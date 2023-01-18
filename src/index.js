@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import Debug from 'debug'
 import * as Koa from 'koa'
 import Keygrip from 'keygrip'
+import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -26,11 +27,23 @@ const key3 = process.env.KEY3
 app.keys = new Keygrip([key1, key2, key3])
 app.proxy = true
 
+render(app, {
+  // root: path.join(__dirname, 'views'),
+  root: path.resolve(`${__dirname}/..`, 'views'),
+  layout: 'template',
+  viewExt: 'html',
+  cache: false,
+  debug: true,
+  delimter: '%',
+  async: true,
+})
+
 // logging
 async function logging(ctx, next) {
   await next()
   const rt = ctx.response.get('X-Response-Time')
   log(`${ctx.method} ${ctx.url} - ${rt}`)
+  await ctx.render('template', { body: ctx.body })
 }
 
 // x-response-time
@@ -43,7 +56,11 @@ async function xResponseTime(ctx, next) {
 //
 // response
 async function response(ctx) {
-  ctx.body = 'hellow orld!'
+  if (ctx.body === '') {
+    ctx.body = 'hellow orld!'
+  } else {
+    ctx.body += 'hellow orld!'
+  }
   log(`${ctx.request.hostname}`)
   log(`${ctx.request.host}`)
   log(`app.proxy: ${app.proxy}`)
@@ -54,13 +71,27 @@ async function response(ctx) {
   log(ctx.app === app)
 }
 
-async function cors(ctx) {
+async function cors(ctx, next) {
+  ctx.body = ''
+  let cors = false
   const keys = Object.keys(ctx.request.headers)
   keys.forEach((k) => {
-    if (/^access-control|^origin$/i.test(k)) {
-      return ctx.body = 'CORS!'
+    log(`header: ${k}`)
+    if (/^access-control-|^origin/i.test(k)) {
+      cors = true
+      ctx.set('Vary', 'Origin')
+      ctx.set('Access-Control-Allow-Origin', '*')
     }
+    log('no cors here, mate')
   })
+  if (cors) {
+    log('CORS! AaaHaa!')
+    ctx.body += 'CORS!\n'
+    ctx.body += '-----'
+    ctx.body += '\n'
+    ctx.body += '\n'
+  }
+  await next()
 }
 
 app.use(cors)

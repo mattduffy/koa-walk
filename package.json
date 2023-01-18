@@ -27,6 +27,7 @@
     "eslint-plugin-import": "2.26.0"
   },
   "dependencies": {
+    "@koa/ejs": "5.0.0",
     "debug": "4.3.4",
     "dotenv": "16.0.3",
     "keygrip": "1.1.0",
