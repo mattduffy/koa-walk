@@ -12,6 +12,7 @@ import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
+import { index } from './routes/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -39,19 +40,20 @@ app.keys = new Keygrip([key1, key2, key3])
 render(app, {
   root: `${root}/views/${app.templateName}`,
   layout: 'template',
-  viewExt: 'html',
+  viewExt: 'ejs',
   cache: false,
-  debug: false,
+  debug: true,
   delimter: '%',
   async: true,
 })
 
 // logging
 async function logging(ctx, next) {
+  log('ctx.state: %o', ctx.state)
   await next()
   const rt = ctx.response.get('X-Response-Time')
   log(`${ctx.method} ${ctx.url} - ${rt}`)
-  await ctx.render('template', { body: ctx.body })
+  // await ctx.render('template', { body: ctx.body })
 }
 
 // x-response-time
@@ -61,7 +63,7 @@ async function xResponseTime(ctx, next) {
   const ms = Date.now() - start
   ctx.set('X-Response-Time', `${ms}`)
 }
-//
+
 // response
 async function response(ctx) {
   if (ctx.body === '') {
@@ -70,19 +72,16 @@ async function response(ctx) {
     ctx.body += 'hellow orld!'
   }
   log(ctx.request.header)
-  ctx.response.body += '\nnot today, buddy.'
-  log(ctx.response.body)
-  log(ctx.app === app)
 }
 
 async function cors(ctx, next) {
   ctx.body = ''
-  let cors = false
+  let isCors = false
   const keys = Object.keys(ctx.request.headers)
   keys.forEach((k) => {
     log(`header: ${k}`)
     if (/^access-control-|^origin/i.test(k)) {
-      cors = true
+      isCors = true
       ctx.set('Vary', 'Origin')
       ctx.set('Access-Control-Allow-Origin', '*')
     }
@@ -98,9 +97,10 @@ async function cors(ctx, next) {
   await next()
 }
 
-app.use(cors)
-app.use(logging)
-app.use(xResponseTime)
-app.use(response)
+// app.use(cors)
+// app.use(logging)
+// app.use(xResponseTime)
+// app.use(response)
+app.use(index.routes())
 
 app.listen(port)
