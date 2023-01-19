@@ -8,32 +8,40 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Debug from 'debug'
 import * as Koa from 'koa'
+import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-dotenv.config({ path: path.resolve(__dirname, '.env'), debug: true })
+const root = path.resolve(`${__dirname}/..`)
+dotenv.config({ path: path.resolve(root, '.env'), debug: true })
 
 const log = Debug('koa-stub:log')
 const error = Debug('koa-stub:error')
 
 export const app = new Koa.default()
+app.env = process.env.APP_ENV || 'development'
+app.proxy = true
+app.root = root
+app.publicDir = `${root}/public`
+app.templateName = 'default'
+app.uploadsDir = `${root}/uploads`
+app.use(serve(app.publicDir))
+
 const port = process.env.PORT || 3333
 const key1 = process.env.KEY1
 const key2 = process.env.KEY2
 const key3 = process.env.KEY3
 app.keys = new Keygrip([key1, key2, key3])
-app.proxy = true
 
 render(app, {
-  // root: path.join(__dirname, 'views'),
-  root: path.resolve(`${__dirname}/..`, 'views'),
+  root: `${root}/views/${app.templateName}`,
   layout: 'template',
   viewExt: 'html',
   cache: false,
-  debug: true,
+  debug: false,
   delimter: '%',
   async: true,
 })
@@ -61,11 +69,7 @@ async function response(ctx) {
   } else {
     ctx.body += 'hellow orld!'
   }
-  log(`${ctx.request.hostname}`)
-  log(`${ctx.request.host}`)
-  log(`app.proxy: ${app.proxy}`)
   log(ctx.request.header)
-  log(ctx.request.origin)
   ctx.response.body += '\nnot today, buddy.'
   log(ctx.response.body)
   log(ctx.app === app)
