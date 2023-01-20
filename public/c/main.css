@@ -1,0 +1,140 @@
+body {
+  margin: 0px;
+  padding: 0px;
+  font-family: 'Avenir Next', 'HelveticaNeue-Light', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1.125em;
+}
+
+header {
+  background-color: #b59575;
+  width: 100%;
+  padding: 0px 0px;
+  margin: 0px auto;
+  border-bottom: 1px solid black;
+}
+
+a#skipnav {
+  position: absolute;
+  left: -1000px; 
+}
+
+#masthead {
+  width: 400px;
+  margin: 0px auto;
+}
+
+#masthead h1 {
+  font-weight: normal;
+  font-size: 2em;
+  margin-top: 0;
+  padding-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+#masthead h1 a, #masthead h1 a:active, #masthead h1 a:visited {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+nav {
+  position: relative;
+}
+
+.crumbs {
+  display: inline-block;
+}
+
+.crumbs ol {
+  list-style-type: none;
+}
+
+.crumbs a::after {
+  display: inline-block;
+  color: #000000;
+  content: '>';
+  font-size: 80%;
+  font-weight: 700;
+  padding: 0px 3px;
+}
+
+nav ol {
+  margin-left: 0px;
+  padding-left: 0px;
+}
+
+h1 {
+  font-weight: normal;
+  font-size: 2em;
+  margin-top: 0;
+  padding-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+h2 {
+  font-weight: normal;
+  font-size: 1.8em;
+  margin-top: 0;
+  padding-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+h3 {
+  font-weight: normal;
+  font-size: 1.6em;
+  margin-top: 0;
+  padding-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+h4 {
+  font-weight: normal;
+  font-size: 1.4em;
+  margin-top: 0;
+  padding-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+main {
+  margin: 0px auto;
+  width: 50%;
+}
+
+main article {
+
+}
+
+main article section {
+
+}
+
+footer {
+  background-color: #b59575;
+  width: 100%;
+  padding: 0px 0px;
+  margin: 0px auto;
+  border-bottom: 1px solid black;
+}
+
+#mastfoot {
+  width: 400px;
+  margin: 0px auto;
+}
+
+#mastfoot h4 {
+  font-weight: normal;
+  font-size: 1.0em;
+  margin-top: 0;
+  padding-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+#mastfoot h4 a, #mastfoot h4 a:active, #mastfoot h4 a:visited {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+nav#foot-nav ol {
+  margin: 10px 0px;
+  padding: 0px;
+  font-size: .8em;
+}

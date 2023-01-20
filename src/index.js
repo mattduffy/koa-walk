@@ -12,7 +12,7 @@ import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
-import { index } from './routes/index.js'
+import { main } from './routes/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -24,6 +24,8 @@ const error = Debug('koa-stub:error')
 
 export const app = new Koa.default()
 app.env = process.env.APP_ENV || 'development'
+app.site = process.env.SITE_NAME || 'Web site'
+app.domain = process.env.DOMAIN_NAME || 'website.com'
 app.proxy = true
 app.root = root
 app.publicDir = `${root}/public`
@@ -101,6 +103,6 @@ async function cors(ctx, next) {
 // app.use(logging)
 // app.use(xResponseTime)
 // app.use(response)
-app.use(index.routes())
+app.use(main.routes())
 
 app.listen(port)
