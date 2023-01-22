@@ -12,7 +12,8 @@ import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
-import { main } from './routes/index.js'
+import { session, config } from './session-handler.js'
+import { main } from './routes/main.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -22,7 +23,13 @@ dotenv.config({ path: path.resolve(root, '.env'), debug: true })
 const log = Debug('koa-stub:log')
 const error = Debug('koa-stub:error')
 
+const key1 = process.env.KEY1
+const key2 = process.env.KEY2
+const key3 = process.env.KEY3
+const port = process.env.PORT || 3333
+
 export const app = new Koa.default()
+app.keys = new Keygrip([key1, key2, key3])
 app.env = process.env.APP_ENV || 'development'
 app.site = process.env.SITE_NAME || 'Web site'
 app.domain = process.env.DOMAIN_NAME || 'website.com'
@@ -31,13 +38,9 @@ app.root = root
 app.publicDir = `${root}/public`
 app.templateName = 'default'
 app.uploadsDir = `${root}/uploads`
-app.use(serve(app.publicDir))
 
-const port = process.env.PORT || 3333
-const key1 = process.env.KEY1
-const key2 = process.env.KEY2
-const key3 = process.env.KEY3
-app.keys = new Keygrip([key1, key2, key3])
+app.use(session(config, app))
+app.use(serve(app.publicDir))
 
 render(app, {
   root: `${root}/views/${app.templateName}`,
@@ -55,7 +58,7 @@ async function logging(ctx, next) {
   await next()
   const rt = ctx.response.get('X-Response-Time')
   log(`${ctx.method} ${ctx.url} - ${rt}`)
-  // await ctx.render('template', { body: ctx.body })
+  log('session: %o', ctx.session)
 }
 
 // x-response-time
@@ -67,12 +70,13 @@ async function xResponseTime(ctx, next) {
 }
 
 // response
-async function response(ctx) {
-  if (ctx.body === '') {
-    ctx.body = 'hellow orld!'
-  } else {
-    ctx.body += 'hellow orld!'
-  }
+async function response(ctx, next) {
+  // if (ctx.body === '') {
+  //   ctx.body = 'hellow orld!'
+  // } else {
+  //   ctx.body += 'hellow orld!'
+  // }
+  await next()
   log(ctx.request.header)
 }
 
@@ -89,7 +93,7 @@ async function cors(ctx, next) {
     }
     log('no cors here, mate')
   })
-  if (cors) {
+  if (isCors) {
     log('CORS! AaaHaa!')
     ctx.body += 'CORS!\n'
     ctx.body += '-----'
@@ -99,10 +103,20 @@ async function cors(ctx, next) {
   await next()
 }
 
-// app.use(cors)
-// app.use(logging)
-// app.use(xResponseTime)
-// app.use(response)
+// session? cookie?
+async function sessionViews(ctx, next) {
+  await next()
+  if (/favicon/.test(ctx.path)) return
+  const n = ctx.session.views || 0
+  ctx.session.views = n + 1
+  ctx.cookies.set('views', ctx.session.views)
+}
+
 app.use(main.routes())
+app.use(cors)
+app.use(logging)
+app.use(xResponseTime)
+app.use(response)
+app.use(sessionViews)
 
 app.listen(port)

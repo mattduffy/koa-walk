@@ -9,7 +9,7 @@ import Router from '@koa/router'
 const router = new Router()
 router.get('index', '/', async (ctx, next) => {
   await next()
-  console.log('inside index router: /')
+  console.log('inside main router: /')
   await ctx.render('index', { body: ctx.body, title: `${ctx.app.site}: Contact` })
 })
 

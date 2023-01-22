@@ -4,5 +4,5 @@
 - [x] set up view template system (probably ejs)
 - [ ] set up mimimally necessary middle wares
 - [x] set up basic session handling
-- [ ] ↳ set up redis session handler
+- [x] ↳ set up redis session handler
 - [ ] 
