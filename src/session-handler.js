@@ -15,7 +15,7 @@ import * as dotenv from 'dotenv'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const root = path.resolve(`${__dirname}/..`)
-dotenv.config({ path: path.resolve(root, '.env'), debug: true })
+dotenv.config({ path: path.resolve(root, 'config/sessions.env'), debug: true })
 
 console.log('cacert: %o', process.env.REDIS_CACERT)
 

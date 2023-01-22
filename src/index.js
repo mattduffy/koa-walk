@@ -18,7 +18,7 @@ import { main } from './routes/main.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const root = path.resolve(`${__dirname}/..`)
-dotenv.config({ path: path.resolve(root, '.env'), debug: true })
+dotenv.config({ path: path.resolve(root, 'config/app.env'), debug: true })
 
 const log = Debug('koa-stub:log')
 const error = Debug('koa-stub:error')
