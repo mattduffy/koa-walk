@@ -13,6 +13,7 @@ tests*
 .npmrc
 .lock-wscript
 *.env
+config/*.env
 npm-debug.log
 node_modules
 package-lock.json

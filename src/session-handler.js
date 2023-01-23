@@ -27,6 +27,7 @@ const redisConnOpts = {
     { host: process.env.REDIS_SENTINEL_03, port: sentinelPort },
   ],
   name: 'myprimary',
+  db: process.env.REDIS_DB,
   sentinelUsername: process.env.REDIS_SENTINEL_USER,
   sentinelPassword: process.env.REDIS_SENTINEL_PASSWORD,
   username: process.env.REDIS_USER,
