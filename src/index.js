@@ -12,13 +12,15 @@ import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
+import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
 import { main } from './routes/main.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const root = path.resolve(`${__dirname}/..`)
-dotenv.config({ path: path.resolve(root, 'config/app.env'), debug: true })
+const showDebug = process.env.NODE_ENV !== 'production'
+dotenv.config({ path: path.resolve(root, 'config/app.env'), debug: showDebug })
 
 const log = Debug('koa-stub:log')
 const error = Debug('koa-stub:error')
@@ -71,11 +73,6 @@ async function xResponseTime(ctx, next) {
 
 // response
 async function response(ctx, next) {
-  // if (ctx.body === '') {
-  //   ctx.body = 'hellow orld!'
-  // } else {
-  //   ctx.body += 'hellow orld!'
-  // }
   await next()
   log(ctx.request.header)
 }
@@ -112,11 +109,24 @@ async function sessionViews(ctx, next) {
   ctx.cookies.set('views', ctx.session.views)
 }
 
-app.use(main.routes())
+// checking to see if mongodb client is working
+async function isMongo(ctx, next) {
+  const { client, ObjectId } = mongoClient
+  const db = client.db()
+  const users = db.collection('users')
+  let user1 = 'this should not show up anywhere'
+  user1 = await users.findOne({ _id: ObjectId('6264b5f610cbb8a2af7e6a8a') })
+  log(user1)
+  ctx.state.user1 = user1
+  await next()
+}
+
 app.use(cors)
 app.use(logging)
 app.use(xResponseTime)
 app.use(response)
 app.use(sessionViews)
+app.use(isMongo)
+app.use(main.routes())
 
 app.listen(port)

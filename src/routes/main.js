@@ -10,7 +10,11 @@ const router = new Router()
 router.get('index', '/', async (ctx, next) => {
   await next()
   console.log('inside main router: /')
-  await ctx.render('index', { body: ctx.body, title: `${ctx.app.site}: Contact` })
+  let user = 'some random guy.'
+  if (ctx.state.user1) {
+    user = ctx.state.user1
+  }
+  await ctx.render('index', { body: ctx.body, title: `${ctx.app.site}: Contact`, user })
 })
 
 router.get('about', '/about', async (ctx, next) => {
