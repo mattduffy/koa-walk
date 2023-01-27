@@ -14,7 +14,8 @@ import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
-import { main } from './routes/main.js'
+import { main as Main } from './routes/main.js'
+import { users as Users } from './routes/users.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -53,7 +54,7 @@ render(app, {
   delimter: '%',
   async: true,
 })
-
+/**
 // logging
 async function logging(ctx, next) {
   log('ctx.state: %o', ctx.state)
@@ -76,6 +77,16 @@ async function response(ctx, next) {
   await next()
   log(ctx.request.header)
 }
+
+// session? cookie?
+async function sessionViews(ctx, next) {
+  await next()
+  if (/favicon/.test(ctx.path)) return
+  const n = ctx.session.views || 0
+  ctx.session.views = n + 1
+  ctx.cookies.set('views', ctx.session.views)
+}
+*/
 
 async function cors(ctx, next) {
   ctx.body = ''
@@ -100,33 +111,30 @@ async function cors(ctx, next) {
   await next()
 }
 
-// session? cookie?
-async function sessionViews(ctx, next) {
-  await next()
-  if (/favicon/.test(ctx.path)) return
-  const n = ctx.session.views || 0
-  ctx.session.views = n + 1
-  ctx.cookies.set('views', ctx.session.views)
-}
-
 // checking to see if mongodb client is working
 async function isMongo(ctx, next) {
   const { client, ObjectId } = mongoClient
+  ctx.state.mongodb = mongoClient
   const db = client.db()
   const users = db.collection('users')
   let user1 = 'this should not show up anywhere'
   user1 = await users.findOne({ _id: ObjectId('6264b5f610cbb8a2af7e6a8a') })
+  if (!user1) {
+    error('Error in isMongo middleware function.')
+  }
+  // await client.close()
   log(user1)
   ctx.state.user1 = user1
   await next()
 }
 
-app.use(cors)
-app.use(logging)
-app.use(xResponseTime)
-app.use(response)
-app.use(sessionViews)
 app.use(isMongo)
-app.use(main.routes())
+app.use(cors)
+// app.use(logging)
+// app.use(xResponseTime)
+// app.use(response)
+// app.use(sessionViews)
+app.use(Main.routes())
+app.use(Users.routes())
 
 app.listen(port)
