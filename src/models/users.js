@@ -6,16 +6,12 @@
  */
 import * as Dotenv from 'dotenv'
 import { Users } from '@mattduffy/users'
-// import { client, ObjectId } from '@mattduffy/users/mongoclient'
+import { 
 
 if (process.env?.MONGODB_CLIENT_DN === undefined) {
   Dotenv.conf({ path: 'config/mongodb.env', debug: true })
   console.log(process.env)
 }
-
-// const users = await new Users(client)
-// const me = users.getByEmail('matt@mattmail.email.602b')
-// console.log(me.description)
 
 export {
   Users,

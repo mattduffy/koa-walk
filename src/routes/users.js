@@ -7,8 +7,8 @@
 
 import Router from '@koa/router'
 import Debug from 'debug'
-// import { Users } from '../models/users.js'
-import { Users } from '@mattduffy/users'
+import { Users } from '../models/users.js'
+// import { Users } from '@mattduffy/users'
 
 const log = Debug('koa-stub:routes:users:log')
 const error = Debug('koa-stub:routes:users:error')
@@ -22,7 +22,8 @@ router.get('getUsers', '/users', async (ctx, next) => {
   const users = new Users(collection)
   let allUsers
   try {
-    allUsers = await users.getAllUsers()
+    const filter = { type: 'Creator' }
+    allUsers = await users.getAllUsers(filter)
   } catch (err) {
     error('Error getting all users.')
     error(err)
@@ -31,10 +32,44 @@ router.get('getUsers', '/users', async (ctx, next) => {
   ctx.body = { users: allUsers }
 })
 
-router.get('getUser', '/user/:id', async (ctx, next) => {
+router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
+  const { id } = ctx.params
+  if (Buffer.from(id).length !== 24 || /[^0-9A-Fa-f]/.test(id)) {
+    ctx.throw(400, `Not a valid user ID: ${id}`)
+  }
+  ctx.state.user = { id }
+  const db = ctx.state.mongodb.client.db()
   await next()
-  log('inside index router: /about')
-  await ctx.render('about', { body: ctx.body, title: `${ctx.app.site}: Contact` })
+  const collection = db.collection('users')
+  const users = new Users(collection)
+  const foundUser = await users.getById(id)
+  if (foundUser === null) {
+    ctx.throw(404, `No user found with ID: ${id}`)
+  }
+  ctx.state.user = foundUser
+  ctx.body = foundUser.toString()
+  ctx.type = 'application/json'
+})
+
+router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
+  const { email } = ctx.params
+  if (/^[\w!#$%&'*+/=?`{|}~^-]+(?:\.[\w!#$%&'*+/=?`{|}~^-]+)*@(?:[A-Z0-9-]+\.)+[A-Z]{2,6}$/i.test(email)) {
+    error(`Not a valid email address: ${email}`)
+    ctx.throw(400, `Not a valid email address: ${email}`)
+  }
+  ctx.state.user = { email }
+  const db = ctx.state.mongodb.client.db()
+  await next()
+  const collection = db.collection('users')
+  const users = new Users(collection)
+  const foundUser = await users.getByEmail(email)
+  if (foundUser === null) {
+    error(`No user found with email: ${email}`)
+    ctx.throw(404, `No user found with email: ${email}`)
+  }
+  ctx.state.user = foundUser
+  ctx.body = foundUser.toString()
+  ctx.type = 'application/json'
 })
 
 export { router as users }

@@ -93,14 +93,16 @@ async function cors(ctx, next) {
   let isCors = false
   const keys = Object.keys(ctx.request.headers)
   keys.forEach((k) => {
-    log(`header: ${k}`)
-    if (/^access-control-|^origin/i.test(k)) {
+    log(`header: ${k} : ${ctx.request.headers[k]}`)
+    if (/^access-control-|origin/i.test(k)) {
       isCors = true
       ctx.set('Vary', 'Origin')
       ctx.set('Access-Control-Allow-Origin', '*')
     }
-    log('no cors here, mate')
   })
+  if (!isCors) log('no cors here, mate')
+  ctx.set('Vary', 'Origin')
+  ctx.set('Access-Control-Allow-Origin', '*')
   if (isCors) {
     log('CORS! AaaHaa!')
     ctx.body += 'CORS!\n'
@@ -123,7 +125,7 @@ async function isMongo(ctx, next) {
     error('Error in isMongo middleware function.')
   }
   // await client.close()
-  log(user1)
+  // log(user1)
   ctx.state.user1 = user1
   await next()
 }
