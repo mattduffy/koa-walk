@@ -12,7 +12,7 @@ import * as Dotenv from 'dotenv'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const root = path.resolve(`${__dirname}/../../../..`)
-console.log('mongo-client.js >>root = ', root)
+// console.log('mongo-client.js >>root = ', root)
 const showDebug = process.env.NODE_ENV !== 'production'
 Dotenv.config({ path: path.resolve(root, 'config/mongodb.env'), debug: showDebug })
 

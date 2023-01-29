@@ -6,7 +6,7 @@
  */
 import * as Dotenv from 'dotenv'
 import { Users } from '@mattduffy/users'
-import { 
+import { AdminUser } from '@mattduffy/users/AdminUser'
 
 if (process.env?.MONGODB_CLIENT_DN === undefined) {
   Dotenv.conf({ path: 'config/mongodb.env', debug: true })
@@ -15,4 +15,5 @@ if (process.env?.MONGODB_CLIENT_DN === undefined) {
 
 export {
   Users,
+  AdminUser,
 }

@@ -18,7 +18,7 @@ const root = path.resolve(`${__dirname}/..`)
 const showDebug = process.env.NODE_ENV !== 'production'
 dotenv.config({ path: path.resolve(root, 'config/sessions.env'), debug: showDebug })
 
-console.log('cacert: %o', process.env.REDIS_CACERT)
+// console.log('cacert: %o', process.env.REDIS_CACERT)
 
 const sentinelPort = process.env.SENTINEL_PORT || 36379
 const redisConnOpts = {

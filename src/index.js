@@ -43,7 +43,6 @@ app.templateName = 'default'
 app.uploadsDir = `${root}/uploads`
 
 app.use(session(config, app))
-app.use(serve(app.publicDir))
 
 render(app, {
   root: `${root}/views/${app.templateName}`,
@@ -89,27 +88,21 @@ async function sessionViews(ctx, next) {
 */
 
 async function cors(ctx, next) {
-  ctx.body = ''
-  let isCors = false
   const keys = Object.keys(ctx.request.headers)
   keys.forEach((k) => {
     log(`header: ${k} : ${ctx.request.headers[k]}`)
     if (/^access-control-|origin/i.test(k)) {
-      isCors = true
       ctx.set('Vary', 'Origin')
       ctx.set('Access-Control-Allow-Origin', '*')
     }
   })
-  if (!isCors) log('no cors here, mate')
+  if (/yourmom/.test(ctx.request.headers.origin)) {
+    error('your mom says hi.')
+  }
   ctx.set('Vary', 'Origin')
   ctx.set('Access-Control-Allow-Origin', '*')
-  if (isCors) {
-    log('CORS! AaaHaa!')
-    ctx.body += 'CORS!\n'
-    ctx.body += '-----'
-    ctx.body += '\n'
-    ctx.body += '\n'
-  }
+  ctx.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+  ctx.set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS')
   await next()
 }
 
@@ -138,5 +131,6 @@ app.use(cors)
 // app.use(sessionViews)
 app.use(Main.routes())
 app.use(Users.routes())
+app.use(serve(app.publicDir))
 
 app.listen(port)

@@ -44,7 +44,7 @@ nav {
   display: inline-block;
 }
 
-.crumbs ol {
+li.crumbs {
   list-style-type: none;
 }
 
@@ -55,6 +55,17 @@ nav {
   font-size: 80%;
   font-weight: 700;
   padding: 0px 3px;
+}
+
+li.login {
+  display: inline-block;
+  list-style-type: none;
+  font-size: 0.85em;
+}
+
+.login a::after {
+  display: inline-block;
+  content: '';
 }
 
 nav ol {
