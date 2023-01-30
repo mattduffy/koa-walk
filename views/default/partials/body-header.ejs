@@ -10,7 +10,7 @@
         <li class="crumbs"><a href="/blog">Blog</a></li>
         <li class="crumbs"><a href="/about">About</a></li>
         <li class="crumbs"><a href="/contact">Contact</a></li>
-        <li class="login">(<% if (user.authenticated) { %>
+        <li class="login">(<% if (user && user?.isAuthenticated) { %>
           <a href="/logout">Log Out</a>
         <% } else { %>
           <a href="/login">Login</a>

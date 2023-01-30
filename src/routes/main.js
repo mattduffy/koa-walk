@@ -6,27 +6,43 @@
  */
 
 import Router from '@koa/router'
+import { ObjectId } from 'mongodb'
 
 const router = new Router()
+
+router.get('getLogin', '/login', async (ctx, next) => {
+  const user = ctx.state.user || {}
+  if (user?.isAuthenticated) {
+    ctx.redirect('/')
+  }
+  const locals = {
+    body: ctx.body,
+    title: `${ctx.app.site}: Login`,
+    user,
+    csrfToken: new ObjectId().toString(),
+  }
+  await ctx.render('login', locals)
+  await next()
+})
+
 router.get('index', '/', async (ctx, next) => {
   await next()
   console.log('inside main router: /')
-  let user = 'some random guy.'
-  if (ctx.state.user1) {
-    user = ctx.state.user1
-  }
+  const user = ctx.state.user || {}
   await ctx.render('index', { body: ctx.body, title: `${ctx.app.site}: Contact`, user })
 })
 
 router.get('about', '/about', async (ctx, next) => {
   await next()
   console.log('inside index router: /about')
-  await ctx.render('about', { body: ctx.body, title: `${ctx.app.site}: Contact` })
+  const user = ctx.state.user || {}
+  await ctx.render('about', { body: ctx.body, title: `${ctx.app.site}: Contact`, user })
 })
 
 router.get('contact', '/contact', async (ctx, next) => {
   await next()
-  await ctx.render('contact', { title: `${ctx.app.site}: Contact` })
+  const user = ctx.state.user || {}
+  await ctx.render('contact', { title: `${ctx.app.site}: Contact`, user })
 })
 
 export { router as main }

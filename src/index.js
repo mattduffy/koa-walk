@@ -53,15 +53,6 @@ render(app, {
   delimter: '%',
   async: true,
 })
-/**
-// logging
-async function logging(ctx, next) {
-  log('ctx.state: %o', ctx.state)
-  await next()
-  const rt = ctx.response.get('X-Response-Time')
-  log(`${ctx.method} ${ctx.url} - ${rt}`)
-  log('session: %o', ctx.session)
-}
 
 // x-response-time
 async function xResponseTime(ctx, next) {
@@ -69,12 +60,14 @@ async function xResponseTime(ctx, next) {
   await next()
   const ms = Date.now() - start
   ctx.set('X-Response-Time', `${ms}`)
+  log(`${ctx.method} ${ctx.url} - ${ms}`)
+  log('session: %o', ctx.session)
 }
 
-// response
-async function response(ctx, next) {
+// logging
+async function logging(ctx, next) {
+  log('ctx.state: %o', ctx.state)
   await next()
-  log(ctx.request.header)
 }
 
 // session? cookie?
@@ -85,7 +78,6 @@ async function sessionViews(ctx, next) {
   ctx.session.views = n + 1
   ctx.cookies.set('views', ctx.session.views)
 }
-*/
 
 async function cors(ctx, next) {
   const keys = Object.keys(ctx.request.headers)
@@ -112,25 +104,42 @@ async function isMongo(ctx, next) {
   ctx.state.mongodb = mongoClient
   const db = client.db()
   const users = db.collection('users')
-  let user1 = 'this should not show up anywhere'
-  user1 = await users.findOne({ _id: ObjectId('6264b5f610cbb8a2af7e6a8a') })
-  if (!user1) {
+  let user = 'this should not show up anywhere'
+  user = await users.findOne({ _id: ObjectId('6264b5f610cbb8a2af7e6a8a') })
+  if (!user) {
     error('Error in isMongo middleware function.')
   }
   // await client.close()
-  // log(user1)
-  ctx.state.user1 = user1
+  // log(user)
+  ctx.state.user = user
   await next()
+}
+
+async function error404(ctx, next) {
+  log('>>>>>>>>>>>>>>>>>>>>>>>> >>>> >> > 404 (1) < << <<<< <<<<<<<<<<<<<<<<<<<<<<<<')
+  try {
+    await next()
+    log('>>>>>>>>>>>>>>>>>>>>>>>> >>>> >> > 404 (2) < << <<<< <<<<<<<<<<<<<<<<<<<<<<<<')
+  } catch (e) {
+    log('>>>>>>>>>>>>>>>>>>>>>>>> >>>> >> > 404 (3) < << <<<< <<<<<<<<<<<<<<<<<<<<<<<<')
+    ctx.status = e.statusCode || e.status || 404
+  }
+  log('>>>>>>>>>>>>>>>>>>>>>>>> >>>> >> > 404 (5) < << <<<< <<<<<<<<<<<<<<<<<<<<<<<<')
+  const user = ctx.state.user || {}
+  const locals = { body: ctx.body, title: `${ctx.app.site}: 404`, user }
+  if (ctx.status === 404) {
+    await ctx.render('404', locals)
+  }
 }
 
 app.use(isMongo)
 app.use(cors)
-// app.use(logging)
-// app.use(xResponseTime)
-// app.use(response)
-// app.use(sessionViews)
+app.use(xResponseTime)
+app.use(sessionViews)
+app.use(logging)
 app.use(Main.routes())
 app.use(Users.routes())
-app.use(serve(app.publicDir))
+app.use(error404)
 
+app.use(serve(app.publicDir))
 app.listen(port)

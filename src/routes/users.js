@@ -14,15 +14,19 @@ const log = Debug('koa-stub:routes:users:log')
 const error = Debug('koa-stub:routes:users:error')
 const router = new Router()
 
+function capitalize(word) {
+  return word[0].toUpperCase() + word.substring(1).toLowerCase()
+}
+
 router.get('getUsers', '/users', async (ctx, next) => {
   log('inside users router: /users')
   const db = ctx.state.mongodb.client.db()
+  const filter = { type: capitalize(ctx.query.type) }
   await next()
   const collection = db.collection('users')
   const users = new Users(collection)
   let allUsers
   try {
-    const filter = { type: 'Creator' }
     allUsers = await users.getAllUsers(filter)
   } catch (err) {
     error('Error getting all users.')
