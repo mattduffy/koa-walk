@@ -2,7 +2,7 @@
   <article>
     <section>
       <h1 class="login">Login</h1>
-      <form name="login" id="login" action="/login" method="post">
+      <form name="login" id="login" action="/login" method="POST" enctype="application/x-www-form-urlencoded">
         <fieldset id="login_fieldset" name="login_fieldset" form="login" class="login_fieldset" title="Login Form">
           <legend>Mattmadethese</legend>
             <label for="username">Username: </label>
@@ -13,7 +13,7 @@
             <input type="hidden" id="csrf-token" name="csrf-token" value="<%=
   csrfToken %>">
             <br>
-            <input type="button" id="submit" name="submit" value="Login">
+            <input type="submit" id="submit" name="submit" value="Login">
             <input type="reset" id="reset" name="reset" value="Reset">
         </fieldset>
       </form>
