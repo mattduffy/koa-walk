@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Debug from 'debug'
 import * as Koa from 'koa'
+import { koaBody } from 'koa-body'
 import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
@@ -42,6 +43,7 @@ app.publicDir = `${root}/public`
 app.templateName = 'default'
 app.uploadsDir = `${root}/uploads`
 
+// app.use(koaBody())
 app.use(session(config, app))
 
 render(app, {
@@ -116,19 +118,28 @@ async function isMongo(ctx, next) {
 }
 
 async function error404(ctx, next) {
-  log('>>>>>>>>>>>>>>>>>>>>>>>> >>>> >> > 404 (1) < << <<<< <<<<<<<<<<<<<<<<<<<<<<<<')
   try {
     await next()
-    log('>>>>>>>>>>>>>>>>>>>>>>>> >>>> >> > 404 (2) < << <<<< <<<<<<<<<<<<<<<<<<<<<<<<')
   } catch (e) {
-    log('>>>>>>>>>>>>>>>>>>>>>>>> >>>> >> > 404 (3) < << <<<< <<<<<<<<<<<<<<<<<<<<<<<<')
     ctx.status = e.statusCode || e.status || 404
   }
-  log('>>>>>>>>>>>>>>>>>>>>>>>> >>>> >> > 404 (5) < << <<<< <<<<<<<<<<<<<<<<<<<<<<<<')
   const user = ctx.state.user || {}
   const locals = { body: ctx.body, title: `${ctx.app.site}: 404`, user }
   if (ctx.status === 404) {
     await ctx.render('404', locals)
+  }
+}
+
+async function error500(ctx, next) {
+  try {
+    await next()
+  } catch (e) {
+    ctx.status = e.statusCode || e.status || 500
+  }
+  const user = ctx.state.user || {}
+  const locals = { body: ctx.body, title: `${ctx.app.site}: 500`, user }
+  if (ctx.status === 500) {
+    await ctx.render('500', locals)
   }
 }
 
@@ -140,6 +151,7 @@ app.use(logging)
 app.use(Main.routes())
 app.use(Users.routes())
 app.use(error404)
+app.use(error500)
 
 app.use(serve(app.publicDir))
 app.listen(port)
