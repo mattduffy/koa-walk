@@ -64,4 +64,4 @@ const config = {
   store: redis,
 }
 
-export { session, config }
+export { session, config, redis }
