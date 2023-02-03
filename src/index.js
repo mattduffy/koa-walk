@@ -15,14 +15,16 @@ import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
+import { flashMessage } from './middlewares.js'
+import { auth as Auth } from './routes/auth.js'
 import { main as Main } from './routes/main.js'
 import { users as Users } from './routes/users.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const root = path.resolve(`${__dirname}/..`)
+const appRoot = path.resolve(`${__dirname}/..`)
 const showDebug = process.env.NODE_ENV !== 'production'
-dotenv.config({ path: path.resolve(root, 'config/app.env'), debug: showDebug })
+dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), debug: showDebug })
 
 const log = Debug('koa-stub:log')
 const error = Debug('koa-stub:error')
@@ -38,16 +40,16 @@ app.env = process.env.APP_ENV || 'development'
 app.site = process.env.SITE_NAME || 'Web site'
 app.domain = process.env.DOMAIN_NAME || 'website.com'
 app.proxy = true
-app.root = root
-app.publicDir = `${root}/public`
+app.root = appRoot
+app.publicDir = `${appRoot}/public`
 app.templateName = 'default'
-app.uploadsDir = `${root}/uploads`
+app.uploadsDir = `${appRoot}/uploads`
 
 // app.use(koaBody())
 app.use(session(config, app))
 
 render(app, {
-  root: `${root}/views/${app.templateName}`,
+  root: `${appRoot}/views/${app.templateName}`,
   layout: 'template',
   viewExt: 'ejs',
   cache: false,
@@ -144,14 +146,18 @@ async function error500(ctx, next) {
 }
 
 app.use(isMongo)
-app.use(cors)
-app.use(xResponseTime)
-app.use(sessionViews)
-app.use(logging)
+// app.use(cors)
+// app.use(xResponseTime)
+// app.use(sessionViews)
+// app.use(logging)
+
+app.use(flashMessage('*************************************************************'))
+
+app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())
-app.use(error404)
-app.use(error500)
+// app.use(error404)
+// app.use(error500)
 
 app.use(serve(app.publicDir))
 app.listen(port)
