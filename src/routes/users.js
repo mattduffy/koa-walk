@@ -8,7 +8,6 @@
 import Router from '@koa/router'
 import Debug from 'debug'
 import { Users } from '../models/users.js'
-// import { Users } from '@mattduffy/users'
 
 const log = Debug('koa-stub:routes:users:log')
 const error = Debug('koa-stub:routes:users:error')
