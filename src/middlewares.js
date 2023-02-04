@@ -10,42 +10,55 @@ import Debug from 'debug'
 // const log = Debug('koa-stub:middlewares:log')
 // const error = Debug('koa-stub:middlewares:error')
 
-export function flashMessage(opts) {
-  const options = { ...opts }
-  const key = options.key || 'flash'
-  const msgs = options.msgs || { success: [], warning: [], error: [] }
+export function flashMessage(options) {
   const log = Debug('koa-stub:flashMessage:log')
   const error = Debug('koa-stub:flashMessage:error')
-  log(`${this}`)
+  const opts = { ...options }
+  const key = opts.key || 'flash'
+  const msgs = opts.msgs || {}
+  let messages
 
   async function flash(ctx, next) {
-    if (!ctx.session) {
-      error('Missing session for storing flash messages.')
-      throw new Error('Missing session for storing flash messages.')
-    }
-    const data = ctx.session[key] || msgs
-    delete ctx.session[key]
-    log(`${opts}`)
-    log(`${this}`)
-    log(ctx.session)
-
+    messages = ctx.session[key] || {}
+    // delete ctx.session[key]
     await next()
-    if (ctx.status === 302 && ctx.session && !ctx.session[key]) {
-      ctx.session[key] = data
+    if (ctx.status === 302 && ctx.session && !(ctx.session[key])) {
+      // ctx.session[key] = messages
+      ctx.session[key] = messages
     }
   }
-
   /* eslint-disable object-shorthand */
-  /* eslint-disable func-names */
+
+/*
+ * Add the `flash` objet property directly to the app.contxt object somehow.
+ */
+
+
   Object.defineProperty(flash, 'flash', {
     enumerable: true,
-    set: function (x) {
-      // data = x
-      ctx.session[key] = x
+    get: function() {
+      return messages
     },
-    get: function () {
-      return data
+    set: function(x) {
+      ctx.session[key] = x
     },
   })
   return flash
+}
+
+export async function errorHandlers(ctx, next) {
+  const user = ctx.state.user || {}
+  try {
+    await next()
+    if (!ctx.body) {
+      ctx.status = 404
+      const locals = { body: ctx.body, title: `${ctx.app.site}: 404`, user }
+      await ctx.render('404', locals)
+    }
+  } catch (e) {
+    const locals = { body: ctx.body, title: `${ctx.app.site}: 500`, user }
+    if (ctx.status === 500) {
+      await ctx.render('500', locals)
+    }
+  }
 }
