@@ -31,6 +31,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
     user: ctx.state.user,
     csrfToken,
     login: flashMessage?.login || {},
+    isAuthenticated: ctx.state.isAuthenticated,
   }
   error('template {locals}: %O', locals)
   ctx.session.csrfToken = locals.csrfToken
@@ -62,9 +63,8 @@ router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
           error: authUser.error,
         },
       }
-      // error(ctx.flash)
       ctx.redirect('/login')
-    } else {
+    } else if (authUser) {
       log('successful user login')
       ctx.state.user = authUser.user
       ctx.state.isAuthenticated = true
@@ -75,25 +75,29 @@ router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
       ctx.state.user = authUser.user
       delete ctx.session.csrfToken
       ctx.redirect('/')
-      // ctx.body = {
-      //   status: 'ok',
-      //   user: authUser.user,
-      // }
+      ctx.flash = {
+        index: {
+          username: authUser.first,
+          message: `Hello ${authUser.first}`,
+          error: null,
+        },
+      }
+    } else {
+      error('csrf token mismatch')
+      ctx.type = 'application/json'
+      ctx.body = { status: 'Error, csrf tokens do not match' }
     }
-  } else {
-    error('csrf token mismatch')
-    ctx.body = { status: 'Error, csrf tokens do not match' }
   }
-  ctx.type = 'application/json'
 })
 
 router.get('getLogout', '/logout', async (ctx, next) => {
   const log = Debug('koa-stub:routes:auth_logout:log')
   const error = Debug('koa-stub:routes:auth_logout:error')
   await next()
-  if (ctx.state.isAuthenticated) {
+  if (ctx.state.isAuthenticated || ctx.session.id) {
     log('logging out')
-    ctx.state.user = {}
+    // ctx.state.user = {}
+    ctx.state.user = null
     ctx.session = null
   }
   ctx.cookies.set('csrfToken')

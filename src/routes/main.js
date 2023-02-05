@@ -34,6 +34,7 @@ async function getSessionUser(ctx, next) {
       const user = await users.getById(ctx.session.id)
       if (user) {
         ctx.state.user = user
+        ctx.state.isAuthenticated = true
       }
     } catch (e) {
       error(e)
@@ -46,20 +47,34 @@ router.get('index', '/', hasFlash, getSessionUser, async (ctx, next) => {
   await next()
   console.log('inside main router: /')
   const user = ctx.state.user || null
-  await ctx.render('index', { body: ctx.body, title: `${ctx.app.site}: Contact`, user })
+  await ctx.render('index', {
+    body: ctx.body,
+    title: `${ctx.app.site}: Contact`,
+    user,
+    isAuthenticated: ctx.state.isAuthenticated,
+  })
 })
 
 router.get('about', '/about', hasFlash, getSessionUser, async (ctx, next) => {
   await next()
   console.log('inside index router: /about')
   const user = ctx.state.user || null
-  await ctx.render('about', { body: ctx.body, title: `${ctx.app.site}: Contact`, user })
+  await ctx.render('about', {
+    body: ctx.body,
+    title: `${ctx.app.site}: Contact`,
+    user,
+    isAuthenticated: ctx.state.isAuthenticated,
+  })
 })
 
 router.get('contact', '/contact', hasFlash, getSessionUser, async (ctx, next) => {
   await next()
   const user = ctx.state.user || null
-  await ctx.render('contact', { title: `${ctx.app.site}: Contact`, user })
+  await ctx.render('contact', {
+    title: `${ctx.app.site}: Contact`,
+    user,
+    isAuthenticated: ctx.state.isAuthenticated,
+  })
 })
 
 export { router as main }

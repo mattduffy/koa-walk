@@ -59,12 +59,22 @@ export async function errorHandlers(ctx, next) {
     await next()
     if (!ctx.body) {
       ctx.status = 404
-      const locals = { body: ctx.body, title: `${ctx.app.site}: 404`, user }
+      const locals = {
+        body: ctx.body,
+        title: `${ctx.app.site}: 404`,
+        user,
+        isAuthenticated: ctx.state.isAuthenticated,
+      }
       await ctx.render('404', locals)
     }
   } catch (e) {
-    const locals = { body: ctx.body, title: `${ctx.app.site}: 500`, user }
     if (ctx.status === 500) {
+      const locals = {
+        body: ctx.body,
+        title: `${ctx.app.site}: 500`,
+        user,
+        isAuthenticated: ctx.state.isAuthenticated,
+      }
       await ctx.render('500', locals)
     }
   }

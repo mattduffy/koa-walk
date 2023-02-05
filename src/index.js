@@ -78,7 +78,7 @@ async function logging(ctx, next) {
 async function sessionViews(ctx, next) {
   await next()
   if (/favicon/.test(ctx.path)) return
-  const n = ctx.session.views || 0
+  const n = ctx.session?.views || 0
   ctx.session.views = n + 1
   ctx.cookies.set('views', ctx.session.views)
 }
@@ -114,7 +114,6 @@ async function isMongo(ctx, next) {
   await next()
 }
 
-// app.use(errorHandlers)
 app.use(flashMessage({}, app))
 app.use(isMongo)
 app.use(cors)
@@ -124,6 +123,7 @@ app.use(logging)
 app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())
+app.use(errorHandlers)
 // app.use(error404)
 // app.use(error500)
 
