@@ -15,7 +15,7 @@ import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
-import { flashMessage } from './middlewares.js'
+import { flashMessage, errorHandlers } from './middlewares.js'
 import { auth as Auth } from './routes/auth.js'
 import { main as Main } from './routes/main.js'
 import { users as Users } from './routes/users.js'
@@ -65,7 +65,7 @@ async function xResponseTime(ctx, next) {
   const ms = Date.now() - start
   ctx.set('X-Response-Time', `${ms}`)
   log(`${ctx.method} ${ctx.url} - ${ms}`)
-  log('session: %o', ctx.session)
+  // log('session: %o', ctx.session)
 }
 
 // logging
@@ -86,15 +86,12 @@ async function sessionViews(ctx, next) {
 async function cors(ctx, next) {
   const keys = Object.keys(ctx.request.headers)
   keys.forEach((k) => {
-    log(`header: ${k} : ${ctx.request.headers[k]}`)
+    // log(`header: ${k} : ${ctx.request.headers[k]}`)
     if (/^access-control-|origin/i.test(k)) {
       ctx.set('Vary', 'Origin')
       ctx.set('Access-Control-Allow-Origin', '*')
     }
   })
-  if (/yourmom/.test(ctx.request.headers.origin)) {
-    error('your mom says hi.')
-  }
   ctx.set('Vary', 'Origin')
   ctx.set('Access-Control-Allow-Origin', '*')
   ctx.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
@@ -106,53 +103,24 @@ async function cors(ctx, next) {
 async function isMongo(ctx, next) {
   const { client, ObjectId } = mongoClient
   ctx.state.mongodb = mongoClient
-  const db = client.db()
-  const users = db.collection('users')
-  let user = 'this should not show up anywhere'
-  user = await users.findOne({ _id: ObjectId('6264b5f610cbb8a2af7e6a8a') })
-  if (!user) {
-    error('Error in isMongo middleware function.')
-  }
-  // await client.close()
-  // log(user)
-  ctx.state.user = user
+  // const db = client.db()
+  // const users = db.collection('users')
+  // let user = 'this should not show up anywhere'
+  // user = await users.findOne({ _id: ObjectId('6264b5f610cbb8a2af7e6a8a') })
+  // if (!user) {
+  //   error('Error in isMongo middleware function.')
+  // }
+  // ctx.state.user = user
   await next()
 }
 
-async function error404(ctx, next) {
-  try {
-    await next()
-  } catch (e) {
-    ctx.status = e.statusCode || e.status || 404
-  }
-  const user = ctx.state.user || {}
-  const locals = { body: ctx.body, title: `${ctx.app.site}: 404`, user }
-  if (ctx.status === 404) {
-    await ctx.render('404', locals)
-  }
-}
-
-async function error500(ctx, next) {
-  try {
-    await next()
-  } catch (e) {
-    ctx.status = e.statusCode || e.status || 500
-  }
-  const user = ctx.state.user || {}
-  const locals = { body: ctx.body, title: `${ctx.app.site}: 500`, user }
-  if (ctx.status === 500) {
-    await ctx.render('500', locals)
-  }
-}
-
+// app.use(errorHandlers)
+app.use(flashMessage({}, app))
 app.use(isMongo)
-// app.use(cors)
-// app.use(xResponseTime)
-// app.use(sessionViews)
-// app.use(logging)
-
-app.use(flashMessage('*************************************************************'))
-
+app.use(cors)
+app.use(xResponseTime)
+app.use(sessionViews)
+app.use(logging)
 app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())

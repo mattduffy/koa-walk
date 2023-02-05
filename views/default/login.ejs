@@ -5,13 +5,13 @@
       <form name="login" id="login" action="/login" method="POST" enctype="application/x-www-form-urlencoded">
         <fieldset id="login_fieldset" name="login_fieldset" form="login" class="login_fieldset" title="Login Form">
           <legend>Mattmadethese</legend>
-            <% if (flash?.login) { %>
+            <% if (login) { %>
             <div id="messages" class="messages">
-              <span><%= flash.login.message%></span>
+              <span><%= login.message %></span>
             </div>
             <% } %>
             <label for="username">Username: </label>
-            <input type="text" id="username" name="username" value="<%= flash?.login?.username %>">
+  <input type="text" id="username" name="username" value="<% if (login) { %><%=login?.username %><% } %>">
             <br>
             <label for="password">Password: </label>
             <input type="password" id="password" name="password" value="">

@@ -10,40 +10,47 @@ import Debug from 'debug'
 // const log = Debug('koa-stub:middlewares:log')
 // const error = Debug('koa-stub:middlewares:error')
 
-export function flashMessage(options) {
+export function flashMessage(options, application) {
   const log = Debug('koa-stub:flashMessage:log')
   const error = Debug('koa-stub:flashMessage:error')
-  const opts = { ...options }
+  let app
+  let opts
+  if (options && typeof options.use === 'function') {
+    opts = application
+    app = options
+  } else {
+    app = application
+    opts = options
+  }
+  if (!app || typeof app.use !== 'function') {
+    error('Required app instance not provided.')
+    throw new Error('App instance is required: flashMessage(opts, app)')
+  }
+  log('adding the flash property to the app.context')
   const key = opts.key || 'flash'
-  const msgs = opts.msgs || {}
-  let messages
+  const msg = opts.msg || {}
 
-  async function flash(ctx, next) {
-    messages = ctx.session[key] || {}
-    // delete ctx.session[key]
+  return async function flash(ctx, next) {
+    if (ctx.session === undefined) {
+      throw new Error('Session is required to store flash messages.')
+    }
+    const message = ctx.session[key] || msg
+    delete ctx.session[key]
+    Object.defineProperty(app.context, 'flash', {
+      configurable: true,
+      enumerable: true,
+      get() {
+        return message
+      },
+      set(x) {
+        ctx.session[key] = x
+      },
+    })
     await next()
-    if (ctx.status === 302 && ctx.session && !(ctx.session[key])) {
-      // ctx.session[key] = messages
-      ctx.session[key] = messages
+    if (ctx.status === 302 && !ctx.session[key]) {
+      ctx.session[key] = message
     }
   }
-  /* eslint-disable object-shorthand */
-
-/*
- * Add the `flash` objet property directly to the app.contxt object somehow.
- */
-
-
-  Object.defineProperty(flash, 'flash', {
-    enumerable: true,
-    get: function() {
-      return messages
-    },
-    set: function(x) {
-      ctx.session[key] = x
-    },
-  })
-  return flash
 }
 
 export async function errorHandlers(ctx, next) {

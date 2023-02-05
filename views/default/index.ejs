@@ -5,11 +5,17 @@
     <p>This is the home page of the website.</p>
     <p>Check out <a href="/about">this</a></p>
     <ul>
+      <% if (user) { %>
       <li><%= user.type %></li>
       <li><%= `${user.first} ${user.last}` %></li>
       <li><%= user.email %></li>
       <li><%= user.description %></li>
       <li><%= user.userStatus%></li>
+    <% } else { %>
+      <li>Nothing to see yet</li>
+      <li>Nothing to read yet</li>
+      <li>Nothing to judge yet</li>
+    <% } %>
     </ul>
   </article>
 </main>

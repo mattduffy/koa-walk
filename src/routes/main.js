@@ -16,6 +16,15 @@ const error = Debug('koa-stub:routes:users:error')
 
 const router = new Router()
 
+async function hasFlash(ctx, next) {
+  if (ctx.flash) {
+    log('ctx.flash is present: %o', ctx.flash)
+  } else {
+    error('ctx.flash is missing.')
+  }
+  await next()
+}
+
 async function getSessionUser(ctx, next) {
   if (ctx.session?.id) {
     try {
@@ -33,23 +42,23 @@ async function getSessionUser(ctx, next) {
   await next()
 }
 
-router.get('index', '/', getSessionUser, async (ctx, next) => {
+router.get('index', '/', hasFlash, getSessionUser, async (ctx, next) => {
   await next()
   console.log('inside main router: /')
-  const user = ctx.state.user || {}
+  const user = ctx.state.user || null
   await ctx.render('index', { body: ctx.body, title: `${ctx.app.site}: Contact`, user })
 })
 
-router.get('about', '/about', getSessionUser, async (ctx, next) => {
+router.get('about', '/about', hasFlash, getSessionUser, async (ctx, next) => {
   await next()
   console.log('inside index router: /about')
-  const user = ctx.state.user || {}
+  const user = ctx.state.user || null
   await ctx.render('about', { body: ctx.body, title: `${ctx.app.site}: Contact`, user })
 })
 
-router.get('contact', '/contact', getSessionUser, async (ctx, next) => {
+router.get('contact', '/contact', hasFlash, getSessionUser, async (ctx, next) => {
   await next()
-  const user = ctx.state.user || {}
+  const user = ctx.state.user || null
   await ctx.render('contact', { title: `${ctx.app.site}: Contact`, user })
 })
 
