@@ -6,9 +6,30 @@
  */
 
 import Debug from 'debug'
+import { Users } from './models/users.js'
 
 // const log = Debug('koa-stub:middlewares:log')
 // const error = Debug('koa-stub:middlewares:error')
+
+export async function getSessionUser(ctx, next) {
+  const log = Debug('koa-stub:getSessionUser_log')
+  const error = Debug('koa-stub:getSessionUser_error')
+  if (ctx.session?.id) {
+    try {
+      const db = ctx.state.mongodb.client.db()
+      const collection = db.collection('users')
+      const users = new Users(collection)
+      const user = await users.getById(ctx.session.id)
+      if (user) {
+        ctx.state.user = user
+        ctx.state.isAuthenticated = true
+      }
+    } catch (e) {
+      error(e)
+    }
+  }
+  await next()
+}
 
 export function flashMessage(options, application) {
   const log = Debug('koa-stub:flashMessage:log')
@@ -47,7 +68,7 @@ export function flashMessage(options, application) {
       },
     })
     await next()
-    if (ctx.status === 302 && !ctx.session[key]) {
+    if (ctx.status === 302 && ctx.session && !ctx.session[key]) {
       ctx.session[key] = message
     }
   }

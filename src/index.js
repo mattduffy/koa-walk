@@ -8,14 +8,14 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Debug from 'debug'
 import * as Koa from 'koa'
-import { koaBody } from 'koa-body'
+// import { koaBody } from 'koa-body'
 import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
-import { flashMessage, errorHandlers } from './middlewares.js'
+import { getSessionUser, flashMessage, errorHandlers } from './middlewares.js'
 import { auth as Auth } from './routes/auth.js'
 import { main as Main } from './routes/main.js'
 import { users as Users } from './routes/users.js'
@@ -26,8 +26,8 @@ const appRoot = path.resolve(`${__dirname}/..`)
 const showDebug = process.env.NODE_ENV !== 'production'
 dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), debug: showDebug })
 
-const log = Debug('koa-stub:log')
-const error = Debug('koa-stub:error')
+const log = Debug('koa-stub:index_log')
+const error = Debug('koa-stub:index_error')
 
 const key1 = process.env.KEY1
 const key2 = process.env.KEY2
@@ -77,6 +77,7 @@ async function logging(ctx, next) {
 // session? cookie?
 async function sessionViews(ctx, next) {
   await next()
+  if (!ctx.session) return
   if (/favicon/.test(ctx.path)) return
   const n = ctx.session?.views || 0
   ctx.session.views = n + 1
@@ -114,18 +115,28 @@ async function isMongo(ctx, next) {
   await next()
 }
 
-app.use(flashMessage({}, app))
 app.use(isMongo)
+app.use(flashMessage({}, app))
+app.use(getSessionUser)
 app.use(cors)
 app.use(xResponseTime)
 app.use(sessionViews)
 app.use(logging)
+app.use(serve(app.publicDir))
 app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())
 app.use(errorHandlers)
-// app.use(error404)
-// app.use(error500)
 
-app.use(serve(app.publicDir))
+app.on('error', (err, ctx) => {
+  error(err)
+  const locals = {
+    title: `${ctx.app.site}: 500`,
+    body: ctx.body,
+    user: ctx.state.user,
+    isAuthenticated: ctx.state.isAuthenticated,
+  }
+  ctx.render('500', locals)
+})
+
 app.listen(port)

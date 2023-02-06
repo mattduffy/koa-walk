@@ -77,8 +77,8 @@ router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
       ctx.redirect('/')
       ctx.flash = {
         index: {
-          username: authUser.first,
-          message: `Hello ${authUser.first}`,
+          username: authUser._first,
+          message: `Hello ${authUser._first}`,
           error: null,
         },
       }
