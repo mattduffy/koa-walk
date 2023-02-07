@@ -43,11 +43,13 @@ router.get('getLogin', '/login', async (ctx, next) => {
 router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
   const log = Debug('koa-stub:routes:auth_login_post:log')
   const error = Debug('koa-stub:routes:auth_login_post:error')
+  const sessionId = ctx.cookies.get('koa.sess')
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
   const csrfTokenHidden = ctx.request.body['csrf-token']
   const { username, password } = ctx.request.body
   log(csrfTokenCookie, csrfTokenSession, ctx.request.body)
+  log(`session status: ${ctx.session.status}`)
   if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
     const db = ctx.state.mongodb.client.db()
     await next()
@@ -66,22 +68,24 @@ router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
       ctx.redirect('/login')
     } else if (authUser) {
       log('successful user login')
-      ctx.state.user = authUser.user
+      authUser.user.sessionId = sessionId
+      const loggedInUser = await authUser.user.update()
+      ctx.state.user = loggedInUser
       ctx.state.isAuthenticated = true
+      ctx.session.id = loggedInUser._id
+      ctx.session.jwts = loggedInUser._jwts
+      ctx.state.user = loggedInUser
+      delete ctx.session.csrfToken
       ctx.cookies.set('csrfToken')
       ctx.cookies.set('csrfToken.sig')
-      ctx.session.id = authUser.user._id
-      ctx.session.jwts = authUser.user._jwts
-      ctx.state.user = authUser.user
-      delete ctx.session.csrfToken
-      ctx.redirect('/')
       ctx.flash = {
         index: {
-          username: authUser._first,
-          message: `Hello ${authUser._first}`,
+          username: loggedInUser._first,
+          message: `Hello ${loggedInUser._first}`,
           error: null,
         },
       }
+      ctx.redirect('/')
     } else {
       error('csrf token mismatch')
       ctx.type = 'application/json'
