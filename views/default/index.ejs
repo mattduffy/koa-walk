@@ -7,8 +7,8 @@
     <ul>
       <% if (user) { %>
       <li><%= user.type %></li>
-      <li><%= `${user._name}` %></li>
-      <li><%= `${user._first} ${user._last}` %></li>
+      <li><%= `${user.name}` %></li>
+      <li><%= `${user.firstName} ${user.lastName}` %></li>
       <li><%= user.email %></li>
       <li><%= user.description %></li>
       <li><%= user.status%></li>

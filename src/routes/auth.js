@@ -35,7 +35,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
   }
   error('template {locals}: %O', locals)
   ctx.session.csrfToken = locals.csrfToken
-  ctx.cookies.set('csrfToken', csrfToken, { httpsOnly: true, sameSite: 'strict' })
+  ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
   await ctx.render('login', locals)
   await next()
 })
