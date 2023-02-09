@@ -122,10 +122,10 @@ app.use(cors)
 app.use(xResponseTime)
 app.use(sessionViews)
 app.use(logging)
-app.use(serve(app.publicDir))
 app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())
+app.use(serve(app.publicDir))
 app.use(errorHandlers)
 
 app.on('error', (err, ctx) => {

@@ -124,4 +124,32 @@ router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) 
   await ctx.render('user', locals)
 })
 
+router.get(/^\/@([^@+?.:\s-][a-zA-Z0-9_]{2,30})$/, koaBody(), async (ctx, next) => {
+  const log = Debug('koa-stub:routes:@username_log')
+  const error = Debug('koa-stub:routes:@username_error')
+  const username = sanitize(ctx.params[0])
+  log(`loooking up user by @username: ${username}`)
+  let user
+  const locals = {}
+  await next()
+  try {
+    const db = ctx.state.mongodb.client.db()
+    const collection = db.collection('users')
+    const users = new Users(collection)
+    user = await users.getByUsername(username)
+    if (!user) {
+      locals.title = `${ctx.app.site}: User Details`
+      locals.username = username
+    }
+  } catch (err) {
+    error(`Error getting username: ${username}`)
+    error(err)
+  }
+  ctx.status = 200
+  locals.title = `${ctx.app.site}: ${user.name}`
+  locals.user = user
+  locals.isAuthenticated = ctx.state.isAuthenticated
+  await ctx.render('user', locals)
+})
+
 export { router as users }
