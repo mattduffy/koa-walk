@@ -124,7 +124,7 @@ router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) 
   await ctx.render('user', locals)
 })
 
-router.get(/^\/@([^@+?.:\s-][a-zA-Z0-9_]{2,30})$/, koaBody(), async (ctx, next) => {
+router.get(/^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBody(), async (ctx, next) => {
   const log = Debug('koa-stub:routes:@username_log')
   const error = Debug('koa-stub:routes:@username_error')
   const username = sanitize(ctx.params[0])
