@@ -15,6 +15,7 @@ import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
+import { wellknownWebfinger } from '@mattduffy/webfinger'
 import { getSessionUser, flashMessage, errorHandlers } from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
 import { auth as Auth } from './routes/auth.js'
@@ -118,6 +119,7 @@ async function isMongo(ctx, next) {
 
 app.use(isMongo)
 app.use(flashMessage({}, app))
+app.use(wellknownWebfinger({}, app))
 app.use(getSessionUser)
 app.use(cors)
 app.use(xResponseTime)
