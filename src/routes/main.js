@@ -41,7 +41,7 @@ router.get('index', '/', hasFlash, async (ctx, next) => {
   const user = ctx.state.user || null
   await ctx.render('index', {
     body: ctx.body,
-    title: `${ctx.app.site}: Contact`,
+    title: `${ctx.app.site}: Home`,
     user,
     isAuthenticated: ctx.state.isAuthenticated,
   })
@@ -56,7 +56,7 @@ router.get('about', '/about', hasFlash, async (ctx, next) => {
   const user = ctx.state.user || null
   await ctx.render('about', {
     body: ctx.body,
-    title: `${ctx.app.site}: Contact`,
+    title: `${ctx.app.site}: About`,
     user,
     isAuthenticated: ctx.state.isAuthenticated,
   })
