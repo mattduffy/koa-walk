@@ -4,6 +4,7 @@
  * @file src/index.js The entry point to set up a koa test app.
  */
 
+import './utils/migrations/user-schema.js'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Debug from 'debug'
@@ -13,9 +14,9 @@ import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
+import { wellknownWebfinger } from '@mattduffy/webfinger'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
-import { wellknownWebfinger } from '@mattduffy/webfinger'
 import { getSessionUser, flashMessage, errorHandlers } from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
 import { auth as Auth } from './routes/auth.js'
