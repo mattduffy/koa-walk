@@ -19,6 +19,7 @@ import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
 import { getSessionUser, flashMessage, errorHandlers } from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
+import { activityV1 } from './routes/activity_stream.js'
 import { auth as Auth } from './routes/auth.js'
 import { main as Main } from './routes/main.js'
 import { users as Users } from './routes/users.js'
@@ -126,6 +127,7 @@ app.use(cors)
 app.use(xResponseTime)
 app.use(sessionViews)
 app.use(logging)
+app.use(activityV1.routes())
 app.use(apiV1.routes())
 app.use(Auth.routes())
 app.use(Main.routes())
