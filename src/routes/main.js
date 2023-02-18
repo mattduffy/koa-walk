@@ -36,7 +36,7 @@ router.get('index', '/', hasFlash, async (ctx, next) => {
   const log = Debug('koa-stub:routes:main:index_log')
   const error = Debug('koa-stub:routes:main:index_error')
   log('inside main router: /')
-  await next()
+  // await next()
   ctx.status = 200
   const user = ctx.state.user || null
   await ctx.render('index', {
@@ -51,7 +51,7 @@ router.get('about', '/about', hasFlash, async (ctx, next) => {
   const log = Debug('koa-stub:routes:main:about_log')
   const error = Debug('koa-stub:routes:main:about_error')
   log('inside index router: /about')
-  await next()
+  // await next()
   ctx.status = 200
   const user = ctx.state.user || null
   await ctx.render('about', {
@@ -66,7 +66,7 @@ router.get('contact', '/contact', hasFlash, async (ctx, next) => {
   const log = Debug('koa-stub:routes:main:contact_log')
   const error = Debug('koa-stub:routes:main:contact_error')
   log('inside index router: /contact')
-  await next()
+  // await next()
   ctx.status = 200
   const user = ctx.state.user || null
   await ctx.render('contact', {

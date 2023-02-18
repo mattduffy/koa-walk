@@ -5,4 +5,9 @@
 - [ ] set up mimimally necessary middle wares
 - [x] set up basic session handling
 - [x] ↳ set up redis session handler
-- [ ] 
+- [ ] add model for user account objects
+- [ ] add router / controller for exposing user model actions
+- [ ] add login / logout router 
+- [ ] ↳ add ctx middleware to check if user is logged in and repopulate ctx.state.user
+- [x[ add application middleware to handle webfinger and host-meta requests
+- [x] add /user/:username and /:@<username> routes to in prep for webfinger support

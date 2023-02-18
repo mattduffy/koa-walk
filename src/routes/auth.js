@@ -37,7 +37,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
   ctx.session.csrfToken = locals.csrfToken
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
   await ctx.render('login', locals)
-  await next()
+  // await next()
 })
 
 router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
@@ -97,7 +97,7 @@ router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
 router.get('getLogout', '/logout', async (ctx, next) => {
   const log = Debug('koa-stub:routes:auth_logout:log')
   const error = Debug('koa-stub:routes:auth_logout:error')
-  await next()
+  // await next()
   if (ctx.state.isAuthenticated || ctx.session.id) {
     log('logging out')
     // ctx.state.user = {}

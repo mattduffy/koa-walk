@@ -14,7 +14,7 @@ import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
-import { wellknownWebfinger } from '@mattduffy/webfinger'
+import { wellknownWebfinger, wellknownHostmeta } from '@mattduffy/webfinger'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
 import { getSessionUser, flashMessage, errorHandlers } from './middlewares.js'
@@ -42,6 +42,7 @@ export const app = new Koa.default()
 app.keys = new Keygrip([key1, key2, key3])
 app.env = process.env.APP_ENV || 'development'
 app.site = process.env.SITE_NAME || 'Web site'
+app.host = process.env.HOST || '127.0.0.1'
 app.domain = process.env.DOMAIN_NAME || 'website.com'
 app.proxy = true
 app.root = appRoot
@@ -121,6 +122,7 @@ async function isMongo(ctx, next) {
 
 app.use(isMongo)
 app.use(flashMessage({}, app))
+app.use(wellknownHostmeta({}, app))
 app.use(wellknownWebfinger({}, app))
 app.use(getSessionUser)
 app.use(cors)
