@@ -14,7 +14,7 @@ import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
-import { wellknownWebfinger, wellknownHostmeta } from '@mattduffy/webfinger'
+import { wellknownWebfinger, wellknownHostmeta, wellknownNodeinfo } from '@mattduffy/webfinger'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
 import { getSessionUser, flashMessage, errorHandlers } from './middlewares.js'
@@ -122,6 +122,7 @@ async function isMongo(ctx, next) {
 
 app.use(isMongo)
 app.use(flashMessage({}, app))
+app.use(wellknownNodeinfo({}, app))
 app.use(wellknownHostmeta({}, app))
 app.use(wellknownWebfinger({}, app))
 app.use(getSessionUser)
