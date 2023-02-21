@@ -8,7 +8,7 @@
 import Router from '@koa/router'
 import { koaBody } from 'koa-body'
 import Debug from 'debug'
-import { Users } from '../models/users.js'
+import { Users, AdminUser } from '../models/users.js'
 
 const router = new Router()
 
@@ -21,30 +21,39 @@ function sanitize(param) {
   return param
 }
 
-router.get('getUsers', '/users', koaBody(), async (ctx, next) => {
+router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
   const log = Debug('koa-stub:routes:users_log')
   const error = Debug('koa-stub:routes:users_error')
   log('inside users router: /users')
-  const db = ctx.state.mongodb.client.db()
-  let filter
-  if (ctx.query.type) {
-    filter = { type: capitalize(ctx.query.type) }
+  // only authenticated Admin level users can access this route
+  if (!ctx.state.isAuthenticated || ctx.state.user.type !== 'Admin') {
+    ctx.status = 401
+    ctx.type = 'text/plain; charset=utf-8'
+    ctx.body = 'Unauthorized'
   } else {
-    filter = {}
+    const db = ctx.state.mongodb.client.db()
+    let filter
+    if (!ctx.params.type) {
+      filter = {}
+    } else {
+      // filter = { type: capitalize(sanitize(ctx.params.type)) }
+      filter = { userTypes: [capitalize(sanitize(ctx.params.type))] }
+    }
+    await next()
+    const collection = db.collection('users')
+    const users = new Users(collection)
+    let allUsers
+    try {
+      // this uses the aggregate query to group by user type
+      allUsers = await users.getAllUsers(filter)
+    } catch (err) {
+      error('Error getting all users.')
+      error(err)
+    }
+    ctx.status = 200
+    ctx.type = 'application/json'
+    ctx.body = { users: allUsers }
   }
-  await next()
-  const collection = db.collection('users')
-  const users = new Users(collection)
-  let allUsers
-  try {
-    allUsers = await users.getAllUsers(filter)
-  } catch (err) {
-    error('Error getting all users.')
-    error(err)
-  }
-  ctx.status = 200
-  ctx.type = 'application/json'
-  ctx.body = { users: allUsers }
 })
 
 router.get('getUserById', '/user/byId/:id', koaBody(), async (ctx, next) => {
