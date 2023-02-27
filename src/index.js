@@ -4,7 +4,6 @@
  * @file src/index.js The entry point to set up a koa test app.
  */
 
-import './utils/migrations/user-schema.js'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Debug from 'debug'
@@ -14,6 +13,7 @@ import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
+import { migrations } from '@mattduffy/koa-migrations'
 import { wellknownWebfinger, wellknownHostmeta, wellknownNodeinfo } from '@mattduffy/webfinger'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
@@ -51,6 +51,11 @@ app.templateName = 'default'
 app.uploadsDir = `${appRoot}/uploads`
 
 // app.use(koaBody())
+const o = {
+  db: path.resolve(`${app.root}/src`, 'daos/impl/mongodb/mongo-client.js'),
+  db_name: process.env.MONGODB_DBNAME || 'test',
+}
+app.use(migrations(o, app))
 app.use(session(config, app))
 
 render(app, {
