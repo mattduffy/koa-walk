@@ -41,7 +41,7 @@ router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
     }
     await next()
     const collection = db.collection('users')
-    const users = new Users(collection)
+    const users = new Users(collection, ctx)
     let allUsers
     try {
       // this uses the aggregate query to group by user type
@@ -68,7 +68,7 @@ router.get('getUserById', '/user/byId/:id', koaBody(), async (ctx, next) => {
   const db = ctx.state.mongodb.client.db()
   await next()
   const collection = db.collection('users')
-  const users = new Users(collection)
+  const users = new Users(collection, ctx)
   const foundUser = await users.getById(id)
   if (foundUser === null) {
     error(`No user found with ID: ${id}`)
@@ -93,7 +93,7 @@ router.get('getUserByEmail', '/user/byEmail/:email', koaBody(), async (ctx, next
   const db = ctx.state.mongodb.client.db()
   await next()
   const collection = db.collection('users')
-  const users = new Users(collection)
+  const users = new Users(collection, ctx)
   const foundUser = await users.getByEmail(email)
   if (foundUser === null) {
     error(`No user found with email: ${email}`)
@@ -116,7 +116,7 @@ router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) 
   try {
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection('users')
-    const users = new Users(collection)
+    const users = new Users(collection, ctx)
     user = await users.getByUsername(username)
     if (!user) {
       locals.title = `${ctx.app.site}: User Details`
@@ -144,7 +144,7 @@ router.get(/^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBody(), async (ctx, next) 
   try {
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection('users')
-    const users = new Users(collection)
+    const users = new Users(collection, ctx)
     user = await users.getByUsername(username)
     if (!user) {
       locals.title = `${ctx.app.site}: User Details`
