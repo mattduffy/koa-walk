@@ -36,14 +36,15 @@ const error = Debug('koa-stub:index_error')
 const key1 = process.env.KEY1
 const key2 = process.env.KEY2
 const key3 = process.env.KEY3
-const port = process.env.PORT || 3333
+const port = process.env.PORT ?? 3333
 
 export const app = new Koa.default()
 app.keys = new Keygrip([key1, key2, key3])
-app.env = process.env.APP_ENV || 'development'
-app.site = process.env.SITE_NAME || 'Web site'
-app.host = process.env.HOST || '127.0.0.1'
-app.domain = process.env.DOMAIN_NAME || 'website.com'
+app.env = process.env.APP_ENV ?? 'development'
+app.site = process.env.SITE_NAME ?? 'Web site'
+app.host = `${process.env.HOST}:${port}` ?? `127.0.0.1:${port}`
+// app.host = `${process.env.HOST}` ?? '127.0.0.1'
+app.domain = process.env.DOMAIN_NAME ?? 'website.com'
 app.proxy = true
 app.root = appRoot
 app.publicDir = `${appRoot}/public`
@@ -53,7 +54,7 @@ app.uploadsDir = `${appRoot}/uploads`
 // app.use(koaBody())
 const o = {
   db: path.resolve(`${app.root}/src`, 'daos/impl/mongodb/mongo-client.js'),
-  db_name: process.env.MONGODB_DBNAME || 'test',
+  db_name: process.env.MONGODB_DBNAME ?? 'test',
 }
 app.use(migrations(o, app))
 app.use(session(config, app))
@@ -89,7 +90,7 @@ async function sessionViews(ctx, next) {
   await next()
   if (!ctx.session) return
   if (/favicon/.test(ctx.path)) return
-  const n = ctx.session?.views || 0
+  const n = ctx.session?.views ?? 0
   ctx.session.views = n + 1
   ctx.cookies.set('views', ctx.session.views)
 }
