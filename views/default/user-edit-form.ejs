@@ -1,0 +1,37 @@
+<main>
+  <article>
+    <h1>Edit User Details</h1>
+    
+    <p>This is the user detail page for <%= user.name %>.</p>
+    <form name="userEdit" id="edit" action="/user/edit" method="POST" enctype="application/x-www-form-urlencoded">
+        <fieldset id="edit_fieldset" name="edit_fieldset" form="edit" class="edit_fieldset" title="edit Form">
+          <legend>Mattmadethese</legend>
+            <% if (edit) { %>
+            <div id="messages" class="messages">
+              <span><%= edit.message %></span>
+            </div>
+            <% } %>
+            <label for="firstname">First Name: </label>
+            <input type="text" id="firstname" name="firstname" value="<% if (user) { %><%=user?.firstName %><% } %>">
+            <br>
+            <label for="lastname">Last Name: </label>
+            <input type="lastname" id="lastname" name="lastname" value="<% if (user) { %><%=user?.lastName %><% } %>">
+            <br>
+            <label for="primaryEmail">Primary Email Address: </label>
+            <input type="primaryEmail" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.primaryEmail.primary%><% } %>">
+            <br>
+            <label for="secondaryEmail">Secondary Email Address: </label>
+            <input type="secondaryEmail" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.email.secondaryEmail?.secondary%><% } %>">
+            <br>
+            <label for="description">Description: </label>
+            <input type="description" id="description" name="description" value="<% if (user) { %><%=user?.description%><% } %>">
+            <br>
+            <input type="hidden" id="csrf-token" name="csrf-token" value="<%= csrfToken %>">
+            <br>
+            <input type="submit" id="submit" name="submit" value="Login">
+            <input type="reset" id="reset" name="reset" value="Reset">
+        </fieldset>
+      </form>  
+  </article>
+</main>
+

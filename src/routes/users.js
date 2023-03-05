@@ -8,6 +8,7 @@
 import Router from '@koa/router'
 import { koaBody } from 'koa-body'
 import Debug from 'debug'
+import { ObjectId } from 'mongodb'
 import { Users, AdminUser } from '../models/users.js'
 
 const router = new Router()
@@ -19,6 +20,17 @@ function capitalize(word) {
 function sanitize(param) {
   // fill in with some effective input scubbing logic
   return param
+}
+
+async function hasFlash(ctx, next) {
+  const log = Debug('koa-stub:routes:main:hasFlash_log')
+  const error = Debug('koa-stub:routes:main:hasFlash_error')
+  if (ctx.flash) {
+    log('ctx.flash is present: %o', ctx.flash)
+  } else {
+    error('ctx.flash is missing.')
+  }
+  await next()
 }
 
 router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
@@ -105,6 +117,27 @@ router.get('getUserByEmail', '/user/byEmail/:email', koaBody(), async (ctx, next
   ctx.type = 'application/json'
 })
 
+router.get('editForm', '/user/edit', hasFlash, async (ctx, next) => {
+  const user = ctx.state.user ?? null
+  const log = Debug('koa-stub:routes:user_edit_log')
+  const error = Debug('koa-stub:routes:user_edit_error')
+  log(`Edit ${user.username}'s account details.`)
+  if (!ctx.state.isAuthenticated) {
+    ctx.redirect('/')
+  }
+  const locals = {
+    user,
+    body: ctx.body,
+    edit: ctx.flash.edit ?? {},
+    csrfToken: new ObjectId().toString(),
+    isAuthenticated: ctx.state.isAuthenticated,
+    title: `${ctx.app.site}: Edit Account Details`,
+  }
+  await next()
+  ctx.status = 200
+  await ctx.render('user-edit-form', locals)
+})
+
 router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) => {
   const log = Debug('koa-stub:routes:user_log')
   const error = Debug('koa-stub:routes:user_error')
@@ -133,7 +166,7 @@ router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) 
   await ctx.render('user', locals)
 })
 
-router.get(/^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBody(), async (ctx, next) => {
+router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBody(), async (ctx, next) => {
   const log = Debug('koa-stub:routes:@username_log')
   const error = Debug('koa-stub:routes:@username_error')
   const username = sanitize(ctx.params[0])

@@ -19,7 +19,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
   const log = Debug('koa-stub:routes:auth_login:log')
   const error = Debug('koa-stub:routes:auth_login:error')
   log('logging the user in')
-  ctx.state.user = ctx.state.user || {}
+  ctx.state.user = ctx.state.user ?? {}
   if (ctx.state.isAuthenticated) {
     ctx.redirect('/')
   }
@@ -30,7 +30,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
     title: `${ctx.app.site}: Login`,
     user: ctx.state.user,
     csrfToken,
-    login: flashMessage?.login || {},
+    login: flashMessage?.login ?? {},
     isAuthenticated: ctx.state.isAuthenticated,
   }
   error('template {locals}: %O', locals)
@@ -98,7 +98,7 @@ router.get('getLogout', '/logout', async (ctx, next) => {
   const log = Debug('koa-stub:routes:auth_logout:log')
   const error = Debug('koa-stub:routes:auth_logout:error')
   // await next()
-  if (ctx.state.isAuthenticated || ctx.session.id) {
+  if (ctx.state.isAuthenticated ?? ctx.session.id) {
     log('logging out')
     // ctx.state.user = {}
     ctx.state.user = null

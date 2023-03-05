@@ -38,7 +38,7 @@ router.get('index', '/', hasFlash, async (ctx, next) => {
   log('inside main router: /')
   // await next()
   ctx.status = 200
-  const user = ctx.state.user || null
+  const user = ctx.state.user ?? null
   await ctx.render('index', {
     body: ctx.body,
     title: `${ctx.app.site}: Home`,
@@ -53,7 +53,7 @@ router.get('about', '/about', hasFlash, async (ctx, next) => {
   log('inside index router: /about')
   // await next()
   ctx.status = 200
-  const user = ctx.state.user || null
+  const user = ctx.state.user ?? null
   await ctx.render('about', {
     body: ctx.body,
     title: `${ctx.app.site}: About`,
@@ -68,7 +68,7 @@ router.get('contact', '/contact', hasFlash, async (ctx, next) => {
   log('inside index router: /contact')
   // await next()
   ctx.status = 200
-  const user = ctx.state.user || null
+  const user = ctx.state.user ?? null
   await ctx.render('contact', {
     title: `${ctx.app.site}: Contact`,
     user,
