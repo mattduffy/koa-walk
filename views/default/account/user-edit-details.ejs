@@ -3,7 +3,7 @@
     <h1>Edit User Details</h1>
     
     <p>This is the user detail page for <%= user.name %>.</p>
-    <form name="userEdit" id="edit" action="/user/edit" method="POST" enctype="application/x-www-form-urlencoded">
+    <form name="userEdit" id="edit" action="/account/edit" method="POST" enctype="application/x-www-form-urlencoded">
         <fieldset id="edit_fieldset" name="edit_fieldset" form="edit" class="edit_fieldset" title="edit Form">
           <legend>Mattmadethese</legend>
             <% if (edit) { %>
@@ -17,7 +17,13 @@
             <label for="lastname">Last Name: </label>
             <input type="lastname" id="lastname" name="lastname" value="<% if (user) { %><%=user?.lastName %><% } %>">
             <br>
-            <label for="primaryEmail">Primary Email Address: </label>
+            <label for="username">User Name: </label>
+            <input type="username" id="username" name="username" value="<% if (user) { %><%=user?.username %><% } %>">
+            <br>
+<label for="displayname">Display Name: </label>
+            <input type="displayname" id="displayname" name="displayname" value="<% if (user) { %><%=user?.displayName %><% } %>">
+            <br>
+<label for="primaryEmail">Primary Email Address: </label>
             <input type="primaryEmail" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.primaryEmail.primary%><% } %>">
             <br>
             <label for="secondaryEmail">Secondary Email Address: </label>

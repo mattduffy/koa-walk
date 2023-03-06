@@ -1,8 +1,8 @@
 /**
- * @summary Koa router for the user api endpoints.
+ * @summary Koa router for the account api endpoints.
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/routes/users.js The router for the user api endpoints.
+ * @file src/routes/account.js The router for the account api endpoints.
  */
 
 import Router from '@koa/router'
@@ -117,60 +117,46 @@ router.get('getUserByEmail', '/user/byEmail/:email', koaBody(), async (ctx, next
   ctx.type = 'application/json'
 })
 
-router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) => {
-  const log = Debug('koa-stub:routes:user_log')
-  const error = Debug('koa-stub:routes:user_error')
-  const username = sanitize(ctx.params.username)
-  log(`loooking up user by username: ${username}`)
-  let user
-  const locals = {}
-  await next()
-  try {
-    const db = ctx.state.mongodb.client.db()
-    const collection = db.collection('users')
-    const users = new Users(collection, ctx)
-    user = await users.getByUsername(username)
-    if (!user) {
-      locals.title = `${ctx.app.site}: User Details`
-      locals.username = username
-    }
-  } catch (err) {
-    error(`Error getting username: ${username}`)
-    error(err)
+router.get('viewDetails', '/account/view', hasFlash, async (ctx, next) => {
+  const user = ctx.state.user ?? null
+  const log = Debug('koa-stub:routes:user_edit_log')
+  const error = Debug('koa-stub:routes:user_edit_error')
+  log(`Edit ${user.username}'s account details.`)
+  if (!ctx.state.isAuthenticated) {
+    ctx.redirect('/')
   }
+  const locals = {
+    user,
+    body: ctx.body,
+    edit: ctx.flash.edit ?? {},
+    csrfToken: new ObjectId().toString(),
+    isAuthenticated: ctx.state.isAuthenticated,
+    title: `${ctx.app.site}: View Account Details`,
+  }
+  await next()
   ctx.status = 200
-  locals.title = `${ctx.app.site}: ${user.name}`
-  locals.user = user
-  locals.isAuthenticated = ctx.state.isAuthenticated
-  await ctx.render('user', locals)
+  await ctx.render('account/user-view-details', locals)
 })
 
-router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBody(), async (ctx, next) => {
-  const log = Debug('koa-stub:routes:@username_log')
-  const error = Debug('koa-stub:routes:@username_error')
-  const username = sanitize(ctx.params[0])
-  log(`loooking up user by @username: ${username}`)
-  let user
-  const locals = {}
-  await next()
-  try {
-    const db = ctx.state.mongodb.client.db()
-    const collection = db.collection('users')
-    const users = new Users(collection, ctx)
-    user = await users.getByUsername(username)
-    if (!user) {
-      locals.title = `${ctx.app.site}: User Details`
-      locals.username = username
-    }
-  } catch (err) {
-    error(`Error getting username: ${username}`)
-    error(err)
+router.get('editDetails', '/account/edit', hasFlash, async (ctx, next) => {
+  const user = ctx.state.user ?? null
+  const log = Debug('koa-stub:routes:user_edit_log')
+  const error = Debug('koa-stub:routes:user_edit_error')
+  log(`Edit ${user.username}'s account details.`)
+  if (!ctx.state.isAuthenticated) {
+    ctx.redirect('/')
   }
+  const locals = {
+    user,
+    body: ctx.body,
+    edit: ctx.flash.edit ?? {},
+    csrfToken: new ObjectId().toString(),
+    isAuthenticated: ctx.state.isAuthenticated,
+    title: `${ctx.app.site}: Edit Account Details`,
+  }
+  await next()
   ctx.status = 200
-  locals.title = `${ctx.app.site}: ${user.name}`
-  locals.user = user
-  locals.isAuthenticated = ctx.state.isAuthenticated
-  await ctx.render('user', locals)
+  await ctx.render('account/user-edit-details', locals)
 })
 
-export { router as users }
+export { router as account }

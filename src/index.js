@@ -23,6 +23,7 @@ import { activityV1 } from './routes/activity_stream.js'
 import { auth as Auth } from './routes/auth.js'
 import { main as Main } from './routes/main.js'
 import { users as Users } from './routes/users.js'
+import { account as Account } from './routes/account.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -141,6 +142,7 @@ app.use(apiV1.routes())
 app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())
+app.use(Account.routes())
 app.use(serve(app.publicDir))
 app.use(errorHandlers)
 
