@@ -117,14 +117,15 @@ router.get('getUserByEmail', '/user/byEmail/:email', koaBody(), async (ctx, next
   ctx.type = 'application/json'
 })
 
-router.get('viewDetails', '/account/view', hasFlash, async (ctx, next) => {
+router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
   const user = ctx.state.user ?? null
   const log = Debug('koa-stub:routes:user_edit_log')
   const error = Debug('koa-stub:routes:user_edit_error')
-  log(`Edit ${user.username}'s account details.`)
-  if (!ctx.state.isAuthenticated) {
-    ctx.redirect('/')
+  if (!ctx.state?.isAuthenticated) {
+    ctx.status = 301
+    return ctx.redirect('/')
   }
+  log(`Edit ${user.username}'s account details.`)
   const locals = {
     user,
     body: ctx.body,
@@ -138,14 +139,15 @@ router.get('viewDetails', '/account/view', hasFlash, async (ctx, next) => {
   await ctx.render('account/user-view-details', locals)
 })
 
-router.get('editDetails', '/account/edit', hasFlash, async (ctx, next) => {
+router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
   const user = ctx.state.user ?? null
   const log = Debug('koa-stub:routes:user_edit_log')
   const error = Debug('koa-stub:routes:user_edit_error')
-  log(`Edit ${user.username}'s account details.`)
-  if (!ctx.state.isAuthenticated) {
-    ctx.redirect('/')
+  if (!ctx.state?.isAuthenticated) {
+    ctx.status = 301
+    return ctx.redirect('/')
   }
+  log(`Edit ${user.username}'s account details.`)
   const locals = {
     user,
     body: ctx.body,

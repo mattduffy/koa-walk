@@ -98,12 +98,14 @@ router.get('getLogout', '/logout', async (ctx, next) => {
   const log = Debug('koa-stub:routes:auth_logout:log')
   const error = Debug('koa-stub:routes:auth_logout:error')
   // await next()
-  if (ctx.state.isAuthenticated ?? ctx.session.id) {
+  // if (ctx.state.isAuthenticated || ctx.session.id) {
+  if (ctx.state.isAuthenticated) {
     log('logging out')
     // ctx.state.user = {}
     ctx.state.user = null
     ctx.session = null
   }
+  ctx.state.isAuthenticated = false
   ctx.cookies.set('csrfToken')
   ctx.cookies.set('csrfToken.sig')
   ctx.redirect('/')

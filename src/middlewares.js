@@ -23,6 +23,9 @@ export async function getSessionUser(ctx, next) {
       if (user) {
         ctx.state.user = user
         ctx.state.isAuthenticated = true
+      } else {
+        ctx.state.isAuthenticated = false
+        ctx.state.user = {}
       }
     } catch (e) {
       error(e)
@@ -48,14 +51,14 @@ export function flashMessage(options, application) {
     throw new Error('App instance is required: flashMessage(opts, app)')
   }
   log('adding the flash property to the app.context')
-  const key = opts.key || 'flash'
-  const msg = opts.msg || {}
+  const key = opts.key ?? 'flash'
+  const msg = opts.msg ?? {}
 
   return async function flash(ctx, next) {
     if (ctx.session === undefined) {
       throw new Error('Session is required to store flash messages.')
     }
-    const message = ctx.session[key] || msg
+    const message = ctx.session[key] ?? msg
     delete ctx.session[key]
     Object.defineProperty(app.context, 'flash', {
       configurable: true,
@@ -75,7 +78,7 @@ export function flashMessage(options, application) {
 }
 
 export async function errorHandlers(ctx, next) {
-  const user = ctx.state.user || {}
+  const user = ctx.state.user ?? {}
   try {
     await next()
     if (!ctx.body) {

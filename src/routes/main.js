@@ -36,8 +36,9 @@ router.get('index', '/', hasFlash, async (ctx, next) => {
   const log = Debug('koa-stub:routes:main:index_log')
   const error = Debug('koa-stub:routes:main:index_error')
   log('inside main router: /')
-  // await next()
+  await next()
   ctx.status = 200
+  error(ctx.state.user)
   const user = ctx.state.user ?? null
   await ctx.render('index', {
     body: ctx.body,
