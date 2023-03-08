@@ -124,7 +124,21 @@ main article h1 {
 
 form {
   margin: 25px 0px;
-  width: auto;
+  width: 75%;
+}
+
+div.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+}
+
+label {
+  margin: 0px auto 5px 0px;
+}
+
+input[type="text"] {
+  margin: 0px auto 5px 0px;
 }
 
 input[type="button"] {

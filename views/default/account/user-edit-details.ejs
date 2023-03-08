@@ -11,29 +11,30 @@
               <span><%= edit.message %></span>
             </div>
             <% } %>
-            <label for="firstname">First Name: </label>
-            <input type="text" id="firstname" name="firstname" value="<% if (user) { %><%=user?.firstName %><% } %>">
-            <br>
-            <label for="lastname">Last Name: </label>
-            <input type="lastname" id="lastname" name="lastname" value="<% if (user) { %><%=user?.lastName %><% } %>">
-            <br>
-            <label for="username">User Name: </label>
-            <input type="username" id="username" name="username" value="<% if (user) { %><%=user?.username %><% } %>">
-            <br>
-<label for="displayname">Display Name: </label>
-            <input type="displayname" id="displayname" name="displayname" value="<% if (user) { %><%=user?.displayName %><% } %>">
-            <br>
-<label for="primaryEmail">Primary Email Address: </label>
-            <input type="primaryEmail" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.primaryEmail.primary%><% } %>">
-            <br>
-            <label for="secondaryEmail">Secondary Email Address: </label>
-            <input type="secondaryEmail" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.email.secondaryEmail?.secondary%><% } %>">
-            <br>
-            <label for="description">Description: </label>
-            <input type="description" id="description" name="description" value="<% if (user) { %><%=user?.description%><% } %>">
-            <br>
-            <input type="hidden" id="csrf-token" name="csrf-token" value="<%= csrfToken %>">
-            <br>
+            <div class="wrapper">
+              <label for="firstname">First Name: </label>
+              <input type="text" size="45" id="firstname" name="firstname" value="<% if (user) { %><%=user?.firstName %><% } %>">
+
+              <label for="lastname">Last Name: </label>
+              <input type="text" size="45" id="lastname" name="lastname" value="<% if (user) { %><%=user?.lastName %><% } %>">
+              
+              <label for="username">User Name: </label>
+              <input type="text" size="45" id="username" name="username" value="<% if (user) { %><%=user?.username %><% } %>">
+              
+<label for="  displayname">Display Name: </label>
+              <input type="text" size="45" id="displayname" name="displayname" value="<% if (user) { %><%=user?.displayName %><% } %>">
+              
+<label for="  primaryEmail">Primary Email Address: </label>
+              <input type="text" size="45" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.primaryEmail.primary%><% } %>">
+           
+              <label for="secondaryEmail">Secondary Email Address: </label>
+              <input type="text" size="45" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.email.secondaryEmail?.secondary%><% } %>">
+              
+              <label for="description">Description: </label>
+              <input type="text" size="45" id="description" name="description" value="<% if (user) { %><%=user?.description%><% } %>">
+              
+              <input type="hidden" id="csrf-token" name="csrf-token" value="<%= csrfToken %>">
+            </div> 
             <input type="submit" id="submit" name="submit" value="Login">
             <input type="reset" id="reset" name="reset" value="Reset">
         </fieldset>
