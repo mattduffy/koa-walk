@@ -4,35 +4,38 @@
     
     <p>This is the user detail page for <%= user.name %>.</p>
     <% if (isAuthenticated) { %>
-      <p><a href="/account/edit">edit</a></p>
+      <p><a href="/account/edit">Edit</a></p>
     <% } %>
     <% if (edit) { %>
-    <div id="messages" class="messages">
-      <span><%= edit.message %></span>
-    </div>
-    <% } %>
-    <dl>
-      <dt style="display: inline-block;">First Name: </dt>
-      <dd style="display: inline-block;"><% if (user) { %><%=user?.firstName %><% } %></dd>
-      <br>
-      <dt style="display: inline-block;">Last Name: </dt>
-      <dd style="display: inline-block;"><% if (user) { %><%=user?.lastName %><% } %></dd>
-      <br>
-      <dt style="display: inline-block;">Primary Email Address: </dt>
-      <dd style="display: inline-block;"><% if (user) { %><%=user?.primaryEmail.primary %><% } %></dd>
-      <br>
-      <dt style="display: inline-block;">Secondary Email Address: </dt>
-      <dd style="display: inline-block;"><% if (user) { %><%=user?.email.secondaryEmail?.secondary %><% } %></dd>
-      <br>
-      <dt style="display: inline-block;">Description: </dt>
-      <dd style="display: inline-block;"><% if (user) { %><%=user?.description %><% } %></dd>
-      <br>
-      <dt style="display: inline-block;">Account Status: </dt>
-      <dd style="display: inline-block;"><% if (user) { %><%=user?.status %><% } %></dd>
-      <br>
-      <dt style="display: inline-block;">Account Type: </dt>
-      <dd style="display: inline-block;"><% if (user) { %><%=user?.type %><% } %></dd>
-    </dl>
+        <div id="messages" class="messages">
+          <span><%= edit.message %></span>
+        </div>
+      <% } %>
+      <div style="width: 80%; margin: 25px auto;">
+        <dl class="wrapper" style="display: grid; grid-template-columns: 1fr
+          1fr; row-gap: 0.125em; column-gap: 1px">
+          <dt style="display: inline-block;">First Name: </dt>
+          <dd style="display: inline-block;"><% if (user) { %><%=user?.firstName %><% } %></dd>
+
+          <dt style="display: inline-block;">Last Name: </dt>
+          <dd style="display: inline-block;"><% if (user) { %><%=user?.lastName %><% } %></dd>
+
+          <dt style="display: inline-block;">Primary Email Address: </dt>
+          <dd style="display: inline-block;"><% if (user) { %><%=user?.primaryEmail.primary %><% } %></dd>
+          
+          <dt style="display: inline-block;">Secondary Email Address: </dt>
+          <dd style="display: inline-block;"><% if (user) { %><%=user?.email.secondaryEmail?.secondary %><% } %></dd>
+
+          <dt style="display: inline-block;">Description: </dt>
+          <dd style="display: inline-block;"><% if (user) { %><%=user?.description %><% } %></dd>
+
+          <dt style="display: inline-block;">Account Status: </dt>
+          <dd style="display: inline-block;"><% if (user) { %><%=user?.status %><% } %></dd>
+
+          <dt style="display: inline-block;">Account Type: </dt>
+          <dd style="display: inline-block;"><% if (user) { %><%=user?.type %><% } %></dd>
+        </dl>
+      </div>
   </article>
 </main>
 

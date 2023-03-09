@@ -62,7 +62,8 @@ app.use(session(config, app))
 
 render(app, {
   root: `${appRoot}/views/${app.templateName}`,
-  layout: 'template',
+  // layout: 'template',
+  layout: 'grid-template',
   viewExt: 'ejs',
   cache: false,
   debug: true,
