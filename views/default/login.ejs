@@ -12,14 +12,14 @@
             <% } %>
             <div class="wrapper">
               <label for="username">Username: </label>
-              <input type="text" size="45" id="username" name="username" value="<% if (login) { %><%=login?.username %><% } %>">
+              <input type="text" size="45" tabindex="1" id="username" name="username" value="<% if (login) { %><%=login?.username %><% } %>">
 
               <label for="password">Password: </label>
-              <input type="password" size="45" id="password" name="password" value="">
+              <input type="password" size="45" tabindex="2" id="password" name="password" value="">
 
               <input type="hidden" id="csrf-token" name="csrf-token" value="<%= csrfToken   %>">
             </div>
-            <input type="submit" id="submit" name="submit" value="Login">
+            <input type="submit" tabindex="3" id="submit" name="submit" value="Login">
             <input type="reset" id="reset" name="reset" value="Reset">
         </fieldset>
       </form>

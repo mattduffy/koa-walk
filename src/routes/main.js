@@ -38,7 +38,7 @@ router.get('index', '/', hasFlash, async (ctx, next) => {
   log('inside main router: /')
   await next()
   ctx.status = 200
-  error(ctx.state.user)
+  // error(ctx.state.user)
   const user = ctx.state.user ?? null
   await ctx.render('index', {
     body: ctx.body,
@@ -52,7 +52,7 @@ router.get('about', '/about', hasFlash, async (ctx, next) => {
   const log = Debug('koa-stub:routes:main:about_log')
   const error = Debug('koa-stub:routes:main:about_error')
   log('inside index router: /about')
-  // await next()
+  await next()
   ctx.status = 200
   const user = ctx.state.user ?? null
   await ctx.render('about', {

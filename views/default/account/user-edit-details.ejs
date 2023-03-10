@@ -13,30 +13,30 @@
             <% } %>
             <div class="wrapper">
               <label for="firstname">First Name: </label>
-              <input type="text" size="45" id="firstname" name="firstname" value="<% if (user) { %><%=user?.firstName %><% } %>">
+              <input type="text" size="45" tabindex="1" id="firstname" name="firstname" value="<% if (user) { %><%=user?.firstName %><% } %>">
 
               <label for="lastname">Last Name: </label>
-              <input type="text" size="45" id="lastname" name="lastname" value="<% if (user) { %><%=user?.lastName %><% } %>">
+              <input type="text" size="45" tabindex="2" id="lastname" name="lastname" value="<% if (user) { %><%=user?.lastName %><% } %>">
               
               <label for="username">User Name: </label>
-              <input type="text" size="45" id="username" name="username" value="<% if (user) { %><%=user?.username %><% } %>">
+              <input type="text" size="45" tabindex="3" id="username" name="username" value="<% if (user) { %><%=user?.username %><% } %>">
               
 <label for="  displayname">Display Name: </label>
-              <input type="text" size="45" id="displayname" name="displayname" value="<% if (user) { %><%=user?.displayName %><% } %>">
+              <input type="text" size="45" tabindex="4" id="displayname" name="displayname" value="<% if (user) { %><%=user?.displayName %><% } %>">
               
 <label for="  primaryEmail">Primary Email Address: </label>
-              <input type="text" size="45" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.primaryEmail.primary%><% } %>">
+              <input type="text" size="45" tabindex="5" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.primaryEmail.primary%><% } %>">
            
               <label for="secondaryEmail">Secondary Email Address: </label>
-              <input type="text" size="45" id="primaryEmail" name="primaryEmail" value="<% if (user) { %><%=user?.email.secondaryEmail?.secondary%><% } %>">
+              <input type="text" size="45" tabindex="6" id="secondaryEmail" name="secondaryEmail" value="<% if (user) { %><%=user?.email.secondaryEmail?.secondary%><% } %>">
               
               <label for="description">Description: </label>
-              <input type="text" size="45" id="description" name="description" value="<% if (user) { %><%=user?.description%><% } %>">
+              <input type="text" size="45" tabindex="7" id="description" name="description" value="<% if (user) { %><%=user?.description%><% } %>">
               
               <input type="hidden" id="csrf-token" name="csrf-token" value="<%= csrfToken %>">
             </div> 
-            <input type="submit" id="submit" name="submit" value="Login">
-            <input type="reset" id="reset" name="reset" value="Reset">
+            <input type="submit" tabindex="9" id="submit" name="submit" value="Login">
+            <input type="reset" tabindex="10" id="reset" name="reset" value="Reset">
         </fieldset>
       </form>  
   </article>
