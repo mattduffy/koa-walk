@@ -1,8 +1,17 @@
 <main>
   <article>
     <h1>Home Page</h1>
-    
-    <p>This is the home page of the website.</p>
+    <% if (flash?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= flash.message %></span>
+    </div>
+    <% } %>
+    <% if (flash?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= flash.error%></span>
+    </div>
+  <% } %>
+  <p>This is the home page of the website.</p>
     <p>View account <a href="/account/view">details</a>.</p>
     <ul>
       <% if (user) { %>
