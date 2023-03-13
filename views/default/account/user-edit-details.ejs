@@ -6,9 +6,14 @@
     <form name="userEdit" id="edit" action="/account/edit" method="POST" enctype="application/x-www-form-urlencoded">
         <fieldset id="edit_fieldset" name="edit_fieldset" form="edit" class="edit_fieldset" title="edit Form">
           <legend>Mattmadethese</legend>
-            <% if (edit) { %>
+            <% if (edit.message !== null) { %>
             <div id="messages" class="messages">
               <span><%= edit.message %></span>
+            </div>
+            <% } %>
+            <% if (edit.error !== null) { %>
+            <div id="errors" class="errors">
+              <span><%= edit.error %></span>
             </div>
             <% } %>
             <div class="wrapper">
@@ -33,10 +38,19 @@
               <label for="description">Description: </label>
               <input type="text" size="45" tabindex="7" id="description" name="description" value="<% if (user) { %><%=user?.description%><% } %>">
               
+              <label for="avatar">Avatar:</label>
+              <input type="text" size="50" tabindex="8" id="avatar" name="avatar" value="<% if (user) { %><%=user.avatar%><% } %>">
+
+              <label for="header">Header: </label>
+              <input type="text" size="50" tabindex="9" id="header" name="header" value="<% if (user) { %><%=user.header%><% } %>">
+
+              <label for="url">Url: </label>
+              <input tpye="text" size="50" tabindex="10" id="url" name="url" value="<% if (user) { %><%=user.url%><% } %>">
+
               <input type="hidden" id="csrf-token" name="csrf-token" value="<%= csrfToken %>">
             </div> 
-            <input type="submit" tabindex="9" id="submit" name="submit" value="Login">
-            <input type="reset" tabindex="10" id="reset" name="reset" value="Reset">
+            <input type="submit" tabindex="11" id="submit" name="submit" value="Save">
+            <input type="reset" tabindex="12" id="reset" name="reset" value="Reset">
         </fieldset>
       </form>  
   </article>

@@ -86,11 +86,11 @@ router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
         },
       }
       ctx.redirect('/')
-    } else {
-      error('csrf token mismatch')
-      ctx.type = 'application/json'
-      ctx.body = { status: 'Error, csrf tokens do not match' }
     }
+  } else {
+    error('csrf token mismatch')
+    ctx.type = 'application/json'
+    ctx.body = { status: 'Error, csrf tokens do not match' }
   }
 })
 
