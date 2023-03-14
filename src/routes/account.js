@@ -44,7 +44,6 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
     ctx.redirect('/')
   } else {
     log(`Edit ${user.username}'s account details.`)
-    log(ctx.flash)
     const locals = {
       user,
       body: ctx.body,

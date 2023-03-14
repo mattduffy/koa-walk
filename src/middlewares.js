@@ -16,6 +16,7 @@ export async function getSessionUser(ctx, next) {
   const error = Debug('koa-stub:getSessionUser_error')
   if (ctx.session?.id) {
     try {
+      log(`restoring session user: ${ctx.session.id}`)
       const db = ctx.state.mongodb.client.db()
       const collection = db.collection('users')
       const users = new Users(collection)
