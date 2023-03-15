@@ -1,5 +1,19 @@
 <section id="grid-gutter-left" class="grid-gutter-left">
   <aside>
-    Lefthand sidebar content area. 
+    <nav class="sidebar-nav-wrapper">
+      <% if (isAuthenticated) { %>
+      <a href="/logout">Logout</a>
+      <ul>
+        <li><a href="/account/view">View account details</a></li>
+        <li><a href="/account/tokens">Authetication tokens</a></li>
+        <li><a href="/account/change/password">Change account password</a></li>
+      </ul>
+      <% } else { %>
+      <a href="/login">Login</a>
+      <% } %>
+      <% if (/admin/i.test(user?.type)) { %>
+        Admin level options go here
+      <% } %>
+    </nav>
   </aside>
 </section>

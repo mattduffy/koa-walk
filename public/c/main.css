@@ -5,6 +5,11 @@ body {
   font-size: 1.125em;
 }
 
+.smallem {
+  font-style: italic;
+  font-size: .9em;
+}
+
 @media screen and (min-width: 576px) {
 
 }
@@ -39,6 +44,12 @@ body {
 
   div.grid-sidebar-left  aside {
     padding: 1em;
+  }
+
+  nav.sidebar-nav-wrapper ul {
+    list-style: none;
+    display: grid;
+    grid-template-rows: auto;
   }
   
   div.grid-content {

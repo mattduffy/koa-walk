@@ -28,7 +28,9 @@
         <dd style="display: inline-block;"><% if (user) { %><%=user?.primaryEmail.primary %><% } %></dd>
         
         <dt style="display: inline-block;">Secondary Email Address: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.email.secondaryEmail?.secondary %><% } %></dd>
+        <dd style="display: inline-block;"><% if (user) {
+          %><%-user?.email.secondaryEmail?.secondary || '<span class="smallem">none provided</span>' %><% } %></dd>
+            
 
         <dt style="display: inline-block;">Description: </dt>
         <dd style="display: inline-block;"><% if (user) { %><%=user?.description %><% } %></dd>
