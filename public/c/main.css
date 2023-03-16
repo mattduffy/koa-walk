@@ -198,6 +198,13 @@ body {
 
   }
 
+  div.account-tokens {
+    width: 800px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    hyphens: auto;
+  }
+
   form {
     margin: 25px auto; 
     width: 100%

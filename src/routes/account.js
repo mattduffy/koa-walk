@@ -13,6 +13,10 @@ import { Users, AdminUser } from '../models/users.js'
 
 const router = new Router()
 
+function isAsyncRequest(req) {
+  return (req.get('X-ASYNCREQUEST') === true)
+}
+
 function capitalize(word) {
   return word[0].toUpperCase() + word.substring(1).toLowerCase()
 }
@@ -32,6 +36,120 @@ async function hasFlash(ctx, next) {
   }
   await next()
 }
+
+router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ctx, next) => {
+  const log = Debug('koa-stub:routes:account_password_GET_log')
+  const error = Debug('koa-stub:routes:account_password_GET_error')
+  await next()
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    log(`View ${ctx.state.user.username}'s account password.`)
+    const csrfToken = new ObjectId().toString()
+    ctx.session.csrfToken = csrfToken
+    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+    if (isAsyncRequest(ctx.request)) {
+      // async request, send back json
+      ctx.type = 'application/json; charset=utf-8'
+      // ctx.body = ctx.headers
+      ctx.body = { nopeeking: true }
+    } else {
+      // regular http request, send back view
+      const locals = {
+        csrfToken,
+        body: ctx.body,
+        user: ctx.state.user,
+        flash: ctx.flash.edit ?? {},
+        isAuthenticated: ctx.state.isAuthenticated,
+        title: `${ctx.app.site}: View Account Password`,
+      }
+      ctx.status = 200
+      await ctx.render('account/user-password', locals)
+    }
+  }
+})
+
+router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBody(), async (ctx, next) => {
+  const log = Debug('koa-stub:routes:account_password_POST_log')
+  const error = Debug('koa-stub:routes:account_password_POST_error')
+  // await next()
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    log(`View ${ctx.state.user.username}'s account password.`)
+    const sessionId = ctx.cookies.get('koa.sess')
+    const csrfTokenCookie = ctx.cookies.get('csrfToken')
+    const csrfTokenSession = ctx.session.csrfToken
+    const csrfTokenHidden = ctx.request.body['csrf-token']
+    const { currentPassword } = ctx.request.body || ''
+    const { newPassword1 } = ctx.request.body || ''
+    const { newPassword2 } = ctx.request.body || ''
+    if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
+      error(csrfTokenCookie)
+      error(csrfTokenSession)
+      error(csrfTokenHidden)
+      error(currentPassword)
+      error(newPassword1)
+      error(newPassword2)
+      if (currentPassword === '') {
+        error('currentPassword is missing.')
+        ctx.flash = { edit: { error: 'Missing current password.' } }
+        ctx.redirect('/account/change/password')
+      } else if (newPassword1 === '' || newPassword2 === '' || newPassword1 !== newPassword2) {
+        error('newPasswords are missing or don\'t match.')
+        ctx.flash = { edit: { error: 'New passwords must match.' } }
+        ctx.redirect('/account/change/password')
+      } else {
+        log('Have currentPassword and matching newPasswordn')
+
+        ctx.flash = { edit: { message: 'Password updated.' } }
+        ctx.redirect('/account/change/password')
+      }
+    } else {
+      error('csrf token mismatch')
+      delete ctx.session.csrfToken
+      ctx.cookies.set('csrfToken')
+      ctx.status = 403
+      ctx.type = 'application/json'
+      ctx.body = { status: 'Error, csrf tokens do not match' }
+    }
+  }
+})
+
+router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
+  const log = Debug('koa-stub:routes:account_tokens_log')
+  const error = Debug('koa-stub:routes:account_tokens_error')
+  await next()
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    log(`View ${ctx.state.user.username}'s account tokens.`)
+
+    if (isAsyncRequest(ctx.request)) {
+      // async request, send back json
+      ctx.type = 'application/json; charset=utf-8'
+      // ctx.body = ctx.headers
+      ctx.body = ctx.state.user.jwts
+    } else {
+      // regular http request, send back view
+      const locals = {
+        user: ctx.state.user,
+        body: ctx.body,
+        view: ctx.flash.view ?? {},
+        isAuthenticated: ctx.state.isAuthenticated,
+        title: `${ctx.app.site}: View Account Tokens`,
+      }
+      ctx.status = 200
+      await ctx.render('account/user-tokens', locals)
+    }
+  }
+})
 
 router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
   const user = ctx.state.user ?? null
@@ -148,6 +266,7 @@ router.post('accountEditPost', '/account/edit', hasFlash, koaBody(), async (ctx,
       }
     } else {
       error('csrf token mismatch')
+      ctx.status = 403
       ctx.type = 'application/json'
       ctx.body = { status: 'Error, csrf tokens do not match' }
     }
