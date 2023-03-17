@@ -89,12 +89,6 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBody
     const { newPassword1 } = ctx.request.body || ''
     const { newPassword2 } = ctx.request.body || ''
     if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
-      error(csrfTokenCookie)
-      error(csrfTokenSession)
-      error(csrfTokenHidden)
-      error(currentPassword)
-      error(newPassword1)
-      error(newPassword2)
       if (currentPassword === '') {
         error('currentPassword is missing.')
         ctx.flash = { edit: { error: 'Missing current password.' } }
@@ -104,10 +98,21 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBody
         ctx.flash = { edit: { error: 'New passwords must match.' } }
         ctx.redirect('/account/change/password')
       } else {
-        log('Have currentPassword and matching newPasswordn')
-
-        ctx.flash = { edit: { message: 'Password updated.' } }
-        ctx.redirect('/account/change/password')
+        try {
+          log('Have currentPassword and matching newPasswordn')
+          const result = await ctx.state.user.updatePassword(currentPassword, newPassword1)
+          if (result.success) {
+            ctx.state.user = await ctx.state.user.update()
+            ctx.flash = { edit: { message: result.message } }
+            ctx.redirect('/account/change/password')
+          } else {
+            ctx.flash = { edit: { error: 'Couldn\'t update password.' } }
+            ctx.redirect('/account/change/password')
+          }
+        } catch (e) {
+          ctx.flash = { edit: { error: e.message } }
+          ctx.redirect('/account/change/password')
+        }
       }
     } else {
       error('csrf token mismatch')

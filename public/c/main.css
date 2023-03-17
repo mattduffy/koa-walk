@@ -198,11 +198,23 @@ body {
 
   }
 
-  div.account-tokens {
+  div.account-tokens dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-row-gap: 1em;
     width: 800px;
+  }
+
+  div.account-tokens dl dt {
+    grid-column: 1;
+  }
+
+  div.account-tokens dl dd {
+    grid-column: 2;
     overflow-wrap: break-word;
     word-wrap: break-word;
-    hyphens: auto;
+    hyphens: none;
+    width: inherit;
   }
 
   form {
