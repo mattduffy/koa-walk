@@ -13,6 +13,10 @@ import { Users, AdminUser } from '../models/users.js'
 
 const router = new Router()
 
+function isAsyncRequest(req) {
+  return (req.get('X-ASYNCREQUEST') === true)
+}
+
 function capitalize(word) {
   return word[0].toUpperCase() + word.substring(1).toLowerCase()
 }
@@ -33,15 +37,23 @@ async function hasFlash(ctx, next) {
   await next()
 }
 
+async function validateAuthToken(token) {
+  const error = Debug('TESTTOKEN:AUTH:CHECKER')
+  // error(`TESTTOKEN: ${process.env.TESTTOKEN}}`)
+  error(`TESTTOKEN match: ${(token === process.env.TESTTOKEN)}`)
+  return (token === process.env.TESTTOKEN)
+}
+
 router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
   const log = Debug('koa-stub:routes:users_log')
   const error = Debug('koa-stub:routes:users_error')
   log('inside users router: /users')
   // only authenticated Admin level users can access this route
-  if (!ctx.state.isAuthenticated || ctx.state.user.type !== 'Admin') {
+  // if (!validateAuthToken(ctx.request.get('auth-token'))
+  if (!ctx.state.isAuthenticated || !(ctx.state?.user.type === 'Admin')) {
     ctx.status = 401
-    ctx.type = 'text/plain; charset=utf-8'
-    ctx.body = 'Unauthorized'
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = { status: 'Unauthorized', code: 401 }
   } else {
     const db = ctx.state.mongodb.client.db()
     let filter

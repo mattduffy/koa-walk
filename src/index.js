@@ -30,6 +30,7 @@ const __dirname = path.dirname(__filename)
 const appRoot = path.resolve(`${__dirname}/..`)
 const showDebug = process.env.NODE_ENV !== 'production'
 dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), debug: showDebug })
+dotenv.config({ path: path.resolve(appRoot, 'config/test.env'), debug: showDebug })
 
 const log = Debug('koa-stub:index_log')
 const error = Debug('koa-stub:index_error')
