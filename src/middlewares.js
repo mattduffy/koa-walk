@@ -77,6 +77,34 @@ export function flashMessage(options, application) {
     }
   }
 }
+export function prepareRequest(options = {}) {
+  const log = Debug('koa-stub:prepareRequest:log')
+  // const error = Debug('koa-stub:prepareRequest:error')
+  return async function prepRequest(ctx, next) {
+    // Is the request an Async / Ajax style request?
+    log(ctx.request.headers)
+    if (/json/.test(ctx.request.get('Accept'))
+    || ctx.request.get('X-ASYNCREQUEST')
+    || ctx.request.get('X-AJAXREQUEST')
+    || ctx.request.get('X-REQUESTED-WITH')) {
+      log(`Async request made: ${ctx.request.get('accept')}`)
+      ctx.state.isAysncRequest = true
+    }
+    // Check for Authorization Bearer (access) token
+    const accessToken = /Bearer\s([\w._-]*)$/.exec(ctx.request.get('Authorization'))
+    if (accessToken && accessToken[1]) {
+      log(`access token: ${accessToken[1]}`);
+      [, ctx.state.accessToken] = accessToken
+    }
+    await next()
+  }
+}
+
+export function authMiddleware(options = {}) {
+  return async function authenticateUser(ctx, next) {
+
+  }
+}
 
 export async function errorHandlers(ctx, next) {
   const user = ctx.state.user ?? {}

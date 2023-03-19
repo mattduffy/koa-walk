@@ -17,7 +17,12 @@ import { migrations } from '@mattduffy/koa-migrations'
 import { wellknownWebfinger, wellknownHostmeta, wellknownNodeinfo } from '@mattduffy/webfinger'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
-import { getSessionUser, flashMessage, errorHandlers } from './middlewares.js'
+import {
+  getSessionUser,
+  flashMessage,
+  prepareRequest,
+  errorHandlers,
+} from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
 import { activityV1 } from './routes/activity_stream.js'
 import { auth as Auth } from './routes/auth.js'
@@ -134,6 +139,7 @@ app.use(flashMessage({}, app))
 app.use(wellknownNodeinfo({}, app))
 app.use(wellknownHostmeta({}, app))
 app.use(wellknownWebfinger({}, app))
+app.use(prepareRequest({}))
 app.use(getSessionUser)
 app.use(cors)
 app.use(xResponseTime)
