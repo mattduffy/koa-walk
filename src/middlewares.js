@@ -78,17 +78,20 @@ export function flashMessage(options, application) {
   }
 }
 export function prepareRequest(options = {}) {
-  const log = Debug('koa-stub:prepareRequest:log')
-  // const error = Debug('koa-stub:prepareRequest:error')
+  const log = Debug('koa-stub:prepareRequest_log')
+  // const error = Debug('koa-stub:prepareRequest_error')
   return async function prepRequest(ctx, next) {
     // Is the request an Async / Ajax style request?
     log(ctx.request.headers)
+    log(`what shows if empty? ${ctx.request.get('X-ASYNCREQUEST')}`)
+    ctx.state.isAsyncRequest = null
+    ctx.state.accessToken = null
     if (/json/.test(ctx.request.get('Accept'))
     || ctx.request.get('X-ASYNCREQUEST')
     || ctx.request.get('X-AJAXREQUEST')
     || ctx.request.get('X-REQUESTED-WITH')) {
       log(`Async request made: ${ctx.request.get('accept')}`)
-      ctx.state.isAysncRequest = true
+      ctx.state.isAsyncRequest = true
     }
     // Check for Authorization Bearer (access) token
     const accessToken = /Bearer\s([\w._-]*)$/.exec(ctx.request.get('Authorization'))
@@ -100,9 +103,43 @@ export function prepareRequest(options = {}) {
   }
 }
 
-export function authMiddleware(options = {}) {
-  return async function authenticateUser(ctx, next) {
-
+export function tokenAuthMiddleware(options = {}) {
+  const log = Debug('koa-stub:tokenAuthMiddleware_log')
+  const error = Debug('koa-stub:tokenAuthMiddleware_error')
+  return async function authenticateTokenUser(ctx, next) {
+    log('Authentication by access token')
+    if (ctx.state?.isAsyncRequest && ctx.state?.accessToken !== null) {
+      const isValidToken = /[^+\s]*[A-Za-z0-9._-]*/g.exec(ctx.state.accessToken)
+      if (!isValidToken) {
+        ctx.status = 400
+        ctx.type = 'text/plain; charset=utf-8'
+        ctx.body = `HTTP 400 Bad Request\nWWW-Authenticate: Bearer realm="${ctx.app.domain}"`
+      } else {
+        try {
+          const db = ctx.state.mongodb.client.db()
+          const collection = db.collection('users')
+          const users = new Users(collection)
+          const tokenUser = await users.authenticateByAccessToken(ctx.state.accessToken)
+          if (tokenUser && tokenUser.message === 'success') {
+            ctx.state.user = tokenUser.user
+            ctx.state.isAuthenticated = true
+            await next()
+          } else {
+            ctx.state.isAuthenticated = false
+            ctx.state.user = {}
+            ctx.status = 401
+            ctx.type = 'text/plain; charset=utf-8'
+            ctx.body = `HTTP 401 Unauthorized\nWWW-Authenticate: Bearer realm="${ctx.app.domain}"`
+          }
+        } catch (e) {
+          error(e)
+        }
+      }
+    } else {
+      ctx.status = 403
+      ctx.type = 'text/plain; charset=utf-8'
+      ctx.body = `HTTP 403 Forbidden\nWWW-Authenticate: Bearer realm="${ctx.app.domain}"`
+    }
   }
 }
 

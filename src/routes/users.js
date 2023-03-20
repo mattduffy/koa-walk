@@ -37,12 +37,12 @@ async function hasFlash(ctx, next) {
   await next()
 }
 
-async function validateAuthToken(token) {
-  const error = Debug('TESTTOKEN:AUTH:CHECKER')
-  // error(`TESTTOKEN: ${process.env.TESTTOKEN}}`)
-  error(`TESTTOKEN match: ${(token === process.env.TESTTOKEN)}`)
-  return (token === process.env.TESTTOKEN)
-}
+// async function validateAuthToken(token) {
+//   const error = Debug('TESTTOKEN:AUTH:CHECKER')
+//   // error(`TESTTOKEN: ${process.env.TESTTOKEN}}`)
+//   error(`TESTTOKEN match: ${(token === process.env.TESTTOKEN)}`)
+//   return (token === process.env.TESTTOKEN)
+// }
 
 router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
   const log = Debug('koa-stub:routes:users_log')

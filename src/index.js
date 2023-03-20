@@ -21,6 +21,7 @@ import {
   getSessionUser,
   flashMessage,
   prepareRequest,
+  tokenAuthMiddleware,
   errorHandlers,
 } from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
@@ -139,7 +140,8 @@ app.use(flashMessage({}, app))
 app.use(wellknownNodeinfo({}, app))
 app.use(wellknownHostmeta({}, app))
 app.use(wellknownWebfinger({}, app))
-app.use(prepareRequest({}))
+app.use(prepareRequest())
+app.use(tokenAuthMiddleware())
 app.use(getSessionUser)
 app.use(cors)
 app.use(xResponseTime)
