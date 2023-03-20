@@ -107,8 +107,8 @@ export function tokenAuthMiddleware(options = {}) {
   const log = Debug('koa-stub:tokenAuthMiddleware_log')
   const error = Debug('koa-stub:tokenAuthMiddleware_error')
   return async function authenticateTokenUser(ctx, next) {
-    log('Authentication by access token')
     if (ctx.state?.isAsyncRequest && ctx.state?.accessToken !== null) {
+      log('Authenticating async request by access token')
       const isValidToken = /[^+\s]*[A-Za-z0-9._-]*/g.exec(ctx.state.accessToken)
       if (!isValidToken) {
         ctx.status = 400
@@ -133,12 +133,14 @@ export function tokenAuthMiddleware(options = {}) {
           }
         } catch (e) {
           error(e)
+          ctx.status = 403
+          ctx.type = 'text/plain; charset=utf-8'
+          ctx.body = `HTTP 403 Forbidden\nWWW-Authenticate: Bearer realm="${ctx.app.domain}"`
         }
       }
     } else {
-      ctx.status = 403
-      ctx.type = 'text/plain; charset=utf-8'
-      ctx.body = `HTTP 403 Forbidden\nWWW-Authenticate: Bearer realm="${ctx.app.domain}"`
+      log('Not an async request bearing jwt access token.')
+      await next()
     }
   }
 }
