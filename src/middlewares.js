@@ -12,15 +12,9 @@ import { Users } from './models/users.js'
 const middlewareLog = _log.extend('middlewares')
 const middlewareError = _error.extend('middlewares')
 
-//Debug.log = console.log.bind(console)
-//const log = Debug('koa-stub:middlewares:log')
-//const error = Debug('koa-stub:middlewares:error')
-
 export async function getSessionUser(ctx, next) {
   const log = middlewareLog.extend('getSessionUser')
   const error = middlewareLog.extend('getSessionUser')
-  // const log = Debug('koa-stub:getSessionUser_log')
-  // const error = Debug('koa-stub:getSessionUser_error')
   if (ctx.session?.id) {
     try {
       log(`restoring session user: ${ctx.session.id}`)
@@ -45,8 +39,6 @@ export async function getSessionUser(ctx, next) {
 export function flashMessage(options, application) {
   const log = middlewareLog.extend('flashMessage')
   const error = middlewareError.extend('flashMessage')
-  // const log = Debug('koa-stub:flashMessage:log')
-  // const error = Debug('koa-stub:flashMessage:error')
   let app
   let opts
   if (options && typeof options.use === 'function') {
@@ -89,8 +81,6 @@ export function flashMessage(options, application) {
 export function prepareRequest(options = {}) {
   const log = middlewareLog.extend('prepareRequest')
   const error = middlewareError.extend('prepareRequest')
-  // const log = Debug('koa-stub:prepareRequest_log')
-  // const error = Debug('koa-stub:prepareRequest_error')
   return async function prepRequest(ctx, next) {
     // Is the request an Async / Ajax style request?
     log(ctx.request.headers)
@@ -117,8 +107,6 @@ export function prepareRequest(options = {}) {
 export function tokenAuthMiddleware(options = {}) {
   const log = middlewareLog.extend('tokenAuth')
   const error = middlewareError.extend('tokenAuth')
-  // const log = Debug('koa-stub:tokenAuthMiddleware_log')
-  // const error = Debug('koa-stub:tokenAuthMiddleware_error')
   return async function authenticateTokenUser(ctx, next) {
     if (ctx.state?.isAsyncRequest && ctx.state?.accessToken !== null) {
       log('Authenticating async request by access token')

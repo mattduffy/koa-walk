@@ -51,7 +51,7 @@ const redisConnOpts = {
 const redis = redisStore(redisConnOpts)
 
 const config = {
-  key: 'koa.sess',
+  key: 'session',
   maxAge: 86400000,
   autoCommit: true,
   overwrite: true,

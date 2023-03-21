@@ -38,8 +38,6 @@ function sanitize(param) {
 async function hasFlash(ctx, next) {
   const log = accountLog.extend('hasFlash')
   const error = accountError.extend('hasFlash')
-  // const log = Debug('koa-stub:routes:account:hasFlash_log')
-  // const error = Debug('koa-stub:routes:account:hasFlash_error')
   if (ctx.flash) {
     log('ctx.flash is present: %o', ctx.flash)
   } else {
@@ -51,9 +49,7 @@ async function hasFlash(ctx, next) {
 router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-change-password')
   const error = accountError.extend('GET-account-change-password')
-  // const log = Debug('koa-stub:routes:account_password_GET_log')
-  // const error = Debug('koa-stub:routes:account_password_GET_error')
-  await next()
+  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -88,8 +84,6 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
 router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
   const log = accountLog.extend('POST-account-change-password')
   const error = accountError.extend('POST-account-change-password')
-  // const log = Debug('koa-stub:routes:account_password_POST_log')
-  // const error = Debug('koa-stub:routes:account_password_POST_error')
   // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
@@ -144,9 +138,7 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBett
 router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-tokens')
   const error = accountError.extend('GET-account-tokens')
-  // const log = Debug('koa-stub:routes:account_tokens_log')
-  // const error = Debug('koa-stub:routes:account_tokens_error')
-  await next()
+  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -157,7 +149,6 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
     if (isAsyncRequest(ctx.request)) {
       // async request, send back json
       ctx.type = 'application/json; charset=utf-8'
-      // ctx.body = ctx.headers
       ctx.body = ctx.state.user.jwts
     } else {
       // regular http request, send back view
@@ -177,8 +168,6 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
 router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-view')
   const error = accountError.extend('GET-account-view')
-  // const log = Debug('koa-stub:routes:account_edit_log')
-  // const error = Debug('koa-stub:routes:account_edit_error')
   const user = ctx.state.user ?? null
   await next()
   if (!ctx.state?.isAuthenticated) {
@@ -203,10 +192,8 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
 router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-edit')
   const error = accountError.extend('GET-account-edit')
-  // const log = Debug('koa-stub:routes:account_edit_log')
-  // const error = Debug('koa-stub:routes:account_edit_error')
   const user = ctx.state.user ?? null
-  await next()
+  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -242,16 +229,14 @@ router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
 router.post('accountEditPost', '/account/edit', hasFlash, koaBetterBody(), async (ctx, next) => {
   const log = accountLog.extend('POST-account-edit')
   const error = accountError.extend('POST-account-edit')
-  // const log = Debug('koa-stub:routes:account_edit_post_log')
-  // const error = Debug('koa-stub:routes:account_edit_post_error')
   // const form = formidable({
   //   uploadDir: ctx.app.uploadsDir,
   //   keepExtensions: true,
   // })
   // await form.parse(ctx.req)
-  // error('ctx fields: %O', ctx.request.fields)
-  // error('ctx files: %O', ctx.request.files)
-  await next()
+  // await next()
+  error('ctx fields: %O', ctx.request.fields)
+  error('ctx files: %O', ctx.request.files)
   if (!ctx.state?.isAuthenticated) {
     ctx.flash = {
       index: {
