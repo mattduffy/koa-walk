@@ -6,12 +6,20 @@
  */
 
 import Router from '@koa/router'
-import { koaBody } from 'koa-body'
-import Debug from 'debug'
+import koaBetterBody from 'koa-better-body'
 import { ObjectId } from 'mongodb'
+// import Debug from 'debug'
+import { _log, _error } from '../utils/logging.js'
 import { Users, AdminUser } from '../models/users.js'
 
+const accountLog = _log.extend('account')
+const accountError = _error.extend('account')
 
+const koaBetterBodyOptions = {
+  encoding: 'utf-8',
+  uploadDir: process.env.UPLOADSDIR,
+  keepExtensions: true,
+}
 const router = new Router()
 
 function isAsyncRequest(req) {
@@ -28,8 +36,10 @@ function sanitize(param) {
 }
 
 async function hasFlash(ctx, next) {
-  const log = Debug('koa-stub:routes:account:hasFlash_log')
-  const error = Debug('koa-stub:routes:account:hasFlash_error')
+  const log = accountLog.extend('hasFlash')
+  const error = accountError.extend('hasFlash')
+  // const log = Debug('koa-stub:routes:account:hasFlash_log')
+  // const error = Debug('koa-stub:routes:account:hasFlash_error')
   if (ctx.flash) {
     log('ctx.flash is present: %o', ctx.flash)
   } else {
@@ -39,8 +49,10 @@ async function hasFlash(ctx, next) {
 }
 
 router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ctx, next) => {
-  const log = Debug('koa-stub:routes:account_password_GET_log')
-  const error = Debug('koa-stub:routes:account_password_GET_error')
+  const log = accountLog.extend('GET-account-change-password')
+  const error = accountError.extend('GET-account-change-password')
+  // const log = Debug('koa-stub:routes:account_password_GET_log')
+  // const error = Debug('koa-stub:routes:account_password_GET_error')
   await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
@@ -72,9 +84,12 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
   }
 })
 
-router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBody(), async (ctx, next) => {
-  const log = Debug('koa-stub:routes:account_password_POST_log')
-  const error = Debug('koa-stub:routes:account_password_POST_error')
+// router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBody(), async (ctx, next) => {
+router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+  const log = accountLog.extend('POST-account-change-password')
+  const error = accountError.extend('POST-account-change-password')
+  // const log = Debug('koa-stub:routes:account_password_POST_log')
+  // const error = Debug('koa-stub:routes:account_password_POST_error')
   // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
@@ -127,8 +142,10 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBody
 })
 
 router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
-  const log = Debug('koa-stub:routes:account_tokens_log')
-  const error = Debug('koa-stub:routes:account_tokens_error')
+  const log = accountLog.extend('GET-account-tokens')
+  const error = accountError.extend('GET-account-tokens')
+  // const log = Debug('koa-stub:routes:account_tokens_log')
+  // const error = Debug('koa-stub:routes:account_tokens_error')
   await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
@@ -158,9 +175,11 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
 })
 
 router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('GET-account-view')
+  const error = accountError.extend('GET-account-view')
+  // const log = Debug('koa-stub:routes:account_edit_log')
+  // const error = Debug('koa-stub:routes:account_edit_error')
   const user = ctx.state.user ?? null
-  const log = Debug('koa-stub:routes:account_edit_log')
-  const error = Debug('koa-stub:routes:account_edit_error')
   await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
@@ -182,9 +201,11 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
 })
 
 router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('GET-account-edit')
+  const error = accountError.extend('GET-account-edit')
+  // const log = Debug('koa-stub:routes:account_edit_log')
+  // const error = Debug('koa-stub:routes:account_edit_error')
   const user = ctx.state.user ?? null
-  const log = Debug('koa-stub:routes:account_edit_log')
-  const error = Debug('koa-stub:routes:account_edit_error')
   await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
@@ -209,16 +230,27 @@ router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
   }
 })
 
-router.post('accountEditPost', '/account/edit', hasFlash, koaBody({
-  multipart: true,
-  formidable: {
-    uploadDir: process.env.UPLOADSDIR,
-    keepExtensions: true,
-    multiples: true,
-  },
-}), async (ctx, next) => {
-  const log = Debug('koa-stub:routes:account_edit_post_log')
-  const error = Debug('koa-stub:routes:account_edit_post_error')
+// router.post('accountEditPost', '/account/edit', hasFlash, koaBody({
+//   multipart: true,
+//   formidable: {
+//     uploadDir: process.env.UPLOADSDIR,
+//     keepExtensions: true,
+//     multiples: true,
+//   },
+// }), async (ctx, next) => {
+// router.post('accountEditPost', '/account/edit', hasFlash, koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.post('accountEditPost', '/account/edit', hasFlash, koaBetterBody(), async (ctx, next) => {
+  const log = accountLog.extend('POST-account-edit')
+  const error = accountError.extend('POST-account-edit')
+  // const log = Debug('koa-stub:routes:account_edit_post_log')
+  // const error = Debug('koa-stub:routes:account_edit_post_error')
+  // const form = formidable({
+  //   uploadDir: ctx.app.uploadsDir,
+  //   keepExtensions: true,
+  // })
+  // await form.parse(ctx.req)
+  // error('ctx fields: %O', ctx.request.fields)
+  // error('ctx files: %O', ctx.request.files)
   await next()
   if (!ctx.state?.isAuthenticated) {
     ctx.flash = {
@@ -230,10 +262,10 @@ router.post('accountEditPost', '/account/edit', hasFlash, koaBody({
     error('Tried to edit account without being authenticated.')
     ctx.redirect('/')
   } else {
-    error(`ctx..body: ${ctx.request.body}`)
-    error(`ctx.fields: ${ctx.request.fields}`)
-    error('avatar file: %O', ctx.request.files['avatar'])
-    error('header file: %O', ctx.request.files['header'])
+    log(`ctx..body: ${ctx.request.body}`)
+    log(`ctx.fields: ${ctx.request.fields}`)
+    log('avatar file: %O', ctx.request.files.avatar)
+    log('header file: %O', ctx.request.files.header)
     const sessionId = ctx.cookies.get('koa.sess')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken

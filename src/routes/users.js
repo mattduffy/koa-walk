@@ -6,11 +6,17 @@
  */
 
 import Router from '@koa/router'
-import { koaBody } from 'koa-body'
+// import { koaBody } from 'koa-body'
+import koaBetterBody from 'koa-better-body'
 import Debug from 'debug'
 import { ObjectId } from 'mongodb'
 import { Users, AdminUser } from '../models/users.js'
 
+const koaBetterBodyOptions = {
+  encoding: 'utf-8',
+  uploadDir: process.env.UPLOADSDIR,
+  keepExtensions: true,
+}
 const router = new Router()
 
 function isAsyncRequest(req) {
@@ -37,14 +43,8 @@ async function hasFlash(ctx, next) {
   await next()
 }
 
-// async function validateAuthToken(token) {
-//   const error = Debug('TESTTOKEN:AUTH:CHECKER')
-//   // error(`TESTTOKEN: ${process.env.TESTTOKEN}}`)
-//   error(`TESTTOKEN match: ${(token === process.env.TESTTOKEN)}`)
-//   return (token === process.env.TESTTOKEN)
-// }
-
-router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
+// router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
+router.get('getUsers', '/users/:type*', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
   const log = Debug('koa-stub:routes:users_log')
   const error = Debug('koa-stub:routes:users_error')
   log('inside users router: /users')
@@ -80,7 +80,8 @@ router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
   }
 })
 
-router.get('getUserById', '/user/byId/:id', koaBody(), async (ctx, next) => {
+// router.get('getUserById', '/user/byId/:id', koaBody(), async (ctx, next) => {
+router.get('getUserById', '/user/byId/:id', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
   const log = Debug('koa-stub:routes:userById_log')
   const error = Debug('koa-stub:routes:userById_error')
   const { id } = ctx.params
@@ -104,7 +105,8 @@ router.get('getUserById', '/user/byId/:id', koaBody(), async (ctx, next) => {
   ctx.type = 'application/json'
 })
 
-router.get('getUserByEmail', '/user/byEmail/:email', koaBody(), async (ctx, next) => {
+// router.get('getUserByEmail', '/user/byEmail/:email', koaBody(), async (ctx, next) => {
+router.get('getUserByEmail', '/user/byEmail/:email', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
   const log = Debug('koa-stub:routes:userByEmail_log')
   const error = Debug('koa-stub:routes:userByEmail_error')
   const { email } = ctx.params
@@ -129,7 +131,8 @@ router.get('getUserByEmail', '/user/byEmail/:email', koaBody(), async (ctx, next
   ctx.type = 'application/json'
 })
 
-router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) => {
+// router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) => {
+router.get('getUserByUsername', '/user/:username', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
   const log = Debug('koa-stub:routes:user_log')
   const error = Debug('koa-stub:routes:user_error')
   const username = sanitize(ctx.params.username)
@@ -157,7 +160,8 @@ router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) 
   await ctx.render('user', locals)
 })
 
-router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBody(), async (ctx, next) => {
+// router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBody(), async (ctx, next) => {
+router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
   const log = Debug('koa-stub:routes:@username_log')
   const error = Debug('koa-stub:routes:@username_error')
   const username = sanitize(ctx.params[0])

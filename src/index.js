@@ -6,7 +6,7 @@
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import Debug from 'debug'
+import { _log, _error } from './utils/logging.js'
 import * as Koa from 'koa'
 // import { koaBody } from 'koa-body'
 import serve from 'koa-static'
@@ -31,15 +31,15 @@ import { main as Main } from './routes/main.js'
 import { users as Users } from './routes/users.js'
 import { account as Account } from './routes/account.js'
 
+const log = _log.extend('index')
+const error = _error.extend('index')
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const appRoot = path.resolve(`${__dirname}/..`)
 const showDebug = process.env.NODE_ENV !== 'production'
 dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), debug: showDebug })
 dotenv.config({ path: path.resolve(appRoot, 'config/test.env'), debug: showDebug })
-
-const log = Debug('koa-stub:index_log')
-const error = Debug('koa-stub:index_error')
 
 const key1 = process.env.KEY1
 const key2 = process.env.KEY2

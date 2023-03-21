@@ -6,14 +6,21 @@
  */
 
 import Router from '@koa/router'
-import { koaBody } from 'koa-body'
+// import { koaBody } from 'koa-body'
+// import koaBetterBody from 'koa-better-body'
 import { ObjectId } from 'mongodb'
-import Debug from 'debug'
+// import Debug from 'debug'
+import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
 
-// const log = Debug('koa-stub:routes:main_log')
-// const error = Debug('koa-stub:routes:main_error')
+const mainLog = _log.extend('main')
+const mainError = _error.extend('main')
 
+// const koaBetterBodyOptions = {
+//   encoding: 'utf-8',
+//   uploadDir: process.env.UPLOADSDIR,
+//   keepExtensions: true,
+// }
 function sanitize(param) {
   // fill in with some effective input scubbing logic
   return param
@@ -22,8 +29,10 @@ function sanitize(param) {
 const router = new Router()
 
 async function hasFlash(ctx, next) {
-  const log = Debug('koa-stub:routes:main:hasFlash_log')
-  const error = Debug('koa-stub:routes:main:hasFlash_error')
+  const log = mainLog.extend('hasFlash')
+  const error = mainError.extend('hasFlash')
+  // const log = Debug('koa-stub:routes:main:hasFlash_log')
+  // const error = Debug('koa-stub:routes:main:hasFlash_error')
   if (ctx.flash) {
     log('ctx.flash is present: %o', ctx.flash)
   } else {
@@ -33,8 +42,10 @@ async function hasFlash(ctx, next) {
 }
 
 router.get('index', '/', hasFlash, async (ctx, next) => {
-  const log = Debug('koa-stub:routes:main:index_log')
-  const error = Debug('koa-stub:routes:main:index_error')
+  const log = mainLog.extend('index')
+  const error = mainError.extend('index')
+  // const log = Debug('koa-stub:routes:main:index_log')
+  // const error = Debug('koa-stub:routes:main:index_error')
   log('inside main router: /')
   await next()
   ctx.status = 200
@@ -50,8 +61,10 @@ router.get('index', '/', hasFlash, async (ctx, next) => {
 })
 
 router.get('about', '/about', hasFlash, async (ctx, next) => {
-  const log = Debug('koa-stub:routes:main:about_log')
-  const error = Debug('koa-stub:routes:main:about_error')
+  const log = mainLog.extend('about')
+  const error = mainError.extend('about')
+  // const log = Debug('koa-stub:routes:main:about_log')
+  // const error = Debug('koa-stub:routes:main:about_error')
   log('inside index router: /about')
   await next()
   ctx.status = 200
@@ -65,8 +78,10 @@ router.get('about', '/about', hasFlash, async (ctx, next) => {
 })
 
 router.get('contact', '/contact', hasFlash, async (ctx, next) => {
-  const log = Debug('koa-stub:routes:main:contact_log')
-  const error = Debug('koa-stub:routes:main:contact_error')
+  const log = mainLog.extend('contact')
+  const error = mainError.extend('contact')
+  // const log = Debug('koa-stub:routes:main:contact_log')
+  // const error = Debug('koa-stub:routes:main:contact_error')
   log('inside index router: /contact')
   // await next()
   ctx.status = 200

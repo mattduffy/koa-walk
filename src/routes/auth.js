@@ -6,18 +6,29 @@
  */
 
 import Router from '@koa/router'
-import { koaBody } from 'koa-body'
+// import { koaBody } from 'koa-body'
+import koaBetterBody from 'koa-better-body'
 import { ObjectId } from 'mongodb'
-import Debug from 'debug'
+// import Debug from 'debug'
+import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
 
-// const log = Debug('koa-stub:routes:auth:log')
-// const error = Debug('koa-stub:routes:auth:error')
+const authLog = _log.extend('auth')
+const authError = _error.extend('auth')
+
+const koaBetterBodyOptions = {
+  encoding: 'utf-8',
+  multipart: true,
+  uploadDir: process.env.UPLOADSDIR,
+  keepExtensions: true,
+}
 const router = new Router()
 
 router.get('getLogin', '/login', async (ctx, next) => {
-  const log = Debug('koa-stub:routes:auth_login:log')
-  const error = Debug('koa-stub:routes:auth_login:error')
+  const log = authLog.extend('GET-login')
+  const error = authError.extend('GET-login')
+  // const log = Debug('koa-stub:routes:auth_login:log')
+  // const error = Debug('koa-stub:routes:auth_login:error')
   log('logging the user in')
   ctx.state.user = ctx.state.user ?? {}
   if (ctx.state.isAuthenticated) {
@@ -40,9 +51,13 @@ router.get('getLogin', '/login', async (ctx, next) => {
   // await next()
 })
 
-router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
-  const log = Debug('koa-stub:routes:auth_login_post:log')
-  const error = Debug('koa-stub:routes:auth_login_post:error')
+// router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
+router.post('postLogin', '/login', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+  const log = authLog.extend('POST-login')
+  const error = authError.extend('POST-login')
+  // const log = Debug('koa-stub:routes:auth_login_post:log')
+  // const error = Debug('koa-stub:routes:auth_login_post:error')
+
   const sessionId = ctx.cookies.get('koa.sess')
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
@@ -95,8 +110,10 @@ router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
 })
 
 router.get('getLogout', '/logout', async (ctx, next) => {
-  const log = Debug('koa-stub:routes:auth_logout:log')
-  const error = Debug('koa-stub:routes:auth_logout:error')
+  const log = authLog.extend('logout')
+  const error = authError.extend('logout')
+  // const log = Debug('koa-stub:routes:auth_logout:log')
+  // const error = Debug('koa-stub:routes:auth_logout:error')
   // await next()
   // if (ctx.state.isAuthenticated || ctx.session.id) {
   if (ctx.state.isAuthenticated) {
