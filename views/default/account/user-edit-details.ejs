@@ -3,7 +3,7 @@
     <h1>Edit User Details</h1>
     
     <p>This is the user detail page for <%= user.name %>.</p>
-    <form name="userEdit" id="edit" action="/account/edit" method="POST" enctype="application/x-www-form-urlencoded">
+    <form name="userEdit" id="edit" action="/account/edit" method="POST" enctype="multipart/form-data">
         <fieldset id="edit_fieldset" name="edit_fieldset" form="edit" class="edit_fieldset" title="edit Form">
           <legend>Mattmadethese</legend>
             <% if (edit.message !== null) { %>
@@ -39,10 +39,12 @@
               <input type="text" size="45" tabindex="7" id="description" name="description" value="<% if (user) { %><%=user?.description%><% } %>">
               
               <label for="avatar">Avatar:</label>
-              <input type="text" size="50" tabindex="8" id="avatar" name="avatar" value="<% if (user) { %><%=user.avatar%><% } %>">
+              <input type="file" tabindex="8" id="avatar" name="avatar" accept="image/png, image/jpeg, image/gif">
+              <!--<input type="text" size="50" tabindex="8" id="avatar" name="avatar" value="<% if (user) { %><%=user.avatar%><% } %>">-->
 
               <label for="header">Header: </label>
-              <input type="text" size="50" tabindex="9" id="header" name="header" value="<% if (user) { %><%=user.header%><% } %>">
+              <input type="file" tabindex="9" id="header" name="header" accept="image/png, image/jpeg, image/gif">
+              <!-- <input type="text" size="50" tabindex="9" id="header" name="header" value="<% if (user) { %><%=user.header%><% } %>"> -->
 
               <label for="url">Url: </label>
               <input tpye="text" size="50" tabindex="10" id="url" name="url" value="<% if (user) { %><%=user.url%><% } %>">

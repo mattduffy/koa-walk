@@ -11,6 +11,7 @@ import Debug from 'debug'
 import { ObjectId } from 'mongodb'
 import { Users, AdminUser } from '../models/users.js'
 
+
 const router = new Router()
 
 function isAsyncRequest(req) {
@@ -208,7 +209,14 @@ router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
   }
 })
 
-router.post('accountEditPost', '/account/edit', hasFlash, koaBody(), async (ctx, next) => {
+router.post('accountEditPost', '/account/edit', hasFlash, koaBody({
+  multipart: true,
+  formidable: {
+    uploadDir: process.env.UPLOADSDIR,
+    keepExtensions: true,
+    multiples: true,
+  },
+}), async (ctx, next) => {
   const log = Debug('koa-stub:routes:account_edit_post_log')
   const error = Debug('koa-stub:routes:account_edit_post_error')
   await next()
@@ -222,12 +230,27 @@ router.post('accountEditPost', '/account/edit', hasFlash, koaBody(), async (ctx,
     error('Tried to edit account without being authenticated.')
     ctx.redirect('/')
   } else {
+    error(`ctx..body: ${ctx.request.body}`)
+    error(`ctx.fields: ${ctx.request.fields}`)
+    error('avatar file: %O', ctx.request.files['avatar'])
+    error('header file: %O', ctx.request.files['header'])
     const sessionId = ctx.cookies.get('koa.sess')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body['csrf-token']
     if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
-      error(ctx.request.body)
+      // const formOptions = {
+      //   uploadDir: ctx.app.uploadsDir,
+      //   multipart: true,
+      //   keepExtensions: true,
+      // }
+      // const form = new Formidable.Formidable(formOptions)
+      // log('form files contents: %o', ctx.request.files)
+      // log(`uploads dir: ${process.env.UPLOADSDIR}`)
+      // form.on('file', (formname, file) => {
+      //   error(formname)
+      //   error(file)
+      // })
       const { firstname } = ctx.request.body
       if (firstname !== '') ctx.state.user.firstName = firstname
       const { lastname } = ctx.request.body

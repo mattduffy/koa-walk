@@ -58,6 +58,7 @@ app.root = appRoot
 app.publicDir = `${appRoot}/public`
 app.templateName = 'default'
 app.uploadsDir = `${appRoot}/uploads`
+process.env.UPLOADSDIR = app.uploadsDir
 
 // app.use(koaBody())
 const o = {
@@ -144,9 +145,9 @@ app.use(prepareRequest())
 app.use(tokenAuthMiddleware())
 app.use(getSessionUser)
 app.use(cors)
-app.use(xResponseTime)
-app.use(sessionViews)
-app.use(logging)
+// app.use(xResponseTime)
+// app.use(sessionViews)
+// app.use(logging)
 app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())
