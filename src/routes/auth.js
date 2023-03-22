@@ -7,22 +7,14 @@
 
 import Router from '@koa/router'
 // import { koaBody } from 'koa-body'
-import koaBetterBody from 'koa-better-body'
+import formidable from 'formidable'
 import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
 
 const authLog = _log.extend('auth')
 const authError = _error.extend('auth')
-
-const koaBetterBodyOptions = {
-  encoding: 'utf-8',
-  multipart: true,
-  uploadDir: process.env.UPLOADSDIR,
-  keepExtensions: true,
-}
 const router = new Router()
-
 router.get('getLogin', '/login', async (ctx, next) => {
   const log = authLog.extend('GET-login')
   const error = authError.extend('GET-login')
@@ -45,14 +37,32 @@ router.get('getLogin', '/login', async (ctx, next) => {
   ctx.session.csrfToken = locals.csrfToken
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
   await ctx.render('login', locals)
-  // await next()
+  await next()
 })
 
-// router.post('postLogin', '/login', koaBody(), async (ctx, next) => {
-router.post('postLogin', '/login', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.post('postLogin', '/login', async (ctx, next) => {
   const log = authLog.extend('POST-login')
   const error = authError.extend('POST-login')
-
+  const form = formidable({
+    encoding: 'utf-8',
+    uploadDir: ctx.app.uploadsDir,
+    keepExtensions: true,
+    multipart: true,
+  })
+  await new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      ctx.request.body = fields
+      ctx.request.files = files
+      // log(fields)
+      // log(files)
+      resolve()
+    })
+  })
+  // log(ctx.request.body)
   const sessionId = ctx.cookies.get('koa.sess')
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken

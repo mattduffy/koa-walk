@@ -6,27 +6,17 @@
  */
 
 import Router from '@koa/router'
-// import { koaBody } from 'koa-body'
-import koaBetterBody from 'koa-better-body'
 import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
 
 const mainLog = _log.extend('main')
 const mainError = _error.extend('main')
-
-const koaBetterBodyOptions = {
-  encoding: 'utf-8',
-  uploadDir: process.env.UPLOADSDIR,
-  keepExtensions: true,
-}
 function sanitize(param) {
   // fill in with some effective input scubbing logic
   return param
 }
-
 const router = new Router()
-
 async function hasFlash(ctx, next) {
   const log = mainLog.extend('hasFlash')
   const error = mainError.extend('hasFlash')

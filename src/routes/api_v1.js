@@ -6,17 +6,10 @@
  */
 
 import Router from '@koa/router'
-// import { koaBody } from 'koa-body'
-import koaBetterBody from 'koa-better-body'
 import { ObjectId } from 'mongodb'
 import Debug from 'debug'
 import { Users } from '../models/users.js'
 
-const koaBetterBodyOptions = {
-  encoding: 'utf-8',
-  uploadDir: process.env.UPLOADSDIR,
-  keepExtensions: true,
-}
 function sanitize(param) {
   // fill in with some effective input scubbing logic
   return param
@@ -24,7 +17,7 @@ function sanitize(param) {
 
 const router = new Router({ prefix: '/api/v1' })
 
-router.get('twerk', '/twerk', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.get('twerk', '/twerk', async (ctx, next) => {
   await next()
   ctx.status = 200
   ctx.type = 'application/json'

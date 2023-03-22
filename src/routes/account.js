@@ -6,19 +6,19 @@
  */
 
 import Router from '@koa/router'
-import koaBetterBody from 'koa-better-body'
 import { ObjectId } from 'mongodb'
-// import Debug from 'debug'
+import formidable from 'formidable'
 import { _log, _error } from '../utils/logging.js'
 import { Users, AdminUser } from '../models/users.js'
 
 const accountLog = _log.extend('account')
 const accountError = _error.extend('account')
 
-const koaBetterBodyOptions = {
+const formOptions = {
   encoding: 'utf-8',
   uploadDir: process.env.UPLOADSDIR,
   keepExtensions: true,
+  multipart: true,
 }
 const router = new Router()
 
@@ -81,9 +81,29 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
 })
 
 // router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBody(), async (ctx, next) => {
-router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('POST-account-change-password')
   const error = accountError.extend('POST-account-change-password')
+  const form = formidable({
+    encoding: 'utf-8',
+    uploadDir: ctx.app.uploadsDir,
+    keepExtensions: true,
+    multipart: true,
+  })
+  await new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      ctx.request.body = fields
+      ctx.request.files = files
+      // log(fields)
+      // log(files)
+      resolve()
+    })
+  })
+  // log(ctx.request.body)
   // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
@@ -217,26 +237,30 @@ router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
   }
 })
 
-// router.post('accountEditPost', '/account/edit', hasFlash, koaBody({
-//   multipart: true,
-//   formidable: {
-//     uploadDir: process.env.UPLOADSDIR,
-//     keepExtensions: true,
-//     multiples: true,
-//   },
-// }), async (ctx, next) => {
-// router.post('accountEditPost', '/account/edit', hasFlash, koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
-router.post('accountEditPost', '/account/edit', hasFlash, koaBetterBody(), async (ctx, next) => {
+router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('POST-account-edit')
   const error = accountError.extend('POST-account-edit')
-  // const form = formidable({
-  //   uploadDir: ctx.app.uploadsDir,
-  //   keepExtensions: true,
-  // })
-  // await form.parse(ctx.req)
+  const form = formidable({
+    encoding: 'utf-8',
+    uploadDir: ctx.app.uploadsDir,
+    keepExtensions: true,
+    multipart: true,
+  })
+  await new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      ctx.request.body = fields
+      ctx.request.files = files
+      // log(fields)
+      // log(files)
+      resolve()
+    })
+  })
+  // log(ctx.request.body)
   // await next()
-  error('ctx fields: %O', ctx.request.fields)
-  error('ctx files: %O', ctx.request.files)
   if (!ctx.state?.isAuthenticated) {
     ctx.flash = {
       index: {
@@ -247,27 +271,15 @@ router.post('accountEditPost', '/account/edit', hasFlash, koaBetterBody(), async
     error('Tried to edit account without being authenticated.')
     ctx.redirect('/')
   } else {
-    log(`ctx..body: ${ctx.request.body}`)
-    log(`ctx.fields: ${ctx.request.fields}`)
-    log('avatar file: %O', ctx.request.files.avatar)
-    log('header file: %O', ctx.request.files.header)
+    // log(`ctx..body: ${ctx.request.body}`)
+    // log(`ctx.fields: ${ctx.request.fields}`)
+    // log('avatar file: %O', ctx.request.files.avatar)
+    // log('header file: %O', ctx.request.files.header)
     const sessionId = ctx.cookies.get('koa.sess')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body['csrf-token']
     if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
-      // const formOptions = {
-      //   uploadDir: ctx.app.uploadsDir,
-      //   multipart: true,
-      //   keepExtensions: true,
-      // }
-      // const form = new Formidable.Formidable(formOptions)
-      // log('form files contents: %o', ctx.request.files)
-      // log(`uploads dir: ${process.env.UPLOADSDIR}`)
-      // form.on('file', (formname, file) => {
-      //   error(formname)
-      //   error(file)
-      // })
       const { firstname } = ctx.request.body
       if (firstname !== '') ctx.state.user.firstName = firstname
       const { lastname } = ctx.request.body

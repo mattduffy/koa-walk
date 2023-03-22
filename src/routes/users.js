@@ -6,31 +6,21 @@
  */
 
 import Router from '@koa/router'
-// import { koaBody } from 'koa-body'
-import koaBetterBody from 'koa-better-body'
 import Debug from 'debug'
 import { ObjectId } from 'mongodb'
 import { Users, AdminUser } from '../models/users.js'
 
-const koaBetterBodyOptions = {
-  encoding: 'utf-8',
-  uploadDir: process.env.UPLOADSDIR,
-  keepExtensions: true,
-}
-const router = new Router()
-
 function isAsyncRequest(req) {
   return (req.get('X-ASYNCREQUEST') === true)
 }
-
 function capitalize(word) {
   return word[0].toUpperCase() + word.substring(1).toLowerCase()
 }
-
 function sanitize(param) {
   // fill in with some effective input scubbing logic
   return param
 }
+const router = new Router()
 
 async function hasFlash(ctx, next) {
   const log = Debug('koa-stub:routes:main:hasFlash_log')
@@ -43,11 +33,29 @@ async function hasFlash(ctx, next) {
   await next()
 }
 
-// router.get('getUsers', '/users/:type*', koaBody(), async (ctx, next) => {
-router.get('getUsers', '/users/:type*', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.get('getUsers', '/users/:type*', async (ctx, next) => {
   const log = Debug('koa-stub:routes:users_log')
   const error = Debug('koa-stub:routes:users_error')
-  log('inside users router: /users')
+  // const form = formidable({
+  //   encoding: 'utf-8',
+  //   uploadDir: ctx.app.uploadsDir,
+  //   keepExtensions: true,
+  //   multipart: true,
+  // })
+  // await new Promise((resolve, reject) => {
+  //   form.parse(ctx.req, (err, fields, files) => {
+  //     if (err) {
+  //       reject(err)
+  //       return
+  //     }
+  //     ctx.request.body = fields
+  //     ctx.request.files = files
+  //     // log(fields)
+  //     // log(files)
+  //     resolve()
+  //   })
+  // })
+  // log(ctx.request.body)  log('inside users router: /users')
   // only authenticated Admin level users can access this route
   // if (!validateAuthToken(ctx.request.get('auth-token'))
   if (!ctx.state.isAuthenticated || !(ctx.state?.user.type === 'Admin')) {
@@ -80,8 +88,7 @@ router.get('getUsers', '/users/:type*', koaBetterBody(koaBetterBodyOptions), asy
   }
 })
 
-// router.get('getUserById', '/user/byId/:id', koaBody(), async (ctx, next) => {
-router.get('getUserById', '/user/byId/:id', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
   const log = Debug('koa-stub:routes:userById_log')
   const error = Debug('koa-stub:routes:userById_error')
   const { id } = ctx.params
@@ -105,8 +112,7 @@ router.get('getUserById', '/user/byId/:id', koaBetterBody(koaBetterBodyOptions),
   ctx.type = 'application/json'
 })
 
-// router.get('getUserByEmail', '/user/byEmail/:email', koaBody(), async (ctx, next) => {
-router.get('getUserByEmail', '/user/byEmail/:email', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
   const log = Debug('koa-stub:routes:userByEmail_log')
   const error = Debug('koa-stub:routes:userByEmail_error')
   const { email } = ctx.params
@@ -131,8 +137,7 @@ router.get('getUserByEmail', '/user/byEmail/:email', koaBetterBody(koaBetterBody
   ctx.type = 'application/json'
 })
 
-// router.get('getUserByUsername', '/user/:username', koaBody(), async (ctx, next) => {
-router.get('getUserByUsername', '/user/:username', koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
   const log = Debug('koa-stub:routes:user_log')
   const error = Debug('koa-stub:routes:user_error')
   const username = sanitize(ctx.params.username)
@@ -160,8 +165,7 @@ router.get('getUserByUsername', '/user/:username', koaBetterBody(koaBetterBodyOp
   await ctx.render('user', locals)
 })
 
-// router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBody(), async (ctx, next) => {
-router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, koaBetterBody(koaBetterBodyOptions), async (ctx, next) => {
+router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next) => {
   const log = Debug('koa-stub:routes:@username_log')
   const error = Debug('koa-stub:routes:@username_error')
   const username = sanitize(ctx.params[0])

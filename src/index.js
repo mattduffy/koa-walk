@@ -8,7 +8,6 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { _log, _error } from './utils/logging.js'
 import * as Koa from 'koa'
-// import { koaBody } from 'koa-body'
 import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
@@ -60,7 +59,6 @@ app.templateName = 'default'
 app.uploadsDir = `${appRoot}/uploads`
 process.env.UPLOADSDIR = app.uploadsDir
 
-// app.use(koaBody())
 const o = {
   db: path.resolve(`${app.root}/src`, 'daos/impl/mongodb/mongo-client.js'),
   db_name: process.env.MONGODB_DBNAME ?? 'test',
@@ -144,9 +142,9 @@ app.use(prepareRequest())
 app.use(tokenAuthMiddleware())
 app.use(getSessionUser)
 app.use(cors)
-// app.use(xResponseTime)
-// app.use(sessionViews)
-// app.use(logging)
+app.use(xResponseTime)
+app.use(sessionViews)
+app.use(logging)
 app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())

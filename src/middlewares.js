@@ -83,8 +83,7 @@ export function prepareRequest(options = {}) {
   const error = middlewareError.extend('prepareRequest')
   return async function prepRequest(ctx, next) {
     // Is the request an Async / Ajax style request?
-    log(ctx.request.headers)
-    log(`what shows if empty? ${ctx.request.get('X-ASYNCREQUEST')}`)
+    // log(ctx.request.headers)
     ctx.state.isAsyncRequest = null
     ctx.state.accessToken = null
     if (/json/.test(ctx.request.get('Accept'))
