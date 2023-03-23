@@ -54,8 +54,8 @@ app.host = `${process.env.HOST}:${port}` ?? `127.0.0.1:${port}`
 app.domain = process.env.DOMAIN_NAME ?? 'website.com'
 app.proxy = true
 app.root = appRoot
-app.publicDir = `${appRoot}/public`
 app.templateName = 'default'
+app.publicDir = `${appRoot}/public`
 app.uploadsDir = `${appRoot}/uploads`
 process.env.UPLOADSDIR = app.uploadsDir
 

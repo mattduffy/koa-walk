@@ -80,7 +80,6 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
   }
 })
 
-// router.post('accountPasswordPOST', '/account/change/password', hasFlash, koaBody(), async (ctx, next) => {
 router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('POST-account-change-password')
   const error = accountError.extend('POST-account-change-password')
@@ -249,9 +248,12 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
   await new Promise((resolve, reject) => {
     form.parse(ctx.req, (err, fields, files) => {
       if (err) {
+        error('There was a problem parsing the multipart form data.')
+        error(err)
         reject(err)
         return
       }
+      log('Multipart form data was successfully parsed.')
       ctx.request.body = fields
       ctx.request.files = files
       // log(fields)
