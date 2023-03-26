@@ -74,4 +74,15 @@ router.get('contact', '/contact', hasFlash, async (ctx, next) => {
   })
 })
 
+router.get('renderTest', '/renderTest', async (ctx, next) => {
+  const log = mainLog.extend('renderTest')
+  const rendered = await ctx.render('renderTest', {
+    title: `${ctx.app.site}: render test`,
+    user: ctx.state?.user ?? 'Matt',
+    isAuthenticated: false,
+  })
+  log(rendered)
+  ctx.redirect('/')
+})
+
 export { router as main }

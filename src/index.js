@@ -63,8 +63,10 @@ const o = {
   db: path.resolve(`${app.root}/src`, 'daos/impl/mongodb/mongo-client.js'),
   db_name: process.env.MONGODB_DBNAME ?? 'test',
 }
-app.use(migrations(o, app))
 app.use(session(config, app))
+if (app.env === 'development') {
+  app.use(migrations(o, app))
+}
 
 render(app, {
   root: `${appRoot}/views/${app.templateName}`,
