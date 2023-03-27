@@ -12,10 +12,10 @@
             <% } %>
             <div class="wrapper">
               <label for="username">Username: </label>
-              <input type="text" size="45" tabindex="1" id="username" name="username" autocomplete="username" value="<% if (login) { %><%=login?.username %><% } %>">
+              <input type="text" size="45" tabindex="1" id="username" name="username" required autocomplete="username" value="<% if (login) { %><%=login?.username %><% } %>">
 
               <label for="password">Password: </label>
-              <input type="password" size="45" tabindex="2" id="password" name="password" autocomplete="current-password" value="">
+              <input type="password" size="45" tabindex="2" id="password" name="password" required autocomplete="current-password" value="">
 
               <input type="hidden" id="csrf-token" name="csrf-token" value="<%= csrfToken   %>">
             </div>
