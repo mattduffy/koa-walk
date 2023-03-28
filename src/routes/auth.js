@@ -62,7 +62,7 @@ router.post('postLogin', '/login', async (ctx, next) => {
     })
   })
   // log(ctx.request.body)
-  const sessionId = ctx.cookies.get('koa.sess')
+  const sessionId = ctx.cookies.get('session')
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
   const csrfTokenHidden = ctx.request.body['csrf-token']

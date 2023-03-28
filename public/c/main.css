@@ -194,6 +194,23 @@ body {
     font-size: 100%;
   }
   
+  div.messages {
+    color: green;
+  }
+
+  div.messages::before {
+    content: "\2713";
+  }
+
+  div.errors {
+    color: red;
+  }
+
+  div.errors::before {
+    content: "\274C";
+    font-size: 0.65em;
+  }
+
   div.account-details {
 
   }

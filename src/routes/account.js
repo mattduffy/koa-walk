@@ -110,7 +110,7 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
     ctx.redirect('/')
   } else {
     log(`View ${ctx.state.user.username}'s account password.`)
-    const sessionId = ctx.cookies.get('koa.sess')
+    const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body['csrf-token']
@@ -188,7 +188,7 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-view')
   const error = accountError.extend('GET-account-view')
   const user = ctx.state.user ?? null
-  await next()
+  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -275,9 +275,7 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
   } else {
     // log(`ctx..body: ${ctx.request.body}`)
     // log(`ctx.fields: ${ctx.request.fields}`)
-    // log('avatar file: %O', ctx.request.files.avatar)
-    // log('header file: %O', ctx.request.files.header)
-    const sessionId = ctx.cookies.get('koa.sess')
+    const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body['csrf-token']
@@ -296,10 +294,12 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
       if (secondaryEmail !== '') ctx.state.user.secondaryEmail = secondaryEmail
       const { description } = ctx.request.body
       if (description !== '') ctx.state.user.description = description
-      const { avatar } = ctx.request.body
-      if (avatar !== '') ctx.state.user.avatar = avatar
-      const { header } = ctx.request.body
-      if (header !== '') ctx.state.user.header = header
+      log('avatar file: %O', ctx.request.files)
+      // log('header file: %O', ctx.request.files.header)
+      // const { avatar } = ctx.request.body
+      // if (avatar !== '') ctx.state.user.avatar = avatar
+      // const { header } = ctx.request.body
+      // if (header !== '') ctx.state.user.header = header
       const { url } = ctx.request.body
       if (url !== '') ctx.state.user.url = url
       try {
