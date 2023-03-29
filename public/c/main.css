@@ -194,6 +194,10 @@ body {
     font-size: 100%;
   }
   
+  div.info {
+    color: yellow;
+  }
+
   div.messages {
     color: green;
   }

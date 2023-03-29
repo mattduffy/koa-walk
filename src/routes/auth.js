@@ -14,6 +14,7 @@ import { Users } from '../models/users.js'
 const authLog = _log.extend('auth')
 const authError = _error.extend('auth')
 const router = new Router()
+
 router.get('getLogin', '/login', async (ctx, next) => {
   const log = authLog.extend('GET-login')
   const error = authError.extend('GET-login')
@@ -23,13 +24,13 @@ router.get('getLogin', '/login', async (ctx, next) => {
     ctx.redirect('/')
   }
   const csrfToken = new ObjectId().toString()
-  const flashMessage = ctx.flash
+  // const flashMessage = ctx.flash
   const locals = {
     body: ctx.body,
     title: `${ctx.app.site}: Login`,
     user: ctx.state.user,
     csrfToken,
-    login: flashMessage?.login ?? {},
+    login: ctx.flash.login ?? {},
     isAuthenticated: ctx.state.isAuthenticated,
   }
   error('template {locals}: %O', locals)
@@ -68,10 +69,10 @@ router.post('postLogin', '/login', async (ctx, next) => {
   const csrfTokenHidden = ctx.request.body['csrf-token']
   const { username, password } = ctx.request.body
   log(csrfTokenCookie, csrfTokenSession, ctx.request.body)
-  log(`session status: ${ctx.session.status}`)
+  // log(`session status: ${ctx.session.status}`)
   if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
     const db = ctx.state.mongodb.client.db()
-    await next()
+    // await next()
     const collection = db.collection('users')
     const users = new Users(collection)
     const authUser = await users.authenticateAndGetUser(username, password)
@@ -80,6 +81,7 @@ router.post('postLogin', '/login', async (ctx, next) => {
       ctx.flash = {
         login: {
           username,
+          info: null,
           message: authUser.message,
           error: authUser.error,
         },
@@ -100,7 +102,8 @@ router.post('postLogin', '/login', async (ctx, next) => {
       ctx.flash = {
         index: {
           username: loggedInUser._first,
-          message: `Hello ${loggedInUser._first}`,
+          info: `Hello ${loggedInUser._first}`,
+          message: null,
           error: null,
         },
       }

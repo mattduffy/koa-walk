@@ -1,18 +1,25 @@
 <main>
   <article>
     <h1>Home Page</h1>
-    <% if (flash?.message) { %>
+    <% if (flash?.info) { %>
+    <div id="info" class="info">
+      <span><%= flash.info %></span>
+    </div>
+    <% } %>
+    <% if (flash?.messages) { %>
     <div id="messages" class="messages">
-      <span><%= flash.message %></span>
+      <span><%= flash.messages %></span>
     </div>
     <% } %>
     <% if (flash?.error) { %>
     <div id="errors" class="errors">
-      <span><%= flash.error%></span>
+      <span><%= flash.error %></span>
     </div>
   <% } %>
   <p>This is the home page of the website.</p>
+    <% if (isAuthenticated) { %>
     <p>View account <a href="/account/view">details</a>.</p>
+    <% } %>
     <ul>
       <% if (user) { %>
       <li><%= user.type %></li>

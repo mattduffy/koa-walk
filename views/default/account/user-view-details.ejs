@@ -6,12 +6,12 @@
     <% if (isAuthenticated) { %>
       <p><a href="/account/edit">Edit</a></p>
     <% } %>
-    <% if (edit.message !== null) { %>
+    <% if (edit.message) { %>
     <div id="messages" class="messages">
       <span><%= edit.message %></span>
     </div>
     <% } %>
-    <% if (edit.error !== null) { %>
+    <% if (edit.error) { %>
     <div id="errors" class="errors">
       <span><%= edit.error%></span>
     </div>

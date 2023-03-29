@@ -194,7 +194,8 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`Edit ${user.username}'s account details.`)
+    log(`View ${user.username}'s account details.`)
+    log('flash %O', ctx.flash)
     const locals = {
       user,
       body: ctx.body,

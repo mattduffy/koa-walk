@@ -6,12 +6,12 @@
     <form name="userEdit" id="edit" action="/account/edit" method="POST" enctype="multipart/form-data">
         <fieldset id="edit_fieldset" name="edit_fieldset" form="edit" class="edit_fieldset" title="edit Form">
           <legend>Mattmadethese</legend>
-            <% if (edit.message !== null) { %>
+            <% if (edit.message) { %>
             <div id="messages" class="messages">
               <span><%= edit.message %></span>
             </div>
             <% } %>
-            <% if (edit.error !== null) { %>
+            <% if (edit.error) { %>
             <div id="errors" class="errors">
               <span><%= edit.error %></span>
             </div>
