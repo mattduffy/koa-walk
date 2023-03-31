@@ -20,6 +20,9 @@ __tests__/images/gps
 __tests__/images/copy*
 __tests__/images/*_original
 src/exiftool.config
+uploads/*
+public/a/*
+migrations/*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

@@ -97,13 +97,10 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
       }
       ctx.request.body = fields
       ctx.request.files = files
-      // log(fields)
       // log(files)
       resolve()
     })
   })
-  // log(ctx.request.body)
-  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401

@@ -36,28 +36,6 @@ async function hasFlash(ctx, next) {
 router.get('getUsers', '/users/:type*', async (ctx, next) => {
   const log = Debug('koa-stub:routes:users_log')
   const error = Debug('koa-stub:routes:users_error')
-  // const form = formidable({
-  //   encoding: 'utf-8',
-  //   uploadDir: ctx.app.uploadsDir,
-  //   keepExtensions: true,
-  //   multipart: true,
-  // })
-  // await new Promise((resolve, reject) => {
-  //   form.parse(ctx.req, (err, fields, files) => {
-  //     if (err) {
-  //       reject(err)
-  //       return
-  //     }
-  //     ctx.request.body = fields
-  //     ctx.request.files = files
-  //     // log(fields)
-  //     // log(files)
-  //     resolve()
-  //   })
-  // })
-  // log(ctx.request.body)  log('inside users router: /users')
-  // only authenticated Admin level users can access this route
-  // if (!validateAuthToken(ctx.request.get('auth-token'))
   if (!ctx.state.isAuthenticated || !(ctx.state?.user.type === 'Admin')) {
     ctx.status = 401
     ctx.type = 'application/json; charset=utf-8'
@@ -68,7 +46,6 @@ router.get('getUsers', '/users/:type*', async (ctx, next) => {
     if (!ctx.params.type) {
       filter = {}
     } else {
-      // filter = { type: capitalize(sanitize(ctx.params.type)) }
       filter = { userTypes: [capitalize(sanitize(ctx.params.type))] }
     }
     await next()
