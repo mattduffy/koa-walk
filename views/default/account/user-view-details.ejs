@@ -41,6 +41,9 @@
         <dt style="display: inline-block;">Account Type: </dt>
         <dd style="display: inline-block;"><% if (user) { %><%=user?.type %><% } %></dd>
 
+        <dt style="display: inline-block;">User Upload Dir: </dt>
+        <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.publicDir}` %><% } %></dd>
+
         <dt style="display: inline-block;">Avatar: </dt>
         <dd style="display: inline-block;"><% if (user) { %><%=user?.avatar%><% } %></dd>
 

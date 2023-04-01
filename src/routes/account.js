@@ -197,6 +197,7 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
       user,
       body: ctx.body,
       edit: ctx.flash.edit ?? {},
+      origin: `${ctx.request.origin}`,
       csrfToken: new ObjectId().toString(),
       isAuthenticated: ctx.state.isAuthenticated,
       title: `${ctx.app.site}: View Account Details`,
