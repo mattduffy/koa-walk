@@ -42,16 +42,18 @@
         <dd style="display: inline-block;"><% if (user) { %><%=user?.type %><% } %></dd>
 
         <dt style="display: inline-block;">User Upload Dir: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.publicDir}` %><% } %></dd>
+        <dd style="display: inline-block;"><% if (user.publicDir !== '') { %><%= `${origin}/${user?.publicDir}` %><% } else { %>
+        <span class="smallem">not set yet</span>
+      <% } %></dd>
 
         <dt style="display: inline-block;">Avatar: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.avatar%><% } %></dd>
+        <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.avatar}` %><% } %></dd>
 
         <dt style="display: inline-block;">Header: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.header%><% } %></dd>
+        <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.header}` %><% } %></dd>
 
         <dt style="display: inline-block;">Url: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.url%><% } %></dd>
+        <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.url}` %><% } %></dd>
       </dl>
     </div>
   </article>

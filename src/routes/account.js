@@ -5,6 +5,8 @@
  * @file src/routes/account.js The router for the account api endpoints.
  */
 
+import path from 'node:path'
+import { rename } from 'node:fs/promises'
 import Router from '@koa/router'
 import { ObjectId } from 'mongodb'
 import formidable from 'formidable'
@@ -293,12 +295,21 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
       if (secondaryEmail !== '') ctx.state.user.secondaryEmail = secondaryEmail
       const { description } = ctx.request.body
       if (description !== '') ctx.state.user.description = description
-      log('avatar file: %O', ctx.request.files)
+      log('avatar file: %O', ctx.request.files.avatar.size)
+      log('avatar file: %O', ctx.request.files.avatar.filepath)
+      const { avatar } = ctx.request.files
+      if (avatar.size > 0) {
+        const avatarSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.user.publicDir}${avatar.newFilename}`)
+        await rename(avatar.filepath, avatarSaved)
+        ctx.state.user.avatar = `${ctx.state.user.publicDir}/${avatar.newFilename}`
+      }
       // log('header file: %O', ctx.request.files.header)
-      // const { avatar } = ctx.request.body
-      // if (avatar !== '') ctx.state.user.avatar = avatar
-      // const { header } = ctx.request.body
-      // if (header !== '') ctx.state.user.header = header
+      const { header } = ctx.request.files
+      if (header.size > 0) {
+        const headerSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.user.publicDir}${header.newFilename}`)
+        await rename(header.filepath, headerSaved)
+        ctx.state.user.header = `${ctx.state.user.publicDir}/${header.newFilename}`
+      }
       const { url } = ctx.request.body
       if (url !== '') ctx.state.user.url = url
       try {
