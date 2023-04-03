@@ -297,18 +297,22 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
       if (description !== '') ctx.state.user.description = description
       log('avatar file: %O', ctx.request.files.avatar.size)
       log('avatar file: %O', ctx.request.files.avatar.filepath)
+      log('users ctx: %O', ctx.state.user._ctx)
+      if (ctx.state.user.publicDir === '') {
+        ctx.state.user.publicDir = 'a'
+      }
       const { avatar } = ctx.request.files
       if (avatar.size > 0) {
-        const avatarSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.user.publicDir}${avatar.newFilename}`)
+        const avatarSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.user.publicDir}${avatar.originalFilename}`)
         await rename(avatar.filepath, avatarSaved)
-        ctx.state.user.avatar = `${ctx.state.user.publicDir}/${avatar.newFilename}`
+        ctx.state.user.avatar = `${ctx.state.user.publicDir}${avatar.originalFilename}`
       }
       // log('header file: %O', ctx.request.files.header)
       const { header } = ctx.request.files
       if (header.size > 0) {
-        const headerSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.user.publicDir}${header.newFilename}`)
+        const headerSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.user.publicDir}${header.originalFilename}`)
         await rename(header.filepath, headerSaved)
-        ctx.state.user.header = `${ctx.state.user.publicDir}/${header.newFilename}`
+        ctx.state.user.header = `${ctx.state.user.publicDir}${header.originalFilename}`
       }
       const { url } = ctx.request.body
       if (url !== '') ctx.state.user.url = url

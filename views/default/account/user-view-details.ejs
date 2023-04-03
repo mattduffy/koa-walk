@@ -47,10 +47,14 @@
       <% } %></dd>
 
         <dt style="display: inline-block;">Avatar: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.avatar}` %><% } %></dd>
+        <dd style="display: inline-block;"><% if (user.avatar !== '') { %><img src="<%= `${origin}/${user?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
+        <span class="smallem">no avatar image uploaded yet</span>
+      <% } %></dd>
 
         <dt style="display: inline-block;">Header: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.header}` %><% } %></dd>
+        <dd style="display: inline-block;"><% if (user.header !== '') { %><img src="<%= `${origin}/${user?.header}` %>" id="header alt="header image"> <% } else { %>
+        <span class="smallem">no header image uploaded yet</span>
+      <% } %></dd>
 
         <dt style="display: inline-block;">Url: </dt>
         <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.url}` %><% } %></dd>

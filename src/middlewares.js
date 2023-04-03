@@ -20,7 +20,7 @@ export async function getSessionUser(ctx, next) {
       log(`restoring session user: ${ctx.session.id}`)
       const db = ctx.state.mongodb.client.db()
       const collection = db.collection('users')
-      const users = new Users(collection)
+      const users = new Users(collection, ctx)
       const user = await users.getById(ctx.session.id)
       if (user) {
         ctx.state.user = user
