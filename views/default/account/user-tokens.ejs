@@ -2,12 +2,12 @@
   <article>
     <h1>View Account Tokens</h1>
     
-    <% if (view.message !== null) { %>
+    <% if (view.message) { %>
     <div id="messages" class="messages">
       <span><%= view.message %></span>
     </div>
     <% } %>
-    <% if (view.error !== null) { %>
+    <% if (view.error) { %>
     <div id="errors" class="errors">
       <span><%= view.error%></span>
     </div>
