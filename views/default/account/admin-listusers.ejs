@@ -1,0 +1,28 @@
+<main>
+  <article>
+    <h1>View User Details</h1>
+    
+    <p>This is the admin list users page.</p>
+    <% if (isAuthenticated) { %>
+      <p><a href="/account/edit">Edit</a></p>
+    <% } %>
+    <% if (list?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= list.message %></span>
+    </div>
+    <% } %>
+    <% if (list?.info) { %>
+    <div id="info" class="info">
+      <span><%= list.info%></span>
+    </div>
+    <% } %>
+    <% if (list?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= list.error%></span>
+    </div>
+    <% } %>
+    <div class="account-details">
+    hi
+    </div>
+  </article>
+</main>

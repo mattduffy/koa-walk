@@ -3,7 +3,7 @@
     <nav class="sidebar-nav-wrapper">
       <% if (isAuthenticated) { %>
       <a href="/logout">Logout</a>
-      <ul>
+      <ul id="userLinks" class="userLinks">
         <li><a href="/account/view">View account details</a></li>
         <li><a href="/account/tokens">Authetication tokens</a></li>
         <li><a href="/account/change/password">Change account password</a></li>
@@ -12,7 +12,10 @@
       <a href="/login">Login</a>
       <% } %>
       <% if (/admin/i.test(user?.type)) { %>
-        Admin level options go here
+      Admin level options go here
+      <ul id="adminLinks" class="adminLinks">
+        <li><a href="/admin/account/listusers">List users</a><li> 
+      </ul>
       <% } %>
     </nav>
   </aside>

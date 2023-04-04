@@ -347,4 +347,29 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
   }
 })
 
+router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('GET-admin-listusers')
+  const error = accountError.extend('GET-admin-listuers')
+  if (!ctx.state?.isAuthenticated) {
+    ctx.flash = {
+      index: {
+        message: null,
+        error: 'You need to be logged in to make account changes.',
+      },
+    }
+    error('Tried view something without being authenticated.')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    log(`Welcome admin level user: ${ctx.state.user.username}`)
+
+    const locals = {
+      title: `${ctx.app.site}: List Users`,
+      isAuthenticated: ctx.state.isAuthenticated,
+      list: ctx.flash,
+    }
+    await ctx.render('account/admin-listusers', locals)
+  }
+})
+
 export { router as account }
