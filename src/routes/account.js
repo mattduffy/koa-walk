@@ -57,7 +57,7 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`View ${ctx.state.user.username}'s account password.`)
+    log(`View ${ctx.state.sessionUser.username}'s account password.`)
     const csrfToken = new ObjectId().toString()
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
@@ -71,7 +71,7 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
       const locals = {
         csrfToken,
         body: ctx.body,
-        user: ctx.state.user,
+        sessionUser: ctx.state.sessionUser,
         flash: ctx.flash.edit ?? {},
         isAuthenticated: ctx.state.isAuthenticated,
         title: `${ctx.app.site}: View Account Password`,
@@ -108,7 +108,7 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`View ${ctx.state.user.username}'s account password.`)
+    log(`View ${ctx.state.sessionUser.username}'s account password.`)
     const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
@@ -128,9 +128,9 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
       } else {
         try {
           log('Have currentPassword and matching newPasswordn')
-          const result = await ctx.state.user.updatePassword(currentPassword, newPassword1)
+          const result = await ctx.state.sessionUser.updatePassword(currentPassword, newPassword1)
           if (result.success) {
-            ctx.state.user = await ctx.state.user.update()
+            ctx.state.sessionUser = await ctx.state.sessionUser.update()
             ctx.flash = { edit: { message: result.message } }
             ctx.redirect('/account/change/password')
           } else {
@@ -162,16 +162,16 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`View ${ctx.state.user.username}'s account tokens.`)
+    log(`View ${ctx.state.sessionUser.username}'s account tokens.`)
 
     if (isAsyncRequest(ctx.request)) {
       // async request, send back json
       ctx.type = 'application/json; charset=utf-8'
-      ctx.body = ctx.state.user.jwts
+      ctx.body = ctx.state.sessionUser.jwts
     } else {
       // regular http request, send back view
       const locals = {
-        user: ctx.state.user,
+        sessionUser: ctx.state.sessionUser,
         body: ctx.body,
         view: ctx.flash.view ?? {},
         isAuthenticated: ctx.state.isAuthenticated,
@@ -186,17 +186,16 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
 router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-view')
   const error = accountError.extend('GET-account-view')
-  const user = ctx.state.user ?? null
   // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`View ${user.username}'s account details.`)
+    log(`View ${ctx.state.sessionUser.username}'s account details.`)
     log('flash %O', ctx.flash)
     const locals = {
-      user,
+      sessionUser: ctx.state.sessionUser,
       body: ctx.body,
       edit: ctx.flash.edit ?? {},
       origin: `${ctx.request.origin}`,
@@ -212,18 +211,17 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
 router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-edit')
   const error = accountError.extend('GET-account-edit')
-  const user = ctx.state.user ?? null
   // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`Edit ${user.username}'s account details.`)
+    log(`Edit ${ctx.state.sessionUser.username}'s account details.`)
     const csrfToken = new ObjectId().toString()
     log(ctx.flash)
     const locals = {
-      user,
+      sessionUser: ctx.state.sessionUser,
       body: ctx.body,
       edit: ctx.flash.edit ?? {},
       csrfToken,
@@ -282,43 +280,43 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
     const csrfTokenHidden = ctx.request.body['csrf-token']
     if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
       const { firstname } = ctx.request.body
-      if (firstname !== '') ctx.state.user.firstName = firstname
+      if (firstname !== '') ctx.state.sessionUser.firstName = firstname
       const { lastname } = ctx.request.body
-      if (lastname !== '') ctx.state.user.lastName = lastname
+      if (lastname !== '') ctx.state.sessionUser.lastName = lastname
       const { username } = ctx.request.body
-      if (username !== '') ctx.state.user.username = username
+      if (username !== '') ctx.state.sessionUser.username = username
       const { displayname } = ctx.request.body
-      if (displayname !== '') ctx.state.user.displayName = displayname
+      if (displayname !== '') ctx.state.sessionUser.displayName = displayname
       const { primaryEmail } = ctx.request.body
-      if (primaryEmail !== '') ctx.state.user.primarEmail = primaryEmail
+      if (primaryEmail !== '') ctx.state.sessionUser.primarEmail = primaryEmail
       const { secondaryEmail } = ctx.request.body
-      if (secondaryEmail !== '') ctx.state.user.secondaryEmail = secondaryEmail
+      if (secondaryEmail !== '') ctx.state.sessionUser.secondaryEmail = secondaryEmail
       const { description } = ctx.request.body
-      if (description !== '') ctx.state.user.description = description
+      if (description !== '') ctx.state.sessionUser.description = description
       log('avatar file: %O', ctx.request.files.avatar.size)
       log('avatar file: %O', ctx.request.files.avatar.filepath)
-      if (ctx.state.user.publicDir === '') {
-        // log('users ctx: %O', ctx.state.user._ctx)
-        log(`${ctx.state.user.username} - no upload directory set yet, setting it now.`)
-        ctx.state.user.publicDir = 'a'
+      if (ctx.state.sessionUser.publicDir === '') {
+        // log('users ctx: %O', ctx.state.sessionUser._ctx)
+        log(`${ctx.state.sessionUser.username} - no upload directory set yet, setting it now.`)
+        ctx.state.sessionUser.publicDir = 'a'
       }
       const { avatar } = ctx.request.files
       if (avatar.size > 0) {
-        const avatarSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.user.publicDir}avatar-${avatar.originalFilename}`)
+        const avatarSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`)
         await rename(avatar.filepath, avatarSaved)
-        ctx.state.user.avatar = `${ctx.state.user.publicDir}avatar-${avatar.originalFilename}`
+        ctx.state.sessionUser.avatar = `${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`
       }
       // log('header file: %O', ctx.request.files.header)
       const { header } = ctx.request.files
       if (header.size > 0) {
-        const headerSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.user.publicDir}header-${header.originalFilename}`)
+        const headerSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`)
         await rename(header.filepath, headerSaved)
-        ctx.state.user.header = `${ctx.state.user.publicDir}header-${header.originalFilename}`
+        ctx.state.sessionUser.header = `${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`
       }
       const { url } = ctx.request.body
-      if (url !== '') ctx.state.user.url = url
+      if (url !== '') ctx.state.sessionUser.url = url
       try {
-        ctx.state.user = await ctx.state.user.update()
+        ctx.state.sessionUser = await ctx.state.sessionUser.update()
         delete ctx.session.csrfToken
         ctx.cookies.set('csrfToken')
         ctx.cookies.set('csrfToken.sig')
@@ -361,7 +359,7 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`Welcome admin level user: ${ctx.state.user.username}`)
+    log(`Welcome admin level user: ${ctx.state.sessionUser.username}`)
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection('users')
     const users = new Users(collection, ctx)

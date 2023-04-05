@@ -23,11 +23,11 @@ export async function getSessionUser(ctx, next) {
       const users = new Users(collection, ctx)
       const user = await users.getById(ctx.session.id)
       if (user) {
-        ctx.state.user = user
+        ctx.state.sessionUser = user
         ctx.state.isAuthenticated = true
       } else {
         ctx.state.isAuthenticated = false
-        ctx.state.user = {}
+        ctx.state.sessionUser = {}
       }
     } catch (e) {
       error(e)
@@ -121,12 +121,12 @@ export function tokenAuthMiddleware(options = {}) {
           const users = new Users(collection)
           const tokenUser = await users.authenticateByAccessToken(ctx.state.accessToken)
           if (tokenUser && tokenUser.message === 'success') {
-            ctx.state.user = tokenUser.user
+            ctx.state.sessionUser = tokenUser.user
             ctx.state.isAuthenticated = true
             await next()
           } else {
             ctx.state.isAuthenticated = false
-            ctx.state.user = {}
+            ctx.state.sessionUser = {}
             ctx.status = 401
             ctx.type = 'text/plain; charset=utf-8'
             ctx.body = `HTTP 401 Unauthorized\nWWW-Authenticate: Bearer realm="${ctx.app.domain}"`
@@ -148,7 +148,6 @@ export function tokenAuthMiddleware(options = {}) {
 export async function errorHandlers(ctx, next) {
   const log = middlewareLog.extend('errorHandler')
   const error = middlewareError.extend('errorHandler')
-  const user = ctx.state.user ?? {}
   try {
     await next()
     if (!ctx.body) {
@@ -157,7 +156,7 @@ export async function errorHandlers(ctx, next) {
       const locals = {
         body: ctx.body,
         title: `${ctx.app.site}: 404`,
-        user,
+        sessionUser: ctx.state.sessionUser,
         isAuthenticated: ctx.state.isAuthenticated,
       }
       await ctx.render('404', locals)

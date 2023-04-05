@@ -161,7 +161,7 @@ app.on('error', (err, ctx) => {
   const locals = {
     title: `${ctx.app.site}: 500`,
     body: ctx.body,
-    user: ctx.state.user,
+    sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
   }
   ctx.render('500', locals)

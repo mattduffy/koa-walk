@@ -19,7 +19,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
   const log = authLog.extend('GET-login')
   const error = authError.extend('GET-login')
   log('logging the user in')
-  ctx.state.user = ctx.state.user ?? {}
+  ctx.state.sessionUser = ctx.state.sessionUser ?? {}
   if (ctx.state.isAuthenticated) {
     ctx.redirect('/')
   }
@@ -28,7 +28,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
   const locals = {
     body: ctx.body,
     title: `${ctx.app.site}: Login`,
-    user: ctx.state.user,
+    sessionUser: ctx.state.sessionUser,
     csrfToken,
     login: ctx.flash.login ?? {},
     isAuthenticated: ctx.state.isAuthenticated,
@@ -91,11 +91,10 @@ router.post('postLogin', '/login', async (ctx, next) => {
       log('successful user login')
       authUser.user.sessionId = sessionId
       const loggedInUser = await authUser.user.update()
-      ctx.state.user = loggedInUser
+      ctx.state.sessionUser = loggedInUser
       ctx.state.isAuthenticated = true
       ctx.session.id = loggedInUser._id
       ctx.session.jwts = loggedInUser._jwts
-      ctx.state.user = loggedInUser
       delete ctx.session.csrfToken
       ctx.cookies.set('csrfToken')
       ctx.cookies.set('csrfToken.sig')
@@ -122,8 +121,7 @@ router.get('getLogout', '/logout', async (ctx, next) => {
   // await next()
   if (ctx.state.isAuthenticated) {
     log('logging out')
-    // ctx.state.user = {}
-    ctx.state.user = null
+    ctx.state.sessionUser = null
     ctx.session = null
   }
   ctx.state.isAuthenticated = false

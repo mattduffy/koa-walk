@@ -34,13 +34,26 @@ router.get('index', '/', hasFlash, async (ctx, next) => {
   log('inside main router: /')
   // await next()
   ctx.status = 200
-  // log(ctx.state.user)
-  const user = ctx.state.user ?? null
+  // log(ctx.state.sessionUser)
   await ctx.render('index', {
-    user,
+    sessionUser: ctx.state.sessionUser,
     body: ctx.body,
     flash: ctx.flash?.index ?? {},
     title: `${ctx.app.site}: Home`,
+    isAuthenticated: ctx.state.isAuthenticated,
+  })
+})
+
+router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
+  const log = mainLog.extend('galleries')
+  const error = mainError.extend('galleries')
+  log('inside index router: /galleries')
+  // await next()
+  ctx.status = 200
+  await ctx.render('about', {
+    body: ctx.body,
+    title: `${ctx.app.site}: Galleries`,
+    sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
   })
 })
@@ -51,11 +64,10 @@ router.get('about', '/about', hasFlash, async (ctx, next) => {
   log('inside index router: /about')
   // await next()
   ctx.status = 200
-  const user = ctx.state.user ?? null
   await ctx.render('about', {
     body: ctx.body,
     title: `${ctx.app.site}: About`,
-    user,
+    sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
   })
 })
@@ -66,10 +78,9 @@ router.get('contact', '/contact', hasFlash, async (ctx, next) => {
   log('inside index router: /contact')
   // await next()
   ctx.status = 200
-  const user = ctx.state.user ?? null
   await ctx.render('contact', {
     title: `${ctx.app.site}: Contact`,
-    user,
+    sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
   })
 })

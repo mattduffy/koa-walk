@@ -73,7 +73,7 @@ router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
   if (Buffer.from(id).length !== 24 || /[^0-9A-Fa-f]/.test(id)) {
     ctx.throw(400, `Not a valid user ID: ${id}`)
   }
-  ctx.state.user = { id }
+  ctx.state.sessionUser = { id }
   const db = ctx.state.mongodb.client.db()
   await next()
   const collection = db.collection('users')
@@ -84,7 +84,7 @@ router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
     ctx.throw(404, `No user found with ID: ${id}`)
   }
   ctx.status = 200
-  ctx.state.user = foundUser
+  ctx.state.sessionUser = foundUser
   ctx.body = foundUser.toString()
   ctx.type = 'application/json'
 })
@@ -98,7 +98,7 @@ router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
     error(`Not a valid email address: ${email}`)
     ctx.throw(400, `Not a valid email address: ${email}`)
   }
-  ctx.state.user = { email }
+  ctx.state.sessionUser = { email }
   const db = ctx.state.mongodb.client.db()
   await next()
   const collection = db.collection('users')
@@ -109,7 +109,7 @@ router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
     ctx.throw(404, `No user found with email: ${email}`)
   }
   ctx.status = 200
-  ctx.state.user = foundUser
+  ctx.state.sessionUser = foundUser
   ctx.body = foundUser.toString()
   ctx.type = 'application/json'
 })
