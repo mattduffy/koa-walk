@@ -354,7 +354,7 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
     ctx.flash = {
       index: {
         message: null,
-        error: 'You need to be logged in to make account changes.',
+        error: 'You need to be logged in to do that.',
       },
     }
     error('Tried view something without being authenticated.')
@@ -362,12 +362,20 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
     ctx.redirect('/')
   } else {
     log(`Welcome admin level user: ${ctx.state.user.username}`)
-
+    const db = ctx.state.mongodb.client.db()
+    const collection = db.collection('users')
+    const users = new Users(collection, ctx)
+    const allUsers = await users.getAllUsers()
     const locals = {
       title: `${ctx.app.site}: List Users`,
+      origin: ctx.request.origin,
       isAuthenticated: ctx.state.isAuthenticated,
       list: ctx.flash,
     }
+    allUsers.map((u) => {
+      locals[u._id] = u.users
+      return undefined
+    })
     await ctx.render('account/admin-listusers', locals)
   }
 })

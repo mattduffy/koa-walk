@@ -21,8 +21,38 @@
       <span><%= list.error%></span>
     </div>
     <% } %>
-    <div class="account-details">
-    hi
+    <div class="adminList">
+    <% if (Admin && Admin.length > 0) { %>
+      <ul id="admins" class="admins">Admins (<%- Admin.length -%>)
+        <% Admin.forEach((user) => { %>
+          <li><a href="<%-origin-%>/@<%- user.username -%>">@<%- user.username -%></a> (<%-user.status-%>)</li>
+        <% }) %>
+      </ul>  
+    <% } else { %>
+      No Admin users created
+    <% } %>
+    </div>
+    <div class="creatorList">
+    <% if (Creator && Creator.length > 0) { %>
+      <ul id="creators" class="creators">Creators (<%- Creator.length -%>)
+        <% Creator.forEach((user) => { %>
+          <li><a href="<%-origin-%>/@<%- user.username -%>">@<%- user.username -%></a> (<%-user.status-%>)</li>
+        <% }) %>
+      </ul>  
+    <% } else { %>
+      No Creator accounts created
+    <% } %>
+    </div>
+    <div class="userList">
+    <% if (User && User.length > 0) { %>
+      <ul id="users" class="users">Users (<%- User.length -%>)
+        <% User.forEach((user) => { %>
+          <li><a href="<%-origin-%>/@<%- user.username -%>">@<%- user.username -%></a> (<%-user.status-%>)</li>
+        <% }) %>
+      </ul>  
+    <% } else { %>
+      No User accounts created
+    <% } %>
     </div>
   </article>
 </main>
