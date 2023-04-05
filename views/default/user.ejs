@@ -2,15 +2,15 @@
   <article>
     <h1>User Detail Page</h1>
     
-    <% if (user) { %>
-    <p>This is the user detail page for <%= user.name %>.</p>
+    <% if (sessionUser) { %>
+    <p>This is the user detail page for <%= sessionUser.name %>.</p>
     <ul>
-      <li><%= user.type %></li>
-      <li><%= `${user.name}` %></li>
-      <li><%= `${user.firstName} ${user.lastName}` %></li>
-      <li><%= user.email.primary %></li>
-      <li><%= user.description %></li>
-      <li><%= user.status%></li>
+      <li><%= sessionUser.type %></li>
+      <li><%= `${sessionUser.name}` %></li>
+      <li><%= `${sessionUser.firstName} ${sessionUser.lastName}` %></li>
+      <li><%= sessionUser.email.primary %></li>
+      <li><%= sessionUser.description %></li>
+      <li><%= sessionUser.status%></li>
     </ul>
     <% } else { %>
     <p>No user found with username <%= username %>.</p>

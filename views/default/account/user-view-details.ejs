@@ -2,7 +2,7 @@
   <article>
     <h1>View User Details</h1>
     
-    <p>This is the user detail page for <%= user.name %>.</p>
+    <p>This is the user detail page for <%= sessionUser.name %>.</p>
     <% if (isAuthenticated) { %>
       <p><a href="/account/edit">Edit</a></p>
     <% } %>
@@ -19,45 +19,45 @@
       <dl class="wrapper" style="display: grid; grid-template-columns: 1fr
         1fr; row-gap: 0.125em; column-gap: 1px">
         <dt style="display: inline-block;">First Name: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.firstName %><% } %></dd>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.firstName %><% } %></dd>
 
         <dt style="display: inline-block;">Last Name: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.lastName %><% } %></dd>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.lastName %><% } %></dd>
 
         <dt style="display: inline-block;">Primary Email Address: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.primaryEmail.primary %><% } %></dd>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.primaryEmail.primary %><% } %></dd>
         
         <dt style="display: inline-block;">Secondary Email Address: </dt>
-        <dd style="display: inline-block;"><% if (user) {
-          %><%-user?.email.secondaryEmail?.secondary || '<span class="smallem">none provided</span>' %><% } %></dd>
+        <dd style="display: inline-block;"><% if (sessionUser) {
+          %><%-sessionUser?.email.secondaryEmail?.secondary || '<span class="smallem">none provided</span>' %><% } %></dd>
             
 
         <dt style="display: inline-block;">Description: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.description %><% } %></dd>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.description %><% } %></dd>
 
         <dt style="display: inline-block;">Account Status: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.status %><% } %></dd>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.status %><% } %></dd>
 
         <dt style="display: inline-block;">Account Type: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%=user?.type %><% } %></dd>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.type %><% } %></dd>
 
         <dt style="display: inline-block;">User Upload Dir: </dt>
-        <dd style="display: inline-block;"><% if (user.publicDir !== '') { %><%= `${origin}/${user?.publicDir}` %><% } else { %>
+        <dd style="display: inline-block;"><% if (sessionUser.publicDir !== '') { %><%= `${origin}/${sessionUser?.publicDir}` %><% } else { %>
         <span class="smallem">not set yet</span>
       <% } %></dd>
 
         <dt style="display: inline-block;">Avatar: </dt>
-        <dd style="display: inline-block;"><% if (user.avatar !== '') { %><img src="<%= `${origin}/${user?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
+        <dd style="display: inline-block;"><% if (sessionUser.avatar !== '') { %><img src="<%= `${origin}/${sessionUser?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
         <span class="smallem">no avatar image uploaded yet</span>
       <% } %></dd>
 
         <dt style="display: inline-block;">Header: </dt>
-        <dd style="display: inline-block;"><% if (user.header !== '') { %><img src="<%= `${origin}/${user?.header}` %>" id="header alt="header image"> <% } else { %>
+        <dd style="display: inline-block;"><% if (sessionUser.header !== '') { %><img src="<%= `${origin}/${sessionUser?.header}` %>" id="header alt="header image"> <% } else { %>
         <span class="smallem">no header image uploaded yet</span>
       <% } %></dd>
 
         <dt style="display: inline-block;">Url: </dt>
-        <dd style="display: inline-block;"><% if (user) { %><%= `${origin}/${user?.url}` %><% } %></dd>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%= `${origin}/${sessionUser?.url}` %><% } %></dd>
       </dl>
     </div>
   </article>

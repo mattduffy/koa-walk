@@ -2,7 +2,7 @@
   <article>
     <h1>Edit User Details</h1>
     
-    <p>This is the user detail page for <%= user.name %>.</p>
+    <p>This is the user detail page for <%= sessionUser.name %>.</p>
     <form name="userEdit" id="edit" action="/account/edit" method="POST" enctype="multipart/form-data">
         <fieldset id="edit_fieldset" name="edit_fieldset" form="edit" class="edit_fieldset" title="edit Form">
           <legend>Mattmadethese</legend>
@@ -18,36 +18,36 @@
             <% } %>
             <div class="wrapper">
               <label for="firstname">First Name: </label>
-              <input type="text" size="45" tabindex="1" id="firstname" name="firstname" required autocomplete="given-name" value="<% if (user) { %><%=user?.firstName %><% } %>">
+              <input type="text" size="45" tabindex="1" id="firstname" name="firstname" required autocomplete="given-name" value="<% if (sessionUser) { %><%=sessionUser?.firstName %><% } %>">
 
               <label for="lastname">Last Name: </label>
-              <input type="text" size="45" tabindex="2" id="lastname" name="lastname" required autocomplete="family-name" value="<% if (user) { %><%=user?.lastName %><% } %>">
+              <input type="text" size="45" tabindex="2" id="lastname" name="lastname" required autocomplete="family-name" value="<% if (sessionUser) { %><%=sessionUser?.lastName %><% } %>">
               
               <label for="username">User Name: </label>
-              <input type="text" size="45" tabindex="3" id="username" name="username" required autocomplete="username" value="<% if (user) { %><%=user?.username %><% } %>">
+              <input type="text" size="45" tabindex="3" id="username" name="username" required autocomplete="username" value="<% if (sessionUser) { %><%=sessionUser?.username %><% } %>">
               
 <label for="  displayname">Display Name: </label>
-              <input type="text" size="45" tabindex="4" id="displayname" name="displayname" required value="<% if (user) { %><%=user?.displayName %><% } %>">
+              <input type="text" size="45" tabindex="4" id="displayname" name="displayname" required value="<% if (sessionUser) { %><%=sessionUser?.displayName %><% } %>">
               
 <label for="  primaryEmail">Primary Email Address: </label>
-              <input type="email" size="45" tabindex="5" id="primaryEmail" name="primaryEmail" required autocomplete="email" value="<% if (user) { %><%=user?.primaryEmail.primary%><% } %>">
+              <input type="email" size="45" tabindex="5" id="primaryEmail" name="primaryEmail" required autocomplete="email" value="<% if (sessionUser) { %><%=sessionUser?.primaryEmail.primary%><% } %>">
            
               <label for="secondaryEmail">Secondary Email Address: </label>
-              <input type="email" size="45" tabindex="6" id="secondaryEmail" name="secondaryEmail" autocomplete="email" value="<% if (user) { %><%=user?.email.secondaryEmail?.secondary%><% } %>">
+              <input type="email" size="45" tabindex="6" id="secondaryEmail" name="secondaryEmail" autocomplete="email" value="<% if (sessionUser) { %><%=sessionUser?.email.secondaryEmail?.secondary%><% } %>">
               
               <label for="description">Description: </label>
-              <input type="text" size="45" tabindex="7" id="description" name="description" value="<% if (user) { %><%=user?.description%><% } %>">
+              <input type="text" size="45" tabindex="7" id="description" name="description" value="<% if (sessionUser) { %><%=sessionUser?.description%><% } %>">
               
               <label for="avatar">Avatar:</label>
               <input type="file" tabindex="8" id="avatar" name="avatar" accept="image/png, image/jpeg, image/gif">
-              <!--<input type="text" size="50" tabindex="8" id="avatar" name="avatar" value="<% if (user) { %><%=user.avatar%><% } %>">-->
+              <!--<input type="text" size="50" tabindex="8" id="avatar" name="avatar" value="<% if (sessionUser) { %><%=sessionUser.avatar%><% } %>">-->
 
               <label for="header">Header: </label>
               <input type="file" tabindex="9" id="header" name="header" accept="image/png, image/jpeg, image/gif">
-              <!-- <input type="text" size="50" tabindex="9" id="header" name="header" value="<% if (user) { %><%=user.header%><% } %>"> -->
+              <!-- <input type="text" size="50" tabindex="9" id="header" name="header" value="<% if (sessionUser) { %><%=sessionUser.header%><% } %>"> -->
 
               <label for="url">Url: </label>
-              <input tpye="text" size="50" tabindex="10" id="url" name="url" value="<% if (user) { %><%=user.url%><% } %>">
+              <input tpye="text" size="50" tabindex="10" id="url" name="url" value="<% if (sessionUser) { %><%=sessionUser.url%><% } %>">
 
               <input type="hidden" id="csrf-token" name="csrf-token" value="<%= csrfToken %>">
             </div> 

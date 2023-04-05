@@ -2,6 +2,9 @@
   <aside>
     <nav class="sidebar-nav-wrapper">
       <% if (isAuthenticated) { %>
+      <div id="loggedInAs">
+        <%- sessionUser.displayName -%>
+      </div>
       <a href="/logout">Logout</a>
       <ul id="userLinks" class="userLinks">
         <li><a href="/account/view">View account details</a></li>
@@ -11,7 +14,7 @@
       <% } else { %>
       <a href="/login">Login</a>
       <% } %>
-      <% if (/admin/i.test(user?.type)) { %>
+      <% if (/admin/i.test(sessionUser?.type)) { %>
       Admin level options go here
       <ul id="adminLinks" class="adminLinks">
         <li><a href="/admin/account/listusers">List users</a><li> 
