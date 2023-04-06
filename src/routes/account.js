@@ -359,22 +359,68 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`Welcome admin level user: ${ctx.state.sessionUser.username}`)
-    const db = ctx.state.mongodb.client.db()
-    const collection = db.collection('users')
-    const users = new Users(collection, ctx)
-    const allUsers = await users.getAllUsers()
-    const locals = {
-      title: `${ctx.app.site}: List Users`,
-      origin: ctx.request.origin,
-      isAuthenticated: ctx.state.isAuthenticated,
-      list: ctx.flash,
+    const locals = {}
+    try {
+      log(`Welcome admin level user: ${ctx.state.sessionUser.username}`)
+      const db = ctx.state.mongodb.client.db()
+      const collection = db.collection('users')
+      const users = new Users(collection, ctx)
+      const allUsers = await users.getAllUsers()
+      locals.title = `${ctx.app.site}: List Users`
+      locals.origin = ctx.request.origin
+      locals.isAuthenticated = ctx.state.isAuthenticated
+      locals.list = ctx.flash
+      allUsers.map((u) => {
+        locals[u._id] = u.users
+        return undefined
+      })
+    } catch (e) {
+      error('Error trying to retrieve list of all user accounts.')
+      ctx.throw('Error trying to retrieve list of all user accounts.')
     }
-    allUsers.map((u) => {
-      locals[u._id] = u.users
-      return undefined
-    })
     await ctx.render('account/admin-listusers', locals)
+  }
+})
+
+router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('GET-admin-viewusers')
+  const error = accountError.extend('GET-admin-viewuers')
+  if (!ctx.state?.isAuthenticated) {
+    ctx.flash = {
+      index: {
+        message: null,
+        error: 'You need to be logged in to do that.',
+      },
+    }
+    error('Tried view something without being authenticated.')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    const locals = {}
+    try {
+      let displayUser = ctx.params.username
+      log(`Admin view of user: ${displayUser}`)
+      const db = ctx.state.mongodb.client.db()
+      const collection = db.collection('users')
+      const users = new Users(collection, ctx)
+      if (displayUser[0] === '@') {
+        displayUser = displayUser.slice(1)
+      }
+      displayUser = await users.getByUsername(displayUser)
+      const csrfToken = new ObjectId().toString()
+      ctx.session.csrfToken = csrfToken
+      ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+      locals.csrfToken = csrfToken
+      locals.edit = ctx.flash.edit ?? {}
+      locals.title = `${ctx.app.site}: View ${ctx.params.username}`
+      locals.origin = ctx.request.origin
+      locals.isAuthenticated = ctx.state.isAuthenticated
+      locals.displayUser = displayUser
+    } catch (e) {
+      error(`Error trying to retrieve ${ctx.params.username}'s account.`)
+      ctx.throw(`Error trying to retrieve ${ctx.params.username}'s account.`)
+    }
+    await ctx.render('account/admin-user-edit-details', locals)
   }
 })
 

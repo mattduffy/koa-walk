@@ -36,7 +36,7 @@ async function hasFlash(ctx, next) {
 router.get('getUsers', '/users/:type*', async (ctx, next) => {
   const log = Debug('koa-stub:routes:users_log')
   const error = Debug('koa-stub:routes:users_error')
-  if (!ctx.state.isAuthenticated || !(ctx.state?.user.type === 'Admin')) {
+  if (!ctx.state.isAuthenticated || !(ctx.state?.sessionUser.type === 'Admin')) {
     ctx.status = 401
     ctx.type = 'application/json; charset=utf-8'
     ctx.body = { status: 'Unauthorized', code: 401 }

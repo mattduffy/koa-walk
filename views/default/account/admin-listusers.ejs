@@ -25,7 +25,8 @@
     <% if (Admin && Admin.length > 0) { %>
       <ul id="admins" class="admins">Admins (<%- Admin.length -%>)
         <% Admin.forEach((u) => { %>
-          <li><a href="<%-origin-%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>)</li>
+          <li><a href="<%- origin -%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>) <span class="edit"><a
+          href="<%- origin -%>/admin/account/view/@<%- u.username -%>">edit</a></span></li>
         <% }) %>
       </ul>  
     <% } else { %>
