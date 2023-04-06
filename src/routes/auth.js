@@ -93,15 +93,16 @@ router.post('postLogin', '/login', async (ctx, next) => {
       const loggedInUser = await authUser.user.update()
       ctx.state.sessionUser = loggedInUser
       ctx.state.isAuthenticated = true
-      ctx.session.id = loggedInUser._id
-      ctx.session.jwts = loggedInUser._jwts
+      ctx.session.id = loggedInUser.id
+      ctx.session.jwts = loggedInUser.jwts
+      ctx.session.username = loggedInUser.username
       delete ctx.session.csrfToken
       ctx.cookies.set('csrfToken')
       ctx.cookies.set('csrfToken.sig')
       ctx.flash = {
         index: {
-          username: loggedInUser._first,
-          info: `Hello ${loggedInUser._first}`,
+          username: loggedInUser.username,
+          info: `Hello ${loggedInUser.firstName}`,
           message: null,
           error: null,
         },

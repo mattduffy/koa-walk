@@ -164,8 +164,9 @@ router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next
     error(err)
   }
   ctx.status = 200
-  locals.title = `${ctx.app.site}: ${user.name}`
-  locals.user = user
+  locals.title = `${ctx.app.site}: ${username}`
+  locals.sessionUser = ctx.state.sessionUser
+  locals.displayUser = user
   locals.isAuthenticated = ctx.state.isAuthenticated
   await ctx.render('user', locals)
 })
