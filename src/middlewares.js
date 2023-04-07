@@ -31,6 +31,7 @@ export async function getSessionUser(ctx, next) {
       }
     } catch (e) {
       error(e)
+      throw new Error(e)
     }
   }
   await next()

@@ -13,6 +13,7 @@ import formidable from 'formidable'
 import { _log, _error } from '../utils/logging.js'
 import { Users, AdminUser } from '../models/users.js'
 
+const USERS = 'users'
 const accountLog = _log.extend('account')
 const accountError = _error.extend('account')
 
@@ -201,6 +202,8 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
       origin: `${ctx.request.origin}`,
       csrfToken: new ObjectId().toString(),
       isAuthenticated: ctx.state.isAuthenticated,
+      defaultAvatar: `${ctx.request.origin}/i/accounts/avatars/missing.png`,
+      defaultHeader: `${ctx.request.origin}/i/accounts/headers/generic.png`,
       title: `${ctx.app.site}: View Account Details`,
     }
     ctx.status = 200
@@ -332,6 +335,7 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
         ctx.status = 304
         ctx.flash = {
           error: e,
+          info: null,
           message: null,
         }
         ctx.redirect('/account/edit')
@@ -363,7 +367,7 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
     try {
       log(`Welcome admin level user: ${ctx.state.sessionUser.username}`)
       const db = ctx.state.mongodb.client.db()
-      const collection = db.collection('users')
+      const collection = db.collection(USERS)
       const users = new Users(collection, ctx)
       const allUsers = await users.getAllUsers()
       locals.title = `${ctx.app.site}: List Users`
@@ -384,7 +388,7 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
 
 router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-admin-viewusers')
-  const error = accountError.extend('GET-admin-viewuers')
+  const error = accountError.extend('GET-admin-viewusers')
   if (!ctx.state?.isAuthenticated) {
     ctx.flash = {
       index: {
@@ -401,26 +405,189 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       let displayUser = ctx.params.username
       log(`Admin view of user: ${displayUser}`)
       const db = ctx.state.mongodb.client.db()
-      const collection = db.collection('users')
+      const collection = db.collection(USERS)
       const users = new Users(collection, ctx)
       if (displayUser[0] === '@') {
         displayUser = displayUser.slice(1)
       }
       displayUser = await users.getByUsername(displayUser)
-      const csrfToken = new ObjectId().toString()
-      ctx.session.csrfToken = csrfToken
-      ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-      locals.csrfToken = csrfToken
-      locals.edit = ctx.flash.edit ?? {}
+      locals.view = ctx.flash.view ?? {}
       locals.title = `${ctx.app.site}: View ${ctx.params.username}`
       locals.origin = ctx.request.origin
       locals.isAuthenticated = ctx.state.isAuthenticated
       locals.displayUser = displayUser
+      locals.defaultAvatar = `${ctx.request.origin}/i/accounts/avatars/missing.png`
+      locals.defaultHeader = `${ctx.request.origin}/i/accounts/headers/generic.png`
     } catch (e) {
       error(`Error trying to retrieve ${ctx.params.username}'s account.`)
-      ctx.throw(`Error trying to retrieve ${ctx.params.username}'s account.`)
+      error(e)
+      ctx.throw(500, `Error trying to retrieve ${ctx.params.username}'s account.`)
+    }
+    await ctx.render('account/admin-user-view-details', locals)
+  }
+})
+
+router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('GET-admin-editusers')
+  const error = accountError.extend('GET-admin-editusers')
+  if (!ctx.state?.isAuthenticated) {
+    ctx.flash = {
+      index: {
+        message: null,
+        error: 'You need to be logged in to do that.',
+      },
+    }
+    error('Tried to view something without being authenticated.')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    const locals = {}
+    try {
+      let displayUser = ctx.params.username
+      log(`Admin edit of user ${displayUser}`)
+      const db = ctx.state.mongodb.client.db()
+      const collection = db.collection(USERS)
+      const users = new Users(collection, ctx)
+      if (displayUser[0] === '@') {
+        displayUser = displayUser.slice(1)
+      }
+      displayUser = await users.getByUsername(displayUser)
+      locals.edit = ctx.flash.edit ?? {}
+      locals.title = `${ctx.app.site}: Edit ${ctx.params.username}`
+      locals.origin = ctx.request.origin
+      locals.isAuthenticated = ctx.state.isAuthenticated
+      const csrfToken = new ObjectId().toString()
+      ctx.session.csrfToken = csrfToken
+      ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+      locals.csrfToken = csrfToken
+      locals.displayUser = displayUser
+    } catch (e) {
+      error(`Error trying to retrieve ${ctx.params.username}'s account.`)
+      error(e)
+      ctx.throw(500, `Error trying to retrieve ${ctx.params.username}'s account.`)
     }
     await ctx.render('account/admin-user-edit-details', locals)
+  }
+})
+
+router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('POST-admin-editusers')
+  const error = accountError.extend('POST-admin-editusers')
+  if (!ctx.state?.isAuthenticated) {
+    ctx.flash = {
+      index: {
+        info: null,
+        message: null,
+        error: 'You need to be logged in to do that.',
+      },
+    }
+    error('Tried to edit an account without being authenticated.')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    try {
+      const form = formidable({
+        encoding: 'utf-8',
+        uploadDir: ctx.app.uploadsDir,
+        keepExtensions: true,
+        multipart: true,
+      })
+      await new Promise((resolve, reject) => {
+        form.parse(ctx.req, (err, fields, files) => {
+          if (err) {
+            error('There was a problem parsing the multipart form data.')
+            error(err)
+            reject(err)
+            return
+          }
+          log('Multipart form data was successfully parsed.')
+          ctx.request.body = fields
+          ctx.request.files = files
+          // log(fields)
+          // log(files)
+          resolve()
+        })
+      })
+      const sessionId = ctx.cookies.get('session')
+      const csrfTokenCookie = ctx.cookies.get('csrfToken')
+      const csrfTokenSession = ctx.session.csrfToken
+      const csrfTokenHidden = ctx.request.body['csrf-token']
+      const db = ctx.state.mongodb.client.db()
+      const collection = db.collection(USERS)
+      const users = new Users(collection, ctx)
+      if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
+        const { username } = ctx.request.body
+        let displayUser = await users.getByUsername(username)
+        if (username !== '') displayUser.username = username
+
+        const { firstname } = ctx.request.body
+        if (firstname !== '') displayUser.firstName = firstname
+        const { lastname } = ctx.request.body
+        if (lastname !== '') displayUser.lastName = lastname
+        const { displayname } = ctx.request.body
+        if (displayname !== '') displayUser.displayName = displayname
+        const { primaryEmail } = ctx.request.body
+        if (primaryEmail !== '') displayUser.primarEmail = primaryEmail
+        const { secondaryEmail } = ctx.request.body
+        if (secondaryEmail !== '') displayUser.secondaryEmail = secondaryEmail
+        const { description } = ctx.request.body
+        if (description !== '') displayUser.description = description
+        log('avatar file: %O', ctx.request.files.avatar.size)
+        log('avatar file: %O', ctx.request.files.avatar.filepath)
+        if (displayUser.publicDir === '') {
+          // log('users ctx: %O', displayUser._ctx)
+          log(`${displayUser.username} - no upload directory set yet, setting it now.`)
+          displayUser.publicDir = 'a'
+        }
+        const { avatar } = ctx.request.files
+        if (avatar.size > 0) {
+          const avatarSaved = path.resolve(`${ctx.app.publicDir}/${displayUser.publicDir}avatar-${avatar.originalFilename}`)
+          await rename(avatar.filepath, avatarSaved)
+          displayUser.avatar = `${displayUser.publicDir}avatar-${avatar.originalFilename}`
+        }
+        // log('header file: %O', ctx.request.files.header)
+        const { header } = ctx.request.files
+        if (header.size > 0) {
+          const headerSaved = path.resolve(`${ctx.app.publicDir}/${displayUser.publicDir}header-${header.originalFilename}`)
+          await rename(header.filepath, headerSaved)
+          displayUser.header = `${displayUser.publicDir}header-${header.originalFilename}`
+        }
+        const { url } = ctx.request.body
+        if (url !== '') displayUser.url = url
+        try {
+          displayUser = await displayUser.update()
+          ctx.flash = {
+            view: {
+              info: null,
+              message: `${username}'s account has been updated.`,
+              error: null,
+            },
+          }
+        } catch (e) {
+          error(e)
+          // ctx.throw(400, 'Failed to update user account.', e)
+          ctx.flash = {
+            view: {
+              info: null,
+              error: e,
+              message: null,
+            },
+          }
+        }
+        delete ctx.session.csrfToken
+        ctx.cookies.set('csrfToken')
+        ctx.cookies.set('csrfToken.sig')
+        ctx.redirect(`/admin/account/view/@${displayUser.username}`)
+      } else {
+        error('csrf token mismatch')
+        ctx.status = 403
+        ctx.type = 'application/json'
+        ctx.body = { status: 'Error, csrf tokens do not match' }
+      }
+    } catch (e) {
+      error(e)
+      ctx.throw(500, 'Failed up update user\'s account.', e)
+    }
   }
 })
 

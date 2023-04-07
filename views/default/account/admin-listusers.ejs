@@ -26,7 +26,8 @@
       <ul id="admins" class="admins">Admins (<%- Admin.length -%>)
         <% Admin.forEach((u) => { %>
           <li><a href="<%- origin -%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>) <span class="edit"><a
-          href="<%- origin -%>/admin/account/view/@<%- u.username -%>">edit</a></span></li>
+                href="<%- origin -%>/admin/account/view/@<%- u.username -%>">view</a></span> <span class="view"><a 
+                href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span></li>
         <% }) %>
       </ul>  
     <% } else { %>
@@ -37,7 +38,9 @@
     <% if (Creator && Creator.length > 0) { %>
       <ul id="creators" class="creators">Creators (<%- Creator.length -%>)
         <% Creator.forEach((u) => { %>
-          <li><a href="<%-origin-%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>)</li>
+          <li><a href="<%-origin-%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>) <span class="edit"><a
+                href="<%- origin -%>/admin/account/view/@<%- u.username -%>">view</a></span> <span class="view"><a 
+                href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span></li>
         <% }) %>
       </ul>  
     <% } else { %>
@@ -48,7 +51,9 @@
     <% if (User && User.length > 0) { %>
       <ul id="users" class="users">Users (<%- User.length -%>)
         <% User.forEach((u) => { %>
-          <li><a href="<%-origin-%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>)</li>
+          <li><a href="<%-origin-%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>) <span class="edit"><a
+                href="<%- origin -%>/admin/account/view/@<%- u.username -%>">view</a></span> <span class="view"><a 
+                href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span></li>
         <% }) %>
       </ul>  
     <% } else { %>

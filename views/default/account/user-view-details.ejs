@@ -24,6 +24,9 @@
         <dt style="display: inline-block;">Last Name: </dt>
         <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.lastName %><% } %></dd>
 
+        <dt style="display: inline-block;">Display Name: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.displayName%><% } %></dd>
+
         <dt style="display: inline-block;">Primary Email Address: </dt>
         <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.primaryEmail.primary %><% } %></dd>
         
@@ -48,12 +51,14 @@
 
         <dt style="display: inline-block;">Avatar: </dt>
         <dd style="display: inline-block;"><% if (sessionUser.avatar !== '') { %><img src="<%= `${origin}/${sessionUser?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
-        <span class="smallem">no avatar image uploaded yet</span>
+        <span class="smallem">no avatar image uploaded yet</span><br>
+        <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
       <% } %></dd>
 
         <dt style="display: inline-block;">Header: </dt>
         <dd style="display: inline-block;"><% if (sessionUser.header !== '') { %><img src="<%= `${origin}/${sessionUser?.header}` %>" id="header alt="header image"> <% } else { %>
-        <span class="smallem">no header image uploaded yet</span>
+        <span class="smallem">no header image uploaded yet</span><br>
+        <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
       <% } %></dd>
 
         <dt style="display: inline-block;">Url: </dt>
