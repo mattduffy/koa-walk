@@ -3,6 +3,9 @@
     <h1>Edit User Details</h1>
     
     <p>This is the user detail page for <%= displayUser.name %>.</p>
+    <% if (isAuthenticated) { %>
+      <p><a href="/admin/account/view/@<%- displayUser.username %>">View</a></p>
+    <% } %>
     <form name="userEdit" id="edit" action="/admin/account/edit" method="POST" enctype="multipart/form-data">
         <fieldset id="edit_fieldset" name="edit_fieldset" form="edit" class="edit_fieldset" title="edit Form">
           <legend>Mattmadethese</legend>

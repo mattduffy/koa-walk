@@ -60,7 +60,7 @@
           <% if (displayUser.avatar !== '') { %><img src="<%= `${origin}/${displayUser?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
             <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
             <figcaption>
-              <span class="smallem">no avatar image uploaded yet</span><br>
+              <span class="smallem">Default avatar.  No avatar image uploaded yet.</span><br>
             </figcaption>
       <% } %>
           </figure>
@@ -72,7 +72,7 @@
           <% if (displayUser.header !== '') { %><img src="<%= `${origin}/${displayUser?.header}` %>" id="header alt="header image"> <% } else { %>
             <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
             <figcaption>
-              <span class="smallem">no header image uploaded yet</span><br>
+              <span class="smallem">Default header.  No header image uploaded yet.</span><br>
             </figcaption>
       <% } %>
           </figure>

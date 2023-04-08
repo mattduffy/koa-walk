@@ -9,6 +9,7 @@
 import { _log, _error } from './utils/logging.js'
 import { Users } from './models/users.js'
 
+const USERS = 'users'
 const middlewareLog = _log.extend('middlewares')
 const middlewareError = _error.extend('middlewares')
 
@@ -18,8 +19,9 @@ export async function getSessionUser(ctx, next) {
   if (ctx.session?.id) {
     try {
       log(`restoring session user: ${ctx.session.id}`)
+      log(`requested url: ${ctx.request.originalUrl}`)
       const db = ctx.state.mongodb.client.db()
-      const collection = db.collection('users')
+      const collection = db.collection(USERS)
       const users = new Users(collection, ctx)
       const user = await users.getById(ctx.session.id)
       if (user) {
@@ -27,7 +29,7 @@ export async function getSessionUser(ctx, next) {
         ctx.state.isAuthenticated = true
       } else {
         ctx.state.isAuthenticated = false
-        ctx.state.sessionUser = {}
+        ctx.state.sessionUser = null
       }
     } catch (e) {
       error(e)
@@ -118,7 +120,7 @@ export function tokenAuthMiddleware(options = {}) {
       } else {
         try {
           const db = ctx.state.mongodb.client.db()
-          const collection = db.collection('users')
+          const collection = db.collection(USERS)
           const users = new Users(collection)
           const tokenUser = await users.authenticateByAccessToken(ctx.state.accessToken)
           if (tokenUser && tokenUser.message === 'success') {
