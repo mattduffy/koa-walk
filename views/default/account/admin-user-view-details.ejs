@@ -21,8 +21,7 @@
       <span><%= view.error%></span>
     </div>
     <% } %><div class="account-details">
-      <dl class="wrapper" style="display: grid; grid-template-columns: 1fr
-        1fr; row-gap: 0.125em; column-gap: 1px">
+      <dl class="wrapper" style="display: grid; grid-template-columns: .75fr 2fr; row-gap: 0.125em; column-gap: 1px">
         <dt style="display: inline-block;">First Name: </dt>
         <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.firstName %><% } %></dd>
 
@@ -31,6 +30,16 @@
 
         <dt style="display: inline-block;">Display Name: </dt>
         <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.displayName%><% } %></dd>
+
+        <dt style="display: inline-block;">Username: </dt>
+        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.username%><% } %></dd>
+          
+        <dt style="display: inline-block;">Url: </dt>
+        <dd style="display: inline-block;"><% if (displayUser) { %><%= `${origin}/${displayUser?.url}` %><% } %></dd>
+
+        <dt style="display: inline-block;">Webfinger: </dt>
+        <dd style="display: inline-block;"><% if (displayUser) { %><%=
+              `${origin}/.well-known/webfinger?resource=acct:${displayUser?.username}` %><% } %></dd>
 
         <dt style="display: inline-block;">Primary Email Address: </dt>
         <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.primaryEmail.primary %><% } %></dd>
@@ -78,8 +87,7 @@
           </figure>
         </dd>
 
-        <dt style="display: inline-block;">Url: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%= `${origin}/${displayUser?.url}` %><% } %></dd>
+        
       </dl>
     </div>
   </article>

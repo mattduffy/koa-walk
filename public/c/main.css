@@ -245,7 +245,7 @@ body {
   
   div.wrapper {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: .75fr 2fr;
     grid-row-gap: .125em;
     column-gap: 1px; 
   

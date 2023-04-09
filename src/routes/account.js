@@ -287,7 +287,27 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
       const { lastname } = ctx.request.body
       if (lastname !== '') ctx.state.sessionUser.lastName = lastname
       const { username } = ctx.request.body
-      if (username !== '') ctx.state.sessionUser.username = username
+      if (username !== '') {
+        if (username !== ctx.state.sessionUser.username) {
+          if (ctx.state.sessionUser.isUsernameAvailable(username)) {
+            ctx.state.sessionUser.username = username
+            ctx.state.sessionUser.url = `@${username}`
+            // const { url } = ctx.request.body
+            // if (url !== '') {
+            //   ctx.state.sessionUser.url = url
+            // }
+          } else {
+            ctx.flash = {
+              edit: {
+                info: null,
+                message: null,
+                error: `${username} is not available.`,
+              },
+            }
+            ctx.redirect('/account/edit')
+          }
+        }
+      }
       const { displayname } = ctx.request.body
       if (displayname !== '') ctx.state.sessionUser.displayName = displayname
       const { primaryEmail } = ctx.request.body
@@ -316,8 +336,6 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
         await rename(header.filepath, headerSaved)
         ctx.state.sessionUser.header = `${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`
       }
-      const { url } = ctx.request.body
-      if (url !== '') ctx.state.sessionUser.url = url
       try {
         ctx.state.sessionUser = await ctx.state.sessionUser.update()
         delete ctx.session.csrfToken
@@ -518,8 +536,22 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, ne
       if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
         const { username } = ctx.request.body
         let displayUser = await users.getByUsername(username)
-        if (username !== '') displayUser.username = username
-
+        if (username !== '') {
+          if (username !== displayUser.username) {
+            if (displayUser.isUsernameAvailable(username)) {
+              displayUser.username = username
+            } else {
+              ctx.flash = {
+                edit: {
+                  info: null,
+                  message: null,
+                  error: `${username} is not available.`,
+                },
+              }
+              ctx.redirect(`/admin/account/edit/@${displayUser.username}`)
+            }
+          }
+        }
         const { firstname } = ctx.request.body
         if (firstname !== '') displayUser.firstName = firstname
         const { lastname } = ctx.request.body
