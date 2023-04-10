@@ -137,7 +137,8 @@ router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
   }
   ctx.status = 200
   locals.title = `${ctx.app.site}: ${user.name}`
-  locals.user = user
+  // locals.user = user
+  locals.displayUser = user
   locals.isAuthenticated = ctx.state.isAuthenticated
   await ctx.render('user', locals)
 })

@@ -60,18 +60,28 @@
       <% } %></dd>
 
         <dt style="display: inline-block;">Avatar: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser.avatar !== '') { %><img src="<%= `${origin}/${sessionUser?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
-        <span class="smallem">no avatar image uploaded yet</span><br>
-        <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
-      <% } %></dd>
+        <dd style="display: inline-block;">
+          <figure>
+          <% if (sessionUser.avatar !== '') { %><img src="<%= `${origin}/${sessionUser?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
+            <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
+            <figcaption>
+              <span class="smallem">Default avatar.  No avatar image uploaded yet.</span><br>
+            </figcaption>
+          <% } %>
+          </figure>
+        </dd>
 
         <dt style="display: inline-block;">Header: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser.header !== '') { %><img src="<%= `${origin}/${sessionUser?.header}` %>" id="header alt="header image"> <% } else { %>
-        <span class="smallem">no header image uploaded yet</span><br>
-        <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
-      <% } %></dd>
-
-        
+        <dd style="display: inline-block;">
+          <figure>
+          <% if (sessionUser.header !== '') { %><img src="<%= `${origin}/${sessionUser?.header}` %>" id="header alt="header image"> <% } else { %>
+            <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
+            <figcaption>
+              <span class="smallem">Default header.  No header image uploaded yet.</span><br>
+            </figcaption>
+          <% } %>
+          <figure>
+        </dd>
       </dl>
     </div>
   </article>
