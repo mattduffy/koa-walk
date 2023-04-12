@@ -22,6 +22,7 @@ import {
   prepareRequest,
   tokenAuthMiddleware,
   errorHandlers,
+  errors,
 } from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
 import { activityV1 } from './routes/activity_stream.js'
@@ -81,11 +82,15 @@ render(app, {
 // x-response-time
 async function xResponseTime(ctx, next) {
   const start = Date.now()
-  await next()
-  const ms = Date.now() - start
-  ctx.set('X-Response-Time', `${ms}`)
-  log(`${ctx.method} ${ctx.url} - ${ms}`)
-  // log('session: %o', ctx.session)
+  try {
+    await next()
+    const ms = Date.now() - start
+    ctx.set('X-Response-Time', `${ms}`)
+    log(`${ctx.method} ${ctx.url} - ${ms}`)
+    // log('session: %o', ctx.session)
+  } catch (e) {
+
+  }
 }
 
 // logging
@@ -117,33 +122,35 @@ async function cors(ctx, next) {
   ctx.set('Access-Control-Allow-Origin', '*')
   ctx.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
   ctx.set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS')
-  await next()
+  try {
+    await next()
+  } catch (e) {
+    // ctx.app.emit('error', 'Failed after setting CORS headers.', ctx)
+    // ctx.app.emit('error', e, ctx)
+  }
 }
 
 // checking to see if mongodb client is working
 async function isMongo(ctx, next) {
   const { client, ObjectId } = mongoClient
   ctx.state.mongodb = mongoClient
-  // const db = client.db()
-  // const users = db.collection('users')
-  // let user = 'this should not show up anywhere'
-  // user = await users.findOne({ _id: ObjectId('6264b5f610cbb8a2af7e6a8a') })
-  // if (!user) {
-  //   error('Error in isMongo middleware function.')
-  // }
-  // ctx.state.user = user
-  await next()
+  try {
+    await next()
+  } catch (e) {
+    // ctx.app.emit('error', 'Failed to get db connection setup.', ctx)
+  }
 }
 
+app.use(errors)
 app.use(isMongo)
+app.use(getSessionUser)
 app.use(flashMessage({}, app))
+app.use(prepareRequest())
+app.use(tokenAuthMiddleware())
+app.use(cors)
 app.use(wellknownNodeinfo({}, app))
 app.use(wellknownHostmeta({}, app))
 app.use(wellknownWebfinger({}, app))
-app.use(prepareRequest())
-app.use(tokenAuthMiddleware())
-app.use(getSessionUser)
-app.use(cors)
 // app.use(xResponseTime)
 // app.use(sessionViews)
 // app.use(logging)
@@ -154,17 +161,19 @@ app.use(Users.routes())
 app.use(Account.routes())
 app.use(activityV1.routes())
 app.use(apiV1.routes())
-app.use(errorHandlers)
 
-app.on('error', (err, ctx) => {
+app.on('error', async (err, ctx) => {
+  log(ctx)
   error(err)
-  const locals = {
-    title: `${ctx.app.site}: 500`,
-    body: ctx.body,
-    sessionUser: ctx.state.sessionUser,
-    isAuthenticated: ctx.state.isAuthenticated,
-  }
-  ctx.render('500', locals)
+  // const locals = {
+  //   errors: ctx.flash?.errors ?? {},
+  //   sessionUser: ctx.state?.sessionUser,
+  //   isAuthenticated: ctx.state.isAuthenticated,
+  //   title: ctx.status,
+  //   status: ctx.status,
+  //   message: ctx?.message ?? 'Fail',
+  // }
+  // await ctx.render('errors/error', locals)
 })
 
 app.listen(port)

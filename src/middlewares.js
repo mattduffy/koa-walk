@@ -33,10 +33,17 @@ export async function getSessionUser(ctx, next) {
       }
     } catch (e) {
       error(e)
-      throw new Error(e)
+      // throw new Error(e)
+      ctx.app.emit('error', e, ctx)
+      ctx.throw(500, 'Error while reconstituting the session.', e)
     }
   }
-  await next()
+  try {
+    await next()
+  } catch (e) {
+    // ctx.app.emit('error', e, ctx)
+    ctx.throw(500, 'Error after reconstituting the session.', e)
+  }
 }
 
 export function flashMessage(options, application) {
@@ -75,7 +82,15 @@ export function flashMessage(options, application) {
         ctx.session[key] = x
       },
     })
-    await next()
+    try {
+      log('Added flash message to session.')
+      await next()
+    } catch (e) {
+      error('Fail after adding flash message to session.')
+      error(e)
+      // ctx.app.emit('error', e, ctx)
+      ctx.throw(500, 'Error after adding flash message to session.', e)
+    }
     if (ctx.status === 302 && ctx.session && !ctx.session[key]) {
       ctx.session[key] = message
     }
@@ -102,7 +117,14 @@ export function prepareRequest(options = {}) {
       log(`access token: ${accessToken[1]}`);
       [, ctx.state.accessToken] = accessToken
     }
-    await next()
+    try {
+      await next()
+    } catch (e) {
+      error('Fail after checking for AJAX / ASYNC request.')
+      error(e)
+      // ctx.app.emit('error', 'Error after checking for AJAX / ASYNC request.', ctx)
+      ctx.throw(500, 'Error after checking for AJAX / ASYNC request.', e)
+    }
   }
 }
 
@@ -143,8 +165,101 @@ export function tokenAuthMiddleware(options = {}) {
       }
     } else {
       log('Not an async request bearing jwt access token.')
-      await next()
+      try {
+        await next()
+      } catch (e) {
+        error('Failed after token authentication.')
+        error(e)
+        // ctx.app.emit('error', 'Failed after token authentication.', ctx)
+        ctx.throw(500, 'Failed after token authentication.', e)
+      }
     }
+  }
+}
+
+export async function errors(ctx, next) {
+  const log = middlewareLog.extend('errorHandler')
+  const error = middlewareError.extend('errorHandler')
+  try {
+    log('pre-errors')
+    await next()
+    log('post-errors')
+  } catch (e) {
+    error('Caught by the app-level error-handler')
+    error(e)
+    switch (ctx.response.status) {
+      case 400:
+        ctx.response.message = 'bad request'
+        break
+      case 401:
+        ctx.response.message = 'unauthorized'
+        break
+      case 402:
+        ctx.response.message = 'payment required'
+        break
+      case 403:
+        ctx.response.message = 'forbidden'
+        break
+      case 404:
+        ctx.response.message = 'not found'
+        break
+      case 405:
+        ctx.response.message = 'method not allowed'
+        break
+      case 406:
+        ctx.response.message = 'not acceptable'
+        break
+      case 407:
+        ctx.response.message = 'proxy authentication required'
+        break
+      case 408:
+        ctx.response.message = 'request timeout'
+        break
+      case 409:
+        ctx.response.message = 'conflict'
+        break
+      case 410:
+        ctx.response.message = 'gone'
+        break
+      case 411:
+        ctx.response.message = 'length required'
+        break
+      case 412:
+        ctx.response.message = 'precondition failed'
+        break
+      case 413:
+        ctx.response.message = 'payload too large'
+        break
+      case 414:
+        ctx.response.message = 'uri too long'
+        break
+      case 415:
+        ctx.response.message = 'unsupported media type'
+        break
+      case 416:
+        ctx.response.message = 'range not satisfiable'
+        break
+      case 417:
+        ctx.response.message = 'expectation failed'
+        break
+      case 418:
+        ctx.response.message = 'I\'m a teapot'
+        break
+      default:
+        ctx.response.status = 500
+        ctx.response.message = 'Something is broken inside'
+    }
+    // log('no-errors')
+    ctx.response.type = 'html'
+    const locals = {
+      title: ctx.response.status,
+      sessionUser: ctx.state?.sessionUser ?? {},
+      isAuthenticated: ctx.state.isAuthenticated,
+      errors: ctx.flash?.errors ?? {},
+      status: ctx.response.status,
+      message: ctx.response.message,
+    }
+    await ctx.render('errors/error', locals)
   }
 }
 
@@ -170,7 +285,7 @@ export async function errorHandlers(ctx, next) {
       const locals = {
         body: ctx.body,
         title: `${ctx.app.site}: 500`,
-        user,
+        user: ctx.state.sessionUser,
         isAuthenticated: ctx.state.isAuthenticated,
       }
       await ctx.render('500', locals)

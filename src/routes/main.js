@@ -48,7 +48,6 @@ router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
   const log = mainLog.extend('galleries')
   const error = mainError.extend('galleries')
   log('inside index router: /galleries')
-  // await next()
   ctx.status = 200
   await ctx.render('about', {
     body: ctx.body,
@@ -90,6 +89,7 @@ router.get('renderTest', '/renderTest', async (ctx, next) => {
   const rendered = await ctx.render('renderTest', {
     title: `${ctx.app.site}: render test`,
     user: ctx.state?.user ?? 'Matt',
+    sessionUser: ctx.state?.sessionUser ?? {},
     isAuthenticated: false,
   })
   log(rendered)
