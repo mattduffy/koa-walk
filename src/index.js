@@ -163,17 +163,10 @@ app.use(activityV1.routes())
 app.use(apiV1.routes())
 
 app.on('error', async (err, ctx) => {
-  log(ctx)
+  error(ctx)
+  error('\n')
   error(err)
-  // const locals = {
-  //   errors: ctx.flash?.errors ?? {},
-  //   sessionUser: ctx.state?.sessionUser,
-  //   isAuthenticated: ctx.state.isAuthenticated,
-  //   title: ctx.status,
-  //   status: ctx.status,
-  //   message: ctx?.message ?? 'Fail',
-  // }
-  // await ctx.render('errors/error', locals)
+  error('***********************************')
 })
 
 app.listen(port)

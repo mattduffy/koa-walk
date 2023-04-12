@@ -181,9 +181,9 @@ export async function errors(ctx, next) {
   const log = middlewareLog.extend('errorHandler')
   const error = middlewareError.extend('errorHandler')
   try {
-    log('pre-errors')
+    log('error-handler pre-next')
     await next()
-    log('post-errors')
+    log('error-handler post-next')
   } catch (e) {
     error('Caught by the app-level error-handler')
     error(e)
@@ -246,10 +246,15 @@ export async function errors(ctx, next) {
         ctx.response.message = 'I\'m a teapot'
         break
       default:
-        ctx.response.status = 500
-        ctx.response.message = 'Something is broken inside'
+        ctx.response.status = 418
+        ctx.response.message = 'I\'m a teapot'
+        // ctx.response.status = 500
+        // ctx.response.message = 'Something is broken inside'
     }
-    // log('no-errors')
+    ctx.response.message += `\n${e.message}`
+  }
+  error(`last chance check of ctx.status code: ${ctx.status}`)
+  if (ctx.status >= 400) {
     ctx.response.type = 'html'
     const locals = {
       title: ctx.response.status,
@@ -261,6 +266,7 @@ export async function errors(ctx, next) {
     }
     await ctx.render('errors/error', locals)
   }
+  log('escaped error-handler with no trapped errors')
 }
 
 export async function errorHandlers(ctx, next) {
