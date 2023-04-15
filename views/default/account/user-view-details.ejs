@@ -44,6 +44,8 @@
         <dd style="display: inline-block;"><% if (sessionUser) {
           %><%-sessionUser?.email.secondaryEmail?.secondary || '<span class="smallem">none provided</span>' %><% } %></dd>
             
+        <dt style="display: inline-block;">Account Type: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.type %><% } %></dd>
 
         <dt style="display: inline-block;">Description: </dt>
         <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.description %><% } %></dd>
@@ -51,8 +53,14 @@
         <dt style="display: inline-block;">Account Status: </dt>
         <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.status %><% } %></dd>
 
-        <dt style="display: inline-block;">Account Type: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.type %><% } %></dd>
+        <dt style="display: inline-block;">Require Follow Requests: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.isLocked) ? 'Yes': 'No' %><% } %></dd>
+
+                <dt style="display: inline-block;">Bot Account: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.isBot) ? 'Yes': 'No' %><% } %></dd>
+
+        <dt style="display: inline-block;">Group Actions: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.isGroup) ? 'Yes' : 'No' %><% } %></dd>
 
         <dt style="display: inline-block;">User Upload Dir: </dt>
         <dd style="display: inline-block;"><% if (sessionUser.publicDir !== '') { %><%= `${origin}/${sessionUser?.publicDir}` %><% } else { %>
