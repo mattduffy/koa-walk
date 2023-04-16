@@ -8,7 +8,7 @@
     <% } %>
     <% if (view?.info) { %>
     <div id="info" class="info">
-      <span><%= view.info%></span>
+      <span><%= view.info %></span>
     </div>
     <% } %>
     <% if (view?.message) { %>
@@ -20,8 +20,9 @@
     <div id="errors" class="errors">
       <span><%= view.error%></span>
     </div>
-    <% } %><div class="account-details">
-      <dl class="wrapper" style="display: grid; grid-template-columns: .75fr 2fr; row-gap: 0.125em; column-gap: 1px">
+    <% } %>
+    <dl class="">
+      <div class="wrapper account-details">
         <dt style="display: inline-block;">First Name: </dt>
         <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.firstName %><% } %></dd>
 
@@ -48,6 +49,8 @@
         <dd style="display: inline-block;"><% if (displayUser) {
           %><%-displayUser?.email.secondaryEmail?.secondary || '<span class="smallem">none provided</span>' %><% } %></dd>
             
+        <dt style="display: inline-block;">Account Type: </dt>
+        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.type %><% } %></dd>
 
         <dt style="display: inline-block;">Description: </dt>
         <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.description %><% } %></dd>
@@ -55,39 +58,61 @@
         <dt style="display: inline-block;">Account Status: </dt>
         <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.status %><% } %></dd>
 
-        <dt style="display: inline-block;">Account Type: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.type %><% } %></dd>
+        <dt style="display: inline-block;">Require Follow Requests: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.locked) ? 'Yes': 'No' %><% } %></dd>
+
+        <dt style="display: inline-block;">Bot Account: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.bot) ? 'Yes': 'No' %><% } %></dd>
+
+        <dt style="display: inline-block;">Group Actions: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.group) ? 'Yes' : 'No' %><% } %></dd>
+
+        <dt style="display: inline-block;">Discoverable: </dt>
+        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.discoverable) ? 'Yes' : 'No' %><% } %></dd>
 
         <dt style="display: inline-block;">User Upload Dir: </dt>
         <dd style="display: inline-block;"><% if (displayUser.publicDir !== '') { %><%= `${origin}/${displayUser?.publicDir}` %><% } else { %>
         <span class="smallem">not set yet</span>
-      <% } %></dd>
+        <% } %></dd>
 
         <dt style="display: inline-block;">Avatar: </dt>
         <dd style="display: inline-block;">
           <figure>
-          <% if (displayUser.avatar !== '') { %><img src="<%= `${origin}/${displayUser?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
-            <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
-            <figcaption>
-              <span class="smallem">Default avatar.  No avatar image uploaded yet.</span><br>
-            </figcaption>
-          <% } %>
+            <picture>
+              <% if (displayUser.avatar !== '') { %>
+              <source srcset="<%= `${origin}/${sessionUser?.avatar}`%>" media="(min-width: 1200px)" id="avatar-big" width="350px" alt="avatar image">
+              <source srcset="<%= `${origin}/${sessionUser?.avatar}`%>" media="(min-width: 600px)" id="avatar-med" width="300px" alt="avatar image">
+              <source srcset="<%= `${origin}/${sessionUser?.avatar}`%>" media="(min-width: 300px)" id="avatar-sml" width="250px" alt="avatar image">
+              <% } %>
+              <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
+              <% if (sessionUser.avatar === '') { %>
+              <figcaption>
+                <span class="smallem">Default avatar.  No avatar image uploaded yet.</span><br>
+              </figcaption>
+              <% } %>
+            </picture>
           </figure>
         </dd>
 
         <dt style="display: inline-block;">Header: </dt>
         <dd style="display: inline-block;">
           <figure>
-          <% if (displayUser.header !== '') { %><img src="<%= `${origin}/${displayUser?.header}` %>" id="header alt="header image"> <% } else { %>
-            <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
-            <figcaption>
-              <span class="smallem">Default header.  No header image uploaded yet.</span><br>
-            </figcaption>
-          <% } %>
-          </figure>
+            <picture>
+              <% if (sessionUser.header !== '') { %>
+              <source srcset="<%= `${origin}/${sessionUser?.header}` %>" media="(min-width: 1000px)" id="header-big" width="350px" alt="header image">
+              <source srcset="<%= `${origin}/${sessionUser?.header}` %>" media="(min-width: 600px)" id="header-med" width="300px" alt="header image">
+              <source srcset="<%= `${origin}/${sessionUser?.header}` %>" media="(min-width: 300px)" id="header-sml" width="250px" alt="header image">
+              <% } else { %>
+              <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
+              <figcaption>
+                <span class="smallem">Default header.  No header image uploaded yet.</span><br>
+              </figcaption>
+              <% } %>
+            </picture>
+          <figure>
         </dd>
-      </dl>
-    </div>
+      </div>
+    </dl>
   </article>
 </main>
 

@@ -127,6 +127,7 @@ async function cors(ctx, next) {
   } catch (e) {
     // ctx.app.emit('error', 'Failed after setting CORS headers.', ctx)
     // ctx.app.emit('error', e, ctx)
+    ctx.throw(500, 'Rethrown in CORS middleware', e)
   }
 }
 
@@ -163,6 +164,7 @@ app.use(activityV1.routes())
 app.use(apiV1.routes())
 
 app.on('error', async (err, ctx) => {
+  error('***********************************')
   error(ctx)
   error('\n')
   error(err)

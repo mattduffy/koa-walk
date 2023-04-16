@@ -6,92 +6,115 @@
     <% if (isAuthenticated) { %>
       <p><a href="/account/edit">Edit</a></p>
     <% } %>
-    <% if (edit.message) { %>
+    <% if (edit?.info) { %>
+    <div id="info" class="info">
+      <span><%= edit.info %></span>
+    </div>
+    <% } %>
+    <% if (edit?.message) { %>
     <div id="messages" class="messages">
       <span><%= edit.message %></span>
     </div>
     <% } %>
-    <% if (edit.error) { %>
+    <% if (edit?.error) { %>
     <div id="errors" class="errors">
       <span><%= edit.error%></span>
     </div>
-    <% } %><div class="account-details">
-      <dl class="wrapper" style="display: grid; grid-template-columns: .75fr 2fr; row-gap: 0.125em; column-gap: 1px">
-        <dt style="display: inline-block;">First Name: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.firstName %><% } %></dd>
+    <% } %>
+      <dl class="" >
+        <div class="wrapper account-details">
+          <dt style="display: inline-block;">First Name: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.firstName %><% } %></dd>
 
-        <dt style="display: inline-block;">Last Name: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.lastName %><% } %></dd>
+          <dt style="display: inline-block;">Last Name: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.lastName %><% } %></dd>
 
-        <dt style="display: inline-block;">Display Name: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.displayName%><% } %></dd>
+          <dt style="display: inline-block;">Display Name: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.displayName%><% } %></dd>
 
-        <dt style="display: inline-block;">Username: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.username%><% } %></dd>
+          <dt style="display: inline-block;">Username: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.username%><% } %></dd>
 
-        <dt style="display: inline-block;">Url: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%= `${origin}/${sessionUser?.url}` %><% } %></dd>
+          <dt style="display: inline-block;">Url: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%= `${origin}/${sessionUser?.url}` %><% } %></dd>
 
-        <dt style="display: inline-block;">Webfinger: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %>
-          <%= `${origin}/.well-known/webfinger?resource=acct:${sessionUser?.username}` %><% } %>
-        </dd>
+          <dt style="display: inline-block;">Webfinger: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %>
+            <%= `${origin}/.well-known/webfinger?resource=acct:${sessionUser?.username}` %><% } %>
+          </dd>
 
-        <dt style="display: inline-block;">Primary Email Address: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.primaryEmail.primary %><% } %></dd>
-        
-        <dt style="display: inline-block;">Secondary Email Address: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) {
-          %><%-sessionUser?.email.secondaryEmail?.secondary || '<span class="smallem">none provided</span>' %><% } %></dd>
-            
-        <dt style="display: inline-block;">Account Type: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.type %><% } %></dd>
+          <dt style="display: inline-block;">Primary Email Address: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.primaryEmail.primary %><% } %></dd>
+          
+          <dt style="display: inline-block;">Secondary Email Address: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) {
+            %><%-sessionUser?.email.secondaryEmail?.secondary || '<span class="smallem">none provided</span>' %><% } %></dd>
+              
+          <dt style="display: inline-block;">Account Type: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.type %><% } %></dd>
 
-        <dt style="display: inline-block;">Description: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.description %><% } %></dd>
+          <dt style="display: inline-block;">Description: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.description %><% } %></dd>
 
-        <dt style="display: inline-block;">Account Status: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.status %><% } %></dd>
+          <dt style="display: inline-block;">Account Status: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%=sessionUser?.status %><% } %></dd>
 
-        <dt style="display: inline-block;">Require Follow Requests: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.isLocked) ? 'Yes': 'No' %><% } %></dd>
+          <dt style="display: inline-block;">Require Follow Requests: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.locked) ? 'Yes': 'No' %><% } %></dd>
 
-                <dt style="display: inline-block;">Bot Account: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.isBot) ? 'Yes': 'No' %><% } %></dd>
+          <dt style="display: inline-block;">Bot Account: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.bot) ? 'Yes': 'No' %><% } %></dd>
 
-        <dt style="display: inline-block;">Group Actions: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.isGroup) ? 'Yes' : 'No' %><% } %></dd>
+          <dt style="display: inline-block;">Group Actions: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.group) ? 'Yes' : 'No' %><% } %></dd>
 
-        <dt style="display: inline-block;">User Upload Dir: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser.publicDir !== '') { %><%= `${origin}/${sessionUser?.publicDir}` %><% } else { %>
-        <span class="smallem">not set yet</span>
-      <% } %></dd>
+          <dt style="display: inline-block;">Discoverable: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.discoverable) ? 'Yes' : 'No' %><% } %></dd>
 
-        <dt style="display: inline-block;">Avatar: </dt>
-        <dd style="display: inline-block;">
-          <figure>
-          <% if (sessionUser.avatar !== '') { %><img src="<%= `${origin}/${sessionUser?.avatar}`%>" id="avatar" alt="avatar image"> <% } else { %>
-            <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
-            <figcaption>
-              <span class="smallem">Default avatar.  No avatar image uploaded yet.</span><br>
-            </figcaption>
+          <dt style="display: inline-block;">User Upload Dir: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser.publicDir !== '') { %><%= `${origin}/${sessionUser?.publicDir}` %><% } else { %>
+            <span class="smallem">not set yet</span>
           <% } %>
-          </figure>
-        </dd>
+          </dd>
 
-        <dt style="display: inline-block;">Header: </dt>
-        <dd style="display: inline-block;">
-          <figure>
-          <% if (sessionUser.header !== '') { %><img src="<%= `${origin}/${sessionUser?.header}` %>" id="header alt="header image"> <% } else { %>
-            <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
-            <figcaption>
-              <span class="smallem">Default header.  No header image uploaded yet.</span><br>
-            </figcaption>
-          <% } %>
-          <figure>
-        </dd>
-      </dl>
-    </div>
+          <dt style="display: inline-block;">Avatar: </dt>
+          <dd style="display: inline-block;">
+            <figure>
+              <picture>
+                <% if (sessionUser.avatar !== '') { %>
+                <source srcset="<%= `${origin}/${sessionUser?.avatar}`%>" media="(min-width: 1200px)" id="avatar-big" width="350px" alt="avatar image">
+                <source srcset="<%= `${origin}/${sessionUser?.avatar}`%>" media="(min-width: 600px)" id="avatar-med" width="300px" alt="avatar image">
+                <source srcset="<%= `${origin}/${sessionUser?.avatar}`%>" media="(min-width: 300px)" id="avatar-sml" width="250px" alt="avatar image">
+                <% } %>
+                <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
+                <% if (sessionUser.avatar === '') { %>
+                <figcaption>
+                  <span class="smallem">Default avatar.  No avatar image uploaded yet.</span><br>
+                </figcaption>
+                <% } %>
+              </picture>
+            </figure>
+          </dd>
+
+          <dt style="display: inline-block;">Header: </dt>
+          <dd style="display: inline-block;">
+            <figure>
+              <picture>
+                <% if (sessionUser.header !== '') { %>
+                <source srcset="<%= `${origin}/${sessionUser?.header}` %>" media="(min-width: 1000px)" id="header-big" width="350px" alt="header image">
+                <source srcset="<%= `${origin}/${sessionUser?.header}` %>" media="(min-width: 600px)" id="header-med" width="300px" alt="header image">
+                <source srcset="<%= `${origin}/${sessionUser?.header}` %>" media="(min-width: 300px)" id="header-sml" width="250px" alt="header image">
+                <% } else { %>
+                <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
+                <figcaption>
+                  <span class="smallem">Default header.  No header image uploaded yet.</span><br>
+                </figcaption>
+                <% } %>
+              </picture>
+            <figure>
+          </dd>
+      </div>
+    </dl>
   </article>
 </main>
 

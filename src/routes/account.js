@@ -316,8 +316,16 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
       if (secondaryEmail !== '') ctx.state.sessionUser.secondaryEmail = secondaryEmail
       const { description } = ctx.request.body
       if (description !== '') ctx.state.sessionUser.description = description
-      log('avatar file: %O', ctx.request.files.avatar.size)
-      log('avatar file: %O', ctx.request.files.avatar.filepath)
+      const { isLocked } = ctx.request.body
+      if (isLocked === 'on') ctx.state.sessionUser.locked = true
+      const { isBot } = ctx.request.body
+      if (isBot === 'on') ctx.state.sessionUser.bot = true
+      const { isGroup } = ctx.request.body
+      if (isGroup === 'on') ctx.state.sessionUser.group = true
+      const { isDiscoverable } = ctx.request.body
+      if (isDiscoverable === 'on') ctx.state.sessionUser.discoverable = true
+      // log('avatar file: %O', ctx.request.files.avatar.size)
+      // log('avatar file: %O', ctx.request.files.avatar.filepath)
       if (ctx.state.sessionUser.publicDir === '') {
         // log('users ctx: %O', ctx.state.sessionUser._ctx)
         log(`${ctx.state.sessionUser.username} - no upload directory set yet, setting it now.`)
