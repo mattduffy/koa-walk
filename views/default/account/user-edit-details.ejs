@@ -46,14 +46,14 @@
               <label for="description">Require Follow Requests: </label>
               <input type="checkbox" tabindex="8" id="isLocked" name="isLocked" <% if (sessionUser) { %><%= (sessionUser?.locked) ? 'checked' : ''%><% } %>>
               
+              <label for="description">Discoverable: </label>
+              <input type="checkbox" tabindex="11" id="isDiscoverable" name="isDiscoverable" <% if (sessionUser) { %><%= (sessionUser?.discoverable) ? 'checked' : ''%><% } %>>
+              
               <label for="description">Is Bot Account: </label>
               <input type="checkbox" tabindex="9" id="isBot" name="isBot" <% if (sessionUser) { %><%= (sessionUser?.bot) ? 'checked' : ''%><% } %>>
               
               <label for="description">Is Group Account: </label>
               <input type="checkbox" tabindex="10" id="isGroup" name="isGroup" <% if (sessionUser) { %><%= (sessionUser?.group) ? 'checked' : ''%><% } %>>
-              
-              <label for="description">Discoverable: </label>
-              <input type="checkbox" tabindex="11" id="isDiscoverable" name="isDiscoverable" <% if (sessionUser) { %><%= (sessionUser?.discoverable) ? 'checked' : ''%><% } %>>
               
               <label for="avatar">Avatar:</label>
               <input type="file" tabindex="12" id="avatar" name="avatar" accept="image/png, image/jpeg, image/gif">

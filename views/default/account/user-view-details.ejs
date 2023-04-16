@@ -62,14 +62,14 @@
           <dt style="display: inline-block;">Require Follow Requests: </dt>
           <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.locked) ? 'Yes': 'No' %><% } %></dd>
 
+          <dt style="display: inline-block;">Discoverable: </dt>
+          <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.discoverable) ? 'Yes' : 'No' %><% } %></dd>
+
           <dt style="display: inline-block;">Bot Account: </dt>
           <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.bot) ? 'Yes': 'No' %><% } %></dd>
 
           <dt style="display: inline-block;">Group Actions: </dt>
           <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.group) ? 'Yes' : 'No' %><% } %></dd>
-
-          <dt style="display: inline-block;">Discoverable: </dt>
-          <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser?.discoverable) ? 'Yes' : 'No' %><% } %></dd>
 
           <dt style="display: inline-block;">User Upload Dir: </dt>
           <dd style="display: inline-block;"><% if (sessionUser.publicDir !== '') { %><%= `${origin}/${sessionUser?.publicDir}` %><% } else { %>
