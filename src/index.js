@@ -57,7 +57,21 @@ app.proxy = true
 app.root = appRoot
 app.templateName = 'default'
 app.publicDir = `${appRoot}/public`
+app.privateDir = `${appRoot}/private`
 app.uploadsDir = `${appRoot}/uploads`
+app.dirs = {
+  public: {
+    dir: `${appRoot}/public`,
+    accounts: `${appRoot}/public/a`,
+    css: `${appRoot}/public/c`,
+    images: `${appRoot}/public/i`,
+    scripts: `${appRoot}/public/j`,
+  },
+  private: {
+    dir: `${appRoot}/private`,
+    accounts: `${appRoot}/private/a`,
+  },
+}
 process.env.UPLOADSDIR = app.uploadsDir
 
 const o = {

@@ -22,6 +22,7 @@ __tests__/images/*_original
 src/exiftool.config
 uploads/*
 public/a/*
+private/a/*
 migrations/*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)

@@ -442,6 +442,7 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       locals.origin = ctx.request.origin
       locals.isAuthenticated = ctx.state.isAuthenticated
       locals.displayUser = displayUser
+      locals.privateDir = ctx.app.privateDir
       locals.defaultAvatar = `${ctx.request.origin}/i/accounts/avatars/missing.png`
       locals.defaultHeader = `${ctx.request.origin}/i/accounts/headers/generic.png`
     } catch (e) {

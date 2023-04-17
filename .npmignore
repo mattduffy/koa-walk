@@ -1,7 +1,14 @@
 coverage
 TODO.md
-tmp
+migrations/*
+private/a/*
+public/a/*
+public/c/*
+public/i/*
+public/j/*
 tests*
+tmp
+uploads/*
 *.config.bk
 *.config.test
 *.config.bk

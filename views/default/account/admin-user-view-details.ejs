@@ -75,6 +75,11 @@
         <span class="smallem">not set yet</span>
         <% } %></dd>
 
+        <dt style="display: inline-block;">User Private Dir: </dt>
+        <dd style="display: inline-block;"><% if (displayUser.privateDir !== '') { %><%= `${privateDir}/${displayUser?.privateDir}` %><% } else { %>
+        <span class="smallem">not set yet</span>
+        <% } %></dd>
+
         <dt style="display: inline-block;">Avatar: </dt>
         <dd style="display: inline-block;">
           <figure>
