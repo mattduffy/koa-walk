@@ -186,26 +186,35 @@ export function httpMethodOverride(options = {}) {
     log('Adding the methodOverride middleware.')
     log(`ctx.request.method: ${ctx.request.method}`)
     const requestMethod = ctx.request.method
+    let newMethod = ctx.get('x-http-method-override') ?? false
     if (opts.allMethods.includes(requestMethod.toUpperCase())) {
-      const methodOverrideInHeader = ctx.get('x-http-method-override') ?? null
-      log(`caught method override header: ${methodOverrideInHeader}`)
-      // const methodOverridInBody = ctx.request.body._method
-      // log(`caught method  override in body: ${methodOverrideInBody}`)
-      const methodOverrideInCookie = ctx.cookies.get('_method') ?? null
-      log(`caught method override cookie: ${methodOverrideInCookie}`)
-      if (opts.allMethods.includes(methodOverrideInHeader.toUpperCase())) {
-        log(opts.allMethods)
-        // overriding original request method
-        ctx.request.method = methodOverrideInHeader.toUpperCase()
-        log(ctx.request.method)
+      if (newMethod) {
+        log(`caught method override in header: ${newMethod}`)
+      } else if ((newMethod = ctx.request?.body?._method ?? false)) {
+        log(`caught method override in body: ${newMethod}`)
+      } else if ((newMethod = ctx.cookies.get('_method') ?? false)) {
+        log(`caught method override in cookie: ${newMethod}`)
       }
+    } else {
+      const msg = `Not allowed to override ${ctx.request.method} with ${newMethod}`
+      error(msg)
+      ctx.throw(403, msg)
+    }
+    if (opts.allMethods.includes(newMethod.toUpperCase())) {
+      // overriding original request method
+      ctx.request.method = newMethod.toUpperCase()
+      log(`Setting new Request Method to: ${ctx.request.method}`)
+    } else {
+      const msg = `Invalid method: ${newMethod}`
+      error(msg)
+      ctx.throw(405, msg)
     }
     try {
       await next()
     } catch (e) {
       const msg = 'Failed after methodOverride middleware.'
       error(msg)
-      ctx.throw(500, msg, e)
+      ctx.throw(405, msg, e)
     }
   }
 }

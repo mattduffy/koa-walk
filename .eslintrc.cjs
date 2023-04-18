@@ -12,6 +12,7 @@ module.exports = {
   },
   rules: {
     semi: ['error', 'never'],
+    'no-cond-assign': ['except-parens'],
     'no-console': 'off',
     'no-underscore-dangle': 'off',
     'import/extensions': 'off',
