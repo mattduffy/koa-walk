@@ -632,4 +632,11 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, ne
   }
 })
 
+router.put('testOverride', '/admin/account/override', async (ctx, next) => {
+  accountLog(ctx.request)
+  ctx.status = 200
+  ctx.type = 'text/plain'
+  ctx.body = ctx.request.method
+})
+
 export { router as account }

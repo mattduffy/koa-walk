@@ -23,6 +23,7 @@ import {
   tokenAuthMiddleware,
   errorHandlers,
   errors,
+  httpMethodOverride,
 } from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
 import { activityV1 } from './routes/activity_stream.js'
@@ -157,6 +158,7 @@ async function isMongo(ctx, next) {
 }
 
 app.use(errors)
+app.use(httpMethodOverride())
 app.use(isMongo)
 app.use(getSessionUser)
 app.use(flashMessage({}, app))

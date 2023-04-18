@@ -6,6 +6,7 @@
  */
 
 // import Debug from 'debug'
+import { METHODS } from 'node:http'
 import { _log, _error } from './utils/logging.js'
 import { Users } from './models/users.js'
 
@@ -177,6 +178,38 @@ export function tokenAuthMiddleware(options = {}) {
   }
 }
 
+export function httpMethodOverride(options = {}) {
+  const log = middlewareLog.extend('methodOverride')
+  const error = middlewareError.extend('methodOverride')
+  const opts = { allMethods: METHODS, allowOverride: ['POST'], ...options }
+  return async function methodOverride(ctx, next) {
+    log('Adding the methodOverride middleware.')
+    log(`ctx.request.method: ${ctx.request.method}`)
+    const requestMethod = ctx.request.method
+    if (opts.allMethods.includes(requestMethod.toUpperCase())) {
+      const methodOverrideInHeader = ctx.get('x-http-method-override') ?? null
+      log(`caught method override header: ${methodOverrideInHeader}`)
+      // const methodOverridInBody = ctx.request.body._method
+      // log(`caught method  override in body: ${methodOverrideInBody}`)
+      const methodOverrideInCookie = ctx.cookies.get('_method') ?? null
+      log(`caught method override cookie: ${methodOverrideInCookie}`)
+      if (opts.allMethods.includes(methodOverrideInHeader.toUpperCase())) {
+        log(opts.allMethods)
+        // overriding original request method
+        ctx.request.method = methodOverrideInHeader.toUpperCase()
+        log(ctx.request.method)
+      }
+    }
+    try {
+      await next()
+    } catch (e) {
+      const msg = 'Failed after methodOverride middleware.'
+      error(msg)
+      ctx.throw(500, msg, e)
+    }
+  }
+}
+
 export async function errors(ctx, next) {
   const log = middlewareLog.extend('errorHandler')
   const error = middlewareError.extend('errorHandler')
@@ -186,6 +219,7 @@ export async function errors(ctx, next) {
     log('error-handler post-next')
   } catch (e) {
     error('Caught by the app-level error-handler')
+    error(`ctx.response.status: ${ctx.status}`)
     error(e)
     switch (ctx.response.status) {
       case 400:
@@ -264,6 +298,7 @@ export async function errors(ctx, next) {
       status: ctx.response.status,
       message: ctx.response.message,
     }
+    ctx.status = ctx.response.status
     await ctx.render('errors/error', locals)
   }
   log('escaped error-handler with no trapped errors')

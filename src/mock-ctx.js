@@ -5,16 +5,14 @@ export const ctx = {
   app: {
     publicDir: `${root}/public`,
     root: `${root}`,
-    state: {
-      dirs: {
-        public: {
-          dir: `${root}/public`,
-          accounts: `${root}/public/a`,
-        },
-        private: {
-          dir: `${root}/private`,
-          accounts: `${root}/private/a`,
-        },
+    dirs: {
+      public: {
+        dir: `${root}/public`,
+        accounts: `${root}/public/a`,
+      },
+      private: {
+        dir: `${root}/private`,
+        accounts: `${root}/private/a`,
       },
     },
   },
