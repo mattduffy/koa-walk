@@ -185,7 +185,7 @@ export function httpMethodOverride(options = {}) {
   return async function methodOverride(ctx, next) {
     log('Adding the methodOverride middleware.')
     log(`ctx.request.method: ${ctx.request.method}`)
-    const requestMethod = ctx.request.method
+    const requestMethod = ctx.request.method.toUpperCase()
     let newMethod = ctx.get('x-http-method-override') ?? false
     if (opts.allMethods.includes(requestMethod.toUpperCase())) {
       if (newMethod) {
@@ -200,15 +200,16 @@ export function httpMethodOverride(options = {}) {
       error(msg)
       ctx.throw(403, msg)
     }
-    if (opts.allMethods.includes(newMethod.toUpperCase())) {
+    if (newMethod && opts.allMethods.includes(newMethod.toUpperCase())) {
       // overriding original request method
       ctx.request.method = newMethod.toUpperCase()
       log(`Setting new Request Method to: ${ctx.request.method}`)
-    } else {
-      const msg = `Invalid method: ${newMethod}`
-      error(msg)
-      ctx.throw(405, msg)
     }
+    // } else {
+    //   const msg = `Invalid method: ${newMethod}`
+    //   error(msg)
+    //   ctx.throw(405, msg)
+    // }
     try {
       await next()
     } catch (e) {
