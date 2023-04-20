@@ -190,8 +190,10 @@ export function httpMethodOverride(options = {}) {
     if (opts.allMethods.includes(requestMethod.toUpperCase())) {
       if (newMethod) {
         log(`caught method override in header: ${newMethod}`)
+        /* eslint-disable-next-line no-cond-assign */
       } else if ((newMethod = ctx.request?.body?._method ?? false)) {
         log(`caught method override in body: ${newMethod}`)
+        /* eslint-disable-next-line no-cond-assign */
       } else if ((newMethod = ctx.cookies.get('_method') ?? false)) {
         log(`caught method override in cookie: ${newMethod}`)
       }
