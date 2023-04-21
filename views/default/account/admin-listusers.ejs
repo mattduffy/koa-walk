@@ -25,9 +25,11 @@
     <% if (Admin && Admin.length > 0) { %>
       <ul id="admins" class="admins">Admins (<%- Admin.length -%>)
         <% Admin.forEach((u) => { %>
-          <li><a href="<%- origin -%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>) <span class="edit"><a
-                href="<%- origin -%>/admin/account/view/@<%- u.username -%>">view</a></span> <span class="view"><a 
-                href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span></li>
+          <li><a href="<%- origin -%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>) <span class="edit">
+                <a href="<%- origin -%>/admin/account/view/@<%- u.username -%>">view</a></span> <span class="view">
+                <a href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span>
+                <a href="<%- origin -%>/admin/account/view/@<%- u.username -%>"><img src="<%- origin -%>/i/delete.svg" style="position: relative; top: 5px; width: 20px;"></a>
+          </li>
         <% }) %>
       </ul>  
     <% } else { %>
@@ -40,7 +42,9 @@
         <% Creator.forEach((u) => { %>
           <li><a href="<%-origin-%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>) <span class="edit"><a
                 href="<%- origin -%>/admin/account/view/@<%- u.username -%>">view</a></span> <span class="view"><a 
-                href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span></li>
+                href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span>
+                <a href="<%- origin -%>/admin/account/view/@<%- u.username -%>"><img src="<%- origin -%>/i/delete.svg" style="position: relative; top: 5px; width: 20px;"></a>
+          </li>
         <% }) %>
       </ul>  
     <% } else { %>
@@ -53,7 +57,9 @@
         <% User.forEach((u) => { %>
           <li><a href="<%-origin-%>/@<%- u.username -%>">@<%- u.username -%></a> (<%-u.status-%>) <span class="edit"><a
                 href="<%- origin -%>/admin/account/view/@<%- u.username -%>">view</a></span> <span class="view"><a 
-                href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span></li>
+                href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a></span>
+                <a href="<%- origin -%>/admin/account/view/@<%- u.username -%>"><img src="<%- origin -%>/i/delete.svg" style="position: relative; top: 5px; width: 20px;"></a>
+          </li>
         <% }) %>
       </ul>  
     <% } else { %>
