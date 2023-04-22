@@ -219,6 +219,36 @@ body {
 
   }
 
+  div.account-list {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    grid-row-gap: 1em;
+    width: auto;
+  }
+
+  div.account-list div.user {
+    justify-self: start;
+  }
+
+  div.account-list div.status {
+    justify-self: start;
+  }
+
+  div.account-list div.view {
+    justify-self: center;
+  }
+
+  div.account-list div.edit {
+    justify-self: center;
+  }
+
+  div.account-list div.delete {
+    justify-self: center;
+  }
+
+  div.account-list > div:nth-of-type(2n+5) {
+  }
+
   div.account-tokens dl {
     display: grid;
     grid-template-columns: auto 1fr;
