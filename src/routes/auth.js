@@ -77,11 +77,12 @@ router.post('postLogin', '/login', async (ctx, next) => {
     const users = new Users(collection)
     const authUser = await users.authenticateAndGetUser(username, password)
     if (!authUser.user) {
+      error(authUser.error)
       ctx.state.isAuthenticated = false
       ctx.flash = {
         login: {
           username,
-          info: null,
+          info: authUser.info,
           message: authUser.message,
           error: authUser.error,
         },
@@ -102,8 +103,8 @@ router.post('postLogin', '/login', async (ctx, next) => {
       ctx.flash = {
         index: {
           username: loggedInUser.username,
-          info: `Hello ${loggedInUser.firstName}`,
-          message: null,
+          message: `Hello ${loggedInUser.firstName}`,
+          info: authUser.message,
           error: null,
         },
       }
