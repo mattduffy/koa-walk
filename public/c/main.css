@@ -219,6 +219,10 @@ body {
 
   }
 
+  img#punchcard {
+    vertical-align: top;
+  }
+
   img.trashcan {
     position: relative;
     top: 5px;
