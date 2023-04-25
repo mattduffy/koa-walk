@@ -5,6 +5,7 @@
  */
 
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { _log, _error } from './utils/logging.js'
 import * as Koa from 'koa'
@@ -52,6 +53,7 @@ app.keys = new Keygrip([key1, key2, key3])
 app.env = process.env.APP_ENV ?? 'development'
 app.site = process.env.SITE_NAME ?? 'Web site'
 app.host = `${process.env.HOST}:${port}` ?? `127.0.0.1:${port}`
+app.origin = app.host
 // app.host = `${process.env.HOST}` ?? '127.0.0.1'
 app.domain = process.env.DOMAIN_NAME ?? 'website.com'
 app.proxy = true
@@ -124,6 +126,51 @@ async function sessionViews(ctx, next) {
   ctx.cookies.set('views', ctx.session.views)
 }
 
+async function proxyCheck(ctx, next) {
+  log('Checking if koa app is running behind an nginx proxy.')
+  log(ctx.headers)
+  log(ctx.protocol)
+  log(ctx.request.get('X-Forwarded-Proto'))
+  try {
+    await next()
+  } catch (e) {
+    ctx.throw(500, 'Rethrown in CSP middleware', e)
+  }
+}
+
+async function csp(ctx, next) {
+  ctx.app.nonce = crypto.randomBytes(16).toString('base64')
+  const policy = 'base-uri \'none\'; '
+    + 'default-src \'none\'; '
+    + 'frame-ancestors \'none\'; '
+    + 'object-src \'none\'; '
+    + 'form-action \'self\'; '
+    // + 'style-src \'self\' ; '
+    + `style-src 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
+    // + `style-src 'self' ${ctx.request.origin} ${ctx.request.origin}; `
+    // + `script-src 'self' 'unsafe-inline' ${ctx.request.origin} ${ctx.request.origin} 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
+    // + 'script-src \'unsafe-inline\'; '
+    + `script-src 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
+    + `script-src-attr 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
+    + `script-src-elem 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
+    // + 'img-src \'self\' data: blob:; '
+    + `img-src 'self' data: blob: ${ctx.request.origin} ${ctx.request.origin}; `
+    // + `font-src 'self' ${ctx.request.origin} ${ctx.request.origin}; `
+    // + `media-src 'self' data: ${ctx.request.origin} ${ctx.request.origin}; `
+    + 'frame-src \'self\'; '
+    // + `child-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
+    // + `worker-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
+    // + `manifest-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
+    // + `connect-src 'self' blob: wss://${ctx.request.origin} ws://${ctx.request.origin}; `
+  ctx.set('Content-Security-Policy', policy)
+  log(`Content-Security-Policy: ${policy}`)
+  try {
+    await next()
+  } catch (e) {
+    ctx.throw(500, 'Rethrown in CSP middleware', e)
+  }
+}
+
 async function cors(ctx, next) {
   const keys = Object.keys(ctx.request.headers)
   keys.forEach((k) => {
@@ -140,8 +187,6 @@ async function cors(ctx, next) {
   try {
     await next()
   } catch (e) {
-    // ctx.app.emit('error', 'Failed after setting CORS headers.', ctx)
-    // ctx.app.emit('error', e, ctx)
     ctx.throw(500, 'Rethrown in CORS middleware', e)
   }
 }
@@ -164,6 +209,8 @@ app.use(getSessionUser)
 app.use(flashMessage({}, app))
 app.use(prepareRequest())
 app.use(tokenAuthMiddleware())
+app.use(proxyCheck)
+app.use(csp)
 app.use(cors)
 app.use(wellknownNodeinfo({}, app))
 app.use(wellknownHostmeta({}, app))
