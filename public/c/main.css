@@ -219,6 +219,24 @@ body {
 
   }
 
+  img.trashcan {
+    position: relative;
+    top: 5px;
+    width: 20px;
+  }
+
+  div.adminList {
+    margin: 1em 0px;
+  }
+
+  div.creatorList {
+    margin: 1em 0px;
+  }
+
+  div.userList {
+    margin: 1em 0px;
+  }
+
   div.account-list {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr 1fr;

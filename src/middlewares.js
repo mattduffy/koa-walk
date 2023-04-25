@@ -186,7 +186,7 @@ export function httpMethodOverride(options = {}) {
     log('Adding the methodOverride middleware.')
     log(`ctx.request.method: ${ctx.request.method}`)
     const requestMethod = ctx.request.method.toUpperCase()
-    let newMethod = ctx.get('x-http-method-override') ?? false
+    let newMethod = ctx.get('X-Http-Method-Override') ?? false
     if (opts.allMethods.includes(requestMethod.toUpperCase())) {
       if (newMethod) {
         log(`caught method override in header: ${newMethod}`)

@@ -60,7 +60,7 @@ const config = {
   rolling: false,
   renew: false,
   secure: false,
-  sameSite: null,
+  sameSite: true,
   store: redis,
 }
 
