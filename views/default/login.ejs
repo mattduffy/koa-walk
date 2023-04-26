@@ -33,6 +33,9 @@
             <input type="reset" id="reset" name="reset" value="Reset">
         </fieldset>
       </form>
+      <script nonce="<%- nonce -%>">
+        document.querySelector('input[type="text"]#username').focus()
+      </script>
     </section>
   </article>
 </main>

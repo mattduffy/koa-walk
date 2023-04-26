@@ -30,6 +30,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
     title: `${ctx.app.site}: Login`,
     sessionUser: ctx.state.sessionUser,
     csrfToken,
+    nonce: ctx.app.nonce,
     login: ctx.flash.login ?? {},
     isAuthenticated: ctx.state.isAuthenticated,
   }

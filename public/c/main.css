@@ -229,15 +229,15 @@ body {
     width: 20px;
   }
 
-  div.adminList {
+  section.adminList {
     margin: 1em 0px;
   }
 
-  div.creatorList {
+  section.creatorList {
     margin: 1em 0px;
   }
 
-  div.userList {
+  section.userList {
     margin: 1em 0px;
   }
 
@@ -248,23 +248,28 @@ body {
     width: auto;
   }
 
-  div.account-list div.user {
+  div.account-list > div.user {
     justify-self: start;
   }
 
-  div.account-list div.status {
+  div.account-list > div.status {
     justify-self: start;
   }
 
-  div.account-list div.view {
+  div.account-list > div.view {
     justify-self: center;
   }
 
-  div.account-list div.edit {
+  div.account-list > div.edit {
     justify-self: center;
   }
 
-  div.account-list div.delete {
+  div.account-list > div.delete {
+    justify-self: center;
+  }
+
+  div.accountlist > div.gridspan {
+    grid-colum: 1/6;
     justify-self: center;
   }
 

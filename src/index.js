@@ -141,26 +141,23 @@ async function proxyCheck(ctx, next) {
 async function csp(ctx, next) {
   ctx.app.nonce = crypto.randomBytes(16).toString('base64')
   const policy = 'base-uri \'none\'; '
-    + 'default-src \'none\'; '
+    + 'default-src \'self\'; '
     + 'frame-ancestors \'none\'; '
     + 'object-src \'none\'; '
     + 'form-action \'self\'; '
-    // + 'style-src \'self\' ; '
     + `style-src 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
-    // + `style-src 'self' ${ctx.request.origin} ${ctx.request.origin}; `
-    // + `script-src 'self' 'unsafe-inline' ${ctx.request.origin} ${ctx.request.origin} 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
-    // + 'script-src \'unsafe-inline\'; '
+    + `style-src-attr 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
+    + `style-src-elem 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
     + `script-src 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
     + `script-src-attr 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
     + `script-src-elem 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
-    // + 'img-src \'self\' data: blob:; '
     + `img-src 'self' data: blob: ${ctx.request.origin} ${ctx.request.origin}; `
-    // + `font-src 'self' ${ctx.request.origin} ${ctx.request.origin}; `
-    // + `media-src 'self' data: ${ctx.request.origin} ${ctx.request.origin}; `
+    + `font-src 'self' ${ctx.request.origin} ${ctx.request.origin}; `
+    + `media-src 'self' data: ${ctx.request.origin} ${ctx.request.origin}; `
     + 'frame-src \'self\'; '
-    // + `child-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
-    // + `worker-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
-    // + `manifest-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
+    + `child-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
+    + `worker-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
+    + `manifest-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
     // + `connect-src 'self' blob: wss://${ctx.request.origin} ws://${ctx.request.origin}; `
   ctx.set('Content-Security-Policy', policy)
   log(`Content-Security-Policy: ${policy}`)
