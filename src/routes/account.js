@@ -396,8 +396,13 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
       const collection = db.collection(USERS)
       const users = new Users(collection, ctx)
       const allUsers = await users.getAllUsers()
+      const csrfToken = new ObjectId().toString()
+      ctx.session.csrfToken = csrfToken
+      ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+      locals.csrfToken = csrfToken
       locals.title = `${ctx.app.site}: List Users`
       locals.origin = ctx.request.origin
+      locals.nonce = ctx.app.nonce
       locals.isAuthenticated = ctx.state.isAuthenticated
       locals.list = ctx.flash
       allUsers.map((u) => {
@@ -632,18 +637,80 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, ne
   }
 })
 
-router.delete('testOverride', '/admin/account/override', async (ctx, next) => {
-  accountLog(ctx.request)
-  ctx.status = 200
-  ctx.type = 'text/plain'
-  ctx.body = ctx.request.method
-})
-
-router.put('testOverride', '/admin/account/override', async (ctx, next) => {
-  accountLog(ctx.request)
-  ctx.status = 200
-  ctx.type = 'text/plain'
-  ctx.body = ctx.request.method
+router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('POST-account-delete')
+  const error = accountError.extend('POST-account-delete')
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    const form = formidable({
+      encoding: 'utf-8',
+      multipart: false,
+    })
+    await new Promise((resolve, reject) => {
+      form.parse(ctx.req, (err, fields) => {
+        if (err) {
+          error('There was a problem parsing the multipart form data.')
+          error(err)
+          reject(err)
+          return
+        }
+        log('Multipart form data was successfully parsed.')
+        ctx.request.body = fields
+        log(fields)
+        resolve()
+      })
+    })
+    const sessionId = ctx.cookies.get('session')
+    const csrfTokenCookie = ctx.cookies.get('csrfToken')
+    const csrfTokenSession = ctx.session.csrfToken
+    const { id, csrfTokenForm } = ctx.request.body
+    const db = ctx.state.mongodb.client.db()
+    const collection = db.collection(USERS)
+    const users = new Users(collection, ctx)
+    if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenForm) {
+      try {
+        let displayUser = await users.getById(id)
+        if (!displayUser) {
+          ctx.flash.delete = {
+            // some flash message
+          }
+          ctx.status = 404
+          ctx.type = 'application/json'
+          ctx.body = {
+            status: 404,
+            error: `User id: ${id} not found.`,
+            message: null,
+          }
+        } else {
+          ctx.flash.delete = {
+            // some flash message
+          }
+          ctx.status = 200
+          ctx.type = 'application/json'
+          ctx.body = {
+            status: 200,
+            error: null,
+            message: `User account: ${id} has been permanently deleted.`,
+            user: displayUser.username,
+          }
+        }
+      } catch (e) {
+        error(`Error from users.getById(${id})`)
+      }
+    } else {
+      log('CSRF Token mismatch.  No delete made.')
+      ctx.status = 403
+      ctx.type = 'application/json'
+      ctx.body = {
+        status: 403,
+        error: 'Error, csrf tokens do not match',
+        message: null,
+      }
+    }
+  }
 })
 
 export { router as account }

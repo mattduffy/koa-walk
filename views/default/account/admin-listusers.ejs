@@ -20,7 +20,7 @@
       <span><%= list.error%></span>
     </div>
     <% } %>
-    <div class="adminList" style="margin: 1em 0px;">
+    <section class="adminList" >
     <% if (Admin && Admin.length > 0) { %>
       <h4 id="admins" class="admins">Admins (<%- Admin.length -%>)</h3>
       <div class="account-list">
@@ -37,15 +37,17 @@
                 <a href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a>
               </span>
           </div>
-          <div class="delete"><img src="<%- origin -%>/i/delete.svg" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" style="position: relative; top: 5px; width: 20px;"></div>
+          <div class="delete">
+            <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
+          </div>
         <% }) %>
       </div>
     <% } else { %>
       No Admin users created
     <% } %>
-    </div>
+    </section>
 
-    <div class="creatorList" style="margin: 1em 0px;">
+    <section class="creatorList" >
     <% if (Creator && Creator.length > 0) { %>
       <h4 id="creators" class="creators">Creators (<%- Creator.length -%>)</h4>
       <div class="account-list">
@@ -62,15 +64,17 @@
               <a href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a>
             </span>
           </div>
-          <div class="delete"><img src="<%- origin -%>/i/delete.svg" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" style="position: relative; top: 5px; width: 20px;"></div>
+          <div class="delete">
+            <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
+          </div>
         <% }) %>
       </div>  
     <% } else { %>
       No Creator accounts created
     <% } %>
-    </div>
+    </section>
 
-    <div class="userList" style="margin: 1em 0px;">
+    <section class="userList" >
     <% if (User && User.length > 0) { %>
       <h4 id="users" class="users">Users (<%- User.length -%>)</h4>
       <div class="account-list">
@@ -87,12 +91,27 @@
                 <a href="<%- origin -%>/admin/account/edit/@<%- u.username -%>">edit</a>
               </span>
             </div>
-            <div class="delete"><img src="<%- origin -%>/i/delete.svg" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" style="position: relative; top: 5px; width: 20px;"></div>
+            <div class="delete">
+              <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
+            </div>
         <% }) %>
       </div>  
     <% } else { %>
       No User accounts created
     <% } %>
-    </div>
+    </section>
+    <script nonce="<%- nonce -%>">
+    window.addEventListener('load', (event) => {
+      const trashcans = document.querySelectorAll('img.trashcan')
+      for (const can of trashcans.entries()) {
+        console.log(can[1].dataset)
+        can[1].addEventListener('click', (e) => {
+          e.stopPropagation()
+          e.preventDefault()
+          alert(e.target.dataset.id)
+        })
+      }
+    })
+    </script>
   </article>
 </main>
