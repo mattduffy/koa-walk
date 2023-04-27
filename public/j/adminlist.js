@@ -22,12 +22,13 @@ function doDelete(dataset, node) {
 
 window.addEventListener('load', () => {
   const trashcans = document.querySelectorAll('img.trashcan')
-  for (const can of trashcans.entries()) {
-    console.log(can[1].dataset)
-    can[1].addEventListener('click', (e) => {
+  // for (const can of trashcans.entries()) {
+  trashcans.forEach((can) => {
+    console.log(can.dataset)
+    can.addEventListener('click', (e) => {
       e.stopPropagation()
       e.preventDefault()
-      const editNode = can[1].parentNode.previousElementSibling
+      const editNode = can.parentNode.previousElementSibling
       const viewNode = editNode.previousElementSibling
       const statusNode = viewNode.previousElementSibling
       const usernameNode = statusNode.previousElementSibling
@@ -51,11 +52,11 @@ window.addEventListener('load', () => {
       dialog.addEventListener('close', (e) => {
         console.info(`dialog.returnValue: ${dialog.returnValue}`)
         if (dialog.returnValue === 'yes') {
-          console.log(can[1].dataset)
-          doDelete(can[1].dataset, usernameNode)
+          console.log(can.dataset)
+          doDelete(can.dataset, usernameNode)
         }
       })
       dialog.showModal()
     })
-  }
+  })
 })
