@@ -1,7 +1,7 @@
 <main>
   <article>
     <h1>View User Details</h1>
-    
+
     <p>This is the user detail page for <%= displayUser.name %>.</p>
     <% if (isAuthenticated) { %>
       <p><a href="/admin/account/edit/@<%- displayUser.username %>">Edit</a></p>
@@ -21,67 +21,67 @@
       <span><%= view.error%></span>
     </div>
     <% } %>
-    <dl class="">
+    <dl class="viewUser">
       <div class="wrapper account-details">
-        <dt style="display: inline-block;">First Name: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.firstName %><% } %></dd>
+        <dt>First Name: </dt>
+        <dd><% if (displayUser) { %><%=displayUser?.firstName %><% } %></dd>
 
-        <dt style="display: inline-block;">Last Name: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.lastName %><% } %></dd>
+        <dt>Last Name: </dt>
+        <dd><% if (displayUser) { %><%=displayUser?.lastName %><% } %></dd>
 
-        <dt style="display: inline-block;">Display Name: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.displayName%><% } %></dd>
+        <dt>Display Name: </dt>
+        <dd><% if (displayUser) { %><%=displayUser?.displayName%><% } %></dd>
 
-        <dt style="display: inline-block;">Username: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.username%><% } %></dd>
+        <dt>Username: </dt>
+        <dd><% if (displayUser) { %><%=displayUser?.username%><% } %></dd>
           
-        <dt style="display: inline-block;">Url: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%= `${origin}/${displayUser?.url}` %><% } %></dd>
+        <dt>Url: </dt>
+        <dd><% if (displayUser) { %><%= `${origin}/${displayUser?.url}` %><% } %></dd>
 
-        <dt style="display: inline-block;">Webfinger: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=
+        <dt>Webfinger: </dt>
+        <dd><% if (displayUser) { %><%=
               `${origin}/.well-known/webfinger?resource=acct:${displayUser?.username}` %><% } %></dd>
 
-        <dt style="display: inline-block;">Primary Email Address: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.primaryEmail.primary %><% } %></dd>
+        <dt>Primary Email Address: </dt>
+        <dd><% if (displayUser) { %><%=displayUser?.primaryEmail.primary %><% } %></dd>
         
-        <dt style="display: inline-block;">Secondary Email Address: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) {
+        <dt>Secondary Email Address: </dt>
+        <dd><% if (displayUser) {
           %><%-displayUser?.email.secondaryEmail?.secondary || '<span class="smallem">none provided</span>' %><% } %></dd>
             
-        <dt style="display: inline-block;">Account Type: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.type %><% } %></dd>
+        <dt>Account Type: </dt>
+        <dd><% if (displayUser) { %><%=displayUser?.type %><% } %></dd>
 
-        <dt style="display: inline-block;">Description: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.description %><% } %></dd>
+        <dt>Description: </dt>
+        <dd><% if (displayUser) { %><%=displayUser?.description %><% } %></dd>
 
-        <dt style="display: inline-block;">Account Status: </dt>
-        <dd style="display: inline-block;"><% if (displayUser) { %><%=displayUser?.status %><% } %></dd>
+        <dt>Account Status: </dt>
+        <dd><% if (displayUser) { %><%=displayUser?.status %><% } %></dd>
 
-        <dt style="display: inline-block;">Require Follow Requests: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser.locked) ? 'Yes': 'No' %><% } %></dd>
+        <dt>Require Follow Requests: </dt>
+        <dd><% if (sessionUser) { %><%= (sessionUser.locked) ? 'Yes': 'No' %><% } %></dd>
 
-        <dt style="display: inline-block;">Discoverable: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser.discoverable) ? 'Yes' : 'No' %><% } %></dd>
+        <dt>Discoverable: </dt>
+        <dd><% if (sessionUser) { %><%= (sessionUser.discoverable) ? 'Yes' : 'No' %><% } %></dd>
 
-        <dt style="display: inline-block;">Bot Account: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser.bot) ? 'Yes': 'No' %><% } %></dd>
+        <dt>Bot Account: </dt>
+        <dd><% if (sessionUser) { %><%= (sessionUser.bot) ? 'Yes': 'No' %><% } %></dd>
 
-        <dt style="display: inline-block;">Group Actions: </dt>
-        <dd style="display: inline-block;"><% if (sessionUser) { %><%= (sessionUser.group) ? 'Yes' : 'No' %><% } %></dd>
+        <dt>Group Actions: </dt>
+        <dd><% if (sessionUser) { %><%= (sessionUser.group) ? 'Yes' : 'No' %><% } %></dd>
 
-        <dt style="display: inline-block;">User Upload Dir: </dt>
-        <dd style="display: inline-block;"><% if (displayUser.publicDir !== '') { %><%= `${origin}/${displayUser?.publicDir}` %><% } else { %>
+        <dt>User Upload Dir: </dt>
+        <dd><% if (displayUser.publicDir !== '') { %><%= `${origin}/${displayUser?.publicDir}` %><% } else { %>
         <span class="smallem">not set yet</span>
         <% } %></dd>
 
-        <dt style="display: inline-block;">User Private Dir: </dt>
-        <dd style="display: inline-block;"><% if (displayUser.privateDir !== '') { %><%= `${privateDir}/${displayUser?.privateDir}` %><% } else { %>
+        <dt>User Private Dir: </dt>
+        <dd><% if (displayUser.privateDir !== '') { %><%= `${privateDir}/${displayUser?.privateDir}` %><% } else { %>
         <span class="smallem">not set yet</span>
         <% } %></dd>
 
-        <dt style="display: inline-block;">Avatar: </dt>
-        <dd style="display: inline-block;">
+        <dt>Avatar: </dt>
+        <dd>
           <figure>
             <picture>
               <% if (displayUser.avatar !== '') { %>
@@ -99,8 +99,8 @@
           </figure>
         </dd>
 
-        <dt style="display: inline-block;">Header: </dt>
-        <dd style="display: inline-block;">
+        <dt>Header: </dt>
+        <dd>
           <figure>
             <picture>
               <% if (sessionUser.header !== '') { %>

@@ -153,20 +153,20 @@ async function csp(ctx, next) {
     + 'frame-ancestors \'none\'; '
     + 'object-src \'none\'; '
     + 'form-action \'self\'; '
-    + `style-src 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
-    + `style-src-attr 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
-    + `style-src-elem 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
-    + `script-src 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
-    + `script-src-attr 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
-    + `script-src-elem 'self' ${ctx.request.origin} ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
-    + `img-src 'self' data: blob: ${ctx.request.origin} ${ctx.request.origin}; `
-    + `font-src 'self' ${ctx.request.origin} ${ctx.request.origin}; `
-    + `media-src 'self' data: ${ctx.request.origin} ${ctx.request.origin}; `
+    + `style-src 'self' ${ctx.request.origin} 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
+    + `style-src-attr ${ctx.request.origin} 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
+    + `style-src-elem ${ctx.request.origin} 'self' 'unsafe-inline' 'nonce-${ctx.app.nonce}'; `
+    + `script-src 'self' ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
+    + `script-src-attr 'self' ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
+    + `script-src-elem 'self' ${ctx.request.origin} 'unsafe-inline' 'strict-dynamic' 'nonce-${ctx.app.nonce}'; `
+    + `img-src 'self' data: blob: ${ctx.request.origin}; `
+    + `font-src 'self' ${ctx.request.origin}; `
+    + `media-src 'self' data: ${ctx.request.origin}; `
     + 'frame-src \'self\'; '
-    + `child-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
-    + `worker-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
-    + `manifest-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
-    // + `connect-src 'self' blob: wss://${ctx.request.origin} ws://${ctx.request.origin}; `
+    + `child-src 'self' blob: ${ctx.request.origin}; `
+    + `worker-src 'self' blob: ${ctx.request.origin}; `
+    + `manifest-src 'self' blob: ${ctx.request.origin}; `
+    + `connect-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin.replace('https', 'wss')}; `
   ctx.set('Content-Security-Policy', policy)
   logg(`Content-Security-Policy: ${policy}`)
   try {

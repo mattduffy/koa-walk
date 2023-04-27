@@ -223,6 +223,10 @@ body {
     vertical-align: top;
   }
 
+  dl.viewUser {
+
+  }
+
   img.trashcan {
     position: relative;
     top: 5px;
@@ -268,7 +272,7 @@ body {
     justify-self: center;
   }
 
-  div.accountlist > div.gridspan {
+  div.account-list > div.gridspan {
     grid-column: 1/6;
     justify-self: center;
   }
@@ -319,7 +323,15 @@ body {
     grid-template-columns: .75fr 2fr;
     grid-row-gap: .125em;
     column-gap: 1px; 
+    justify-items: start;
+  }
+
+  div.wrapper.account-details > dt {
+    display: inline-block;
+  }
   
+  div.wrapper.account-details > dd {
+    display: inline-block;
   }
   
   label {
