@@ -1,4 +1,8 @@
 module.exports = {
+  globals: {
+    window: true,
+    document: true,
+  },
   env: {
     es2021: true,
     node: true,
