@@ -269,7 +269,7 @@ body {
   }
 
   div.accountlist > div.gridspan {
-    grid-colum: 1/6;
+    grid-column: 1/6;
     justify-self: center;
   }
 

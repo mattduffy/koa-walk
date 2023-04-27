@@ -127,18 +127,26 @@ async function sessionViews(ctx, next) {
 }
 
 async function proxyCheck(ctx, next) {
-  log('Checking if koa app is running behind an nginx proxy.')
-  log(ctx.headers)
-  log(ctx.protocol)
-  log(ctx.request.get('X-Forwarded-Proto'))
+  const logg = log.extend('proxyCheck')
+  const err = error.extend('proxyCheck')
+  if (ctx.request.get('x-nginx-proxy') === 'true') {
+    logg('Koa app is running behind an nginx proxy.')
+    // log(ctx.headers)
+    logg(`Koa app is using ${ctx.protocol}`)
+  } else {
+    logg('Koa app is NOT running behind an nginx proxy.')
+  }
   try {
     await next()
   } catch (e) {
+    err(e)
     ctx.throw(500, 'Rethrown in CSP middleware', e)
   }
 }
 
 async function csp(ctx, next) {
+  const logg = log.extend('CSP')
+  const err = error.extend('CSP')
   ctx.app.nonce = crypto.randomBytes(16).toString('base64')
   const policy = 'base-uri \'none\'; '
     + 'default-src \'self\'; '
@@ -160,18 +168,21 @@ async function csp(ctx, next) {
     + `manifest-src 'self' blob: ${ctx.request.origin} ${ctx.request.origin}; `
     // + `connect-src 'self' blob: wss://${ctx.request.origin} ws://${ctx.request.origin}; `
   ctx.set('Content-Security-Policy', policy)
-  log(`Content-Security-Policy: ${policy}`)
+  logg(`Content-Security-Policy: ${policy}`)
   try {
     await next()
   } catch (e) {
+    err(e)
     ctx.throw(500, 'Rethrown in CSP middleware', e)
   }
 }
 
 async function cors(ctx, next) {
+  const logg = log.extend('CORS')
+  const err = error.extend('CORS')
   const keys = Object.keys(ctx.request.headers)
   keys.forEach((k) => {
-    // log(`header: ${k} : ${ctx.request.headers[k]}`)
+    // logg(`header: ${k} : ${ctx.request.headers[k]}`)
     if (/^access-control-|origin/i.test(k)) {
       ctx.set('Vary', 'Origin')
       ctx.set('Access-Control-Allow-Origin', '*')
@@ -184,18 +195,22 @@ async function cors(ctx, next) {
   try {
     await next()
   } catch (e) {
+    err(e)
     ctx.throw(500, 'Rethrown in CORS middleware', e)
   }
 }
 
 // checking to see if mongodb client is working
 async function isMongo(ctx, next) {
-  const { client, ObjectId } = mongoClient
+  const logg = log.extend('isMongo')
+  const err = log.extend('isMongo')
+  // const { client, ObjectId } = mongoClient
   ctx.state.mongodb = mongoClient
   try {
     await next()
   } catch (e) {
-    // ctx.app.emit('error', 'Failed to get db connection setup.', ctx)
+    err(e)
+    ctx.throw(500, 'Rethrown in mongodb setup.', e)
   }
 }
 

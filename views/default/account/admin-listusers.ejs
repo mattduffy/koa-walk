@@ -38,7 +38,7 @@
               </span>
           </div>
           <div class="delete">
-            <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
+            <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-username="<%- u.username -%>" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
           </div>
         <% }) %>
       </div>
@@ -65,7 +65,7 @@
             </span>
           </div>
           <div class="delete">
-            <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
+            <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-username="<%- u.username -%>" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
           </div>
         <% }) %>
       </div>  
@@ -92,7 +92,7 @@
               </span>
             </div>
             <div class="delete">
-              <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
+              <img src="<%- origin -%>/i/delete.svg" class="trashcan" data-username="<%- u.username -%>" data-id="<%- u.id -%>" data-csrfToken="<%- csrfToken -%>" >
             </div>
         <% }) %>
       </div>  
@@ -100,18 +100,72 @@
       No User accounts created
     <% } %>
     </section>
+    <dialog id="dia" >
+      <span id="prompt"></span>
+      <br>
+      <span id="yes" class="dialogYes">Yes</span><span id="no" class="dialogNo">No</span>
+    </dialog>
     <script nonce="<%- nonce -%>">
-    window.addEventListener('load', (event) => {
-      const trashcans = document.querySelectorAll('img.trashcan')
-      for (const can of trashcans.entries()) {
-        console.log(can[1].dataset)
-        can[1].addEventListener('click', (e) => {
-          e.stopPropagation()
-          e.preventDefault()
-          alert(e.target.dataset.id)
-        })
+      function doDelete(dataset) {
+        if (!dataset) {
+          console.error('No dataset values provided.  No delete issued.')
+          return false
+        } 
+        console.log('doDelete called with: ')
+        console.table(dataset)
       }
-    })
+      
+      function updateGrid(dataset, target) {
+        const div = document.createElement('div')
+        div.classList.add('gridspan')
+        // div.setAttribute('class', 'gridspan')
+        // div.className = 'gridspan'
+        const text = document.createTextNode(`Permanently deleted ${dataset.username}.  No going back...`)
+        div.appendChild(text)
+        target.parentNode.insertBefore(div, target)
+        console.log(div)
+      }
+
+      window.addEventListener('load', (event) => {
+        const trashcans = document.querySelectorAll('img.trashcan')
+        for (const can of trashcans.entries()) {
+          console.log(can[1].dataset)
+          can[1].addEventListener('click', (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            const editNode = can[1].parentNode.previousElementSibling
+            const viewNode = editNode.previousElementSibling
+            const statusNode = viewNode.previousElementSibling
+            const usernameNode = statusNode.previousElementSibling
+            const deletePrompt = 'Are you sure you want to delete the account for:\n'
+              + `${usernameNode.firstChild.text}?\n` 
+              + 'This action cannot be undone.'
+            const dialog = document.querySelector('dialog[id="dia"]')
+            dialog.firstElementChild.innerText = deletePrompt
+            const yes = document.querySelector('span[id="yes"]')
+            yes.addEventListener('click', (e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              dialog.close('yes')
+            })
+            const no = document.querySelector('span[id="no"]')
+            no.addEventListener('click', (e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              dialog.close('no')
+            })
+            dialog.addEventListener('close', (e) => {
+              console.info(`dialog.returnValue: ${dialog.returnValue}`)
+              if (dialog.returnValue === 'yes') {
+                console.log(can[1].dataset)
+                doDelete(can[1].dataset)
+                updateGrid(can[1].dataset, usernameNode)
+              }
+            })
+            dialog.showModal()
+          })
+        }
+      })
     </script>
   </article>
 </main>

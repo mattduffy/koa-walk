@@ -663,6 +663,9 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
         resolve()
       })
     })
+    // 
+    // Check that route param :id and form field id values match
+    //
     const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
