@@ -276,6 +276,20 @@ body {
   div.account-list > div:nth-of-type(2n+5) {
   }
 
+  dialog > span#yes {
+    position: relative;
+    padding-top: .5em;
+    padding-left: 2em;
+    float: right;
+  }
+
+  dialog > span#no {
+    position: relative;
+    padding-top: .5em;
+    padding-right: 2em;
+    float: left;
+  }
+
   div.account-tokens dl {
     display: grid;
     grid-template-columns: auto 1fr;

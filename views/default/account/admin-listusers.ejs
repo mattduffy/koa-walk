@@ -106,13 +106,14 @@
       <span id="yes" class="dialogYes">Yes</span><span id="no" class="dialogNo">No</span>
     </dialog>
     <script nonce="<%- nonce -%>">
-      function doDelete(dataset) {
+      function doDelete(dataset, node) {
         if (!dataset) {
           console.error('No dataset values provided.  No delete issued.')
           return false
         } 
         console.log('doDelete called with: ')
         console.table(dataset)
+        updateGrid(dataset, node)
       }
       
       function updateGrid(dataset, target) {
@@ -137,11 +138,11 @@
             const viewNode = editNode.previousElementSibling
             const statusNode = viewNode.previousElementSibling
             const usernameNode = statusNode.previousElementSibling
-            const deletePrompt = 'Are you sure you want to delete the account for:\n'
-              + `${usernameNode.firstChild.text}?\n` 
-              + 'This action cannot be undone.'
+            const deletePrompt = `You are about to delete <em>${usernameNode.firstChild.text}'s</em> account.<br>` 
+              + 'This action cannot be undone.<br>'
+              + 'Are you sure you want to delete this account?<br>'
             const dialog = document.querySelector('dialog[id="dia"]')
-            dialog.firstElementChild.innerText = deletePrompt
+            dialog.firstElementChild.innerHTML = deletePrompt
             const yes = document.querySelector('span[id="yes"]')
             yes.addEventListener('click', (e) => {
               e.preventDefault()
@@ -158,8 +159,7 @@
               console.info(`dialog.returnValue: ${dialog.returnValue}`)
               if (dialog.returnValue === 'yes') {
                 console.log(can[1].dataset)
-                doDelete(can[1].dataset)
-                updateGrid(can[1].dataset, usernameNode)
+                doDelete(can[1].dataset, usernameNode)
               }
             })
             dialog.showModal()
