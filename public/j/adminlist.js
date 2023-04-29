@@ -1,9 +1,23 @@
-function updateGrid(dataset, target) {
+const trashcans = document.querySelectorAll('img.trashcan')
+
+function updateGrid(dataset, targetRow) {
   const div = document.createElement('div')
   div.classList.add('gridspan')
   const text = document.createTextNode(`Permanently deleted ${dataset.username}.  No going back...`)
   div.appendChild(text)
-  target.parentNode.insertBefore(div, target)
+  targetRow.usernameNode.parentNode.insertBefore(div, targetRow.usernameNode)
+  targetRow.canNode.firstElementChild.dataset.deleted = true
+  function xClick(n) {
+    // console.log(n)
+    n.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+    })
+  }
+  xClick(targetRow.usernameNode.firstElementChild)
+  xClick(targetRow.viewNode.firstElementChild.firstElementChild)
+  xClick(targetRow.editNode.firstElementChild.firstElementChild)
+  xClick(targetRow.canNode)
   console.log(div)
 }
 
@@ -14,7 +28,7 @@ function doDelete(dataset, row) {
   }
   console.log('doDelete called with: ')
   console.table(dataset)
-  updateGrid(dataset, row.usernameNode)
+  updateGrid(dataset, row)
   return true
 }
 
@@ -54,31 +68,38 @@ function createDialog(dataset) {
   return dialog
 }
 
-const trashcans = document.querySelectorAll('img.trashcan')
-window.addEventListener('load', () => {
+function canHandler(e, can) {
+  e.stopPropagation()
+  e.preventDefault()
+  if (can.dataset?.deleted === 'true') {
+    console.log('trashcan was already clicked.')
+  } else {
+    const thisRow = {
+      canNode: can.parentNode,
+      editNode: can.parentNode.previousElementSibling,
+      viewNode: can.parentNode.previousElementSibling.previousElementSibling,
+      statusNode: can.parentNode.previousElementSibling.previousElementSibling.previousElementSibling,
+      usernameNode: can.parentNode.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling,
+    }
+    console.log(thisRow)
+    const modalDialog = createDialog(can.dataset)
+    modalDialog.addEventListener('close', (c) => {
+      console.info(`dialog.returnValue: ${modalDialog.returnValue}`)
+      if (modalDialog.returnValue === 'yes') {
+        console.log('Dialog Yes clicked')
+        doDelete(can.dataset, thisRow)
+        // removeEventHandler
+      }
+    })
+    modalDialog.showModal()
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
   trashcans.forEach((can) => {
     console.log(can.dataset)
     can.addEventListener('click', (e) => {
-      e.stopPropagation()
-      e.preventDefault()
-      const thisRow = {
-        canNode: can.parentNode,
-        editNode: can.parentNode.previousElementSibling,
-        viewNode: can.parentNode.previousElementSibling.previousElementSibling,
-        statusNode: can.parentNode.previousElementSibling.previousElementSibling.previousElementSibling,
-        usernameNode: can.parentNode.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling,
-      }
-      console.log(thisRow)
-      const modalDialog = createDialog(can.dataset)
-      modalDialog.addEventListener('close', (c) => {
-        console.info(`dialog.returnValue: ${modalDialog.returnValue}`)
-        if (modalDialog.returnValue === 'yes') {
-          console.log('Dialog Yes clicked')
-          doDelete(can.dataset, thisRow)
-          // removeEventHandler
-        }
-      })
-      modalDialog.showModal()
+      canHandler(e, can)
     })
   })
 })
