@@ -49,16 +49,16 @@
               <label for="description">Description: </label>
               <input type="text" size="100%" tabindex="7" id="description" name="description" value="<% if (displayUser) { %><%=displayUser?.description%><% } %>">
               
-              <label for="description">Require Follow Requests: </label>
+              <label for="isLocked">Require Follow Requests: </label>
               <input type="checkbox" tabindex="8" id="isLocked" name="isLocked" <% if (displayUser) { %><%= (displayUser.locked) ? 'checked' : '' %><% } %>>
 
-              <label for="description">Discoverable: </label>
+              <label for="isDiscoverable">Discoverable: </label>
               <input type="checkbox" tabindex="11" id="isDiscoverable" name="isDiscoverable" <% if (displayUser) { %><%= (displayUser.discoverable) ? 'checked' : ''%><% } %>>
               
-              <label for="description">Is Bot Account: </label>
+              <label for="isBot">Is Bot Account: </label>
               <input type="checkbox" tabindex="9" id="isBot" name="isBot" <% if (displayUser) { %><%= (displayUser.bot) ? 'checked' : ''%><% } %>> 
 
-              <label for="description">Is Group Account: </label>
+              <label for="isGroup">Is Group Account: </label>
               <input type="checkbox" tabindex="10" id="isGroup" name="isGroup" <% if (displayUser) { %><%= (displayUser.group) ? 'checked' : ''%><% } %>>
               
               <label for="avatar">Avatar:</label>
