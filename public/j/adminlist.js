@@ -1,9 +1,14 @@
 const trashcans = document.querySelectorAll('img.trashcan')
 
-function updateGrid(dataset, targetRow) {
+function updateGrid(dataset, targetRow, message = null) {
   const div = document.createElement('div')
   div.classList.add('gridspan')
-  const text = document.createTextNode(`Permanently deleted ${dataset.username}.  No going back...`)
+  let text
+  if (message) {
+    text = document.createTextNode(message)
+  } else {
+    text = document.createTextNode(`Permanently deleted ${dataset.username}.  No going back...`)
+  }
   div.appendChild(text)
   targetRow.usernameNode.parentNode.insertBefore(div, targetRow.usernameNode)
   targetRow.canNode.firstElementChild.dataset.deleted = true
@@ -18,22 +23,38 @@ function updateGrid(dataset, targetRow) {
   xClick(targetRow.viewNode.firstElementChild.firstElementChild)
   xClick(targetRow.editNode.firstElementChild.firstElementChild)
   xClick(targetRow.canNode)
-  console.log(div)
 }
 
-function doDelete(dataset, row) {
+async function doDelete(dataset, row) {
   if (!dataset) {
     console.error('No dataset values provided.  No delete issued.')
     return false
   }
+  const formData = new FormData()
+  formData.append('csrfTokenForm', dataset.csrftoken)
+  formData.append('id', dataset.id)
+  const opts = {
+    method: 'DELETE',
+    headers: {
+      Accept: 'application/json',
+    },
+    body: formData,
+  }
+  const request = new Request(`${origin}/admin/account/delete/${dataset.id}`, opts)
+  console.table(request)
+  const response = await fetch(request)
+  console.log(response.status)
   console.log('doDelete called with: ')
   console.table(dataset)
-  updateGrid(dataset, row)
-  return true
+  if (response.status === 200) {
+    // updateGrid(dataset, row)
+    return response.json()
+  }
+  console.error('fetch api returned an error ')
+  return false
 }
 
 function createDialog(dataset) {
-  console.log(this)
   const spanPrompt = document.createElement('span')
   spanPrompt.setAttribute('id', 'prompt')
   const dialogText = `You are about to delete <em>${dataset.username}'s</em> account.<br>`
@@ -81,14 +102,20 @@ function canHandler(e, can) {
       statusNode: can.parentNode.previousElementSibling.previousElementSibling.previousElementSibling,
       usernameNode: can.parentNode.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling,
     }
-    console.log(thisRow)
+    // console.log(thisRow)
     const modalDialog = createDialog(can.dataset)
-    modalDialog.addEventListener('close', (c) => {
+    modalDialog.addEventListener('close', async (c) => {
+      console.log(c.currentTarget)
       console.info(`dialog.returnValue: ${modalDialog.returnValue}`)
       if (modalDialog.returnValue === 'yes') {
         console.log('Dialog Yes clicked')
-        doDelete(can.dataset, thisRow)
-        // removeEventHandler
+        const response = await doDelete(can.dataset, thisRow)
+        if (!response) {
+          console.error('Failed to perform delete.')
+        } else {
+          console.log(response)
+          updateGrid(can.dataset, thisRow, response.message)
+        }
       }
     })
     modalDialog.showModal()
@@ -103,3 +130,4 @@ window.addEventListener('DOMContentLoaded', () => {
     })
   })
 })
+console.log(`origin = ${origin}`)

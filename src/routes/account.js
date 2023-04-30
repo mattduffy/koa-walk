@@ -647,7 +647,7 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
   } else {
     const form = formidable({
       encoding: 'utf-8',
-      multipart: false,
+      multipart: true,
     })
     await new Promise((resolve, reject) => {
       form.parse(ctx.req, (err, fields) => {
@@ -663,12 +663,14 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
         resolve()
       })
     })
-    // 
+    //
     // Check that route param :id and form field id values match
     //
     const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
+    log('request body: ')
+    log(ctx.request.body)
     const { id, csrfTokenForm } = ctx.request.body
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection(USERS)
@@ -696,8 +698,9 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
           ctx.body = {
             status: 200,
             error: null,
-            message: `User account: ${id} has been permanently deleted.`,
+            message: `User account: @${displayUser.username} has been permanently deleted.`,
             user: displayUser.username,
+            id,
           }
         }
       } catch (e) {
@@ -705,6 +708,9 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
       }
     } else {
       log('CSRF Token mismatch.  No delete made.')
+      log(`session token: ${csrfTokenSession}`)
+      log(`cookie token: ${csrfTokenCookie}`)
+      log(`form token: ${csrfTokenForm}`)
       ctx.status = 403
       ctx.type = 'application/json'
       ctx.body = {

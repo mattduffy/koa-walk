@@ -181,15 +181,16 @@ async function cors(ctx, next) {
   const logg = log.extend('CORS')
   const err = error.extend('CORS')
   const keys = Object.keys(ctx.request.headers)
-  keys.forEach((k) => {
-    // logg(`header: ${k} : ${ctx.request.headers[k]}`)
-    if (/^access-control-|origin/i.test(k)) {
-      ctx.set('Vary', 'Origin')
-      ctx.set('Access-Control-Allow-Origin', '*')
-    }
-  })
+  // keys.forEach((k) => {
+  //   // logg(`header: ${k} : ${ctx.request.headers[k]}`)
+  //   if (/^access-control-|origin/i.test(k)) {
+  //     ctx.set('Vary', 'Origin')
+  //     ctx.set('Access-Control-Allow-Origin', '*')
+  //   }
+  // })
   ctx.set('Vary', 'Origin')
-  ctx.set('Access-Control-Allow-Origin', '*')
+  // ctx.set('Access-Control-Allow-Origin', '*')
+  ctx.set('Access-Control-Allow-Origin', ctx.request.origin)
   ctx.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
   ctx.set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS')
   try {
