@@ -2,6 +2,7 @@ module.exports = {
   globals: {
     window: true,
     document: true,
+    origin: true,
   },
   env: {
     es2021: true,

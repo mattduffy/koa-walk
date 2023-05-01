@@ -3,29 +3,30 @@ const trashcans = document.querySelectorAll('img.trashcan')
 function updateGrid(dataset, targetRow, message = null) {
   const div = document.createElement('div')
   div.classList.add('gridspan')
-  let text
-  if (message) {
-    text = document.createTextNode(message)
-  } else {
-    text = document.createTextNode(`Permanently deleted ${dataset.username}.  No going back...`)
-  }
+  const text = document.createTextNode(message ?? `Permanently deleted ${dataset.username}.  No going back...`)
   div.appendChild(text)
   targetRow.usernameNode.parentNode.insertBefore(div, targetRow.usernameNode)
+  /* eslint-disable-next-line no-param-reassign */
   targetRow.canNode.firstElementChild.dataset.deleted = true
   function xClick(n) {
-    // console.log(n)
     n.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
     })
   }
+  function strike(n) {
+    n.style.textDecoration = 'line-through'
+  }
   xClick(targetRow.usernameNode.firstElementChild)
+  strike(targetRow.usernameNode.firstElementChild)
   xClick(targetRow.viewNode.firstElementChild.firstElementChild)
+  strike(targetRow.viewNode.firstElementChild.firstElementChild)
   xClick(targetRow.editNode.firstElementChild.firstElementChild)
+  strike(targetRow.editNode.firstElementChild.firstElementChild)
   xClick(targetRow.canNode)
 }
 
-async function doDelete(dataset, row) {
+async function doDelete(dataset) {
   if (!dataset) {
     console.error('No dataset values provided.  No delete issued.')
     return false
@@ -41,13 +42,10 @@ async function doDelete(dataset, row) {
     body: formData,
   }
   const request = new Request(`${origin}/admin/account/delete/${dataset.id}`, opts)
-  console.table(request)
   const response = await fetch(request)
-  console.log(response.status)
   console.log('doDelete called with: ')
   console.table(dataset)
   if (response.status === 200) {
-    // updateGrid(dataset, row)
     return response.json()
   }
   console.error('fetch api returned an error ')
@@ -104,16 +102,15 @@ function canHandler(e, can) {
     }
     // console.log(thisRow)
     const modalDialog = createDialog(can.dataset)
-    modalDialog.addEventListener('close', async (c) => {
-      console.log(c.currentTarget)
-      console.info(`dialog.returnValue: ${modalDialog.returnValue}`)
+    modalDialog.addEventListener('close', async () => {
+      // console.info(`dialog.returnValue: ${modalDialog.returnValue}`)
       if (modalDialog.returnValue === 'yes') {
         console.log('Dialog Yes clicked')
         const response = await doDelete(can.dataset, thisRow)
         if (!response) {
           console.error('Failed to perform delete.')
         } else {
-          console.log(response)
+          // console.log(response)
           updateGrid(can.dataset, thisRow, response.message)
         }
       }
