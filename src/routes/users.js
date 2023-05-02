@@ -65,6 +65,38 @@ router.get('getUsers', '/users/:type*', async (ctx, next) => {
   }
 })
 
+router.get('getArchivedUsers', '/archived/:type*', async (ctx, next) => {
+  const log = Debug('koa-stub:routes:users_log')
+  const error = Debug('koa-stub:routes:users_error')
+  if (!ctx.state.isAuthenticated || !(ctx.state?.sessionUser.type === 'Admin')) {
+    ctx.status = 401
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = { status: 'Unauthorized', code: 401 }
+  } else {
+    const db = ctx.state.mongodb.client.db()
+    let filter
+    if (!ctx.params.type) {
+      filter = {}
+    } else {
+      filter = { userTypes: [capitalize(sanitize(ctx.params.type))] }
+    }
+    await next()
+    const collection = db.collection('users')
+    const users = new Users(collection, ctx)
+    let allUsers
+    try {
+      // this uses the aggregate query to group by user type
+      allUsers = await users.getAllArchivedUsers(filter)
+    } catch (err) {
+      error('Error getting all archived users.')
+      error(err)
+    }
+    ctx.status = 200
+    ctx.type = 'application/json'
+    ctx.body = { users: allUsers }
+  }
+})
+
 router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
   const log = Debug('koa-stub:routes:userById_log')
   const error = Debug('koa-stub:routes:userById_error')
