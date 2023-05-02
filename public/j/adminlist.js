@@ -15,10 +15,12 @@ function updateGrid(dataset, targetRow, message = null) {
     })
   }
   function strike(n) {
-    n.style.textDecoration = 'line-through'
+    const elem = n ?? null
+    elem.style.textDecoration = 'line-through'
   }
   xClick(targetRow.usernameNode.firstElementChild)
   strike(targetRow.usernameNode.firstElementChild)
+  strike(targetRow.statusNode)
   xClick(targetRow.viewNode.firstElementChild.firstElementChild)
   strike(targetRow.viewNode.firstElementChild.firstElementChild)
   xClick(targetRow.editNode.firstElementChild.firstElementChild)
