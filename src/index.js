@@ -62,7 +62,11 @@ app.templateName = 'default'
 app.publicDir = `${appRoot}/public`
 app.privateDir = `${appRoot}/private`
 app.uploadsDir = `${appRoot}/uploads`
+app.archiveDir = `${appRoot}/archive`
 app.dirs = {
+  archive: {
+    archive: `${appRoot}/archive`,
+  },
   public: {
     dir: `${appRoot}/public`,
     accounts: `${appRoot}/public/a`,
