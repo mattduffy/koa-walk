@@ -20,6 +20,7 @@ __tests__/images/gps
 __tests__/images/copy*
 __tests__/images/*_original
 src/exiftool.config
+archive/*
 uploads/*
 public/a/*
 private/a/*

@@ -1,6 +1,7 @@
 coverage
 TODO.md
 migrations/*
+archive/*
 private/a/*
 public/a/*
 public/c/*
