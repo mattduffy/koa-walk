@@ -110,7 +110,7 @@ router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
   await next()
   const collection = db.collection('users')
   const users = new Users(collection, ctx)
-  const foundUser = await users.getById(id)
+  const foundUser = await users.getById(id, { archived: false })
   if (foundUser === null) {
     error(`No user found with ID: ${id}`)
     ctx.throw(404, `No user found with ID: ${id}`)
@@ -135,7 +135,7 @@ router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
   await next()
   const collection = db.collection('users')
   const users = new Users(collection, ctx)
-  const foundUser = await users.getByEmail(email)
+  const foundUser = await users.getByEmail(email, { archived: false })
   if (foundUser === null) {
     error(`No user found with email: ${email}`)
     ctx.throw(404, `No user found with email: ${email}`)
@@ -158,7 +158,7 @@ router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection('users')
     const users = new Users(collection, ctx)
-    user = await users.getByUsername(username)
+    user = await users.getByUsername(username, { archived: false })
     if (!user) {
       locals.title = `${ctx.app.site}: User Details`
       locals.username = username
@@ -172,6 +172,7 @@ router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
   // locals.user = user
   locals.displayUser = user
   locals.isAuthenticated = ctx.state.isAuthenticated
+  locals.sessionUser = ctx.state.sessionUser
   await ctx.render('user', locals)
 })
 
@@ -187,7 +188,7 @@ router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection('users')
     const users = new Users(collection, ctx)
-    user = await users.getByUsername(username)
+    user = await users.getByUsername(username, { archived: false })
     if (!user) {
       locals.title = `${ctx.app.site}: User Details`
       locals.username = username
@@ -201,6 +202,7 @@ router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next
   locals.sessionUser = ctx.state.sessionUser
   locals.displayUser = user
   locals.isAuthenticated = ctx.state.isAuthenticated
+  locals.sessionUser = ctx.state.sessionUser
   await ctx.render('user', locals)
 })
 
