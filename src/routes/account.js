@@ -17,12 +17,6 @@ const USERS = 'users'
 const accountLog = _log.extend('account')
 const accountError = _error.extend('account')
 
-const formOptions = {
-  encoding: 'utf-8',
-  uploadDir: process.env.UPLOADSDIR,
-  keepExtensions: true,
-  multipart: true,
-}
 const router = new Router()
 
 function isAsyncRequest(req) {
@@ -669,15 +663,14 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
     const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
-    log('request body: ')
-    log(ctx.request.body)
     const { id, csrfTokenForm } = ctx.request.body
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection(USERS)
     const users = new Users(collection, ctx)
     if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenForm) {
       try {
-        let displayUser = await users.getById(id)
+        // let displayUser = await users.getById(id)
+        let displayUser = await users.archiveUser(ctx, id)
         if (!displayUser) {
           ctx.flash.delete = {
             // some flash message
@@ -698,7 +691,7 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
           ctx.body = {
             status: 200,
             error: null,
-            message: `User account: @${displayUser.username} has been permanently deleted.`,
+            message: `User account: @${displayUser?.username} has been permanently deleted.`,
             user: displayUser.username,
             id,
           }
@@ -709,8 +702,8 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
     } else {
       log('CSRF Token mismatch.  No delete made.')
       log(`session token: ${csrfTokenSession}`)
-      log(`cookie token: ${csrfTokenCookie}`)
-      log(`form token: ${csrfTokenForm}`)
+      log(` cookie token: ${csrfTokenCookie}`)
+      log(`   form token: ${csrfTokenForm}`)
       ctx.status = 403
       ctx.type = 'application/json'
       ctx.body = {
