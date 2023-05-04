@@ -59,16 +59,16 @@
         <dd><% if (displayUser) { %><%=displayUser?.status %><% } %></dd>
 
         <dt>Require Follow Requests: </dt>
-        <dd><% if (sessionUser) { %><%= (sessionUser.locked) ? 'Yes': 'No' %><% } %></dd>
+        <dd><% if (displayUser) { %><%= (displayUser.locked) ? 'Yes': 'No' %><% } %></dd>
 
         <dt>Discoverable: </dt>
-        <dd><% if (sessionUser) { %><%= (sessionUser.discoverable) ? 'Yes' : 'No' %><% } %></dd>
+        <dd><% if (displayUser) { %><%= (displayUser.discoverable) ? 'Yes' : 'No' %><% } %></dd>
 
         <dt>Bot Account: </dt>
-        <dd><% if (sessionUser) { %><%= (sessionUser.bot) ? 'Yes': 'No' %><% } %></dd>
+        <dd><% if (displayUser) { %><%= (displayUser.bot) ? 'Yes': 'No' %><% } %></dd>
 
         <dt>Group Actions: </dt>
-        <dd><% if (sessionUser) { %><%= (sessionUser.group) ? 'Yes' : 'No' %><% } %></dd>
+        <dd><% if (displayUser) { %><%= (displayUser.group) ? 'Yes' : 'No' %><% } %></dd>
 
         <dt>User Upload Dir: </dt>
         <dd><% if (displayUser.publicDir !== '') { %><%= `${origin}/${displayUser?.publicDir}` %><% } else { %>
@@ -90,7 +90,7 @@
               <source srcset="<%= `${origin}/${displayUser?.avatar}`%>" media="(min-width: 300px)" id="avatar-sml" width="250px" alt="avatar image">
               <% } %>
               <img src="<%= defaultAvatar %>" id="defaultAvatar" alt="default avatar image">
-              <% if (sessionUser.avatar === '') { %>
+              <% if (displayUser.avatar === '') { %>
               <figcaption>
                 <span class="smallem">Default avatar.  No avatar image uploaded yet.</span><br>
               </figcaption>
@@ -103,12 +103,13 @@
         <dd>
           <figure>
             <picture>
-              <% if (sessionUser.header !== '') { %>
+              <% if (displayUser.header !== '') { %>
               <source srcset="<%= `${origin}/${displayUser?.header}` %>" media="(min-width: 1000px)" id="header-big" width="350px" alt="header image">
               <source srcset="<%= `${origin}/${displayUser?.header}` %>" media="(min-width: 600px)" id="header-med" width="300px" alt="header image">
               <source srcset="<%= `${origin}/${displayUser?.header}` %>" media="(min-width: 300px)" id="header-sml" width="250px" alt="header image">
-              <% } else { %>
+              <% } %>
               <img src="<%= defaultHeader %>" id="defaultHeader" alt="default header image">
+              <% if (displayUser.header  === '') { %>
               <figcaption>
                 <span class="smallem">Default header.  No header image uploaded yet.</span><br>
               </figcaption>
