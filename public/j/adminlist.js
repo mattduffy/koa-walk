@@ -45,13 +45,14 @@ async function doDelete(dataset) {
   }
   const request = new Request(`${origin}/admin/account/delete/${dataset.id}`, opts)
   const response = await fetch(request)
+  const json = await response.json()
   console.log('doDelete called with: ')
   console.table(dataset)
-  if (response.status === 200) {
-    return response.json()
+  if (response.status > 299) {
+    console.error('fetch api returned an error ')
+    console.error(json)
   }
-  console.error('fetch api returned an error ')
-  return false
+  return json
 }
 
 function createDialog(dataset) {
