@@ -631,7 +631,7 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, ne
   }
 })
 
-router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async (ctx, next) => {
+router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async (ctx) => {
   const log = accountLog.extend('POST-account-delete')
   const error = accountError.extend('POST-account-delete')
   if (!ctx.state?.isAuthenticated) {
@@ -660,7 +660,6 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
     //
     // Check that route param :id and form field id values match
     //
-    const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const { id, csrfTokenForm } = ctx.request.body
@@ -670,7 +669,7 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
     if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenForm) {
       try {
         // let displayUser = await users.getById(id)
-        let displayUser = await users.archiveUser(ctx, id)
+        const displayUser = await users.archiveUser(ctx, id)
         if (!displayUser) {
           ctx.flash.delete = {
             // some flash message
@@ -691,7 +690,7 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
           ctx.body = {
             status: 200,
             error: null,
-            message: `User account: @${displayUser?.username} has been permanently deleted.`,
+            message: `User account: @${displayUser?.username} has been deleted.`,
             user: displayUser.username,
             id,
           }
