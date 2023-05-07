@@ -124,10 +124,9 @@ function canHandler(e, can) {
 
 window.addEventListener('DOMContentLoaded', () => {
   trashcans.forEach((can) => {
-    console.log(can.dataset)
+    // console.log(can.dataset)
     can.addEventListener('click', (e) => {
       canHandler(e, can)
     })
   })
 })
-console.log(`origin = ${origin}`)
