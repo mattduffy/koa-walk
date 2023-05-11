@@ -1,0 +1,23 @@
+<main>
+  <article>
+    <h1>View Account Public Key</h1>
+    
+    <% if (view.message) { %>
+    <div id="messages" class="messages">
+      <span><%= view.message %></span>
+    </div>
+    <% } %>
+    <% if (view.error) { %>
+    <div id="errors" class="errors">
+      <span><%= view.error%></span>
+    </div>
+    <% } %>
+    <div class="account-pubkey">
+      <dl>
+        <dt>Identity:</dt>
+        <dd><%- sessionUser.publicKey %></dd>
+      </dl>
+    </div>
+  </article>
+</main>
+
