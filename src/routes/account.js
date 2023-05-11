@@ -178,6 +178,27 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
   }
 })
 
+router.get('accountPublicKey', '/account/pubkey', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('GET-account-publickey')
+  const error = accountError.extend('GET-account-publickey')
+  // await next()
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    const locals = {
+      sessionUser: ctx.state.sessionUser,
+      body: ctx.body,
+      view: ctx.flash.view ?? {},
+      isAuthenticated: ctx.state.isAuthenticated,
+      title: `${ctx.app.site}: View Public Key`,
+    }
+    ctx.status = 200
+    await ctx.render('account/user-pubkey', locals)
+  }
+})
+
 router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-view')
   const error = accountError.extend('GET-account-view')
