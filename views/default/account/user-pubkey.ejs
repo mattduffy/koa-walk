@@ -14,8 +14,8 @@
     <% } %>
     <div class="account-pubkey">
       <dl>
-        <dt>Identity:</dt>
-        <dd><%- sessionUser.publicKey %></dd>
+        <dt>Public Signing Key:</dt>
+        <dd><%- await sessionUser.publicSigningKey %></dd>
       </dl>
     </div>
   </article>
