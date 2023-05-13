@@ -178,9 +178,50 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
   }
 })
 
-router.get('accountPublicKey', '/account/pubkey', hasFlash, async (ctx, next) => {
-  const log = accountLog.extend('GET-account-publickey')
-  const error = accountError.extend('GET-account-publickey')
+router.get('accountGenerateKeys', '/account/generateKeys/:type?', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('GET-account-generateKeys')
+  const error = accountError.extend('GET-account-generateKeys')
+  // await next()
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    const createTypes = { signing: false, encrypting: false }
+    if (ctx.params.type === 'signing') {
+      createTypes.signing = true
+      log('Request to generate signing key type')
+    } else if (ctx.params.type === 'encrypting') {
+      createTypes.encrypting = true
+      log('Request to generate encrypting key type')
+    } else {
+      createTypes.signing = true
+      createTypes.encrypting = true
+      log('Request to generate both signing and encrypting keypairs.')
+    }
+    let keys
+    let status
+    let body
+    try {
+      keys = await ctx.state.sessionUser.generateKeys(createTypes)
+      ctx.state.sessionUser = ctx.state.sessionUser.update()
+      status = 200
+      body = keys
+    } catch (e) {
+      error(`Failed to generate key pair for ${ctx.state.sessionUser.username}`)
+      error(e)
+      status = 500
+      body = { error: 'No webcrypto keys were created.' }
+    }
+    ctx.status = status
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = body
+  }
+})
+
+router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) => {
+  const log = accountLog.extend('GET-account-publickeys')
+  const error = accountError.extend('GET-account-publickeys')
   // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
@@ -195,7 +236,7 @@ router.get('accountPublicKey', '/account/pubkey', hasFlash, async (ctx, next) =>
       title: `${ctx.app.site}: View Public Key`,
     }
     ctx.status = 200
-    await ctx.render('account/user-pubkey', locals)
+    await ctx.render('account/user-pubkeys', locals)
   }
 })
 

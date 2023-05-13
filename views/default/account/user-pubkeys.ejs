@@ -1,6 +1,6 @@
 <main>
   <article>
-    <h1>View Account Public Key</h1>
+    <h1>View Account Public Keys</h1>
     
     <% if (view.message) { %>
     <div id="messages" class="messages">
@@ -15,7 +15,14 @@
     <div class="account-pubkey">
       <dl>
         <dt>Public Signing Key:</dt>
-        <dd><%- await sessionUser.publicSigningKey %></dd>
+        <dd>
+          <pre><%- await sessionUser.publicSigningKey %></pre>
+        </dd>
+
+        <dt>Public Encrypting Key:</dt>
+        <dd>
+          <pre><%- await sessionUser.publicEncryptingKey %></pre>
+        </dd>
       </dl>
     </div>
   </article>
