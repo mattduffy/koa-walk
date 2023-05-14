@@ -19,9 +19,19 @@
           <pre><%- await sessionUser.publicSigningKey %></pre>
         </dd>
 
+        <dt>Signing JWK</dt>
+        <dd>
+          <pre><%- await sessionUser.signingJwk %></pre>
+        </dd>
+
         <dt>Public Encrypting Key:</dt>
         <dd>
           <pre><%- await sessionUser.publicEncryptingKey %></pre>
+        </dd>
+        
+        <dt>Encrypting JWK</dt>
+        <dd>
+          <pre><%- await sessionUser.encryptingJwk %></pre>
         </dd>
       </dl>
     </div>
