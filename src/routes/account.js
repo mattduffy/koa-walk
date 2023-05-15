@@ -228,16 +228,39 @@ router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) 
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    const locals = {
-      sessionUser: ctx.state.sessionUser,
-      body: ctx.body,
-      view: ctx.flash.view ?? {},
-      isAuthenticated: ctx.state.isAuthenticated,
-      title: `${ctx.app.site}: View Public Key`,
+    log('is this an async api request?')
+    if (ctx.state.isAsyncRequest) {
+      ctx.status = 200
+      ctx.type = 'application/json; charset=utf-8'
+      ctx.body = await ctx.state.sessionUser.publicKeys()
+    } else {
+      const locals = {
+        sessionUser: ctx.state.sessionUser,
+        body: ctx.body,
+        view: ctx.flash.view ?? {},
+        isAuthenticated: ctx.state.isAuthenticated,
+        title: `${ctx.app.site}: View Public Key`,
+      }
+      ctx.status = 200
+      await ctx.render('account/user-pubkeys', locals)
     }
-    ctx.status = 200
-    await ctx.render('account/user-pubkeys', locals)
   }
+})
+
+router.get('accountSignData', '/account/sign/:data', hasFlash, async (ctx, next) => {
+  
+})
+
+router.get('accountVerifyData', '/account/verify/:signature', hasFlash, async (ctx, next) => {
+  
+})
+
+router.get('accountEncryptData', '/account/encrypt/:plaintext', hasFlash, async (ctx, next) => {
+  
+})
+
+router.get('accountDecryptData', '/account/decrypt/:ciphertext', hasFlash, async (ctx, next) => {
+  
 })
 
 router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
