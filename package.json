@@ -30,10 +30,13 @@
   "dependencies": {
     "@koa/ejs": "5.0.0",
     "@koa/router": "12.0.0",
+    "@mattduffy/koa-migrations": "^1.0.0",
+    "@mattduffy/webfinger": "^1.0.0",
     "@mattduffy/users": "^1.0.0",
     "debug": "4.3.4",
     "dotenv": "16.0.3",
     "formidable": "2.1.1",
+    "jose": "4.14.4",
     "keygrip": "1.1.0",
     "koa": "^2.14.1",
     "koa-redis": "4.0.1",

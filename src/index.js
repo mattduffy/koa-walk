@@ -7,7 +7,6 @@
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { fileURLToPath } from 'node:url'
-import { _log, _error } from './utils/logging.js'
 import * as Koa from 'koa'
 import serve from 'koa-static'
 import Keygrip from 'keygrip'
@@ -15,6 +14,7 @@ import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import { migrations } from '@mattduffy/koa-migrations'
 import { wellknownWebfinger, wellknownHostmeta, wellknownNodeinfo } from '@mattduffy/webfinger'
+import { _log, _error } from './utils/logging.js'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
 import {
@@ -22,7 +22,7 @@ import {
   flashMessage,
   prepareRequest,
   tokenAuthMiddleware,
-  errorHandlers,
+  // errorHandlers,
   errors,
   httpMethodOverride,
 } from './middlewares.js'
@@ -101,34 +101,34 @@ render(app, {
 })
 
 // x-response-time
-async function xResponseTime(ctx, next) {
-  const start = Date.now()
-  try {
-    await next()
-    const ms = Date.now() - start
-    ctx.set('X-Response-Time', `${ms}`)
-    log(`${ctx.method} ${ctx.url} - ${ms}`)
-    // log('session: %o', ctx.session)
-  } catch (e) {
-
-  }
-}
+// async function xResponseTime(ctx, next) {
+//   const start = Date.now()
+//   try {
+//     await next()
+//     const ms = Date.now() - start
+//     ctx.set('X-Response-Time', `${ms}`)
+//     log(`${ctx.method} ${ctx.url} - ${ms}`)
+//     // log('session: %o', ctx.session)
+//   } catch (e) {
+//     error(e)
+//   }
+// }
 
 // logging
-async function logging(ctx, next) {
-  log('ctx.state: %o', ctx.state)
-  await next()
-}
+// async function logging(ctx, next) {
+//   log('ctx.state: %o', ctx.state)
+//   await next()
+// }
 
 // session? cookie?
-async function sessionViews(ctx, next) {
-  await next()
-  if (!ctx.session) return
-  if (/favicon/.test(ctx.path)) return
-  const n = ctx.session?.views ?? 0
-  ctx.session.views = n + 1
-  ctx.cookies.set('views', ctx.session.views)
-}
+// async function sessionViews(ctx, next) {
+//   await next()
+//   if (!ctx.session) return
+//   if (/favicon/.test(ctx.path)) return
+//   const n = ctx.session?.views ?? 0
+//   ctx.session.views = n + 1
+//   ctx.cookies.set('views', ctx.session.views)
+// }
 
 async function proxyCheck(ctx, next) {
   const logg = log.extend('proxyCheck')
@@ -184,7 +184,8 @@ async function csp(ctx, next) {
 async function cors(ctx, next) {
   const logg = log.extend('CORS')
   const err = error.extend('CORS')
-  const keys = Object.keys(ctx.request.headers)
+  logg('Cors middleware checking headers.')
+  // const keys = Object.keys(ctx.request.headers)
   // keys.forEach((k) => {
   //   // logg(`header: ${k} : ${ctx.request.headers[k]}`)
   //   if (/^access-control-|origin/i.test(k)) {
@@ -193,7 +194,6 @@ async function cors(ctx, next) {
   //   }
   // })
   ctx.set('Vary', 'Origin')
-  // ctx.set('Access-Control-Allow-Origin', '*')
   ctx.set('Access-Control-Allow-Origin', ctx.request.origin)
   ctx.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
   ctx.set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS')
@@ -212,6 +212,7 @@ async function isMongo(ctx, next) {
   // const { client, ObjectId } = mongoClient
   ctx.state.mongodb = mongoClient
   try {
+    logg(mongoClient.client.s.namespace)
     await next()
   } catch (e) {
     err(e)
