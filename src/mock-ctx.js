@@ -2,6 +2,9 @@ const root = process.cwd()
 console.log(root)
 
 export const ctx = {
+  request: {
+    origin: 'https://mattmadethese.com',
+  },
   app: {
     dirs: {
       archive: {
