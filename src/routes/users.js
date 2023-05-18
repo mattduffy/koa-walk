@@ -6,13 +6,18 @@
  */
 
 import Router from '@koa/router'
-import Debug from 'debug'
+// import Debug from 'debug'
 import { ObjectId } from 'mongodb'
+import { _log, _error } from '../utils/logging.js'
 import { Users, AdminUser } from '../models/users.js'
 
-function isAsyncRequest(req) {
-  return (req.get('X-ASYNCREQUEST') === true)
-}
+const userLog = _log.extend('auth')
+const userError = _error.extend('auth')
+const USERS_COL = 'users'
+
+// function isAsyncRequest(req) {
+//   return (req.get('X-ASYNCREQUEST') === true)
+// }
 function capitalize(word) {
   return word[0].toUpperCase() + word.substring(1).toLowerCase()
 }
@@ -22,20 +27,9 @@ function sanitize(param) {
 }
 const router = new Router()
 
-async function hasFlash(ctx, next) {
-  const log = Debug('koa-stub:routes:main:hasFlash_log')
-  const error = Debug('koa-stub:routes:main:hasFlash_error')
-  if (ctx.flash) {
-    log('ctx.flash is present: %o', ctx.flash)
-  } else {
-    error('ctx.flash is missing.')
-  }
-  await next()
-}
-
 router.get('getUsers', '/users/:type*', async (ctx, next) => {
-  const log = Debug('koa-stub:routes:users_log')
-  const error = Debug('koa-stub:routes:users_error')
+  const log = userLog.extend('GET-users_type')
+  const error = userError.extend('GET-users_type')
   if (!ctx.state.isAuthenticated || !(ctx.state?.sessionUser.type === 'Admin')) {
     ctx.status = 401
     ctx.type = 'application/json; charset=utf-8'
@@ -49,7 +43,7 @@ router.get('getUsers', '/users/:type*', async (ctx, next) => {
       filter = { userTypes: [capitalize(sanitize(ctx.params.type))] }
     }
     await next()
-    const collection = db.collection('users')
+    const collection = db.collection(USERS_COL)
     const users = new Users(collection, ctx)
     let allUsers
     try {
@@ -66,8 +60,8 @@ router.get('getUsers', '/users/:type*', async (ctx, next) => {
 })
 
 router.get('getArchivedUsers', '/archived/:type*', async (ctx, next) => {
-  const log = Debug('koa-stub:routes:users_log')
-  const error = Debug('koa-stub:routes:users_error')
+  const log = userLog.extend('GET-archived_type')
+  const error = userError.extend('GET-archived_type')
   if (!ctx.state.isAuthenticated || !(ctx.state?.sessionUser.type === 'Admin')) {
     ctx.status = 401
     ctx.type = 'application/json; charset=utf-8'
@@ -81,7 +75,7 @@ router.get('getArchivedUsers', '/archived/:type*', async (ctx, next) => {
       filter = { userTypes: [capitalize(sanitize(ctx.params.type))] }
     }
     await next()
-    const collection = db.collection('users')
+    const collection = db.collection(USERS_COL)
     const users = new Users(collection, ctx)
     let allUsers
     try {
@@ -98,9 +92,9 @@ router.get('getArchivedUsers', '/archived/:type*', async (ctx, next) => {
 })
 
 router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
-  const log = Debug('koa-stub:routes:userById_log')
-  const error = Debug('koa-stub:routes:userById_error')
-  const { id } = ctx.params
+  const log = userLog.extend('GET-user_byId')
+  const error = userError.extend('GET-user_byId')
+  const id = sanitize(ctx.params.id)
   log(`looking up user by Id: ${id}`)
   if (Buffer.from(id).length !== 24 || /[^0-9A-Fa-f]/.test(id)) {
     ctx.throw(400, `Not a valid user ID: ${id}`)
@@ -108,7 +102,7 @@ router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
   ctx.state.sessionUser = { id }
   const db = ctx.state.mongodb.client.db()
   await next()
-  const collection = db.collection('users')
+  const collection = db.collection(USERS_COL)
   const users = new Users(collection, ctx)
   const foundUser = await users.getById(id, { archived: false })
   if (foundUser === null) {
@@ -122,9 +116,9 @@ router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
 })
 
 router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
-  const log = Debug('koa-stub:routes:userByEmail_log')
-  const error = Debug('koa-stub:routes:userByEmail_error')
-  const { email } = ctx.params
+  const log = userLog.extend('GET-user_byEmail')
+  const error = userError.extend('GET-user_byEmail')
+  const email = sanitize(ctx.params.email)
   log(`looking up user by email: ${email}`)
   if (/^[\w!#$%&'*+/=?`{|}~^-]+(?:\.[\w!#$%&'*+/=?`{|}~^-]+)*@(?:[A-Z0-9-]+\.)+[A-Z]{2,6}$/i.test(email)) {
     error(`Not a valid email address: ${email}`)
@@ -133,7 +127,7 @@ router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
   ctx.state.sessionUser = { email }
   const db = ctx.state.mongodb.client.db()
   await next()
-  const collection = db.collection('users')
+  const collection = db.collection(USERS_COL)
   const users = new Users(collection, ctx)
   const foundUser = await users.getByEmail(email, { archived: false })
   if (foundUser === null) {
@@ -147,8 +141,8 @@ router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
 })
 
 router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
-  const log = Debug('koa-stub:routes:user_log')
-  const error = Debug('koa-stub:routes:user_error')
+  const log = userLog.extend('GET-user_username')
+  const error = userError.extend('GET-user_username')
   const username = sanitize(ctx.params.username)
   log(`loooking up user by username: ${username}`)
   let user
@@ -156,7 +150,7 @@ router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
   await next()
   try {
     const db = ctx.state.mongodb.client.db()
-    const collection = db.collection('users')
+    const collection = db.collection(USERS_COL)
     const users = new Users(collection, ctx)
     user = await users.getByUsername(username, { archived: false })
     if (!user) {
@@ -176,17 +170,17 @@ router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
   await ctx.render('user', locals)
 })
 
-router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next) => {
-  const log = Debug('koa-stub:routes:@username_log')
-  const error = Debug('koa-stub:routes:@username_error')
-  const username = sanitize(ctx.params[0])
+router.get('@username', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next) => {
+  const log = userLog.extend('GET-user_@username')
+  const error = userError.extend('GET-user_@username')
+  const username = sanitize(ctx.params.username)
   log(`loooking up user by @username: ${username}`)
   let user
   const locals = {}
   await next()
   try {
     const db = ctx.state.mongodb.client.db()
-    const collection = db.collection('users')
+    const collection = db.collection(USERS_COL)
     const users = new Users(collection, ctx)
     user = await users.getByUsername(username, { archived: false })
     if (!user) {
@@ -204,6 +198,38 @@ router.get('@username', /^\/@([^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next
   locals.isAuthenticated = ctx.state.isAuthenticated
   locals.sessionUser = ctx.state.sessionUser
   await ctx.render('user', locals)
+})
+
+router.get('jwks', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})\/jwks.json$/, async (ctx, next) => {
+  // This api route is publicly available, no need for authentication.
+  const log = userLog.extend('GET-user_jwks-json')
+  const error = userError.extend('GET-user_username')
+  const username = sanitize(ctx.params.username)
+  log(`looking up user by @username: ${username}`)
+  let user
+  let keys = {}
+  try {
+    const db = ctx.state.mongodb.client.db()
+    const collection = db.collection(USERS_COL)
+    const users = new Users(collection, ctx)
+    user = await users.getByUsername(username, { archived: false })
+    if (!user) {
+      ctx.status = 404
+      ctx.type = 'text/plain; charset=utf-8'
+      ctx.body = 'Not Found'
+      return
+    }
+    keys = await user.jwksjson()
+  } catch (e) {
+    error(e)
+    ctx.status = 500
+    ctx.type = 'text/plain; charset=utf-8'
+    ctx.body = 'User lookup failed.'
+    return
+  }
+  ctx.status = 200
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = keys
 })
 
 export { router as users }
