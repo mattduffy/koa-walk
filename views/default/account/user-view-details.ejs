@@ -38,9 +38,18 @@
           <dt>Url: </dt>
           <dd><% if (sessionUser) { %><%= `${origin}/${sessionUser?.url}` %><% } %></dd>
 
+          <dt>JWK Set: </dt>
+          <dd><% if (sessionUser?._keys) { %>
+              <a href="<%= `${origin}/@${sessionUser.username}/jwks.json` %>"><%= `${origin}/@${sessionUser.username}/jwks.json` %></a>
+              <% } else { %>
+              No public keys available. 
+              <% } %>
+          </dd>
+
           <dt>Webfinger: </dt>
           <dd><% if (sessionUser) { %>
-            <%= `${origin}/.well-known/webfinger?resource=acct:${sessionUser?.username}` %><% } %>
+            <a href="<%= `${origin}/.well-known/webfinger?resource=acct:${sessionUser?.username}` %>"><%= `${origin}/.well-known/webfinger?resource=acct:${sessionUser?.username}` %></a>
+            <% } %>
           </dd>
 
           <dt>Primary Email Address: </dt>

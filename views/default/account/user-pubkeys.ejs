@@ -14,8 +14,17 @@
     <% } %>
     <div class="account-pubkey">
       <dl>
-        <dt>Public Signing Key:</dt>
+        <dt>
+          <a href="<%= origin %>/@<%= sessionUser.username %>/jwks.json">
+            <%= origin %>/@<%= sessionUser.username %>/jwks.json
+          </a>
+
+        </dt>
         <dd>
+        </dd>
+
+        <dt>Public Signing Key:</dt>
+        
           <pre><%- await sessionUser.publicSigningKey %></pre>
         </dd>
 

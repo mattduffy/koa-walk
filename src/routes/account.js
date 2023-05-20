@@ -235,11 +235,12 @@ router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) 
       ctx.body = await ctx.state.sessionUser.publicKeys()
     } else {
       const locals = {
-        sessionUser: ctx.state.sessionUser,
         body: ctx.body,
         view: ctx.flash.view ?? {},
-        isAuthenticated: ctx.state.isAuthenticated,
+        origin: ctx.request.origin,
+        sessionUser: ctx.state.sessionUser,
         title: `${ctx.app.site}: View Public Key`,
+        isAuthenticated: ctx.state.isAuthenticated,
       }
       ctx.status = 200
       await ctx.render('account/user-pubkeys', locals)

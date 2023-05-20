@@ -38,9 +38,19 @@
         <dt>Url: </dt>
         <dd><% if (displayUser) { %><%= `${origin}/${displayUser?.url}` %><% } %></dd>
 
+        <dt>JWK Set: </dt>
+        <dd><% if (displayUser._keys.signing !== undefined) { %>
+            <a href="<%= `${origin}/@${displayUser.username}/jwks.json` %>"><%= `${origin}/@${displayUser.username}/jwks.json` %></a>
+            <% } else { %>
+            No public keys available. 
+            <% } %>
+        </dd>
+
         <dt>Webfinger: </dt>
-        <dd><% if (displayUser) { %><%=
-              `${origin}/.well-known/webfinger?resource=acct:${displayUser?.username}` %><% } %></dd>
+        <dd><% if (displayUser) { %>
+          <a href="<%= `${origin}/.well-known/webfinger?resource=acct:${displayUser?.username}` %>"><%= `${origin}/.well-known/webfinger?resource=acct:${displayUser?.username}` %></a>
+          <% } %>
+        </dd>
 
         <dt>Primary Email Address: </dt>
         <dd><% if (displayUser) { %><%=displayUser?.primaryEmail.primary %><% } %></dd>
