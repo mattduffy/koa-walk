@@ -30,6 +30,7 @@ import { apiV1 } from './routes/api_v1.js'
 import { activityV1 } from './routes/activity_stream.js'
 import { auth as Auth } from './routes/auth.js'
 import { main as Main } from './routes/main.js'
+import { wellKnown } from './routes/wellKnown.js'
 import { users as Users } from './routes/users.js'
 import { account as Account } from './routes/account.js'
 
@@ -230,7 +231,7 @@ app.use(tokenAuthMiddleware())
 app.use(proxyCheck)
 app.use(csp)
 app.use(cors)
-app.use(wellknownNodeinfo({}, app))
+// app.use(wellknownNodeinfo({}, app))
 app.use(wellknownHostmeta({}, app))
 app.use(wellknownWebfinger({}, app))
 // app.use(xResponseTime)
@@ -241,6 +242,7 @@ app.use(Auth.routes())
 app.use(Main.routes())
 app.use(Users.routes())
 app.use(Account.routes())
+app.use(wellKnown.routes())
 app.use(activityV1.routes())
 app.use(apiV1.routes())
 
