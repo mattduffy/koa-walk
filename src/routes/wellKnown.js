@@ -8,6 +8,7 @@
 import Router from '@koa/router'
 import NodeInfo from '@mattduffy/webfinger/nodeinfo'
 import Hostmeta from '@mattduffy/webfinger/host-meta'
+import Webfinger from '@mattduffy/webfinger/webfinger'
 import { _log, _error } from '../utils/logging.js'
 
 const wellKnownLog = _log.extend('wellKnown')
@@ -108,6 +109,68 @@ router.get('host-meta', '/.well-known/host-meta', async (ctx, next) => {
     ctx.status = 500
     // throw new Error(e)
     ctx.throw(500, 'Hostmeta failure - 100', e)
+  }
+})
+
+router.get('webfinger', '/.well-known/webfinger', async (ctx, next) => {
+  const log = wellKnownLog.extend('GET-webfinger')
+  const error = wellKnownError.extend('GET-webfinger')
+  if (!ctx.state.mongodb) {
+    error('Missing db connection')
+    ctx.status = 500
+    ctx.type = 'text/plain; charset=utf-8'
+    ctx.throw(500, 'Missing database connection.')
+  }
+  try {
+    await next()
+  } catch (e) {
+    error('Webfinger failure - 200')
+    error(e)
+    ctx.throw(500, 'Webfinger failure - 200', e)
+  }
+  try {
+    const re = /^acct:([^\\s][A-Za-z0-9_-]{2,30})(?:@)?([^\\s].*)?$/
+    const username = re.exec(ctx.request.query?.resource)
+    if (!ctx.request.query.resource || !username) {
+      error('Missing resource query parameter.')
+      ctx.status = 400
+      ctx.type = 'text/plain; charset=utf-8'
+      ctx.body = 'Bad request'
+    } else {
+      const { origin, host, protocol } = ctx.request
+      const localAcct = new RegExp(`(${host})`)
+      let isLocal = false
+      if (username[2] === undefined || localAcct.test(username[2])) {
+        isLocal = true
+      }
+      const db = ctx.state.mongodb.client.db()
+      const users = db.collection('users')
+      const o = {
+        db: users,
+        username,
+        local: isLocal,
+        origin,
+        protocol: `${protocol}`,
+        host: `${host}`,
+        imgDir: ctx.app.publicDir,
+      }
+      const finger = new Webfinger(o)
+      const found = await finger.finger()
+      if (!found) {
+        ctx.status = 404
+        ctx.type = 'text/plain; charset=utf-8'
+        ctx.body = `${username[1]} not found`
+      } else {
+        ctx.status = 200
+        ctx.type = 'application/jrd+json; charset=utf-8'
+        ctx.body = found
+      }
+    }
+  } catch (e) {
+    error(e)
+    ctx.status = 500
+    // throw new Error(e)
+    ctx.throw(500, 'Webfinger failure - 100', e)
   }
 })
 

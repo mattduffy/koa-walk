@@ -13,7 +13,6 @@ import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import { migrations } from '@mattduffy/koa-migrations'
-import { wellknownWebfinger, wellknownHostmeta, wellknownNodeinfo } from '@mattduffy/webfinger'
 import { _log, _error } from './utils/logging.js'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
@@ -231,9 +230,6 @@ app.use(tokenAuthMiddleware())
 app.use(proxyCheck)
 app.use(csp)
 app.use(cors)
-// app.use(wellknownNodeinfo({}, app))
-// app.use(wellknownHostmeta({}, app))
-app.use(wellknownWebfinger({}, app))
 // app.use(xResponseTime)
 // app.use(sessionViews)
 // app.use(logging)
