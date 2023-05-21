@@ -7,6 +7,7 @@
 
 import Router from '@koa/router'
 import NodeInfo from '@mattduffy/webfinger/nodeinfo'
+import Hostmeta from '@mattduffy/webfinger/host-meta'
 import { _log, _error } from '../utils/logging.js'
 
 const wellKnownLog = _log.extend('wellKnown')
@@ -71,6 +72,42 @@ router.get('nodeinfo2.1', '/nodeinfo/2.1', async (ctx, next) => {
     ctx.status = 200
     ctx.type = info.type
     ctx.body = info.body
+  }
+})
+
+router.get('host-meta', '/.well-known/host-meta', async (ctx, next) => {
+  const log = wellKnownLog.extend('GET-host-meta')
+  const error = wellKnownError.extend('GET-host-meta')
+  // Doesn't seem like anything other than Mastodon relies on this anymore.
+  // No need to make it do anything other than return the default description
+  // of the webfinger interface.
+  try {
+    await next()
+  } catch (e) {
+    error('Hostmeta failure - 200')
+    ctx.throw(500, 'Hostmeta failure - 200', e)
+  }
+  let info
+  try {
+    // const host = `${ctx.request.protocol}://${ctx.request.host}`
+    const host = ctx.request.origin
+    const o = { path: ctx.request.path, host }
+    const meta = new Hostmeta(o)
+    info = meta.info()
+    if (!info) {
+      ctx.status = 400
+      ctx.type = 'text/plain; charset=utf8'
+      ctx.body = 'Bad request'
+    } else {
+      ctx.status = 200
+      ctx.type = info.type
+      ctx.body = info.body
+    }
+  } catch (e) {
+    error(e)
+    ctx.status = 500
+    // throw new Error(e)
+    ctx.throw(500, 'Hostmeta failure - 100', e)
   }
 })
 
