@@ -7,12 +7,28 @@
 
 // import Debug from 'debug'
 import { METHODS } from 'node:http'
+import { subtle } from 'node:crypto'
 import { _log, _error } from './utils/logging.js'
 import { Users } from './models/users.js'
 
 const USERS = 'users'
 const middlewareLog = _log.extend('middlewares')
 const middlewareError = _error.extend('middlewares')
+
+export async function checkServerJWKs(ctx, next) {
+  const log = middlewareLog.extend('checkServerJWKs')
+  const error = middlewareLog.extend('checkServerJWKs')
+  const signingKeys = await subtle.generateKey(
+    {
+      name: process.env.KEY_NAME || 'RSASSA-PKCS1-v1_5',
+      modulusLength: process.env.KEY_MOD || 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: process.env.RSA_KEY_HASH || 'SHA-256',
+    },
+    true,
+    ['sign', 'verify'],
+  )
+}
 
 export async function getSessionUser(ctx, next) {
   const log = middlewareLog.extend('getSessionUser')
