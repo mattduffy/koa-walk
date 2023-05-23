@@ -24,6 +24,7 @@ import {
   // errorHandlers,
   errors,
   httpMethodOverride,
+  checkServerJWKs,
 } from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
 import { activityV1 } from './routes/activity_stream.js'
@@ -67,6 +68,7 @@ app.dirs = {
   archive: {
     archive: `${appRoot}/archive`,
   },
+  keys: `${appRoot}/keys`,
   public: {
     dir: `${appRoot}/public`,
     accounts: `${appRoot}/public/a`,
@@ -227,6 +229,7 @@ app.use(getSessionUser)
 app.use(flashMessage({}, app))
 app.use(prepareRequest())
 app.use(tokenAuthMiddleware())
+app.use(checkServerJWKs)
 app.use(proxyCheck)
 app.use(csp)
 app.use(cors)
