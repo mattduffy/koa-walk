@@ -34,7 +34,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
     login: ctx.flash.login ?? {},
     isAuthenticated: ctx.state.isAuthenticated,
   }
-  error('template {locals}: %O', locals)
+  log('template {locals}: %O', locals)
   ctx.session.csrfToken = locals.csrfToken
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
   await ctx.render('login', locals)

@@ -11,9 +11,9 @@ import { subtle } from 'node:crypto'
 import { stat, readFile } from 'node:fs/promises'
 import { _log, _error } from './utils/logging.js'
 import { Users } from './models/users.js'
+import { App } from './models/app.js'
 
 const USERS = 'users'
-const APP = 'app'
 const middlewareLog = _log.extend('middlewares')
 const middlewareError = _error.extend('middlewares')
 
@@ -21,27 +21,16 @@ export async function checkServerJWKs(ctx, next) {
   const log = middlewareLog.extend('checkServerJWKs')
   const error = middlewareLog.extend('checkServerJWKs')
   try {
-    const db = ctx.state.mongodb.client.db()
-    const collection = db.collection(APP)
-    const filter = { name: ctx.app.site }
-    const options = { projection: { keys: 1 } }
-    const keys = await collection.findOne(filter, options)
-    log('%0', keys)
+    const o = {
+      db: ctx.state.mongodb.client,
+      keyDir: ctx.app.dirs.keys,
+    }
+    const theApp = new App(o)
+    ctx.state.keys = await theApp.keys()
   } catch (e) {
     error('Failed to lookup app keys in db.')
     ctx.throw(500, 'Failed to lookup app keys in db.', e)
   }
-  const signingKeys = await subtle.generateKey(
-    {
-      name: process.env.RSA_KEY_NAME || 'RSASSA-PKCS1-v1_5',
-      modulusLength: parseInt(process.env.RSA_KEY_MOD, 10) || 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: process.env.RSA_KEY_HASH || 'SHA-256',
-    },
-    true,
-    ['sign', 'verify'],
-  )
-  log(signingKeys)
   try {
     await next()
   } catch (e) {
