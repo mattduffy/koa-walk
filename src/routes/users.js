@@ -219,12 +219,18 @@ router.get('jwks', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})\/jwks.json$/,
       ctx.body = 'Not Found'
       return
     }
-    keys = await user.jwksjson()
+    keys = await user.jwksjson(0)
+    if (keys.keys.length < 1) {
+      ctx.status = 404
+      ctx.type = 'text/plain; charset=utf-8'
+      ctx.body = 'JWKS Not Found'
+      return
+    }
   } catch (e) {
     error(e)
     ctx.status = 500
     ctx.type = 'text/plain; charset=utf-8'
-    ctx.body = 'User lookup failed.'
+    ctx.body = 'JWKS lookup failed.'
     return
   }
   ctx.status = 200
