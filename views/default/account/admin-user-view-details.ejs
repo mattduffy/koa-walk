@@ -39,10 +39,10 @@
         <dd><% if (displayUser) { %><%= `${origin}/${displayUser?.url}` %><% } %></dd>
 
         <dt>JWK Set: </dt>
-        <dd><% if (displayUser._keys.signing !== undefined) { %>
+        <dd><% if (displayUser._keys.signing.length > 0 || displayUser._keys.encrypting.length > 0) { %>
             <a href="<%= `${origin}/@${displayUser.username}/jwks.json` %>"><%= `${origin}/@${displayUser.username}/jwks.json` %></a>
             <% } else { %>
-            No public keys available. 
+              No public keys available.  [<a href="<%= `${origin}/users">create key pairs</a>]
             <% } %>
         </dd>
 
@@ -125,7 +125,7 @@
               </figcaption>
               <% } %>
             </picture>
-          <figure>
+          </figure>
         </dd>
       </div>
     </dl>

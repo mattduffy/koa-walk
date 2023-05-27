@@ -11,8 +11,8 @@ import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { Users, AdminUser } from '../models/users.js'
 
-const userLog = _log.extend('auth')
-const userError = _error.extend('auth')
+const userLog = _log.extend('/users')
+const userError = _error.extend('/users')
 const USERS_COL = 'users'
 
 // function isAsyncRequest(req) {
@@ -170,6 +170,14 @@ router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
   await ctx.render('user', locals)
 })
 
+router.get('createUserKeyPairs', '/user/:username/createKeys', async (ctx, next) => {
+  const { username } = ctx.params
+  const action = ctx.request.URL
+  ctx.status = 200
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = { username, action }
+})
+
 router.get('@username', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next) => {
   const log = userLog.extend('GET-user_@username')
   const error = userError.extend('GET-user_@username')
@@ -214,6 +222,7 @@ router.get('jwks', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})\/jwks.json$/,
     const users = new Users(collection, ctx)
     user = await users.getByUsername(username, { archived: false })
     if (!user) {
+      error(`User ${username} not found.`)
       ctx.status = 404
       ctx.type = 'text/plain; charset=utf-8'
       ctx.body = 'Not Found'
@@ -221,6 +230,7 @@ router.get('jwks', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})\/jwks.json$/,
     }
     keys = await user.jwksjson(0)
     if (keys.keys.length < 1) {
+      error('No JWKS found.')
       ctx.status = 404
       ctx.type = 'text/plain; charset=utf-8'
       ctx.body = 'JWKS Not Found'

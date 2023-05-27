@@ -39,7 +39,7 @@
           <dd><% if (sessionUser) { %><%= `${origin}/${sessionUser?.url}` %><% } %></dd>
 
           <dt>JWK Set: </dt>
-          <dd><% if (sessionUser?._keys) { %>
+          <dd><% if (sessionUser?._keys.signing.length > 0 || sessionUser?._keys.encrypting.length > 0) { %>
               <a href="<%= `${origin}/@${sessionUser.username}/jwks.json` %>"><%= `${origin}/@${sessionUser.username}/jwks.json` %></a>
               <% } else { %>
               No public keys available. 
@@ -121,7 +121,7 @@
                 </figcaption>
                 <% } %>
               </picture>
-            <figure>
+            </figure>
           </dd>
       </div>
     </dl>
