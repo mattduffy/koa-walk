@@ -127,7 +127,7 @@ export function prepareRequest(options = {}) {
   return async function prepRequest(ctx, next) {
     // Is the request an Async / Ajax style request?
     // log(ctx.request.headers)
-    ctx.state.isAsyncRequest = null
+    ctx.state.isAsyncRequest = false
     ctx.state.accessToken = null
     if (/json/.test(ctx.request.get('Accept'))
     || ctx.request.get('X-ASYNCREQUEST')
