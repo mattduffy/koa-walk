@@ -178,7 +178,15 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
   }
 })
 
-router.get('accountGenerateKeys', '/account/generateKeys/:type?', hasFlash, async (ctx, next) => {
+router.get('createUserKeyPairs', '/user/:username/createKeys', async (ctx, next) => {
+  const { username } = ctx.params
+  const action = ctx.request.URL
+  ctx.status = 200
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = { username, action }
+})
+
+router.get('accountCreateKeys', '/account/createKeys/:type?', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-generateKeys')
   const error = accountError.extend('GET-account-generateKeys')
   // await next()
@@ -228,7 +236,7 @@ router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) 
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log('is this an async api request?')
+    log(`is this an async api request? ${ctx.state.isAsyncRequest}`)
     if (ctx.state.isAsyncRequest) {
       ctx.status = 200
       ctx.type = 'application/json; charset=utf-8'
@@ -524,6 +532,7 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       displayUser = await users.getByUsername(displayUser)
       locals.view = ctx.flash.view ?? {}
       locals.title = `${ctx.app.site}: View ${ctx.params.username}`
+      locals.nonce = ctx.app.nonce
       locals.origin = ctx.request.origin
       locals.isAuthenticated = ctx.state.isAuthenticated
       locals.displayUser = displayUser
