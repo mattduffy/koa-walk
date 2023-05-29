@@ -19,6 +19,11 @@ body {
 }
 
 @media screen and (min-width: 1200px) { 
+  .link {
+    text-decoration: underline;
+    color: blue;
+  }
+
   div.grid-layout {
     min-height: 100vh;
     display: grid;

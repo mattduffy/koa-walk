@@ -170,14 +170,6 @@ router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
   await ctx.render('user', locals)
 })
 
-router.get('createUserKeyPairs', '/user/:username/createKeys', async (ctx, next) => {
-  const { username } = ctx.params
-  const action = ctx.request.URL
-  ctx.status = 200
-  ctx.type = 'application/json; charset=utf-8'
-  ctx.body = { username, action }
-})
-
 router.get('@username', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next) => {
   const log = userLog.extend('GET-user_@username')
   const error = userError.extend('GET-user_@username')

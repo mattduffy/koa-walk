@@ -42,7 +42,7 @@
         <dd><% if (displayUser._keys.signing.length > 0 || displayUser._keys.encrypting.length > 0) { %>
             <a href="<%= `${origin}/@${displayUser.username}/jwks.json` %>"><%= `${origin}/@${displayUser.username}/jwks.json` %></a>
             <% } else { %>
-              No public keys available.  [<a id="createKeys" href="<%= `${origin}/admin/account/createKeys` %>">create key pairs</a>]
+              <span id="noKeys">No public keys available.</span>  [<span id="createKeys" data-href="<%= `${origin}/account/${displayUser.username}/createKeys` %>">create key pairs</span>]
             <% } %>
         </dd>
 
@@ -129,9 +129,12 @@
         </dd>
       </div>
     </dl>
-    <script src="<%- origin -%>/j/vud.js" nonce="<%- nonce -%>">
-      let origin = <%- origin -%> 
+    <script nonce="<%- nonce -%>">
+      let origin = '<%- origin -%>'
+      let csrfToken = '<%- csrfToken -%>'
+      let atUsername = '@<%- displayUser.username -%>'
     </script>
+    <script src="<%- origin -%>/j/vud.js" nonce="<%- nonce -%>"></script>
   </article>
 </main>
 

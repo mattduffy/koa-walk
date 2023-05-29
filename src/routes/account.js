@@ -186,15 +186,30 @@ router.get('createUserKeyPairs', '/user/:username/createKeys', async (ctx, next)
   ctx.body = { username, action }
 })
 
-router.get('accountCreateKeys', '/account/createKeys/:type?', hasFlash, async (ctx, next) => {
+// router.get('accountCreateKeys', '/account/createKeys/:type?', hasFlash, async (ctx, next) => {
+router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-generateKeys')
   const error = accountError.extend('GET-account-generateKeys')
   // await next()
+  let status
+  let body
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
     ctx.redirect('/')
+  } else if (ctx.request.header.csrftoken !== ctx.session.csrfToken) {
+    error(`CSR-Token mismatch: header:${ctx.request.header.csrftoken} - session:${ctx.session.csrfToken}`)
+    status = 401
+    ctx.body = { error: 'csrf token mismatch' }
   } else {
+    const db = ctx.state.mongodb.client.db()
+    const collection = db.collection(USERS)
+    const users = new Users(collection, ctx)
+    let user = sanitize(ctx.params.username)
+    if (user[0] === '@') {
+      user = user.slice(1)
+    }
+    let displayUser = await users.getByUsername(user)
     const createTypes = { signing: false, encrypting: false }
     if (ctx.params.type === 'signing') {
       createTypes.signing = true
@@ -208,13 +223,22 @@ router.get('accountCreateKeys', '/account/createKeys/:type?', hasFlash, async (c
       log('Request to generate both signing and encrypting keypairs.')
     }
     let keys
-    let status
-    let body
     try {
-      keys = await ctx.state.sessionUser.generateKeys(createTypes)
-      ctx.state.sessionUser = ctx.state.sessionUser.update()
-      status = 200
-      body = keys
+      keys = await displayUser.generateKeys(createTypes)
+      //
+      displayUser = displayUser.update()
+      //
+      if (keys.status === 'success') {
+        status = 200
+        // body = keys
+        body = {
+          status: 'success',
+          url: `${ctx.request.origin}/${ctx.state.sessionUser.url}/jwks.json`,
+        }
+      } else {
+        status = 418
+        body = { error: 'I\'m a teapot' }
+      }
     } catch (e) {
       error(`Failed to generate key pair for ${ctx.state.sessionUser.username}`)
       error(e)
@@ -530,9 +554,13 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
         displayUser = displayUser.slice(1)
       }
       displayUser = await users.getByUsername(displayUser)
+      const csrfToken = new ObjectId().toString()
+      ctx.session.csrfToken = csrfToken
+      ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
       locals.view = ctx.flash.view ?? {}
       locals.title = `${ctx.app.site}: View ${ctx.params.username}`
       locals.nonce = ctx.app.nonce
+      locals.csrfToken = csrfToken
       locals.origin = ctx.request.origin
       locals.isAuthenticated = ctx.state.isAuthenticated
       locals.displayUser = displayUser

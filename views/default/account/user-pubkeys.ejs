@@ -13,12 +13,18 @@
     </div>
     <% } %>
     <div class="account-pubkey">
+      <% const sigK = sessionUser.publicSigningKey %>
+      <% console.log(sigK) %>
+      <% const encK = sessionUser.publicEncryptingKey %>
       <dl>
         <dt>
+          <% if (sigK === null && encK === null) { %>
+            No JWKs created yet.
+          <% } else { %>
           <a href="<%= origin %>/@<%= sessionUser.username %>/jwks.json">
             <%= origin %>/@<%= sessionUser.username %>/jwks.json
           </a>
-
+          <% } %>
         </dt>
         <dd>
         </dd>
