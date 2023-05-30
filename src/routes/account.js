@@ -178,15 +178,6 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
   }
 })
 
-router.get('createUserKeyPairs', '/user/:username/createKeys', async (ctx, next) => {
-  const { username } = ctx.params
-  const action = ctx.request.URL
-  ctx.status = 200
-  ctx.type = 'application/json; charset=utf-8'
-  ctx.body = { username, action }
-})
-
-// router.get('accountCreateKeys', '/account/createKeys/:type?', hasFlash, async (ctx, next) => {
 router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash, async (ctx, next) => {
   const log = accountLog.extend('GET-account-generateKeys')
   const error = accountError.extend('GET-account-generateKeys')
@@ -205,11 +196,11 @@ router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection(USERS)
     const users = new Users(collection, ctx)
-    let user = sanitize(ctx.params.username)
-    if (user[0] === '@') {
-      user = user.slice(1)
+    let username = sanitize(ctx.params.username)
+    if (username[0] === '@') {
+      username = username.slice(1)
     }
-    let displayUser = await users.getByUsername(user)
+    let user = await users.getByUsername(username)
     const createTypes = { signing: false, encrypting: false }
     if (ctx.params.type === 'signing') {
       createTypes.signing = true
@@ -224,16 +215,14 @@ router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash
     }
     let keys
     try {
-      keys = await displayUser.generateKeys(createTypes)
-      //
-      displayUser = displayUser.update()
-      //
+      keys = await user.generateKeys(createTypes)
+      user = await user.update()
       if (keys.status === 'success') {
         status = 200
-        // body = keys
         body = {
           status: 'success',
-          url: `${ctx.request.origin}/${ctx.state.sessionUser.url}/jwks.json`,
+          url: `${ctx.request.origin}/${user.url}/jwks.json`,
+          keys: await user.publicKeys(0, 'jwk'),
         }
       } else {
         status = 418
@@ -266,8 +255,13 @@ router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) 
       ctx.type = 'application/json; charset=utf-8'
       ctx.body = await ctx.state.sessionUser.publicKeys()
     } else {
+      const csrfToken = new ObjectId().toString()
+      ctx.session.csrfToken = csrfToken
       const locals = {
+        csrfToken,
         body: ctx.body,
+        pageName: 'pubkeys',
+        nonce: ctx.app.nonce,
         view: ctx.flash.view ?? {},
         origin: ctx.request.origin,
         sessionUser: ctx.state.sessionUser,
@@ -557,14 +551,15 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       const csrfToken = new ObjectId().toString()
       ctx.session.csrfToken = csrfToken
       ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-      locals.view = ctx.flash.view ?? {}
-      locals.title = `${ctx.app.site}: View ${ctx.params.username}`
       locals.nonce = ctx.app.nonce
       locals.csrfToken = csrfToken
-      locals.origin = ctx.request.origin
-      locals.isAuthenticated = ctx.state.isAuthenticated
       locals.displayUser = displayUser
+      locals.view = ctx.flash.view ?? {}
+      locals.origin = ctx.request.origin
+      locals.pageName = 'admin_account_view'
       locals.privateDir = ctx.app.privateDir
+      locals.isAuthenticated = ctx.state.isAuthenticated
+      locals.title = `${ctx.app.site}: View ${ctx.params.username}`
       locals.defaultAvatar = `${ctx.request.origin}/i/accounts/avatars/missing.png`
       locals.defaultHeader = `${ctx.request.origin}/i/accounts/headers/generic.png`
     } catch (e) {

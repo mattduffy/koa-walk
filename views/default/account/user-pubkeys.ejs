@@ -13,13 +13,17 @@
     </div>
     <% } %>
     <div class="account-pubkey">
-      <% const sigK = sessionUser.publicSigningKey %>
-      <% console.log(sigK) %>
-      <% const encK = sessionUser.publicEncryptingKey %>
       <dl>
         <dt>
-          <% if (sigK === null && encK === null) { %>
-            No JWKs created yet.
+          <%
+          const sigK = await sessionUser.publicSigningKey
+          const encK = await sessionUser.publicEncryptingKey
+          if (sigK === null && encK === null) { %>
+          <div id="noKeys">
+            <span>No JWKs created yet.</span>
+            <br>
+            <span id="createKeys" class="link" data-href="<%= `${origin}/account/${sessionUser.username}/createKeys` %>">Create keys pairs.</span>
+          </div>
           <% } else { %>
           <a href="<%= origin %>/@<%= sessionUser.username %>/jwks.json">
             <%= origin %>/@<%= sessionUser.username %>/jwks.json
@@ -30,26 +34,39 @@
         </dd>
 
         <dt>Public Signing Key:</dt>
-        
-          <pre><%- await sessionUser.publicSigningKey %></pre>
+          <pre data-sig><%- await sessionUser.publicSigningKey %></pre>
         </dd>
 
         <dt>Signing JWK</dt>
         <dd>
-          <pre><%- await sessionUser.signingJwk %></pre>
+          <pre data-sig-jwk><%- await sessionUser.signingJwk %></pre>
         </dd>
 
         <dt>Public Encrypting Key:</dt>
         <dd>
-          <pre><%- await sessionUser.publicEncryptingKey %></pre>
+          <pre data-enc><%- await sessionUser.publicEncryptingKey %></pre>
         </dd>
         
         <dt>Encrypting JWK</dt>
         <dd>
-          <pre><%- await sessionUser.encryptingJwk %></pre>
+          <pre data-enc-jwk><%- await sessionUser.encryptingJwk %></pre>
         </dd>
       </dl>
     </div>
+    <script nonce="<%- nonce -%>">
+      let page = '<%- pageName -%>'
+      let origin = '<%- origin -%>'
+      let csrfToken = '<%- csrfToken -%>'
+      let atUsername = '@<%- sessionUser.username -%>'
+      const link = document.querySelector('span#createKeys')
+      console.log(link)
+    </script>
+    <script src="<%- origin -%>/j/vud.js" nonce="<%- nonce -%>"></script>
+    <script nonce="<%- nonce -%>">
+      if (link !== null) {
+        createKeysUser(link)
+      }
+    </script>
   </article>
 </main>
 

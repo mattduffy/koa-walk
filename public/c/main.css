@@ -22,6 +22,7 @@ body {
   .link {
     text-decoration: underline;
     color: blue;
+    cursor: pointer;
   }
 
   div.grid-layout {
