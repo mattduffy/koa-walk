@@ -135,11 +135,12 @@
       let csrfToken = '<%- csrfToken -%>'
       let atUsername = '@<%- displayUser.username -%>'
       const link = document.querySelector('span#createKeys')
+    </script>
+    <script src="<%- origin -%>/j/vud.js" nonce="<%- nonce -%>"></script>
+    <script nonce="<%- nonce -%>">
       if (link !== null) {
         createKeysAdmin(link)
       }
-    </script>
-    <script src="<%- origin -%>/j/vud.js" nonce="<%- nonce -%>"></script>
-  </article>
+    </script>  </article>
 </main>
 
