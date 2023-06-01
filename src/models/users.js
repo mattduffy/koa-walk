@@ -6,7 +6,7 @@
  */
 import * as Dotenv from 'dotenv'
 import { Users } from '@mattduffy/users'
-import { AdminUser } from '@mattduffy/users/AdminUser'
+import { AdminUser } from '@mattduffy/users/AdminUser.js'
 
 if (process.env?.MONGODB_CLIENT_DN === undefined) {
   Dotenv.conf({ path: 'config/mongodb.env', debug: true })

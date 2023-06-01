@@ -6,9 +6,9 @@
  */
 
 import Router from '@koa/router'
-import NodeInfo from '@mattduffy/webfinger/nodeinfo'
-import Hostmeta from '@mattduffy/webfinger/host-meta'
-import Webfinger from '@mattduffy/webfinger/webfinger'
+import NodeInfo from '@mattduffy/webfinger/nodeinfo.js'
+import Hostmeta from '@mattduffy/webfinger/host-meta.js'
+import Webfinger from '@mattduffy/webfinger/webfinger.js'
 import { _log, _error } from '../utils/logging.js'
 
 const wellKnownLog = _log.extend('wellKnown')
