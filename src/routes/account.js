@@ -166,9 +166,9 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
     } else {
       // regular http request, send back view
       const locals = {
-        sessionUser: ctx.state.sessionUser,
         body: ctx.body,
         view: ctx.flash.view ?? {},
+        sessionUser: ctx.state.sessionUser,
         isAuthenticated: ctx.state.isAuthenticated,
         title: `${ctx.app.site}: View Account Tokens`,
       }
@@ -184,6 +184,7 @@ router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash
   // await next()
   let status
   let body
+  log(ctx.headers)
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -267,6 +268,7 @@ router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) 
         sessionUser: ctx.state.sessionUser,
         title: `${ctx.app.site}: View Public Key`,
         isAuthenticated: ctx.state.isAuthenticated,
+        jwtAccess: (ctx.state.sessionUser.jwts).token,
       }
       ctx.status = 200
       await ctx.render('account/user-pubkeys', locals)
@@ -505,12 +507,13 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
       const csrfToken = new ObjectId().toString()
       ctx.session.csrfToken = csrfToken
       ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-      locals.csrfToken = csrfToken
-      locals.title = `${ctx.app.site}: List Users`
-      locals.origin = ctx.request.origin
-      locals.nonce = ctx.app.nonce
-      locals.isAuthenticated = ctx.state.isAuthenticated
       locals.list = ctx.flash
+      locals.jwtAccess = (ctx.state.sessionUser.jwts).token
+      locals.csrfToken = csrfToken
+      locals.nonce = ctx.app.nonce
+      locals.origin = ctx.request.origin
+      locals.title = `${ctx.app.site}: List Users`
+      locals.isAuthenticated = ctx.state.isAuthenticated
       allUsers.map((u) => {
         locals[u._id] = u.users
         return undefined
@@ -559,6 +562,7 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       locals.pageName = 'admin_account_view'
       locals.privateDir = ctx.app.privateDir
       locals.isAuthenticated = ctx.state.isAuthenticated
+      locals.jwtAccess = (ctx.state.sessionUser.jwts).token
       locals.title = `${ctx.app.site}: View ${ctx.params.username}`
       locals.defaultAvatar = `${ctx.request.origin}/i/accounts/avatars/missing.png`
       locals.defaultHeader = `${ctx.request.origin}/i/accounts/headers/generic.png`

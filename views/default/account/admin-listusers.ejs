@@ -100,8 +100,10 @@
       No User accounts created
     <% } %>
     </section>
-    <script src="<%- origin -%>/j/adminlist.js" nonce="<%- nonce -%>">
-      let origin = <%- origin -%> 
+    <script nonce="<%- nonce -%>">
+      let origin = '<%- origin -%>'
+      let jwtAccess = '<%- jwtAccess -%>'
     </script>
+    <script src="<%- origin -%>/j/adminlist.js" nonce="<%- nonce -%>"></script>
   </article>
 </main>

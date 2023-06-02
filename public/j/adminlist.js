@@ -40,11 +40,12 @@ async function doDelete(dataset) {
     method: 'DELETE',
     headers: {
       Accept: 'application/json',
+      Authorization: `Bearer ${jwtAccess}`,
     },
     body: formData,
   }
   const request = new Request(`${origin}/admin/account/delete/${dataset.id}`, opts)
-  const response = await fetch(request)
+  const response = await fetch(request, { credentials: 'same-origin' })
   const json = await response.json()
   console.log('doDelete called with: ')
   console.table(dataset)
