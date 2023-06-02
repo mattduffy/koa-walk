@@ -62,6 +62,18 @@ class App {
 
     }
   }
+
+  /**
+   * Rotate a new RSA key pair into use.
+   * @summary Rotate a new RSA key pair into use.
+   * @async
+   * @return { undefined }
+   */
+  async rotate() {
+    const log = appLog.extend('rotate')
+    const error = appLog.extend('rotate')
+    log('Rotating server keys.')
+  }
 }
 
 export {
