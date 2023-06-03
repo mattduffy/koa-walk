@@ -34,7 +34,8 @@ const redisConnOpts = {
   username: process.env.REDIS_USER,
   password: process.env.REDIS_PASSWORD,
   connectionName: 'koa-sessions',
-  keyPrefix: 'koasessions:',
+  // keyPrefix: 'koasessions:',
+  keyPrefix: `${process.env.REDIS_KEY_PREFIX}:sessions:` ?? 'koa:sessions:',
   enableTLSForSentinelMode: true,
   sentinelRetryStrategy: 100,
   tls: {
