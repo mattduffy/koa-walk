@@ -8,6 +8,7 @@
 import path from 'node:path'
 import { rename } from 'node:fs/promises'
 import Router from '@koa/router'
+import { ulid } from 'ulid'
 import { ObjectId } from 'mongodb'
 import formidable from 'formidable'
 import { _log, _error } from '../utils/logging.js'
@@ -53,7 +54,8 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
     ctx.redirect('/')
   } else {
     log(`View ${ctx.state.sessionUser.username}'s account password.`)
-    const csrfToken = new ObjectId().toString()
+    // const csrfToken = new ObjectId().toString()
+    const csrfToken = ulid()
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
     if (isAsyncRequest(ctx.request)) {
@@ -256,7 +258,8 @@ router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) 
       ctx.type = 'application/json; charset=utf-8'
       ctx.body = await ctx.state.sessionUser.publicKeys()
     } else {
-      const csrfToken = new ObjectId().toString()
+      // const csrfToken = new ObjectId().toString()
+      const csrfToken = ulid()
       ctx.session.csrfToken = csrfToken
       const locals = {
         csrfToken,
@@ -308,7 +311,8 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
       body: ctx.body,
       edit: ctx.flash.edit ?? {},
       origin: `${ctx.request.origin}`,
-      csrfToken: new ObjectId().toString(),
+      // csrfToken: new ObjectId().toString(),
+      csrfToken: ulid(),
       isAuthenticated: ctx.state.isAuthenticated,
       defaultAvatar: `${ctx.request.origin}/i/accounts/avatars/missing.png`,
       defaultHeader: `${ctx.request.origin}/i/accounts/headers/generic.png`,
@@ -329,7 +333,8 @@ router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
     ctx.redirect('/')
   } else {
     log(`Edit ${ctx.state.sessionUser.username}'s account details.`)
-    const csrfToken = new ObjectId().toString()
+    // const csrfToken = new ObjectId().toString()
+    const csrfToken = ulid()
     log(ctx.flash)
     const locals = {
       sessionUser: ctx.state.sessionUser,
@@ -504,7 +509,8 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
       const collection = db.collection(USERS)
       const users = new Users(collection, ctx)
       const allUsers = await users.getAllUsers()
-      const csrfToken = new ObjectId().toString()
+      // const csrfToken = new ObjectId().toString()
+      const csrfToken = ulid()
       ctx.session.csrfToken = csrfToken
       ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
       locals.list = ctx.flash
@@ -551,7 +557,8 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
         displayUser = displayUser.slice(1)
       }
       displayUser = await users.getByUsername(displayUser)
-      const csrfToken = new ObjectId().toString()
+      // const csrfToken = new ObjectId().toString()
+      const csrfToken = ulid()
       ctx.session.csrfToken = csrfToken
       ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
       locals.nonce = ctx.app.nonce
@@ -604,7 +611,8 @@ router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async 
       locals.title = `${ctx.app.site}: Edit ${ctx.params.username}`
       locals.origin = ctx.request.origin
       locals.isAuthenticated = ctx.state.isAuthenticated
-      const csrfToken = new ObjectId().toString()
+      // const csrfToken = new ObjectId().toString()
+      const csrfToken = ulid()
       ctx.session.csrfToken = csrfToken
       ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
       locals.csrfToken = csrfToken

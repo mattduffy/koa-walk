@@ -6,7 +6,8 @@
  */
 
 import path from 'node:path'
-import { randomUUID, subtle } from 'node:crypto'
+import { subtle } from 'node:crypto'
+import { ulid } from 'ulid'
 import { _log, _error } from '../utils/logging.js'
 
 const appLog = _log.extend('App_class')
@@ -50,7 +51,7 @@ class App {
         true,
         ['sign', 'verify'],
       )
-      const kid = randomUUID()
+      const kid = ulid()
       const pubKeyPath = path.resolve(this._keyDir, `app-rs256-public-${keyIndex}.pem`)
       const jwkeyPath = path.resolve(this._keyDir, `app-rs256-${keyIndex}.jwk`)
       const priKeyPath = path.resolve(this._keyDir, `app-rs256-private-${keyIndex}.pem`)

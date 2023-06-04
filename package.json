@@ -30,9 +30,9 @@
   "dependencies": {
     "@koa/ejs": "5.0.0",
     "@koa/router": "12.0.0",
-    "@mattduffy/koa-migrations": "^1.0.0",
-    "@mattduffy/webfinger": "^1.0.0",
-    "@mattduffy/users": "^1.0.0",
+    "@mattduffy/koa-migrations": "/home/matt/node_package_development/koa-migrations",
+    "@mattduffy/users": "/home/matt/node_package_development/users",
+    "@mattduffy/webfinger": "/home/matt/node_package_development/webfinger",
     "debug": "4.3.4",
     "dotenv": "16.0.3",
     "formidable": "2.1.1",
@@ -45,7 +45,8 @@
     "koa-session": "6.3.1",
     "koa-static": "5.0.0",
     "mongodb": "4.13.0",
-    "redis-om": "0.3.6"
+    "redis-om": "0.3.6",
+    "ulid": "2.3.0"
   },
   "keywords": [
     "Koa",

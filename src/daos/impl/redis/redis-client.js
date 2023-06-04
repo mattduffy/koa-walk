@@ -8,7 +8,7 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { Redis } from 'ioredis'
-import { Entity, Schema, Client as redisOm } from 'redis-om'
+import { Repository, Entity, Schema, Client as redisOm } from 'redis-om'
 import * as Dotenv from 'dotenv'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -53,4 +53,5 @@ export {
   redisClient as Client,
   Entity,
   Schema,
+  Repository,
 }

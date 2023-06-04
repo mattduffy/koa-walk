@@ -7,6 +7,7 @@
 
 import Router from '@koa/router'
 import formidable from 'formidable'
+import { ulid } from 'ulid'
 import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
@@ -23,7 +24,8 @@ router.get('getLogin', '/login', async (ctx, next) => {
   if (ctx.state.isAuthenticated) {
     ctx.redirect('/')
   }
-  const csrfToken = new ObjectId().toString()
+  // const csrfToken = new ObjectId().toString()
+  const csrfToken = ulid()
   // const flashMessage = ctx.flash
   const locals = {
     body: ctx.body,
