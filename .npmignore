@@ -1,5 +1,6 @@
 coverage
 TODO.md
+keys/*
 migrations/*
 archive/*
 private/a/*
