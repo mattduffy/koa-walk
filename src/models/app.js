@@ -13,17 +13,18 @@ import { _log, _error } from '../utils/logging.js'
 
 const appLog = _log.extend('App_class')
 const appError = _error.extend('App_class')
-const DATABASE = 'mattmadethese'
+const DATABASE = process.env.MONGODB_DBNAME ?? 'koastub'
 const COLLECTION = 'app'
 
 class App {
   constructor(config = {}) {
     const log = appLog.extend('constructor')
     const error = appError.extend('constructor')
-    this._db = config?.db.db().collection(COLLECTION)
-    this._keys = config.keys ?? { signing: [], encrypting: [] }
+
     this._keyDir = config.keyDir
+    this._db = config?.db.db().collection(COLLECTION)
     this._siteName = process.env.SITE_NAME ?? 'website'
+    this._keys = config.keys ?? { signing: [], encrypting: [] }
   }
 
   async keys() {

@@ -557,7 +557,6 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
         displayUser = displayUser.slice(1)
       }
       displayUser = await users.getByUsername(displayUser)
-      // const csrfToken = new ObjectId().toString()
       const csrfToken = ulid()
       ctx.session.csrfToken = csrfToken
       ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
