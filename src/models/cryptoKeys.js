@@ -5,7 +5,7 @@
  * @file ./src/models/cryptoKesy.js
  */
 
-
+import path from 'node:path'
 import { subtle } from 'node:crypto'
 import { ulid } from 'ulid'
 import { _log, _error } from '../utils/logging.js'
@@ -32,6 +32,10 @@ class CryptoKeys {
 
   #curve
 
+  #publicKeyDir
+
+  #privateKeyDir
+
   _pubKey
 
   _priKey
@@ -43,11 +47,12 @@ class CryptoKeys {
     const error = keysError.extend('constructor')
 
     this._format = config?.format ?? 'pem'
-    this._keyDir = config?.keyDir ?? process.env.KEY_DIR ?? './keys'
     this._kid = ulid()
+    this.#publicKeyDir = config?.dirs?.public ?? process.env.KEY_DIR ?? './keys'
+    this.#privateKeyDir = config?.dirs?.private ?? process.env.KEY_DIR ?? './keys'
     this.#db = config?.db?.db().collection(COLLECTION) ?? null
     this.#siteName = process.env.SITE_NAME ?? 'website'
-    this.#keys = config.keys ?? { signing: [], encrypting: [] }
+    this.#keys = config.keys ?? { signing: {}, encrypting: {} }
     this.#rsaEnc = process.env.RSA_ENC_KEY_NAME ?? 'RSA-OAEP'
     this.#rsaSig = process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5'
     this.#bits = process.env.RSA_SIG_KEY_MOD ?? 2048
@@ -81,6 +86,8 @@ class CryptoKeys {
   }
 
   async #signRSA() {
+    const log = keysLog.extend('signRSA')
+    const error = keysError.extend('signRSA')
     let keys
     try {
       keys = await subtle.generateKey(
@@ -96,7 +103,15 @@ class CryptoKeys {
       this._keyType = this.#rsaSig
       this._pubKey = keys.publicKey
       this._priKey = keys.privateKey
+      this.#keys.signing.name = keys.publicKey.algorithm.name
+      this.#keys.signing.hash = keys.publicKey.algorithm.hash.name
+      this.#keys.signing.bits = keys.publicKey.algorithm.modulusLength
+      this.#keys.signing.kid = this._kid
+      this.#keys.signing.publicKey = ''
+      this.#keys.signing.privateKey = ''
+      this.#keys.signing.jwk = ''
     } catch (e) {
+      error(e)
       throw new Error(e)
     }
     // return keys
@@ -119,6 +134,13 @@ class CryptoKeys {
       this._keyType = this.#rsaEnc
       this._pubKey = keys.publicKey
       this._priKey = keys.privateKey
+      this.#keys.encrypting.name = keys.publicKey.algorithm.name
+      this.#keys.encrypting.hash = keys.publicKey.algorithm.hash.name
+      this.#keys.encrypting.bits = keys.publicKey.algorithm.modulusLength
+      this.#keys.encrypting.kid = this._kid
+      this.#keys.encrypting.publicKey = ''
+      this.#keys.encrypting.privateKey = ''
+      this.#keys.encrypting.jwk = ''
     } catch (e) {
       throw new Error(e)
     }
@@ -140,11 +162,37 @@ class CryptoKeys {
       this._keyType = 'ECDSA'
       this._pubKey = keys.publicKey
       this._priKey = keys.privateKey
+      this.#keys.encrypting.name = keys.publicKey.algorithm.name
+      this.#keys.encrypting.namedCurve = keys.publicKey.algorithm.namedCurve
+      this.#keys.encrypting.kid = this._kid
+      this.#keys.encrypting.publicKey = ''
+      this.#keys.encrypting.privateKey = ''
+      this.#keys.encrypting.jwk = ''
     } catch (e) {
       throw new Error(e)
     }
     // return keys
     return this
+  }
+
+  get publicKeyDir() {
+    return this.#publicKeyDir
+  }
+
+  set publicKeyDir(dir) {
+    this.#publicKeyDir = path.resolve(dir)
+  }
+
+  get privateKeyDir() {
+    return this.#privateKeyDir
+  }
+
+  set privateKeyDir(dir) {
+    this.#privateKeyDir = path.resolve(dir)
+  }
+
+  get keys() {
+    return this.#keys
   }
 }
 
