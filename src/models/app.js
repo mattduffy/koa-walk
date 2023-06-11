@@ -9,6 +9,7 @@ import path from 'node:path'
 import { writeFile, readFile, stat } from 'node:fs/promises'
 import { subtle } from 'node:crypto'
 import { ulid } from 'ulid'
+import { CryptoKeys } from './cryptoKeys.js'
 import { _log, _error } from '../utils/logging.js'
 
 const appLog = _log.extend('App_class')
@@ -17,14 +18,17 @@ const DATABASE = process.env.MONGODB_DBNAME ?? 'koastub'
 const COLLECTION = 'app'
 
 class App {
+  #cryptoKeys
+
   constructor(config = {}) {
     const log = appLog.extend('constructor')
     const error = appError.extend('constructor')
 
-    this._keyDir = config.keyDir
+    this._keyDir = config.keyDir ?? './keys'
     this._db = config?.db.db().collection(COLLECTION)
     this._siteName = process.env.SITE_NAME ?? 'website'
     this._keys = config.keys ?? { signing: [], encrypting: [] }
+    this.#cryptoKeys = new CryptoKeys({ dirs: { public: this._keyDir, private: this._keyDir } })
   }
 
   async keys() {
@@ -35,15 +39,75 @@ class App {
     const numSigKeys = this._keys.signing?.length ?? 0
     const numEncKeys = this._keys.encrypting?.length ?? 0
     // log(this._keys, numSigKeys, numEncKeys)
-    if (numSigKeys < 1) {
-      await this.#createRSASigningKey()
-      needToUpdate = true
-    }
-    if (numEncKeys < 1) {
-      await this.#createRSAEncryptingKey()
-      needToUpdate = true
+    try {
+      if (numSigKeys < 1) {
+        // await this.#createRSASigningKey()
+        this.#cryptoKeys = await this.#cryptoKeys.generateKey({ alg: 'RSA', use: 'sig' })
+        needToUpdate = true
+      }
+      if (numEncKeys < 1) {
+        // await this.#createRSAEncryptingKey()
+        this.#cryptoKeys = await this.#cryptoKeys.generateKey({ alg: 'RSA', use: 'enc' })
+        needToUpdate = true
+      }
+    } catch (e) {
+      error('Failed to create crypto keys.')
+      error(e)
+      return false
     }
     if (needToUpdate) {
+      const keyResults = await this.#cryptoKeys.export()
+      if (keyResults.details.signing !== null) {
+        // set filename and path for keys
+        // save keys to file system
+        const keyIndex = numSigKeys
+        const filename = `app-${keyIndex}-${process.env.RSA_SIG_KEY_FILENAME}`
+        const pubKeyPath = path.resolve(this._keyDir, `${filename}-public.pem`)
+        const jwkeyPath = path.resolve(this._keyDir, `${filename}.jwk`)
+        const priKeyPath = path.resolve(this._keyDir, `${filename}-private.pem`)
+        try {
+          await writeFile(pubKeyPath, keyResults.sig.public)
+          keyResults.details.signing.publicKey = pubKeyPath
+          log(`Saving ${pubKeyPath}`)
+          await writeFile(priKeyPath, keyResults.sig.private)
+          keyResults.details.signing.privateKey = priKeyPath
+          log(`Saving ${priKeyPath}`)
+          await writeFile(jwkeyPath, JSON.stringify(keyResults.sig.jwk))
+          keyResults.details.signing.jwk = jwkeyPath
+          log(`Saving ${jwkeyPath}`)
+        } catch (e) {
+          error('Failed to save key files.')
+          error(e)
+          throw new Error(e)
+        }
+        this._keys.signing.unshift(keyResults.details.signing)
+      }
+      if (keyResults.details.encrypting !== null) {
+        // set filename and path for keys
+        // save keys to file system
+        const keyIndex = numEncKeys
+        const filename = `app-${keyIndex}-${process.env.RSA_ENC_KEY_FILENAME}`
+        const pubKeyPath = path.resolve(this._keyDir, `${filename}-public.pem`)
+        const jwkeyPath = path.resolve(this._keyDir, `${filename}.jwk`)
+        const priKeyPath = path.resolve(this._keyDir, `${filename}-private.pem`)
+        try {
+          await writeFile(pubKeyPath, keyResults.enc.public)
+          keyResults.details.encrypting.publicKey = pubKeyPath
+          log(`Saving ${pubKeyPath}`)
+          await writeFile(priKeyPath, keyResults.enc.private)
+          keyResults.details.encrypting.privateKey = priKeyPath
+          log(`Saving ${priKeyPath}`)
+          await writeFile(jwkeyPath, JSON.stringify(keyResults.enc.jwk))
+          keyResults.details.encrypting.jwk = jwkeyPath
+          log(`Saving ${jwkeyPath}`)
+        } catch (e) {
+          error('Failed to save key files.')
+          error(e)
+          throw new Error(e)
+        }
+        this._keys.encrypting.unshift(keyResults.details.encrypting)
+      }
+      // log('keys: ', this._keys)
       const filter = { name: this._siteName }
       const update = {
         $set: {
@@ -64,165 +128,6 @@ class App {
       }
     }
     return this._keys
-  }
-
-  async #createRSAEncryptingKey() {
-    const log = appLog.extend('createRSAEncryptingKey')
-    const error = appError.extend('createRSAEncryptingKey')
-    const keyIndex = this._keys.encrypting?.length ?? 0
-    let keys
-    const name = process.env.RSA_ENC_KEY_NAME ?? 'RSA-OAEP'
-    const bits = parseInt(process.env.RSA_ENC_KEY_MOD, 10) ?? 2048
-    const hash = process.env.RSA_ENC_KEY_HASH ?? 'SHA-256'
-    try {
-      keys = await subtle.generateKey(
-        {
-          name,
-          modulusLength: bits,
-          publicExponent: new Uint8Array([1, 0, 1]),
-          hash,
-        },
-        true,
-        ['encrypt', 'decrypt'],
-      )
-    } catch (e) {
-      error('Failed to generate RSA OAEP Encrypting keys')
-      error(e)
-      return false
-    }
-    const filename = `app-${keyIndex}-${process.env.RSA_ENC_KEY_FILENAME}`
-    const pubKeyPath = path.resolve(this._keyDir, `${filename}-public.pem`)
-    const jwkeyPath = path.resolve(this._keyDir, `${filename}.jwk`)
-    const priKeyPath = path.resolve(this._keyDir, `${filename}-private.pem`)
-    const kid = ulid()
-    // log(kid, pubKeyPath, jwkeyPath, priKeyPath)
-    let pub
-    let jwk
-    let pri
-    try {
-      pub = await subtle.exportKey('spki', keys.publicKey)
-      pri = await subtle.exportKey('pkcs8', keys.privateKey)
-      jwk = await subtle.exportKey('jwk', keys.publicKey)
-      jwk.kid = kid
-      jwk.use = 'enc'
-    } catch (e) {
-      error('Failed to export encrypting key parts')
-      error(e)
-      return false
-    }
-    let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
-    pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
-    pubToPem = '-----BEGIN PUBLIC KEY-----\n'
-      + `${pubToPem}\n`
-      + '-----END PUBLIC KEY-----'
-    let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
-    priToPem = priToPem.match(/.{1,64}/g).join('\n')
-    priToPem = '-----BEGIN PRIVATE KEY-----\n'
-      + `${priToPem}\n`
-      + '-----BEGIN PRIVATE KEY-----'
-    try {
-      log(`Saving ${pubKeyPath}`)
-      await writeFile(pubKeyPath, pubToPem)
-      log(`Saving ${priKeyPath}`)
-      await writeFile(priKeyPath, priToPem)
-      log(`Saving ${jwkeyPath}`)
-      await writeFile(jwkeyPath, JSON.stringify(jwk))
-    } catch (e) {
-      error('Failed to save key files.')
-      error(e)
-      return false
-    }
-    const result = {
-      name,
-      hash,
-      bits,
-      kid,
-      publicKey: pubKeyPath,
-      privateKey: priKeyPath,
-      jwk: jwkeyPath,
-    }
-    this._keys.encrypting.unshift(result)
-    return result
-  }
-
-  async #createRSASigningKey() {
-    const log = appLog.extend('createRSASigningKey')
-    const error = appError.extend('createRSASigningKey')
-    const keyIndex = this._keys.signing?.length ?? 0
-    let keys
-    const name = process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5'
-    const bits = parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
-    const hash = process.env.RSA_SIG_KEY_HASH ?? 'SHA-256'
-    try {
-      keys = await subtle.generateKey(
-        {
-          name,
-          modulusLength: bits,
-          publicExponent: new Uint8Array([1, 0, 1]),
-          hash,
-        },
-        true,
-        ['sign', 'verify'],
-      )
-    } catch (e) {
-      error('Failed to generate RSA Signing keys.')
-      error(e)
-      return false
-    }
-    const filename = `app-${keyIndex}-${process.env.RSA_SIG_KEY_FILENAME}`
-    const pubKeyPath = path.resolve(this._keyDir, `${filename}-public.pem`)
-    const jwkeyPath = path.resolve(this._keyDir, `${filename}.jwk`)
-    const priKeyPath = path.resolve(this._keyDir, `${filename}-private.pem`)
-    const kid = ulid()
-    // log(kid, pubKeyPath, jwkeyPath, priKeyPath)
-    let pub
-    let jwk
-    let pri
-    try {
-      pub = await subtle.exportKey('spki', keys.publicKey)
-      pri = await subtle.exportKey('pkcs8', keys.privateKey)
-      jwk = await subtle.exportKey('jwk', keys.publicKey)
-      jwk.kid = kid
-      jwk.use = 'sig'
-      keys.jwk = jwk
-    } catch (e) {
-      error('Failed to export the signing key parts.')
-      error(e)
-      return false
-    }
-    let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
-    pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
-    pubToPem = '-----BEGIN PUBLIC KEY-----\n'
-      + `${pubToPem}\n`
-      + '-----END PUBLIC KEY-----'
-    let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
-    priToPem = priToPem.match(/.{1,64}/g).join('\n')
-    priToPem = '-----BEGIN PRIVATE KEY-----\n'
-      + `${priToPem}\n`
-      + '-----BEGIN PRIVATE KEY-----'
-    try {
-      log(`Saving ${pubKeyPath}`)
-      await writeFile(pubKeyPath, pubToPem)
-      log(`Saving ${priKeyPath}`)
-      await writeFile(priKeyPath, priToPem)
-      log(`Saving ${jwkeyPath}`)
-      await writeFile(jwkeyPath, JSON.stringify(jwk))
-    } catch (e) {
-      error('Failed to save key files.')
-      error(e)
-      return false
-    }
-    const result = {
-      name,
-      hash,
-      bits,
-      kid,
-      publicKey: pubKeyPath,
-      privateKey: priKeyPath,
-      jwk: jwkeyPath,
-    }
-    this._keys.signing.unshift(result)
-    return result
   }
 
   /**

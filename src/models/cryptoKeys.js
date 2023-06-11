@@ -75,11 +75,11 @@ class CryptoKeys {
     this.#keys = config.keys ?? { signing: null, encrypting: null }
     // RSA Signing key options
     this.#rsaSig = process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5'
-    this.#sigBits = process.env.RSA_SIG_KEY_MOD ?? 2048
+    this.#sigBits = parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
     this.#sigHash = process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256'
     // RSA Encrypting key options
     this.#rsaEnc = process.env.RSA_ENC_KEY_NAME ?? 'RSA-OAEP'
-    this.#encBits = process.env.RSA_SIG_KEY_MOD ?? 2048
+    this.#encBits = parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
     this.#encHash = process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256'
     // ECDSA Signing key options
     this.#namedCurve = process.env.ECDSA_SIG_KEY_NAMEDCURVE ?? 'P-521'
@@ -126,7 +126,7 @@ class CryptoKeys {
     try {
       if (this.#keys.signing !== null) {
         await this.#exportSigning()
-        log('exported signing: ', this.#exportedSigning)
+        // log('exported signing: ', this.#exportedSigning)
       }
     } catch (e) {
       error('Failed to export siging key components.')
@@ -136,14 +136,19 @@ class CryptoKeys {
     try {
       if (this.#keys.encrypting !== null) {
         await this.#exportEncrypting()
-        log('exported encrypting: ', this.#exportedEncrypting)
+        // log('exported encrypting: ', this.#exportedEncrypting)
       }
     } catch (e) {
       error('Failed to export encrypting key components.')
       error(e)
       throw new Error(e)
     }
-    return this
+    // return this
+    return {
+      details: this.#keys,
+      sig: this.#exportedSigning,
+      enc: this.#exportedEncrypting,
+    }
   }
 
   async #exportSigning() {
@@ -154,6 +159,7 @@ class CryptoKeys {
       this.#exportedSigning.jwk = await subtle.exportKey('jwk', this.#signing.publicKey)
       this.#exportedSigning.jwk.kid = this._sigKid
       this.#exportedSigning.jwk.use = 'sig'
+      this._sigJwk = this.#exportedSigning.jwk
     } catch (e) {
       error('Failed to export JWK from signing public key.')
       error(e)
@@ -184,6 +190,7 @@ class CryptoKeys {
       this.#exportedEncrypting.jwk = await subtle.exportKey('jwk', this.#encrypting.publicKey)
       this.#exportedEncrypting.jwk.kid = this._encKid
       this.#exportedEncrypting.jwk.use = 'enc'
+      this._encJwk = this.#exportedEncrypting.jwk
     } catch (e) {
       error('Failed to export JWK from encrypting public key.')
       error(e)
