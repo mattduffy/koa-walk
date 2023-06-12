@@ -6,7 +6,7 @@
  */
 
 import path from 'node:path'
-import { writeFile, readFile, stat } from 'node:fs/promises'
+import { stat, readFile, writeFile, mkdir } from 'node:fs/promises'
 import { subtle } from 'node:crypto'
 import { ulid } from 'ulid'
 import { CryptoKeys } from './cryptoKeys.js'
@@ -19,6 +19,18 @@ const COLLECTION = 'app'
 
 class App {
   #cryptoKeys
+
+  #sigPubKeyPath
+
+  #sigPriKeyPath
+
+  #sigJWKKeyPath
+
+  #encPubKeyPath
+
+  #encPriKeyPath
+
+  #encJWKKeyPath
 
   constructor(config = {}) {
     const log = appLog.extend('constructor')
@@ -127,6 +139,12 @@ class App {
         return false
       }
     }
+    this.#sigPubKeyPath = this._keys.signing[0].publicKey
+    this.#sigPriKeyPath = this._keys.signing[0].privateKey
+    this.#sigJWKKeyPath = this._keys.signing[0].jwk
+    this.#encPubKeyPath = this._keys.encrypting[0].publicKey
+    this.#encPriKeyPath = this._keys.encrypting[0].privateKey
+    this.#encJWKKeyPath = this._keys.encrypting[0].jwk
     return this._keys
   }
 
@@ -141,6 +159,71 @@ class App {
     const error = appLog.extend('rotate')
     log('Rotating server keys.')
   }
+
+  get signingPublicKey() {
+    return this.#openKey(this.#sigPubKeyPath)
+  }
+
+  get signingPrivateKey() {
+    return this.#openKey(this.#sigPriKeyPath)
+  }
+
+  get signingJwkPP() {
+    return this.#prettyPrintJwk(this.#sigJWKKeyPath, true)
+  }
+
+  get signingJwk() {
+    return this.#prettyPrintJwk(this.#sigJWKKeyPath)
+  }
+
+  get encryptingPublicKey() {
+    return this.#openKey(this.#encPubKeyPath)
+  }
+
+  get encryptinPrivateKey() {
+    return this.#openKey(this.#encPriKeyPath)
+  }
+
+  get encryptingJwkPP() {
+    return this.#prettyPrintJwk(this.#encJWKKeyPath, true)
+  }
+
+  get encryptingJwk() {
+    return this.#openKey(this.#encJWKKeyPath)
+  }
+
+  async #prettyPrintJwk(j, open = false) {
+    let jwk = j
+    if (open) {
+      jwk = (await this.#openKey(j)).toString()
+      // jwk = jwk.toString()
+    }
+    const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*"),(?<kid>"kid":".*")/).groups
+    // const indent = '\t'
+    const indent = '  '
+    const string = '{\n'
+      + `${indent}${matches.key_ops},\n`
+      + `${indent}${matches.ext},\n`
+      + `${indent}${matches.kty},\n`
+      + `${indent}"n":"${matches.n_val.match(/.{1,64}/g).join(`\n${indent}`)}",\n`
+      + `${indent}${matches.e},\n`
+      + `${indent}${matches.alg}\n`
+      + `${indent}${matches.kid},\n`
+      + '}'
+    return string
+  }
+
+  async #openKey(keyPath) {
+    if (!keyPath) {
+      throw new Error('Missing required path to key file.')
+    }
+    try {
+      return await readFile(keyPath)
+    } catch (e) {
+      throw new Error(e)
+    }
+  }
+
 }
 
 export {

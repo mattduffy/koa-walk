@@ -33,22 +33,22 @@
         </dd>
 
         <dt>Public Signing Key:</dt>
-          <pre data-sig><%= keys.signing[0].name %></pre>
+          <pre data-sig><%= await theApp.signingPublicKey %></pre>
         </dd>
 
         <dt>Signing JWK</dt>
         <dd>
-          <pre data-sig-jwk><%= keys.signing[0].name %></pre>
+          <pre data-sig-jwk><%= await theApp.signingJwkPP %></pre>
         </dd>
 
         <dt>Public Encrypting Key:</dt>
         <dd>
-          <pre data-enc><%= keys.encrypting[0].name %></pre>
+          <pre data-enc><%= await theApp.encryptingPublicKey %></pre>
         </dd>
         
         <dt>Encrypting JWK</dt>
         <dd>
-          <pre data-enc-jwk><%= keys.encrypting[0].name %></pre>
+          <pre data-enc-jwk><%= await theApp.encryptingJwkPPP%></pre>
         </dd>
       </dl>
     </div>

@@ -36,6 +36,7 @@ router.get('appKeys', '/admin/app/keys', async (ctx, next) => {
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
     const locals = {
       keys,
+      theApp,
       csrfToken,
       nonce: ctx.app.nonce,
       origin: ctx.request.origin,
