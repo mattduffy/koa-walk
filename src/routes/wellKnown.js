@@ -6,6 +6,7 @@
  */
 
 import Router from '@koa/router'
+import { App } from '../models/app.js'
 import NodeInfo from '@mattduffy/webfinger/nodeinfo.js'
 import Hostmeta from '@mattduffy/webfinger/host-meta.js'
 import Webfinger from '@mattduffy/webfinger/webfinger.js'
@@ -15,14 +16,18 @@ const wellKnownLog = _log.extend('wellKnown')
 const wellKnownError = _error.extend('wellKnown')
 const router = new Router()
 
-router.get('jwks-json', '/.well-known/jwks.json', (ctx, next) => {
+router.get('jwks-json', '/.well-known/jwks.json', async (ctx, next) => {
   const log = wellKnownLog.extend('GET-jwks_json')
   const error = wellKnownError.extend('GET-jwks_json')
   log('server-wide JWK set')
-
+  const theApp = new App({ db: ctx.state.mongodb.client, keyDir: ctx.app.dirs.keys })
+  const keys = await theApp.keys()
+  log(keys)
+  const jwks = await theApp.jwksjson(0)
+  log(jwks)
   ctx.status = 200
   ctx.type = 'application/json; charset=utf-8'
-  ctx.body = { keys: ['key1', 'key2', 'key3'] }
+  ctx.body = jwks
 })
 
 router.get('nodeinfo', '/.well-known/nodeinfo', async (ctx, next) => {

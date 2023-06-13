@@ -173,7 +173,8 @@ class App {
   }
 
   get signingJwk() {
-    return this.#prettyPrintJwk(this.#sigJWKKeyPath)
+    console.log(this.#sigJWKKeyPath)
+    return this.#openKey(this.#sigJWKKeyPath)
   }
 
   get encryptingPublicKey() {
@@ -211,6 +212,32 @@ class App {
       + `${indent}${matches.kid},\n`
       + '}'
     return string
+  }
+
+  async jwksjson(keyIndex = 0) {
+    console.log((keyIndex).toString().match(/\d/))
+    if ((keyIndex).toString()?.match(/(?<all>all)/i)?.groups?.all === 'all') {
+      return { keys: 'All keys not functional yet.' }
+    }
+    const jwks = { keys: [] }
+    try {
+      const sig = JSON.parse(await this.signingJwk)
+      if (sig) {
+        jwks.keys.push(sig)
+      }
+    } catch (e) {
+      console.error(e)
+      throw new Error(e)
+    }
+    try {
+      const enc = JSON.parse(await this.encryptingJwk)
+      if (enc) {
+        jwks.keys.push(enc)
+      }
+    } catch (e) {
+      throw new Error(e)
+    }
+    return jwks
   }
 
   async #openKey(keyPath) {
