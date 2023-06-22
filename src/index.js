@@ -61,10 +61,6 @@ app.domain = process.env.DOMAIN_NAME ?? 'website.com'
 app.proxy = true
 app.root = appRoot
 app.templateName = 'default'
-app.publicDir = `${appRoot}/public`
-app.privateDir = `${appRoot}/private`
-app.uploadsDir = `${appRoot}/uploads`
-app.archiveDir = `${appRoot}/archive`
 app.dirs = {
   archive: {
     archive: `${appRoot}/archive`,
@@ -79,10 +75,11 @@ app.dirs = {
   },
   private: {
     dir: `${appRoot}/private`,
+    uploads: `${appRoot}/uploads`,
     accounts: `${appRoot}/private/a`,
   },
 }
-process.env.UPLOADSDIR = app.uploadsDir
+process.env.UPLOADSDIR = app.dirs.private.uploads
 
 const o = {
   db: path.resolve(`${app.root}/src`, 'daos/impl/mongodb/mongo-client.js'),
@@ -237,7 +234,7 @@ app.use(cors)
 // app.use(xResponseTime)
 // app.use(sessionViews)
 // app.use(logging)
-app.use(serve(app.publicDir))
+app.use(serve(app.dirs.public.dir))
 app.use(theApp.routes())
 app.use(Auth.routes())
 app.use(Main.routes())

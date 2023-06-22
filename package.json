@@ -33,6 +33,7 @@
     "@mattduffy/koa-migrations": "/home/matt/node_package_development/koa-migrations",
     "@mattduffy/users": "/home/matt/node_package_development/users",
     "@mattduffy/webfinger": "/home/matt/node_package_development/webfinger",
+    "@mattduffy/albums": "/home/matt/node_package_development/albums",
     "debug": "4.3.4",
     "dotenv": "16.0.3",
     "formidable": "2.1.1",

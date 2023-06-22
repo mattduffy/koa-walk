@@ -1,0 +1,22 @@
+<main>
+  <article>
+    <h1>Galleries Main Page</h1>
+    <% if (flash?.info) { %>
+    <div id="info" class="info">
+      <span><%= flash.info %></span>
+    </div>
+    <% } %>
+    <% if (flash?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= flash.message %></span>
+    </div>
+    <% } %>
+    <% if (flash?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= flash.error %></span>
+    </div>
+    <% } %> 
+    
+  </article>
+</main>
+

@@ -157,7 +157,8 @@ router.get('webfinger', '/.well-known/webfinger', async (ctx, next) => {
         origin,
         protocol: `${protocol}`,
         host: `${host}`,
-        imgDir: ctx.app.publicDir,
+        // imgDir: ctx.app.publicDir,
+        imgDir: ctx.app.dirs.public.dir,
       }
       const finger = new Webfinger(o)
       const found = await finger.finger()

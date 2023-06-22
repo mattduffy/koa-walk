@@ -446,14 +446,16 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
       }
       const { avatar } = ctx.request.files
       if (avatar.size > 0) {
-        const avatarSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`)
+        // const avatarSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`)
+        const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`)
         await rename(avatar.filepath, avatarSaved)
         ctx.state.sessionUser.avatar = `${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`
       }
       // log('header file: %O', ctx.request.files.header)
       const { header } = ctx.request.files
       if (header.size > 0) {
-        const headerSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`)
+        // const headerSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`)
+        const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`)
         await rename(header.filepath, headerSaved)
         ctx.state.sessionUser.header = `${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`
       }
@@ -566,7 +568,8 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       locals.view = ctx.flash.view ?? {}
       locals.origin = ctx.request.origin
       locals.pageName = 'admin_account_view'
-      locals.privateDir = ctx.app.privateDir
+      // locals.privateDir = ctx.app.privateDir
+      locals.privateDir = ctx.app.dirs.private.dir
       locals.isAuthenticated = ctx.state.isAuthenticated
       locals.jwtAccess = (ctx.state.sessionUser.jwts).token
       locals.title = `${ctx.app.site}: View ${ctx.params.username}`
@@ -710,14 +713,16 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, ne
         }
         const { avatar } = ctx.request.files
         if (avatar.size > 0) {
-          const avatarSaved = path.resolve(`${ctx.app.publicDir}/${displayUser.publicDir}avatar-${avatar.originalFilename}`)
+          // const avatarSaved = path.resolve(`${ctx.app.publicDir}/${displayUser.publicDir}avatar-${avatar.originalFilename}`)
+          const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${displayUser.publicDir}avatar-${avatar.originalFilename}`)
           await rename(avatar.filepath, avatarSaved)
           displayUser.avatar = `${displayUser.publicDir}avatar-${avatar.originalFilename}`
         }
         // log('header file: %O', ctx.request.files.header)
         const { header } = ctx.request.files
         if (header.size > 0) {
-          const headerSaved = path.resolve(`${ctx.app.publicDir}/${displayUser.publicDir}header-${header.originalFilename}`)
+          // const headerSaved = path.resolve(`${ctx.app.publicDir}/${displayUser.publicDir}header-${header.originalFilename}`)
+          const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${displayUser.publicDir}header-${header.originalFilename}`)
           await rename(header.filepath, headerSaved)
           displayUser.header = `${displayUser.publicDir}header-${header.originalFilename}`
         }

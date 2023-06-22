@@ -7,6 +7,7 @@
 
 import Router from '@koa/router'
 import { ObjectId } from 'mongodb'
+import { Albums } from '@mattduffy/albums/Albums'
 import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
 
@@ -49,9 +50,11 @@ router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
   const error = mainError.extend('galleries')
   log('inside index router: /galleries')
   ctx.status = 200
-  await ctx.render('about', {
+  await ctx.render('galleries', {
     body: ctx.body,
+    flash: ctx.flash?.galleries ?? {},
     title: `${ctx.app.site}: Galleries`,
+    recent: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
     sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
   })
@@ -62,6 +65,7 @@ router.get('about', '/about', hasFlash, async (ctx, next) => {
   const error = mainError.extend('about')
   log('inside index router: /about')
   // await next()
+  const albums = new Albums()
   ctx.status = 200
   await ctx.render('about', {
     body: ctx.body,

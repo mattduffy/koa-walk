@@ -1,8 +1,8 @@
 /**
- * @summary Koa router for the main top-level pages.
+ * @summary A small wrapper around the Debug package to setup the namespace.
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/middlewares.js A small library of useful middleware funtions.
+ * @file src/utils/logging.js A small wrapper around the Debug package to setup the namespace.
  */
 
 import Debug from 'debug'
