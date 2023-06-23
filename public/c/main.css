@@ -200,6 +200,10 @@ body {
     font-size: 100%;
   }
   
+  main article h2 {
+    font-size: 95%;
+  }
+  
   div.info {
     color: yellow;
   }
@@ -231,6 +235,18 @@ body {
 
   dl.viewUser {
 
+  }
+  
+  div.recentlyAdded {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-auto-rows: 200px;
+    gap: 20px;
+    position: relative:
+  }
+
+  div.recentlyAddedAlbum {
+    border: 1px solid black;
   }
 
   img.trashcan {
