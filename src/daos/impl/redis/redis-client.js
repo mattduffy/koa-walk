@@ -45,11 +45,13 @@ const redisConnOpts = {
     rejectUnauthorized: false,
     requestCert: true,
   },
+  showFriendlyErrorStack: true,
 }
 console.log(redisConnOpts)
 const redis = new Redis(redisConnOpts)
 const redisClient = await new redisOm().use(redis)
 export {
+  redis,
   redisClient as Client,
   Entity,
   Schema,

@@ -10,6 +10,7 @@ import { ObjectId } from 'mongodb'
 import { Albums } from '@mattduffy/albums/Albums'
 import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
+import { redis } from '../daos/impl/redis/redis-client.js'
 
 const mainLog = _log.extend('main')
 const mainError = _error.extend('main')
@@ -50,11 +51,10 @@ router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
   const error = mainError.extend('galleries')
   log('inside index router: /galleries')
   ctx.status = 200
-  await ctx.render('galleries', {
-    body: ctx.body,
-    flash: ctx.flash?.galleries ?? {},
-    title: `${ctx.app.site}: Galleries`,
-    recent: [
+  let recent10 = await Albums.recentlyAdded(redis)
+  log(recent10)
+  if (recent10.length < 1) {
+    recent10 = [
       { name: 'one' },
       { name: 'two' },
       { name: 'three' },
@@ -65,7 +65,13 @@ router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
       { name: 'eight' },
       { name: 'nine' },
       { name: 'ten' },
-    ],
+    ]
+  }
+  await ctx.render('galleries', {
+    recent10,
+    body: ctx.body,
+    flash: ctx.flash?.galleries ?? {},
+    title: `${ctx.app.site}: Galleries`,
     sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
   })
