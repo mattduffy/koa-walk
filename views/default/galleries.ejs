@@ -18,14 +18,27 @@
     <% } %> 
     <% if (recent10?.length > 0) { %>
       <h2>Recently Added</h2>    
-      <div class="recentlyAdded">
-      <% recent10.forEach((a) => { %>
-        <div class="recentlyAddedAlbum"> 
-          <%= a.name %> 
+      <section id="recent10">
+        <div class="recentlyAdded">
+        <% recent10.forEach((a) => { %>
+          <div class="recentlyAddedAlbum"> 
+            <%= a.name %> 
+          </div>
+        <% }) %>
         </div>
-      <% }) %>
-      </div>
+      </section>
     <% } %>
+    <br>
+    <section id="userAlbums">
+      <h2>Users With Public Albums</h2>
+      <% if (userAlbums?.length > 0) { %>
+      <ul id="usersAlbumsList">
+        <% userAlbums.forEach((a) => { %>
+          <li><a href="<%- origin -%>/<%- a.url -%>"><%- a.userName -%></a></li>
+        <% }) %>
+      </ul>
+      <% } %>
+    </section>
   </article>
 </main>
 

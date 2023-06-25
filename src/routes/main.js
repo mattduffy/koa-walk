@@ -51,9 +51,14 @@ router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
   const error = mainError.extend('galleries')
   log('inside index router: /galleries')
   ctx.status = 200
-  let recent10 = await Albums.recentlyAdded(redis)
-  log(recent10)
-  if (recent10.length < 1) {
+  let recent10
+  try {
+    recent10 = await Albums.recentlyAdded(redis)
+  } catch (e) {
+    error(e)
+  }
+  log('recent10: ', recent10)
+  if (recent10?.length < 1) {
     recent10 = [
       { name: 'one' },
       { name: 'two' },
@@ -62,14 +67,27 @@ router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
       { name: 'five' },
       { name: 'six' },
       { name: 'seven' },
-      { name: 'eight' },
-      { name: 'nine' },
-      { name: 'ten' },
     ]
   }
+  let userAlbums
+  try {
+    userAlbums = await Albums.usersWithPublicAlbums(ctx.state.mongodb.client.db())
+  } catch (e) {
+    error(e)
+  }
+  if (userAlbums?.length < 1) {
+    userAlbums = [
+      { ownerUsername: '@user1', url: '/@user1' },
+      { ownerUsername: '@user1', url: '/@user1' },
+      { ownerUsername: '@user1', url: '/@user1' },
+    ]
+  }
+  log('userAlbums: ', userAlbums)
   await ctx.render('galleries', {
     recent10,
+    userAlbums,
     body: ctx.body,
+    origin: ctx.request.origin,
     flash: ctx.flash?.galleries ?? {},
     title: `${ctx.app.site}: Galleries`,
     sessionUser: ctx.state.sessionUser,
