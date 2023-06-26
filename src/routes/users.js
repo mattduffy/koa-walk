@@ -5,19 +5,17 @@
  * @file src/routes/users.js The router for the user api endpoints.
  */
 
+/* eslint-disable no-unused-vars */
 import Router from '@koa/router'
-// import Debug from 'debug'
 import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { Users, AdminUser } from '../models/users.js'
+/* eslint-enable no-unused-vars */
 
 const userLog = _log.extend('/users')
 const userError = _error.extend('/users')
 const USERS_COL = 'users'
 
-// function isAsyncRequest(req) {
-//   return (req.get('X-ASYNCREQUEST') === true)
-// }
 function capitalize(word) {
   return word[0].toUpperCase() + word.substring(1).toLowerCase()
 }
@@ -27,7 +25,7 @@ function sanitize(param) {
 }
 const router = new Router()
 
-router.get('getUsers', '/users/:type*', async (ctx, next) => {
+router.get('getUsers', '/users/:type*', async (ctx) => {
   const log = userLog.extend('GET-users_type')
   const error = userError.extend('GET-users_type')
   if (!ctx.state.isAuthenticated || !(ctx.state?.sessionUser.type === 'Admin')) {
@@ -41,8 +39,9 @@ router.get('getUsers', '/users/:type*', async (ctx, next) => {
       filter = {}
     } else {
       filter = { userTypes: [capitalize(sanitize(ctx.params.type))] }
+      log(filter)
     }
-    await next()
+    // await next()
     const collection = db.collection(USERS_COL)
     const users = new Users(collection, ctx)
     let allUsers
@@ -59,7 +58,7 @@ router.get('getUsers', '/users/:type*', async (ctx, next) => {
   }
 })
 
-router.get('getArchivedUsers', '/archived/:type*', async (ctx, next) => {
+router.get('getArchivedUsers', '/archived/:type*', async (ctx) => {
   const log = userLog.extend('GET-archived_type')
   const error = userError.extend('GET-archived_type')
   if (!ctx.state.isAuthenticated || !(ctx.state?.sessionUser.type === 'Admin')) {
@@ -74,7 +73,8 @@ router.get('getArchivedUsers', '/archived/:type*', async (ctx, next) => {
     } else {
       filter = { userTypes: [capitalize(sanitize(ctx.params.type))] }
     }
-    await next()
+    log(filter)
+    // await next()
     const collection = db.collection(USERS_COL)
     const users = new Users(collection, ctx)
     let allUsers
@@ -91,7 +91,7 @@ router.get('getArchivedUsers', '/archived/:type*', async (ctx, next) => {
   }
 })
 
-router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
+router.get('getUserById', '/user/byId/:id', async (ctx) => {
   const log = userLog.extend('GET-user_byId')
   const error = userError.extend('GET-user_byId')
   const id = sanitize(ctx.params.id)
@@ -101,7 +101,7 @@ router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
   }
   ctx.state.sessionUser = { id }
   const db = ctx.state.mongodb.client.db()
-  await next()
+  // await next()
   const collection = db.collection(USERS_COL)
   const users = new Users(collection, ctx)
   const foundUser = await users.getById(id, { archived: false })
@@ -115,7 +115,7 @@ router.get('getUserById', '/user/byId/:id', async (ctx, next) => {
   ctx.type = 'application/json'
 })
 
-router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
+router.get('getUserByEmail', '/user/byEmail/:email', async (ctx) => {
   const log = userLog.extend('GET-user_byEmail')
   const error = userError.extend('GET-user_byEmail')
   const email = sanitize(ctx.params.email)
@@ -126,7 +126,7 @@ router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
   }
   ctx.state.sessionUser = { email }
   const db = ctx.state.mongodb.client.db()
-  await next()
+  // await next()
   const collection = db.collection(USERS_COL)
   const users = new Users(collection, ctx)
   const foundUser = await users.getByEmail(email, { archived: false })
@@ -140,14 +140,14 @@ router.get('getUserByEmail', '/user/byEmail/:email', async (ctx, next) => {
   ctx.type = 'application/json'
 })
 
-router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
+router.get('getUserByUsername', '/user/:username', async (ctx) => {
   const log = userLog.extend('GET-user_username')
   const error = userError.extend('GET-user_username')
   const username = sanitize(ctx.params.username)
   log(`loooking up user by username: ${username}`)
   let user
   const locals = {}
-  await next()
+  // await next()
   try {
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection(USERS_COL)
@@ -170,14 +170,14 @@ router.get('getUserByUsername', '/user/:username', async (ctx, next) => {
   await ctx.render('user', locals)
 })
 
-router.get('@username', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx, next) => {
+router.get('@username', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async (ctx) => {
   const log = userLog.extend('GET-user_@username')
   const error = userError.extend('GET-user_@username')
   const username = sanitize(ctx.params.username)
   log(`loooking up user by @username: ${username}`)
   let user
   const locals = {}
-  await next()
+  // await next()
   try {
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection(USERS_COL)
@@ -200,7 +200,7 @@ router.get('@username', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})$/, async
   await ctx.render('user', locals)
 })
 
-router.get('jwks', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})\/jwks.json$/, async (ctx, next) => {
+router.get('jwks', /^\/@(?<username>[^@+?.:\s][a-zA-Z0-9_-]{2,30})\/jwks.json$/, async (ctx) => {
   // This api route is publicly available, no need for authentication.
   const log = userLog.extend('GET-user_jwks-json')
   const error = userError.extend('GET-user_username')

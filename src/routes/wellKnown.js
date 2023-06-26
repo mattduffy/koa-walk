@@ -6,31 +6,43 @@
  */
 
 import Router from '@koa/router'
+import NodeInfo from '@mattduffy/webfinger/nodeinfo.js' // eslint-disable-line import/no-unresolved
+import Hostmeta from '@mattduffy/webfinger/host-meta.js' // eslint-disable-line import/no-unresolved
+import Webfinger from '@mattduffy/webfinger/webfinger.js' // eslint-disable-line import/no-unresolved
 import { App } from '../models/app.js'
-import NodeInfo from '@mattduffy/webfinger/nodeinfo.js'
-import Hostmeta from '@mattduffy/webfinger/host-meta.js'
-import Webfinger from '@mattduffy/webfinger/webfinger.js'
 import { _log, _error } from '../utils/logging.js'
 
 const wellKnownLog = _log.extend('wellKnown')
 const wellKnownError = _error.extend('wellKnown')
 const router = new Router()
 
-router.get('jwks-json', '/.well-known/jwks.json', async (ctx, next) => {
+router.get('jwks-json', '/.well-known/jwks.json', async (ctx) => {
   const log = wellKnownLog.extend('GET-jwks_json')
   const error = wellKnownError.extend('GET-jwks_json')
   log('server-wide JWK set')
   const theApp = new App({ db: ctx.state.mongodb.client, keyDir: ctx.app.dirs.keys })
-  const keys = await theApp.keys()
-  log(keys)
-  const jwks = await theApp.jwksjson(0)
-  log(jwks)
+  let keys
+  try {
+    keys = await theApp.keys()
+    log(keys)
+  } catch (e) {
+    error(e)
+    ctx.throw(500, e)
+  }
+  let jwks
+  try {
+    jwks = await theApp.jwksjson(0)
+    log(jwks)
+  } catch (e) {
+    error(e)
+    ctx.throw(500, e)
+  }
   ctx.status = 200
   ctx.type = 'application/json; charset=utf-8'
   ctx.body = jwks
 })
 
-router.get('nodeinfo', '/.well-known/nodeinfo', async (ctx, next) => {
+router.get('nodeinfo', '/.well-known/nodeinfo', async (ctx) => {
   const log = wellKnownLog.extend('GET-nodeinfo')
   const error = wellKnownError.extend('GET-nodeinfo')
   log('well-known nodeinfo request')
@@ -62,13 +74,20 @@ router.get('nodeinfo', '/.well-known/nodeinfo', async (ctx, next) => {
   }
 })
 
-router.get('nodeinfo2.1', '/nodeinfo/2.1', async (ctx, next) => {
+router.get('nodeinfo2.1', '/nodeinfo/2.1', async (ctx) => {
   const log = wellKnownLog.extend('GET-nodeinfo2.1')
   const error = wellKnownError.extend('GET-nodeinfo2.1')
   const { proto, host } = ctx.request
   const o = { db: ctx.state.mongodb.client, proto, host }
   const node = new NodeInfo(o)
-  const info = await node.stats()
+  let info
+  try {
+    info = await node.stats()
+    log(info)
+  } catch (e) {
+    error(e)
+    ctx.throw(500, e)
+  }
   if (!info) {
     error('Nodeinfo not found')
     ctx.status = 404
@@ -100,6 +119,7 @@ router.get('host-meta', '/.well-known/host-meta', async (ctx, next) => {
     const o = { path: ctx.request.path, host }
     const meta = new Hostmeta(o)
     info = meta.info()
+    log(info)
     if (!info) {
       ctx.status = 400
       ctx.type = 'text/plain; charset=utf8'
@@ -127,6 +147,7 @@ router.get('webfinger', '/.well-known/webfinger', async (ctx, next) => {
     ctx.throw(500, 'Missing database connection.')
   }
   try {
+    log('awaiting next return')
     await next()
   } catch (e) {
     error('Webfinger failure - 200')
@@ -157,7 +178,6 @@ router.get('webfinger', '/.well-known/webfinger', async (ctx, next) => {
         origin,
         protocol: `${protocol}`,
         host: `${host}`,
-        // imgDir: ctx.app.publicDir,
         imgDir: ctx.app.dirs.public.dir,
       }
       const finger = new Webfinger(o)

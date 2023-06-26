@@ -8,6 +8,7 @@
 import Router from '@koa/router'
 import formidable from 'formidable'
 import { ulid } from 'ulid'
+/* eslint-disable-next-line no-unused-vars */
 import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
@@ -20,11 +21,16 @@ router.get('getLogin', '/login', async (ctx, next) => {
   const log = authLog.extend('GET-login')
   const error = authError.extend('GET-login')
   log('logging the user in')
+  try {
+    await next()
+  } catch (e) {
+    error(e)
+    ctx.throw(500, e)
+  }
   ctx.state.sessionUser = ctx.state.sessionUser ?? {}
   if (ctx.state.isAuthenticated) {
     ctx.redirect('/')
   }
-  // const csrfToken = new ObjectId().toString()
   const csrfToken = ulid()
   // const flashMessage = ctx.flash
   const locals = {
@@ -40,10 +46,9 @@ router.get('getLogin', '/login', async (ctx, next) => {
   ctx.session.csrfToken = locals.csrfToken
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
   await ctx.render('login', locals)
-  await next()
 })
 
-router.post('postLogin', '/login', async (ctx, next) => {
+router.post('postLogin', '/login', async (ctx) => {
   const log = authLog.extend('POST-login')
   const error = authError.extend('POST-login')
   const form = formidable({
@@ -120,10 +125,9 @@ router.post('postLogin', '/login', async (ctx, next) => {
   }
 })
 
-router.get('getLogout', '/logout', async (ctx, next) => {
+router.get('getLogout', '/logout', async (ctx) => {
   const log = authLog.extend('logout')
-  const error = authError.extend('logout')
-  // await next()
+  // const error = authError.extend('logout')
   if (ctx.state.isAuthenticated) {
     log('logging out')
     ctx.state.sessionUser = null

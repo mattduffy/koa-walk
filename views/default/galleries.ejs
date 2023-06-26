@@ -34,7 +34,7 @@
       <% if (userAlbums?.length > 0) { %>
       <ul id="usersAlbumsList">
         <% userAlbums.forEach((a) => { %>
-          <li><a href="<%- origin -%>/<%- a.url -%>"><%- a.userName -%></a></li>
+          <li><a href="<%- origin -%>/@<%- a.ownerUsername -%>">@<%- a.ownerUsername -%></a></li>
         <% }) %>
       </ul>
       <% } %>

@@ -43,7 +43,7 @@ const __dirname = path.dirname(__filename)
 const appRoot = path.resolve(`${__dirname}/..`)
 const showDebug = process.env.NODE_ENV !== 'production'
 dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), debug: showDebug })
-dotenv.config({ path: path.resolve(appRoot, 'config/test.env'), debug: showDebug })
+// dotenv.config({ path: path.resolve(appRoot, 'config/test.env'), debug: showDebug })
 
 const key1 = process.env.KEY1
 const key2 = process.env.KEY2

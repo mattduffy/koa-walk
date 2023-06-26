@@ -14,7 +14,7 @@ const appLog = _log.extend('app')
 const appError = _error.extend('app')
 const router = new Router()
 
-router.get('appKeys', '/admin/app/keys', async (ctx, next) => {
+router.get('appKeys', '/admin/app/keys', async (ctx) => {
   const log = appLog.extend('GET-app-keys')
   const error = appError.extend('GET-app-keys')
   if (!ctx.state?.isAuthenticated) {

@@ -6,14 +6,15 @@
  */
 
 import Router from '@koa/router'
-import { ObjectId } from 'mongodb'
-import { Albums } from '@mattduffy/albums/Albums'
+// import { ObjectId } from 'mongodb'
+import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
+// import { Users } from '../models/users.js'
 import { _log, _error } from '../utils/logging.js'
-import { Users } from '../models/users.js'
 import { redis } from '../daos/impl/redis/redis-client.js'
 
 const mainLog = _log.extend('main')
 const mainError = _error.extend('main')
+/* eslint-disable-next-line no-unused-vars */
 function sanitize(param) {
   // fill in with some effective input scubbing logic
   return param
@@ -30,11 +31,10 @@ async function hasFlash(ctx, next) {
   await next()
 }
 
-router.get('index', '/', hasFlash, async (ctx, next) => {
+router.get('index', '/', hasFlash, async (ctx) => {
   const log = mainLog.extend('index')
-  const error = mainError.extend('index')
+  // const error = mainError.extend('index')
   log('inside main router: /')
-  // await next()
   ctx.status = 200
   // log(ctx.state.sessionUser)
   await ctx.render('index', {
@@ -46,7 +46,7 @@ router.get('index', '/', hasFlash, async (ctx, next) => {
   })
 })
 
-router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
+router.get('galleries', '/galleries', hasFlash, async (ctx) => {
   const log = mainLog.extend('galleries')
   const error = mainError.extend('galleries')
   log('inside index router: /galleries')
@@ -95,12 +95,10 @@ router.get('galleries', '/galleries', hasFlash, async (ctx, next) => {
   })
 })
 
-router.get('about', '/about', hasFlash, async (ctx, next) => {
+router.get('about', '/about', hasFlash, async (ctx) => {
   const log = mainLog.extend('about')
-  const error = mainError.extend('about')
+  // const error = mainError.extend('about')
   log('inside index router: /about')
-  // await next()
-  const albums = new Albums()
   ctx.status = 200
   await ctx.render('about', {
     body: ctx.body,
@@ -110,11 +108,10 @@ router.get('about', '/about', hasFlash, async (ctx, next) => {
   })
 })
 
-router.get('contact', '/contact', hasFlash, async (ctx, next) => {
+router.get('contact', '/contact', hasFlash, async (ctx) => {
   const log = mainLog.extend('contact')
-  const error = mainError.extend('contact')
+  // const error = mainError.extend('contact')
   log('inside index router: /contact')
-  // await next()
   ctx.status = 200
   await ctx.render('contact', {
     title: `${ctx.app.site}: Contact`,
@@ -123,7 +120,7 @@ router.get('contact', '/contact', hasFlash, async (ctx, next) => {
   })
 })
 
-router.get('renderTest', '/renderTest', async (ctx, next) => {
+router.get('renderTest', '/renderTest', async (ctx) => {
   const log = mainLog.extend('renderTest')
   const rendered = await ctx.render('renderTest', {
     title: `${ctx.app.site}: render test`,

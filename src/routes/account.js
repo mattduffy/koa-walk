@@ -9,9 +9,10 @@ import path from 'node:path'
 import { rename } from 'node:fs/promises'
 import Router from '@koa/router'
 import { ulid } from 'ulid'
-import { ObjectId } from 'mongodb'
+// import { ObjectId } from 'mongodb'
 import formidable from 'formidable'
 import { _log, _error } from '../utils/logging.js'
+/* eslint-disable-next-line no-unused-vars */
 import { Users, AdminUser } from '../models/users.js'
 
 const USERS = 'users'
@@ -24,6 +25,7 @@ function isAsyncRequest(req) {
   return (req.get('X-ASYNCREQUEST') === true)
 }
 
+/* eslint-disable-next-line no-unused-vars */
 function capitalize(word) {
   return word[0].toUpperCase() + word.substring(1).toLowerCase()
 }
@@ -44,10 +46,9 @@ async function hasFlash(ctx, next) {
   await next()
 }
 
-router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ctx, next) => {
+router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-change-password')
   const error = accountError.extend('GET-account-change-password')
-  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -79,7 +80,7 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
   }
 })
 
-router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (ctx, next) => {
+router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (ctx) => {
   const log = accountLog.extend('POST-account-change-password')
   const error = accountError.extend('POST-account-change-password')
   const form = formidable({
@@ -106,7 +107,7 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
     ctx.redirect('/')
   } else {
     log(`View ${ctx.state.sessionUser.username}'s account password.`)
-    const sessionId = ctx.cookies.get('session')
+    // const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body['csrf-token']
@@ -150,10 +151,9 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
   }
 })
 
-router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
+router.get('accountTokens', '/account/tokens', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-tokens')
   const error = accountError.extend('GET-account-tokens')
-  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -180,10 +180,9 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx, next) => {
   }
 })
 
-router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash, async (ctx, next) => {
+router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-generateKeys')
   const error = accountError.extend('GET-account-generateKeys')
-  // await next()
   let status
   let body
   log(ctx.headers)
@@ -243,10 +242,9 @@ router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash
   }
 })
 
-router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) => {
+router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-publickeys')
   const error = accountError.extend('GET-account-publickeys')
-  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -279,26 +277,25 @@ router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx, next) 
   }
 })
 
-router.get('accountSignData', '/account/sign/:data', hasFlash, async (ctx, next) => {
-  
+router.get('accountSignData', '/account/sign/:data', hasFlash, async (ctx) => {
+  console.log(ctx)
 })
 
-router.get('accountVerifyData', '/account/verify/:signature', hasFlash, async (ctx, next) => {
-  
+router.get('accountVerifyData', '/account/verify/:signature', hasFlash, async (ctx) => {
+  console.log(ctx)
 })
 
-router.get('accountEncryptData', '/account/encrypt/:plaintext', hasFlash, async (ctx, next) => {
-  
+router.get('accountEncryptData', '/account/encrypt/:plaintext', hasFlash, async (ctx) => {
+  console.log(ctx)
 })
 
-router.get('accountDecryptData', '/account/decrypt/:ciphertext', hasFlash, async (ctx, next) => {
-  
+router.get('accountDecryptData', '/account/decrypt/:ciphertext', hasFlash, async (ctx) => {
+  console.log(ctx)
 })
 
-router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
+router.get('accountView', '/account/view', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-view')
   const error = accountError.extend('GET-account-view')
-  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -323,10 +320,9 @@ router.get('accountView', '/account/view', hasFlash, async (ctx, next) => {
   }
 })
 
-router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
+router.get('accountEdit', '/account/edit', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-edit')
   const error = accountError.extend('GET-account-edit')
-  // await next()
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -351,7 +347,7 @@ router.get('accountEdit', '/account/edit', hasFlash, async (ctx, next) => {
   }
 })
 
-router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
+router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
   const log = accountLog.extend('POST-account-edit')
   const error = accountError.extend('POST-account-edit')
   const form = formidable({
@@ -377,7 +373,6 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
     })
   })
   // log(ctx.request.body)
-  // await next()
   if (!ctx.state?.isAuthenticated) {
     ctx.flash = {
       index: {
@@ -390,7 +385,7 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
   } else {
     // log(`ctx..body: ${ctx.request.body}`)
     // log(`ctx.fields: ${ctx.request.fields}`)
-    const sessionId = ctx.cookies.get('session')
+    // const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body['csrf-token']
@@ -446,7 +441,6 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
       }
       const { avatar } = ctx.request.files
       if (avatar.size > 0) {
-        // const avatarSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`)
         const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`)
         await rename(avatar.filepath, avatarSaved)
         ctx.state.sessionUser.avatar = `${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`
@@ -454,7 +448,6 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
       // log('header file: %O', ctx.request.files.header)
       const { header } = ctx.request.files
       if (header.size > 0) {
-        // const headerSaved = path.resolve(`${ctx.app.publicDir}/${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`)
         const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`)
         await rename(header.filepath, headerSaved)
         ctx.state.sessionUser.header = `${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`
@@ -490,7 +483,7 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx, next) => {
   }
 })
 
-router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, next) => {
+router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-admin-listusers')
   const error = accountError.extend('GET-admin-listuers')
   if (!ctx.state?.isAuthenticated) {
@@ -534,7 +527,7 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx, n
   }
 })
 
-router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ctx, next) => {
+router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-admin-viewusers')
   const error = accountError.extend('GET-admin-viewusers')
   if (!ctx.state?.isAuthenticated) {
@@ -584,7 +577,7 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
   }
 })
 
-router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async (ctx, next) => {
+router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-admin-editusers')
   const error = accountError.extend('GET-admin-editusers')
   if (!ctx.state?.isAuthenticated) {
@@ -628,7 +621,7 @@ router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async 
   }
 })
 
-router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, next) => {
+router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) => {
   const log = accountLog.extend('POST-admin-editusers')
   const error = accountError.extend('POST-admin-editusers')
   if (!ctx.state?.isAuthenticated) {
@@ -666,7 +659,7 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, ne
           resolve()
         })
       })
-      const sessionId = ctx.cookies.get('session')
+      // const sessionId = ctx.cookies.get('session')
       const csrfTokenCookie = ctx.cookies.get('csrfToken')
       const csrfTokenSession = ctx.session.csrfToken
       const csrfTokenHidden = ctx.request.body['csrf-token']
@@ -713,7 +706,6 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, ne
         }
         const { avatar } = ctx.request.files
         if (avatar.size > 0) {
-          // const avatarSaved = path.resolve(`${ctx.app.publicDir}/${displayUser.publicDir}avatar-${avatar.originalFilename}`)
           const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${displayUser.publicDir}avatar-${avatar.originalFilename}`)
           await rename(avatar.filepath, avatarSaved)
           displayUser.avatar = `${displayUser.publicDir}avatar-${avatar.originalFilename}`
@@ -721,7 +713,6 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx, ne
         // log('header file: %O', ctx.request.files.header)
         const { header } = ctx.request.files
         if (header.size > 0) {
-          // const headerSaved = path.resolve(`${ctx.app.publicDir}/${displayUser.publicDir}header-${header.originalFilename}`)
           const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${displayUser.publicDir}header-${header.originalFilename}`)
           await rename(header.filepath, headerSaved)
           displayUser.header = `${displayUser.publicDir}header-${header.originalFilename}`
