@@ -34,11 +34,14 @@ router.get('getLogin', '/login', async (ctx, next) => {
   const csrfToken = ulid()
   // const flashMessage = ctx.flash
   const locals = {
+    // origin: ctx.request.origin,
+    // siteName: ctx.app.site,
+    // appName: ctx.app.site.toProperCase(),
+    // nonce: ctx.app.nonce,
     body: ctx.body,
     title: `${ctx.app.site}: Login`,
     sessionUser: ctx.state.sessionUser,
     csrfToken,
-    nonce: ctx.app.nonce,
     login: ctx.flash.login ?? {},
     isAuthenticated: ctx.state.isAuthenticated,
   }
@@ -65,8 +68,8 @@ router.post('postLogin', '/login', async (ctx) => {
       }
       ctx.request.body = fields
       ctx.request.files = files
-      // log(fields)
-      // log(files)
+      log(fields)
+      log(files)
       resolve()
     })
   })

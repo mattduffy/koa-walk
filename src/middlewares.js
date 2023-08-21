@@ -7,12 +7,13 @@
 
 // import Debug from 'debug'
 import { METHODS } from 'node:http'
-import { subtle } from 'node:crypto'
-import { stat, readFile } from 'node:fs/promises'
+// import { subtle } from 'node:crypto'
+// import { stat, readFile } from 'node:fs/promises'
 import { _log, _error } from './utils/logging.js'
 import { Users } from './models/users.js'
 import { App } from './models/app.js'
 
+// const DBNAME = 'koastub'
 const USERS = 'users'
 const middlewareLog = _log.extend('middlewares')
 const middlewareError = _error.extend('middlewares')
@@ -20,10 +21,12 @@ const middlewareError = _error.extend('middlewares')
 export async function checkServerJWKs(ctx, next) {
   const log = middlewareLog.extend('checkServerJWKs')
   const error = middlewareLog.extend('checkServerJWKs')
+  log()
   try {
     const o = {
-      db: ctx.state.mongodb.client,
+      db: ctx.state.mongodb.client.db(ctx.state.mongodb.client.dbName),
       keyDir: ctx.app.dirs.keys,
+      siteName: ctx.app.site,
     }
     const theApp = new App(o)
     ctx.state.keys = await theApp.keys()
@@ -45,7 +48,7 @@ export async function getSessionUser(ctx, next) {
     try {
       log(`restoring session user: ${ctx.session.id}`)
       log(`requested url: ${ctx.request.originalUrl}`)
-      const db = ctx.state.mongodb.client.db()
+      const db = ctx.state.mongodb.client.db(ctx.state.mongodb.client.dbName)
       const collection = db.collection(USERS)
       const users = new Users(collection, ctx)
       const user = await users.getById(ctx.session.id)
@@ -343,6 +346,7 @@ export async function errors(ctx, next) {
 export async function errorHandlers(ctx, next) {
   const log = middlewareLog.extend('errorHandler')
   const error = middlewareError.extend('errorHandler')
+  log()
   try {
     await next()
     if (!ctx.body) {
