@@ -127,9 +127,11 @@ export function flashMessage(options, application) {
 export function prepareRequest(options = {}) {
   const log = middlewareLog.extend('prepareRequest')
   const error = middlewareError.extend('prepareRequest')
+  const opts = { ...options }
   return async function prepRequest(ctx, next) {
     // Is the request an Async / Ajax style request?
     // log(ctx.request.headers)
+    log(opts)
     ctx.state.isAsyncRequest = false
     ctx.state.accessToken = null
     if (/json/.test(ctx.request.get('Accept'))
@@ -159,8 +161,10 @@ export function prepareRequest(options = {}) {
 export function tokenAuthMiddleware(options = {}) {
   const log = middlewareLog.extend('tokenAuth')
   const error = middlewareError.extend('tokenAuth')
+  const opts = { ...options }
   return async function authenticateTokenUser(ctx, next) {
     if (ctx.state?.isAsyncRequest && ctx.state?.accessToken !== null) {
+      log(opts)
       log('Authenticating async request by access token')
       const isValidToken = /[^+\s]*[A-Za-z0-9._-]*/g.exec(ctx.state.accessToken)
       if (!isValidToken) {
