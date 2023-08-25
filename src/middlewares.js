@@ -175,7 +175,7 @@ export function tokenAuthMiddleware(options = {}) {
         try {
           const db = ctx.state.mongodb.client.db()
           const collection = db.collection(USERS)
-          const users = new Users(collection)
+          const users = new Users(collection, ctx)
           const tokenUser = await users.authenticateByAccessToken(ctx.state.accessToken)
           if (tokenUser && tokenUser.message === 'success') {
             ctx.state.sessionUser = tokenUser.user
