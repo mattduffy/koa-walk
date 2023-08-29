@@ -376,7 +376,7 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
       log('Multipart form data was successfully parsed.')
       ctx.request.body = fields
       ctx.request.files = files
-      // log(fields)
+      log(fields)
       // log(files)
       resolve()
     })
@@ -434,13 +434,29 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
       const { description } = ctx.request.body
       if (description !== '') ctx.state.sessionUser.description = description
       const { isLocked } = ctx.request.body
-      if (isLocked === 'on') ctx.state.sessionUser.locked = true
+      if (isLocked === 'on') {
+        ctx.state.sessionUser.locked = true
+      } else {
+        ctx.state.sessionUser.locked = false
+      }
       const { isBot } = ctx.request.body
-      if (isBot === 'on') ctx.state.sessionUser.bot = true
+      if (isBot === 'on') {
+        ctx.state.sessionUser.bot = true
+      } else {
+        ctx.state.sessionUser.bot = false
+      }
       const { isGroup } = ctx.request.body
-      if (isGroup === 'on') ctx.state.sessionUser.group = true
+      if (isGroup === 'on') {
+        ctx.state.sessionUser.group = true
+      } else {
+        ctx.state.sessionUser.group = false
+      }
       const { isDiscoverable } = ctx.request.body
-      if (isDiscoverable === 'on') ctx.state.sessionUser.discoverable = true
+      if (isDiscoverable === 'on') {
+        ctx.state.sessionUser.discoverable = true
+      } else {
+        ctx.state.sessionUser.discoverable = false
+      }
       // log('avatar file: %O', ctx.request.files.avatar.size)
       // log('avatar file: %O', ctx.request.files.avatar.filepath)
       if (ctx.state.sessionUser.publicDir === '') {
@@ -712,6 +728,24 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) =>
         if (secondaryEmail !== '') displayUser.secondaryEmail = secondaryEmail
         const { description } = ctx.request.body
         if (description !== '') displayUser.description = description
+        const { isLocked } = ctx.request.body
+        if (isLocked === 'on') {
+          displayUser.locked = true
+        } else {
+          displayUser.locked = false
+        }
+        const { isBot } = ctx.request.body
+        if (isBot === 'on') {
+          displayUser.bot = true
+        } else {
+          displayUser.bot = false
+        }
+        const { isGroup } = ctx.request.body
+        if (isGroup === 'on') {
+          displayUser.group = true
+        } else {
+          displayUser.group = false
+        }
         log('avatar file: %O', ctx.request.files.avatar.size)
         log('avatar file: %O', ctx.request.files.avatar.filepath)
         if (displayUser.publicDir === '') {
