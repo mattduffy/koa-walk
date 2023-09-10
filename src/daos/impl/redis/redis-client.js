@@ -32,7 +32,7 @@ const redisConnOpts = {
   sentinelPassword: redisEnv.REDIS_SENTINEL_PASSWORD,
   username: redisEnv.REDIS_USER,
   password: redisEnv.REDIS_PASSWORD,
-  connectionName: 'redis-om',
+  connectionName: 'ioredis',
   enableTLSForSentinelMode: true,
   sentinelRetryStrategy: 100,
   tls: {
