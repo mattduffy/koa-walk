@@ -23,7 +23,7 @@
     <ul>
       <% if (sessionUser) { %>
       <li><%= sessionUser.type %></li>
-      <li><%= `${sessionUser.name}` %></li>
+      <li><%= `@${sessionUser.username}` %></li>
       <li><%= `${sessionUser.firstName} ${sessionUser.lastName}` %></li>
       <li><%= sessionUser.email.primary %></li>
       <li><%= sessionUser.description %></li>
