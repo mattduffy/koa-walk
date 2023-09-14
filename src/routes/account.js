@@ -576,9 +576,11 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
     try {
       let displayUser = ctx.params.username
       log(`Admin view of user: ${displayUser}`)
-      const db = ctx.state.mongodb.client.db()
-      const collection = db.collection(USERS)
-      const users = new Users(collection, ctx)
+      // const db = ctx.state.mongodb.client.db()
+      // const collection = db.collection(USERS)
+      // const users = new Users(collection, ctx)
+      log(ctx.state.mongodb.client.options.credentials)
+      const users = new Users(ctx.state.mongodb, ctx)
       if (displayUser[0] === '@') {
         displayUser = displayUser.slice(1)
       }
@@ -589,6 +591,7 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       // locals.nonce = ctx.app.nonce
       locals.csrfToken = csrfToken
       locals.displayUser = displayUser
+      log(displayUser)
       locals.view = ctx.flash.view ?? {}
       locals.origin = ctx.request.origin
       locals.pageName = 'admin_account_view'
@@ -626,9 +629,10 @@ router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async 
     try {
       let displayUser = ctx.params.username
       log(`Admin edit of user ${displayUser}`)
-      const db = ctx.state.mongodb.client.db()
-      const collection = db.collection(USERS)
-      const users = new Users(collection, ctx)
+      // const db = ctx.state.mongodb.client.db()
+      // const collection = db.collection(USERS)
+      // const users = new Users(collection, ctx)
+      const users = new Users(ctx.state.mongodb, ctx)
       if (displayUser[0] === '@') {
         displayUser = displayUser.slice(1)
       }
@@ -694,9 +698,10 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) =>
       const csrfTokenCookie = ctx.cookies.get('csrfToken')
       const csrfTokenSession = ctx.session.csrfToken
       const csrfTokenHidden = ctx.request.body['csrf-token']
-      const db = ctx.state.mongodb.client.db()
-      const collection = db.collection(USERS)
-      const users = new Users(collection, ctx)
+      // const db = ctx.state.mongodb.client.db()
+      // const collection = db.collection(USERS)
+      // const users = new Users(collection, ctx)
+      const users = new Users(ctx.state.mongodb, ctx)
       if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
         const { username } = ctx.request.body
         let displayUser = await users.getByUsername(username)
