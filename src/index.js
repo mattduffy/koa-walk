@@ -127,6 +127,24 @@ async function proxyCheck(ctx, next) {
   }
 }
 
+async function openGraph(ctx, next) {
+  const logg = log.extend('openGraph')
+  // const err = error.extend('openGraph')
+  const ogArray = []
+  ogArray.push('<meta property="og:type" content="website">')
+  ogArray.push(`<meta property="og:url" content="${ctx.request.href}${ctx.request.search}">`)
+  ogArray.push('<meta property="og:title" content="Matt Made These.">')
+  ogArray.push(`<meta property="og:image" content="${ctx.request.origin}/i/plane-450x295.jpg">`)
+  ogArray.push('<meta property="og:image:type" content="image/jpg">')
+  ogArray.push('<meta property="og:image:width" content="450">')
+  ogArray.push('<meta property="og:image:height" content="295">')
+  ogArray.push('<meta property="og:image:alt" content="Things that Matt made.">')
+  ogArray.push('<meta property="og:description" content="Things that Matt made.">')
+  ctx.state.openGraph = ogArray.join('\n')
+  logg(ctx.state.openGraph)
+  await next()
+}
+
 async function csp(ctx, next) {
   const logg = log.extend('CSP')
   const err = error.extend('CSP')
@@ -221,6 +239,7 @@ async function logRequest(ctx, next) {
 
 app.use(logRequest)
 app.use(viewGlobals)
+app.use(openGraph)
 app.use(errors)
 app.use(httpMethodOverride())
 app.use(isMongo)
