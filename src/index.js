@@ -132,8 +132,9 @@ async function openGraph(ctx, next) {
   // const err = error.extend('openGraph')
   const ogArray = []
   ogArray.push('<meta property="og:type" content="website">')
-  ogArray.push(`<meta property="og:url" content="${ctx.request.href}${ctx.request.search}">`)
+  ogArray.push('<meta property="og:site_name" content="Matt Made These">')
   ogArray.push('<meta property="og:title" content="Matt Made These.">')
+  ogArray.push(`<meta property="og:url" content="${ctx.request.href}${ctx.request.search}">`)
   ogArray.push(`<meta property="og:image" content="${ctx.request.origin}/i/plane-450x295.jpg">`)
   ogArray.push('<meta property="og:image:type" content="image/jpg">')
   ogArray.push('<meta property="og:image:width" content="450">')
@@ -157,8 +158,8 @@ async function csp(ctx, next) {
     + 'object-src \'none\'; '
     + 'form-action \'self\'; '
     + `style-src 'self' ${ctx.request.origin} 'unsafe-inline' 'nonce-${nonce}'; `
-    + `style-src-attr ${ctx.request.origin} 'self' 'unsafe-inline'; `
-    + `style-src-elem ${ctx.request.origin} 'self' 'unsafe-inline'; `
+    + `style-src-attr 'self' ${ctx.request.origin} 'unsafe-inline'; `
+    + `style-src-elem 'self' ${ctx.request.origin} 'unsafe-inline'; `
     + `script-src 'self' ${ctx.request.origin} 'nonce-${nonce}'; `
     + `script-src-attr 'self' ${ctx.request.origin} 'nonce-${nonce}'; `
     + `script-src-elem 'self' ${ctx.request.origin} 'nonce-${nonce}'; `
