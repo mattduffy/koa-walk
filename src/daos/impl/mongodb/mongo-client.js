@@ -12,12 +12,9 @@ import * as Dotenv from 'dotenv'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const root = path.resolve(`${__dirname}/../../../..`)
-console.log('mongo-client.js >>root = ', root)
 const showDebug = process.env.NODE_ENV !== 'production'
 const mongodbEnvPath = path.resolve(root, 'config/mongodb.env')
-console.log(`mongo-client env path: ${mongodbEnvPath}`)
 const mongoEnv = {}
-// Dotenv.config({ path: mongodbEnvPath, debug: showDebug })
 Dotenv.config({ path: mongodbEnvPath, processEnv: mongoEnv, debug: showDebug })
 
 const clientDn = mongoEnv.MONGODB_CLIENT_DN
@@ -29,14 +26,18 @@ const dbName = mongoEnv.MONGODB_DBNAME
 const appName = mongoEnv.MONGODB_APPNAME
 const authMechanism = 'MONGODB-X509'
 const authSource = '$external'
-const clientPEMFile = encodeURIComponent(mongoEnv.MONGODB_CLIENT_KEY)
-const dbCAKeyFile = encodeURIComponent(mongoEnv.MONGODB_CAKEYFILE)
+const clientPEMFile = path.resolve(root, mongoEnv.MONGODB_CLIENT_KEY)
+const dbCAKeyFile = path.resolve(root, mongoEnv.MONGODB_CAKEYFILE)
+// const clientPEMFile = encodeURIComponent(mongoEnv.MONGODB_CLIENT_KEY)
+// const dbCAKeyFile = encodeURIComponent(mongoEnv.MONGODB_CAKEYFILE)
 const uri = `mongodb://${clientDn}@${dbHost}:${dbPort1},${dbHost}:${dbPort2},${dbHost}:${dbPort3}/${dbName}?replicaSet=myReplicaSet&authMechanism=${authMechanism}&tls=true&tlsCertificateKeyFile=${clientPEMFile}&tlsCAFile=${dbCAKeyFile}&authSource=${authSource}&appName=${appName}`
 
-console.log(`MongoDB host: ${dbHost}`)
-console.log(`TLS client key: ${clientPEMFile}`)
-console.log(`TLS server key: ${dbCAKeyFile}`)
-console.log(`TLS Subject: ${clientDn}`)
+// console.log('mongo-client.js >> root = ', root)
+// console.log(`mongo-client env path: ${mongodbEnvPath}`)
+// console.log(`MongoDB host: ${dbHost}`)
+// console.log(`MongoDB TLS client key: ${clientPEMFile}`)
+// console.log(`MongoDB TLS server key: ${dbCAKeyFile}`)
+// console.log(`MongoDB TLS Subject: ${clientDn}`)
 
 const client = new MongoClient(uri)
 
@@ -44,5 +45,6 @@ export {
   uri,
   dbName,
   client,
+  mongoEnv,
   ObjectId,
 }
