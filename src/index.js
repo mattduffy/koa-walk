@@ -242,7 +242,7 @@ async function logRequest(ctx, next) {
       logEntry.date = new Date()
       logEntry.method = ctx.method
       logEntry.url = ctx.request.href
-      // logEntry.httpVersion = ''
+      logEntry.httpVersion = `${ctx.req.httpVersionMajor}.${ctx.req.httpVersionMinor}`
       logEntry.referer = ctx.request.headers?.referer
       logEntry.userAgent = ctx.request.headers['user-agent']
       await mainLog.insertOne(logEntry)
