@@ -4,6 +4,7 @@ keys/*
 migrations/*
 archive/*
 private/a/*
+public/sitemap.xml
 public/a/*
 public/c/*
 public/i/*

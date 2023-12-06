@@ -34,6 +34,7 @@ import { wellKnown } from './routes/wellKnown.js'
 import { users as Users } from './routes/users.js'
 import { app as theApp } from './routes/app.js'
 import { account as Account } from './routes/account.js'
+import { seo as Seo } from './routes/seo.js'
 
 const log = _log.extend('index')
 const error = _error.extend('index')
@@ -220,6 +221,12 @@ async function viewGlobals(ctx, next) {
   ctx.state.siteName = ctx.app.site
   ctx.state.appName = ctx.app.site.toProperCase()
   ctx.state.stylesheets = []
+  ctx.state.structredData = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'website',
+    name: ctx.app.site,
+    url: ctx.request.origin,
+  }, null, 2)
   await next()
 }
 
@@ -279,6 +286,7 @@ app.use(Main.routes())
 app.use(Users.routes())
 app.use(Account.routes())
 app.use(wellKnown.routes())
+app.use(Seo.routes())
 app.use(activityV1.routes())
 app.use(apiV1.routes())
 

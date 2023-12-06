@@ -24,6 +24,7 @@ keys/*
 archive/*
 uploads/*
 public/a/*
+public/sitemap.xml
 private/a/*
 migrations/*
 

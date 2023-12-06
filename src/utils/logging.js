@@ -9,6 +9,7 @@ import Debug from 'debug'
 
 Debug.log = console.log.bind(console)
 const _log = Debug('koa-stub-LOG')
+const _info = Debug('koa-stub-INFO')
 const _error = Debug('koa-stub-ERROR')
 
 /* eslint-disable no-extend-native */
@@ -18,7 +19,16 @@ String.prototype.toProperCase = function () {
 }
 /* eslint-enable no-extend-native */
 
+/*
+ * Capitalize a word
+ */
+function capitalize(word) {
+  return word[0].toUpperCase() + word.substring(1).toLowerCase()
+}
+
 export {
   _log,
+  _info,
   _error,
+  capitalize,
 }
