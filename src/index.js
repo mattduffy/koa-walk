@@ -222,6 +222,7 @@ async function viewGlobals(ctx, next) {
   ctx.state.origin = ctx.request.origin
   ctx.state.siteName = ctx.app.site
   ctx.state.appName = ctx.app.site.toProperCase()
+  ctx.state.pageDescription = 'Things that I have made.'
   ctx.state.stylesheets = []
   ctx.state.structredData = JSON.stringify({
     '@context': 'https://schema.org',
