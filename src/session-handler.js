@@ -63,7 +63,7 @@ const config = {
   httpOnly: true,
   signed: true,
   rolling: false,
-  renew: false,
+  renew: true,
   secure: false,
   sameSite: true,
   store: redis,
