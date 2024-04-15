@@ -11,6 +11,7 @@ import Router from '@koa/router'
 import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 import formidable from 'formidable'
+import { Album, Albums } from '@mattduffy/albums'
 import { _log, _error } from '../utils/logging.js'
 /* eslint-disable-next-line no-unused-vars */
 import { Users, AdminUser } from '../models/users.js'
@@ -300,6 +301,38 @@ router.get('accountEncryptData', '/account/encrypt/:plaintext', hasFlash, async 
 
 router.get('accountDecryptData', '/account/decrypt/:ciphertext', hasFlash, async (ctx) => {
   console.log(ctx)
+})
+
+router.get('accountGalleries', '/account/galleries', async (ctx) => {
+  const log = accountLog.extend('GET-account-galleries')
+  const error = accountError.extend('GET-account-galleries')
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    log(`View ${ctx.state.sessionUser.username}'s account details.`)
+    log('flash %O', ctx.flash)
+    const db = ctx.state.mongodb.client.db()
+    // Get list of albums, if they exist
+    const albumList = Albums.list(db, ctx.state.sessionUser.username)
+    const locals = {
+      sessionUser: ctx.state.sessionUser,
+      body: ctx.body,
+      view: ctx.flash.view ?? {},
+      edit: ctx.flash.edit ?? {},
+      origin: `${ctx.request.origin}`,
+      csrfToken: ulid(),
+      public: albumList?.public ?? [],
+      private: albumList?.private ?? [],
+      isAuthenticated: ctx.state.isAuthenticated,
+      defaultAvatar: `${ctx.request.origin}/i/accounts/avatars/missing.png`,
+      defaultHeader: `${ctx.request.origin}/i/accounts/headers/generic.png`,
+      title: `${ctx.app.site}: View Account Details`,
+    }
+    ctx.status = 200
+    await ctx.render('account/user-galleries', locals)
+  }
 })
 
 router.get('accountView', '/account/view', hasFlash, async (ctx) => {

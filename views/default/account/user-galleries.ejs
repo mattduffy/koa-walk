@@ -1,0 +1,54 @@
+<main>
+  <article>
+    <h1>Your Galleries</h1>
+    <% if (view.message) { %>
+    <div id="messages" class="messages">
+      <span><%= view.message %></span>
+    </div>
+    <% } %>
+    <% if (view.error) { %>
+    <div id="errors" class="errors">
+      <span><%= view.error%></span>
+    </div>
+    <% } %>
+    <div class="add-gallery">
+      <h2>Upload a new gallery archive.</h2>
+      <form name="uploader" id="uploader_Id" action="/account/gallery/upload/archive" method="POST" enctype="multipart/form-data">
+        <fieldset>
+          <legend>Select an archive</legend>
+          <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
+          <input type="file" name="archive" id="archive_Id" accept="application/gzip, application/x-tar, application/x-rar, application/zip" required>
+          <br>
+          <input type="submit" name="submit" id="submit_Id" value="Upload">
+          <input type="reset" name="reset" id="reset_Id" value="Clear">
+        </fieldset>
+      </form>
+      <script nonce="<%= nonce %>">
+
+      </script>
+    </div>
+    <div class="existing-galleries">
+      <h2>Current Public Galleries</h2>
+      <% if (public.length > 0) { %>
+      <ul id="public" class="public">
+        <% public.forEach((g) => { %>
+        <li><a href="<%= g.url %>"><%= g.name %></a></li> 
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p>No public galleries created yet.</p>
+    <% } %>
+      <h2>Current Private Galleries</h2>
+      <% if (private.length > 0) { %>
+      <ul id="private" class="private">
+        <% private.forEach((g) => { %>
+        <li><a href="<%= g.url %>"><%= g.name %></a></li> 
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p>No private galleries created yet.</p>
+    <% } %>
+    </div>
+  </article>
+</main>
+

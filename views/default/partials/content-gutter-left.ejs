@@ -6,11 +6,14 @@
         <%- sessionUser.displayName -%>
       </div>
       <a href="/logout">Logout</a>
+      <ul id="userContentLinks" class="userLinks">
+        <li><a href="/account/galleries">Your Image Galleries</a>
+      </ul>
       <ul id="userLinks" class="userLinks">
-        <li><a href="/account/view">View account details</a></li>
+        <li><a href="/account/view">View Account Details</a></li>
         <li><a href="/account/pubkeys">Public Keys</a></li>
-        <li><a href="/account/tokens">Authetication tokens</a></li>
-        <li><a href="/account/change/password">Change account password</a></li>
+        <li><a href="/account/tokens">Authetication Tokens</a></li>
+        <li><a href="/account/change/password">Change Account Password</a></li>
       </ul>
       <% } else { %>
       <a href="/login">Login</a>
@@ -18,8 +21,8 @@
       <% if (/admin/i.test(sessionUser?.type)) { %>
       Admin level actions go here
       <ul id="adminLinks" class="adminLinks">
-        <li><a href="/admin/account/listusers">List users</a><li> 
-        <li><a href="/admin/app/keys">Server keys</a></li>
+        <li><a href="/admin/account/listusers">List Users</a><li> 
+        <li><a href="/admin/app/keys">Server Keys</a></li>
       </ul>
       <% } %>
     </nav>
