@@ -315,7 +315,9 @@ router.get('accountGalleries', '/account/galleries', async (ctx) => {
     log('flash %O', ctx.flash)
     const db = ctx.state.mongodb.client.db()
     // Get list of albums, if they exist
-    const albumList = Albums.list(db, ctx.state.sessionUser.username)
+    const albumList = await Albums.list(db, ctx.state.sessionUser.username)
+    const pub = albumList.filter((album) => album.public === true)
+    const pri = albumList.filter((album) => album.public === false)
     const locals = {
       sessionUser: ctx.state.sessionUser,
       body: ctx.body,
@@ -323,8 +325,8 @@ router.get('accountGalleries', '/account/galleries', async (ctx) => {
       edit: ctx.flash.edit ?? {},
       origin: `${ctx.request.origin}`,
       csrfToken: ulid(),
-      public: albumList?.public ?? [],
-      private: albumList?.private ?? [],
+      public: pub,
+      private: pri,
       isAuthenticated: ctx.state.isAuthenticated,
       defaultAvatar: `${ctx.request.origin}/i/accounts/avatars/missing.png`,
       defaultHeader: `${ctx.request.origin}/i/accounts/headers/generic.png`,
