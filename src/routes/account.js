@@ -78,6 +78,7 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
       // regular http request, send back view
       const locals = {
         csrfToken,
+        username: ctx.state.sessionUser.username,
         body: ctx.body,
         sessionUser: ctx.state.sessionUser,
         flash: ctx.flash.edit ?? {},
@@ -95,19 +96,23 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
   const error = accountError.extend('POST-account-change-password')
   const form = formidable({
     encoding: 'utf-8',
-    uploadDir: ctx.app.uploadsDir,
+    uploadDir: ctx.app.dirs.private.uploads,
     keepExtensions: true,
     multipart: true,
   })
   await new Promise((resolve, reject) => {
     form.parse(ctx.req, (err, fields, files) => {
       if (err) {
+        error('There was a problem parsing the multipart form data.')
+        error(err)
         reject(err)
         return
       }
+      log('Multipart form data was successfully parsed.')
       ctx.request.body = fields
       ctx.request.files = files
-      // log(files)
+      log('fields: %o', fields)
+      log('files: %o', files)
       resolve()
     })
   })
@@ -117,14 +122,25 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
     ctx.redirect('/')
   } else {
     log(`View ${ctx.state.sessionUser.username}'s account password.`)
+    const [currentPassword] = ctx.request.body.currentPassword ?? ''
+    const [newPassword1] = ctx.request.body.newPassword1 ?? ''
+    const [newPassword2] = ctx.request.body.newPassword2 ?? ''
     // const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
-    const csrfTokenHidden = ctx.request.body['csrf-token']
-    const { currentPassword } = ctx.request.body || ''
-    const { newPassword1 } = ctx.request.body || ''
-    const { newPassword2 } = ctx.request.body || ''
-    if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
+    const csrfTokenHidden = ctx.request.body['csrf-token'][0]
+    if (csrfTokenCookie === csrfTokenSession) log(`cookie  ${csrfTokenCookie} === session ${csrfTokenSession}`)
+    if (csrfTokenCookie === csrfTokenHidden) log(`cookie  ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+      error(`                     hidden: ${csrfTokenHidden}`)
+      error(`                    session: ${csrfTokenSession}`)
+      ctx.status = 403
+      ctx.type = 'application/json'
+      ctx.body = { status: 'Error, csrf tokens do not match' }
+    } else {
+      /* eslint-disable no-lonely-if */
       if (currentPassword === '') {
         error('currentPassword is missing.')
         ctx.flash = { edit: { error: 'Missing current password.' } }
@@ -135,8 +151,9 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
         ctx.redirect('/account/change/password')
       } else {
         try {
-          log('Have currentPassword and matching newPasswordn')
+          log('Have currentPassword and matching newPassword')
           const result = await ctx.state.sessionUser.updatePassword(currentPassword, newPassword1)
+          // log(result)
           if (result.success) {
             ctx.state.sessionUser = await ctx.state.sessionUser.update()
             ctx.flash = { edit: { message: result.message } }
@@ -150,13 +167,7 @@ router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (
           ctx.redirect('/account/change/password')
         }
       }
-    } else {
-      error('csrf token mismatch')
-      delete ctx.session.csrfToken
-      ctx.cookies.set('csrfToken')
-      ctx.status = 403
-      ctx.type = 'application/json'
-      ctx.body = { status: 'Error, csrf tokens do not match' }
+      /* eslint-enable no-lonely-if */
     }
   }
 })
@@ -303,7 +314,7 @@ router.get('accountDecryptData', '/account/decrypt/:ciphertext', hasFlash, async
   console.log(ctx)
 })
 
-router.get('accountGalleries', '/account/galleries', async (ctx) => {
+router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-galleries')
   const error = accountError.extend('GET-account-galleries')
   if (!ctx.state?.isAuthenticated) {
@@ -318,13 +329,17 @@ router.get('accountGalleries', '/account/galleries', async (ctx) => {
     const albumList = await Albums.list(db, ctx.state.sessionUser.username)
     const pub = albumList.filter((album) => album.public === true)
     const pri = albumList.filter((album) => album.public === false)
+    const csrfToken = ulid()
+    ctx.session.csrfToken = csrfToken
+    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
     const locals = {
       sessionUser: ctx.state.sessionUser,
       body: ctx.body,
       view: ctx.flash.view ?? {},
       edit: ctx.flash.edit ?? {},
       origin: `${ctx.request.origin}`,
-      csrfToken: ulid(),
+      jwtAccess: (ctx.state.sessionUser.jwts).token,
+      csrfToken,
       public: pub,
       private: pri,
       isAuthenticated: ctx.state.isAuthenticated,
@@ -334,6 +349,66 @@ router.get('accountGalleries', '/account/galleries', async (ctx) => {
     }
     ctx.status = 200
     await ctx.render('account/user-galleries', locals)
+  }
+})
+
+router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
+  const log = accountLog.extend('PUT-account-galleries-add')
+  const error = accountError.extend('PUT-account-galleries-add')
+  const form = formidable({
+    encoding: 'utf-8',
+    uploadDir: ctx.app.dirs.private.uploads,
+    keepExtensions: true,
+    multipart: true,
+  })
+  await new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        error('There was a problem parsing the multipart form data.')
+        error(err)
+        reject(err)
+        return
+      }
+      log('Multipart form data was successfully parsed.')
+      ctx.request.body = fields
+      ctx.request.files = files
+      log('fields: %o', fields)
+      log('files: %o', files)
+      resolve()
+    })
+  })
+  log(ctx.request.body)
+  if (!ctx.state?.isAuthenticated) {
+    ctx.flash = {
+      index: {
+        message: null,
+        error: 'You need to be logged in to make account changes.',
+      },
+    }
+    error('Tried to upload an album archive without first being authenticated.')
+    ctx.redirect('/')
+  } else {
+    log(`ctx.fields: ${ctx.request.body}`)
+    log('ctx.files: %o', ctx.request.files)
+    // const sessionId = ctx.cookies.get('session')
+    const csrfTokenCookie = ctx.cookies.get('csrfToken')
+    const csrfTokenSession = ctx.session.csrfToken
+    const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
+    if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
+    if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+      error(`                     hidden: ${csrfTokenHidden}`)
+      error(`                    session: ${csrfTokenSession}`)
+      ctx.status = 403
+      ctx.type = 'application/json'
+      ctx.body = { status: 'Error, csrf tokens do not match' }
+    } else {
+      ctx.status = 200
+      ctx.type = 'application/json; charset=utf-8'
+      ctx.body = { csrfToken: csrfTokenHidden, file: 'what?' }
+    }
   }
 })
 
@@ -396,7 +471,9 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
   const error = accountError.extend('POST-account-edit')
   const form = formidable({
     encoding: 'utf-8',
-    uploadDir: ctx.app.uploadsDir,
+    allowEmptyFiles: true,
+    minFileSize: 0,
+    uploadDir: ctx.app.dirs.private.uploads,
     keepExtensions: true,
     multipart: true,
   })
@@ -411,12 +488,12 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
       log('Multipart form data was successfully parsed.')
       ctx.request.body = fields
       ctx.request.files = files
-      log(fields)
-      // log(files)
+      log('fields: %o', fields)
+      log('files: %o', files)
       resolve()
     })
   })
-  // log(ctx.request.body)
+  log(ctx.request.body)
   if (!ctx.state?.isAuthenticated) {
     ctx.flash = {
       index: {
@@ -427,18 +504,29 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
     error('Tried to edit account without being authenticated.')
     ctx.redirect('/')
   } else {
-    // log(`ctx..body: ${ctx.request.body}`)
-    // log(`ctx.fields: ${ctx.request.fields}`)
+    log(`ctx.fields: ${ctx.request.body}`)
+    log('ctx.files: %o', ctx.request.files)
     // const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
-    const csrfTokenHidden = ctx.request.body['csrf-token']
-    if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
-      const { firstname } = ctx.request.body
+    const csrfTokenHidden = ctx.request.body['csrf-token'][0]
+    if (csrfTokenCookie === csrfTokenSession) log(`cookie  ${csrfTokenCookie} === session ${csrfTokenSession}`)
+    if (csrfTokenCookie === csrfTokenHidden) log(`cookie  ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+      error(`                     hidden: ${csrfTokenHidden}`)
+      error(`                    session: ${csrfTokenSession}`)
+      ctx.status = 403
+      ctx.type = 'application/json'
+      ctx.body = { status: 'Error, csrf tokens do not match' }
+    } else {
+      // const { firstname } = ctx.request.body
+      const [firstname] = ctx.request.body.firstname
       if (firstname !== '') ctx.state.sessionUser.firstName = firstname
-      const { lastname } = ctx.request.body
+      const [lastname] = ctx.request.body.lastname
       if (lastname !== '') ctx.state.sessionUser.lastName = lastname
-      const { username } = ctx.request.body
+      const [username] = ctx.request.body.username
       if (username !== '') {
         if (username !== ctx.state.sessionUser.username) {
           if (ctx.state.sessionUser.isUsernameAvailable(username)) {
@@ -460,37 +548,45 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
           }
         }
       }
-      const { displayname } = ctx.request.body
+      const [displayname] = ctx.request.body.displayname
       if (displayname !== '') ctx.state.sessionUser.displayName = displayname
-      const { primaryEmail } = ctx.request.body
+      const [primaryEmail] = ctx.request.body.primaryEmail
       if (primaryEmail !== '') ctx.state.sessionUser.primarEmail = primaryEmail
-      const { secondaryEmail } = ctx.request.body
+      const [secondaryEmail] = ctx.request.body.secondaryEmail
       if (secondaryEmail !== '') ctx.state.sessionUser.secondaryEmail = secondaryEmail
-      const { description } = ctx.request.body
+      const [description] = ctx.request.body.description
       if (description !== '') ctx.state.sessionUser.description = description
-      const { isLocked } = ctx.request.body
-      if (isLocked === 'on') {
-        ctx.state.sessionUser.locked = true
-      } else {
-        ctx.state.sessionUser.locked = false
+      if (ctx.request.body.isLocked) {
+        const [isLocked] = ctx.request.body.isLocked
+        if (isLocked === 'on') {
+          ctx.state.sessionUser.locked = true
+        } else {
+          ctx.state.sessionUser.locked = false
+        }
       }
-      const { isBot } = ctx.request.body
-      if (isBot === 'on') {
-        ctx.state.sessionUser.bot = true
-      } else {
-        ctx.state.sessionUser.bot = false
+      if (ctx.request.body.isBot) {
+        const [isBot] = ctx.request.body.isBot
+        if (isBot === 'on') {
+          ctx.state.sessionUser.bot = true
+        } else {
+          ctx.state.sessionUser.bot = false
+        }
       }
-      const { isGroup } = ctx.request.body
-      if (isGroup === 'on') {
-        ctx.state.sessionUser.group = true
-      } else {
-        ctx.state.sessionUser.group = false
+      if (ctx.request.body.isGroup) {
+        const [isGroup] = ctx.request.body.isGroup
+        if (isGroup === 'on') {
+          ctx.state.sessionUser.group = true
+        } else {
+          ctx.state.sessionUser.group = false
+        }
       }
-      const { isDiscoverable } = ctx.request.body
-      if (isDiscoverable === 'on') {
-        ctx.state.sessionUser.discoverable = true
-      } else {
-        ctx.state.sessionUser.discoverable = false
+      if (ctx.request.body.isDiscoverable) {
+        const [isDiscoverable] = ctx.request.body.isDiscoverable
+        if (isDiscoverable === 'on') {
+          ctx.state.sessionUser.discoverable = true
+        } else {
+          ctx.state.sessionUser.discoverable = false
+        }
       }
       // log('avatar file: %O', ctx.request.files.avatar.size)
       // log('avatar file: %O', ctx.request.files.avatar.filepath)
@@ -540,11 +636,6 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
         }
         ctx.redirect('/account/edit')
       }
-    } else {
-      error('csrf token mismatch')
-      ctx.status = 403
-      ctx.type = 'application/json'
-      ctx.body = { status: 'Error, csrf tokens do not match' }
     }
   }
 })
@@ -709,7 +800,9 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) =>
     try {
       const form = formidable({
         encoding: 'utf-8',
-        uploadDir: ctx.app.uploadsDir,
+        allowEmptyFiles: true,
+        minFileSize: 0,
+        uploadDir: ctx.app.dirs.private.uploads,
         keepExtensions: true,
         multipart: true,
       })
@@ -724,21 +817,28 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) =>
           log('Multipart form data was successfully parsed.')
           ctx.request.body = fields
           ctx.request.files = files
-          // log(fields)
-          // log(files)
+          log('fields: %o', fields)
+          log('files: %o', files)
           resolve()
         })
       })
+      const users = new Users(ctx.state.mongodb, ctx)
       // const sessionId = ctx.cookies.get('session')
       const csrfTokenCookie = ctx.cookies.get('csrfToken')
       const csrfTokenSession = ctx.session.csrfToken
-      const csrfTokenHidden = ctx.request.body['csrf-token']
-      // const db = ctx.state.mongodb.client.db()
-      // const collection = db.collection(USERS)
-      // const users = new Users(collection, ctx)
-      const users = new Users(ctx.state.mongodb, ctx)
-      if (csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden) {
-        const { username } = ctx.request.body
+      const csrfTokenHidden = ctx.request.body['csrf-token'][0]
+      if (csrfTokenCookie === csrfTokenSession) log(`cookie  ${csrfTokenCookie} === session ${csrfTokenSession}`)
+      if (csrfTokenCookie === csrfTokenHidden) log(`cookie  ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+      if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+      if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+        error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+        error(`                     hidden: ${csrfTokenHidden}`)
+        error(`                    session: ${csrfTokenSession}`)
+        ctx.status = 403
+        ctx.type = 'application/json'
+        ctx.body = { status: 'Error, csrf tokens do not match' }
+      } else {
+        const [username] = ctx.request.body.username
         let displayUser = await users.getByUsername(username)
         if (username !== '') {
           if (username !== displayUser.username) {
@@ -756,35 +856,49 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) =>
             }
           }
         }
-        const { firstname } = ctx.request.body
+        const [firstname] = ctx.request.body.firstname
         if (firstname !== '') displayUser.firstName = firstname
-        const { lastname } = ctx.request.body
+        const [lastname] = ctx.request.body.lastname
         if (lastname !== '') displayUser.lastName = lastname
-        const { displayname } = ctx.request.body
+        const [displayname] = ctx.request.body.displayname
         if (displayname !== '') displayUser.displayName = displayname
-        const { primaryEmail } = ctx.request.body
+        const [primaryEmail] = ctx.request.body.primaryEmail
         if (primaryEmail !== '') displayUser.primarEmail = primaryEmail
-        const { secondaryEmail } = ctx.request.body
+        const [secondaryEmail] = ctx.request.body.secondaryEmail
         if (secondaryEmail !== '') displayUser.secondaryEmail = secondaryEmail
-        const { description } = ctx.request.body
+        const [description] = ctx.request.body.description
         if (description !== '') displayUser.description = description
-        const { isLocked } = ctx.request.body
-        if (isLocked === 'on') {
-          displayUser.locked = true
-        } else {
-          displayUser.locked = false
+        if (ctx.request.body.isLocked) {
+          const { isLocked } = ctx.request.body
+          if (isLocked === 'on') {
+            displayUser.locked = true
+          } else {
+            displayUser.locked = false
+          }
         }
-        const { isBot } = ctx.request.body
-        if (isBot === 'on') {
-          displayUser.bot = true
-        } else {
-          displayUser.bot = false
+        if (ctx.request.body.isBot) {
+          const [isBot] = ctx.request.body.isBot
+          if (isBot === 'on') {
+            displayUser.bot = true
+          } else {
+            displayUser.bot = false
+          }
         }
-        const { isGroup } = ctx.request.body
-        if (isGroup === 'on') {
-          displayUser.group = true
-        } else {
-          displayUser.group = false
+        if (ctx.request.body.isGroup) {
+          const [isGroup] = ctx.request.body.isGroup
+          if (isGroup === 'on') {
+            displayUser.group = true
+          } else {
+            displayUser.group = false
+          }
+        }
+        if (ctx.request.body.isDiscoverable) {
+          const [isDiscoverable] = ctx.request.body.isDiscoverable
+          if (isDiscoverable === 'on') {
+            ctx.state.sessionUser.discoverable = true
+          } else {
+            ctx.state.sessionUser.discoverable = false
+          }
         }
         log('avatar file: %O', ctx.request.files.avatar.size)
         log('avatar file: %O', ctx.request.files.avatar.filepath)
@@ -838,11 +952,6 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) =>
         ctx.cookies.set('csrfToken')
         ctx.cookies.set('csrfToken.sig')
         ctx.redirect(`/admin/account/view/@${displayUser.username}`)
-      } else {
-        error('csrf token mismatch')
-        ctx.status = 403
-        ctx.type = 'application/json'
-        ctx.body = { status: 'Error, csrf tokens do not match' }
       }
     } catch (e) {
       error(e)

@@ -24,7 +24,40 @@
         </fieldset>
       </form>
       <script nonce="<%= nonce %>">
-
+        const origin = '<%= origin %>'
+        const jwtAccess = '<%= jwtAccess %>'
+        const form = document.forms[0]
+        async function uploadArchive(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          const file = form.elements.archive
+          if (file.files.length === 0) {
+            return
+          }
+          const csrfToken = form.elements['csrf-token']
+          const formData = new FormData()
+          formData.append('methodOverride', 'PUT')
+          formData.append('csrfTokenHidden', csrfToken.value)
+          formData.append('archive', file.files[0])
+          const opts = {
+            method: 'PUT',
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${jwtAccess}`,
+            },
+            body: formData,
+          }
+          const request = new Request(`${origin}/account/galleries/add`, opts)
+          console.dir(request)
+          const response = await fetch(request, { credentials: 'same-origin' })
+          if (!response.ok) {
+            console.error(response.statusText)
+          } else {
+            const json = await response.json()
+            console.log(json)
+          }
+        }
+        form.addEventListener('submit', uploadArchive) 
       </script>
     </div>
     <div class="existing-galleries">
