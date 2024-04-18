@@ -395,6 +395,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
     log('ctx.files: %o', ctx.request.files)
     const albumName = ctx.request.body?.albumName?.[0] ?? null
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
+    const albumPublic = ctx.request.body?.albumPublic?.[0] ?? false
     // const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
@@ -446,10 +447,11 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
             // rootDir: userPubDir,
             rootDir: newPath,
             albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/`,
+            albumImageUrl: `${ctx.state.sessionUser.publicDir}galleries/`,
             albumName: albumName ?? unpacker.getFileBasename(),
             albumOwner: ctx.state.sessionUser.username,
             albumDescription,
-            public: true,
+            public: albumPublic,
           }
           album = new Album(config)
           album = await album.init(extracted.finalPath)
