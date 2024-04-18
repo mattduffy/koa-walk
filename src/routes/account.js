@@ -11,7 +11,10 @@ import Router from '@koa/router'
 import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 import formidable from 'formidable'
+/* eslint-disable */
 import { Album, Albums } from '@mattduffy/albums'
+import { Unpacker } from '@mattduffy/unpacker'
+/* eslint-enable */
 import { _log, _error } from '../utils/logging.js'
 /* eslint-disable-next-line no-unused-vars */
 import { Users, AdminUser } from '../models/users.js'
@@ -388,8 +391,10 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
     error('Tried to upload an album archive without first being authenticated.')
     ctx.redirect('/')
   } else {
-    log(`ctx.fields: ${ctx.request.body}`)
+    log('ctx.fields: %o', ctx.request.body)
     log('ctx.files: %o', ctx.request.files)
+    const albumName = ctx.request.body?.albumName?.[0] ?? null
+    const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
     // const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
@@ -405,9 +410,70 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
       ctx.type = 'application/json'
       ctx.body = { status: 'Error, csrf tokens do not match' }
     } else {
+      let unpacker
+      let extracted
+      let newPath
+      let album
+      const galleries = 'galleries'
+      const db = ctx.state.mongodb.client.db()
+      // const userPubDir = ctx.state.sessionUser.publicDir
+      const archive = ctx.request.files.archive[0]
+      const originalFilenameCleaned = sanitizeFilename(archive.originalFilename)
+      const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
+      try {
+        await rename(archive.filepath, originalFilenamePath)
+      } catch (e) {
+        error(e)
+        throw new Error('Failed to rename uploaded archive back to its original name.', { cause: e })
+      }
+      log(archive)
+      if (archive.size > 0) {
+        newPath = path.resolve(ctx.app.dirs.public.dir, ctx.state.sessionUser.publicDir, galleries)
+        try {
+          log(`uploads: ${ctx.app.dirs.private.uploads}`)
+          log(`username: ${ctx.state.sessionUser.username}`)
+          log(`       |-publicDir: ${ctx.state.sessionUser.publicDir}`)
+          log(`       |-privateDir: ${ctx.state.sessionUser.privateDir}`)
+          log(`       |-newPath: ${newPath}`)
+          log(`archive: ${archive.filepath}`)
+          log(`archive: ${originalFilenamePath}`)
+          log(`       |-originalFilename: ${originalFilenamePath}`)
+          unpacker = new Unpacker()
+          await unpacker.setPath(originalFilenamePath)
+          extracted = await unpacker.unpack(newPath)
+          const config = {
+            collection: db.collection('albums'),
+            // rootDir: userPubDir,
+            rootDir: newPath,
+            albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/`,
+            albumName: albumName ?? unpacker.getFileBasename(),
+            albumOwner: ctx.state.sessionUser.username,
+            albumDescription,
+            public: true,
+          }
+          album = new Album(config)
+          album = await album.init(extracted.finalPath)
+          const saved = await album.save()
+          log(`was the album saved?: ${saved}`)
+          // ctx.status = 200
+          // ctx.type = 'application/json; charset=utf-8'
+          ctx.body = {
+            albumId: album.id,
+            albumName: album.name,
+            albumUrl: album.url,
+            albumOwner: album.owner,
+            albumDescription: album.description,
+            public: album.public,
+          }
+        } catch (e) {
+          ctx.status = 500
+          ctx.type = 'application/json; charset=utf-8'
+          ctx.body = { status: 500, step: 'unpacking', error: e.message }
+        }
+      }
       ctx.status = 200
       ctx.type = 'application/json; charset=utf-8'
-      ctx.body = { csrfToken: csrfTokenHidden, file: 'what?' }
+      // ctx.body = { csrfToken: csrfTokenHidden, file: 'what?' }
     }
   }
 })

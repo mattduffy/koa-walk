@@ -17,10 +17,16 @@
         <fieldset>
           <legend>Select an archive</legend>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
-          <input type="file" name="archive" id="archive_Id" accept="application/gzip, application/x-tar, application/x-rar, application/zip" required>
+          <label for="description">Album Description:</label>
+          <input type="text" name="description" id="description" value="" size="80" tabindex="1">
           <br>
-          <input type="submit" name="submit" id="submit_Id" value="Upload">
-          <input type="reset" name="reset" id="reset_Id" value="Clear">
+          <label for="name">Album Name:</label>
+          <input type="text" name="name" id="name" value="" size="80" tabindex="2">
+          <br>
+          <input type="file" name="archive" id="archive_Id" accept="application/gzip, application/x-tar, application/x-rar, application/zip" tabindex="3" required>
+          <br>
+          <input type="submit" name="submit" id="submit_Id" value="Upload" tabindex="4">
+          <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="5">
         </fieldset>
       </form>
       <script nonce="<%= nonce %>">
@@ -34,11 +40,18 @@
           if (file.files.length === 0) {
             return
           }
-          const csrfToken = form.elements['csrf-token']
           const formData = new FormData()
+          const csrfToken = form.elements['csrf-token']
           formData.append('methodOverride', 'PUT')
           formData.append('csrfTokenHidden', csrfToken.value)
-          formData.append('archive', file.files[0])
+         if (form.elements['name'].value !== '') {
+            const albumName = form.elements['name']
+            formData.append('albumName', albumName.value)
+          }
+         if ( form.elements['description'].value !== '') {
+            const albumDescription = form.elements['description']
+            formData.append('albumDescription', albumDescription.value)
+          } formData.append('archive', file.files[0])
           const opts = {
             method: 'PUT',
             headers: {
