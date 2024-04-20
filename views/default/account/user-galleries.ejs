@@ -18,12 +18,15 @@
           <legend>Select an archive</legend>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
           <label for="description">Album Description:</label>
-          <input type="text" name="description" id="description" value="" size="80" tabindex="1">
+          <input type="text" name="description" id="description_Id" value="" size="80" tabindex="1">
           <br>
           <label for="name">Album Name:</label>
-          <input type="text" name="name" id="name" value="" size="80" tabindex="2">
+          <input type="text" name="name" id="name_Id" value="" size="80" tabindex="2">
           <br>
           <input type="file" name="archive" id="archive_Id" accept="application/gzip, application/x-tar, application/x-rar, application/zip" tabindex="3" required>
+          <br>
+          <label for="public">Make Public:</label>
+          <input type="checkbox" name="public" id="public_Id" >
           <br>
           <input type="submit" name="submit" id="submit_Id" value="Upload" tabindex="4">
           <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="5">
@@ -51,6 +54,8 @@
          if ( form.elements['description'].value !== '') {
             const albumDescription = form.elements['description']
             formData.append('albumDescription', albumDescription.value)
+            const albumPublic = form.elements['public']
+            formData.append('albumPublic', albumPublic.checked)
           } formData.append('archive', file.files[0])
           const opts = {
             method: 'PUT',
@@ -66,8 +71,23 @@
           if (!response.ok) {
             console.error(response.statusText)
           } else {
-            const json = await response.json()
-            console.log(json)
+            const newAlbum = await response.json()
+            if (newAlbum.status > 200) {
+              console.error(newAlbum)
+            } else {
+              console.log(newAlbum)
+              const li = document.createElement('li')
+              const a = document.createElement('a')
+              // a.href = newAlbum.albumUrl
+              a.href = `${origin}/account/galleries/${newAlbum.albumId}`
+              a.textContent = newAlbum.albumName
+              li.appendChild(a)
+              if (newAlbum.public) {
+                document.querySelector('ul#public').appendChild(li) 
+              } else {
+                document.querySelector('ul#private').appendChild(li)
+              }
+            }
           }
         }
         form.addEventListener('submit', uploadArchive) 
@@ -78,7 +98,7 @@
       <% if (public.length > 0) { %>
       <ul id="public" class="public">
         <% public.forEach((g) => { %>
-        <li><a href="<%= g.url %>"><%= g.name %></a></li> 
+        <li><a href="<%= origin %>/account/galleries/<%= g._id %>"><%= g.name %></a></li>
         <% }) %>
       </ul>
     <% } else { %>
@@ -88,7 +108,7 @@
       <% if (private.length > 0) { %>
       <ul id="private" class="private">
         <% private.forEach((g) => { %>
-        <li><a href="<%= g.url %>"><%= g.name %></a></li> 
+        <li><a href="<%= origin %>/account/galleries/<%= g._id %>"><%= g.name %></a></li>
         <% }) %>
       </ul>
     <% } else { %>
