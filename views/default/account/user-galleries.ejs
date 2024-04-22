@@ -17,19 +17,19 @@
         <fieldset>
           <legend>Select an archive</legend>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
+          <input type="file" name="archive" id="archive_Id" accept="application/gzip, application/x-tar, application/x-rar, application/zip" tabindex="1" required>
+          <br>
           <label for="description">Album Description:</label>
-          <input type="text" name="description" id="description_Id" value="" size="80" tabindex="1">
+          <input type="text" name="description" id="description_Id" value="" size="80" tabindex="2">
           <br>
           <label for="name">Album Name:</label>
-          <input type="text" name="name" id="name_Id" value="" size="80" tabindex="2">
-          <br>
-          <input type="file" name="archive" id="archive_Id" accept="application/gzip, application/x-tar, application/x-rar, application/zip" tabindex="3" required>
+          <input type="text" name="name" id="name_Id" value="" size="80" tabindex="3">
           <br>
           <label for="public">Make Public:</label>
-          <input type="checkbox" name="public" id="public_Id" >
+          <input type="checkbox" name="public" id="public_Id" tabindex="4">
           <br>
-          <input type="submit" name="submit" id="submit_Id" value="Upload" tabindex="4">
-          <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="5">
+          <input type="submit" name="submit" id="submit_Id" value="Upload" tabindex="5">
+          <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="6">
         </fieldset>
       </form>
       <script nonce="<%= nonce %>">

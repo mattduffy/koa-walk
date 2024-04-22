@@ -363,6 +363,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
     uploadDir: ctx.app.dirs.private.uploads,
     keepExtensions: true,
     multipart: true,
+    maxFileSize: (200 * 1024 * 1024),
   })
   await new Promise((resolve, reject) => {
     form.parse(ctx.req, (err, fields, files) => {
