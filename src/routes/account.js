@@ -12,7 +12,8 @@ import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 import formidable from 'formidable'
 /* eslint-disable */
-import { Album, Albums } from '@mattduffy/albums'
+import { Album } from '@mattduffy/albums'
+import { Albums } from '@mattduffy/albums/Albums'
 import { Unpacker } from '@mattduffy/unpacker'
 /* eslint-enable */
 import { _log, _error } from '../utils/logging.js'
