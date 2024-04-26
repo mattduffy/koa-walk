@@ -98,7 +98,7 @@
       <% if (public.length > 0) { %>
       <ul id="public" class="public">
         <% public.forEach((g) => { %>
-        <li><a href="<%= origin %>/account/galleries/<%= g._id %>"><%= g.name %></a></li>
+        <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
       </ul>
     <% } else { %>
@@ -108,7 +108,7 @@
       <% if (private.length > 0) { %>
       <ul id="private" class="private">
         <% private.forEach((g) => { %>
-        <li><a href="<%= origin %>/account/galleries/<%= g._id %>"><%= g.name %></a></li>
+        <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
       </ul>
     <% } else { %>

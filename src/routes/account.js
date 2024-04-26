@@ -313,9 +313,45 @@ router.get('accountVerifyData', '/account/verify/:signature', hasFlash, async (c
 router.get('accountEncryptData', '/account/encrypt/:plaintext', hasFlash, async (ctx) => {
   console.log(ctx)
 })
-
 router.get('accountDecryptData', '/account/decrypt/:ciphertext', hasFlash, async (ctx) => {
   console.log(ctx)
+})
+
+router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx) => {
+  const log = accountLog.extend('GET-account-galleries-edit')
+  const error = accountError.extend('GET-account-galleries-edit')
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
+    error(`CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
+    ctx.status = 401
+    ctx.body = { error: 'csrf token mismatch' }
+  } else {
+    const csrfToken = ulid()
+    ctx.session.csrfToken = csrfToken
+    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+    const db = ctx.state.mongodb.client.db()
+    const album = await Albums.getById(db, ctx.params.id)
+    log(album)
+    const locals = {
+      album,
+      sesseionUser: ctx.state.sessionUser,
+      body: ctx.body,
+      view: ctx.flash.view ?? {},
+      edit: ctx.flash.edit ?? {},
+      origin: `${ctx.request.origin}`,
+      jwtAccess: (ctx.state.sessionUser.jwts).token,
+      csrfToken,
+      title: `${ctx.app.site}: View Account Details`,
+    }
+    await ctx.render('account/user-edit-gallery', locals)
+  }
+})
+
+router.post('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx) => {
+
 })
 
 router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
@@ -331,8 +367,10 @@ router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
     const db = ctx.state.mongodb.client.db()
     // Get list of albums, if they exist
     const albumList = await Albums.list(db, ctx.state.sessionUser.username)
-    const pub = albumList.filter((album) => album.public === true)
-    const pri = albumList.filter((album) => album.public === false)
+    log(albumList)
+    const pub = (albumList?.[0]?._id === 'public') ? albumList[0].albums : []
+    log(pub[0])
+    const pri = (albumList?.[1]?._id === false) ? albumList[1].albums : []
     const csrfToken = ulid()
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
@@ -347,8 +385,6 @@ router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
       public: pub,
       private: pri,
       isAuthenticated: ctx.state.isAuthenticated,
-      defaultAvatar: `${ctx.request.origin}/i/accounts/avatars/missing.png`,
-      defaultHeader: `${ctx.request.origin}/i/accounts/headers/generic.png`,
       title: `${ctx.app.site}: View Account Details`,
     }
     ctx.status = 200

@@ -1,0 +1,52 @@
+<main>
+  <article>
+    <h1>Gallery: <%= album.name %></h1>
+    <% if (view.message) { %>
+    <div id="messages" class="messages">
+      <span><%= view.message %></span>
+    </div>
+    <% } %>
+    <% if (view.error) { %>
+    <div id="errors" class="errors">
+      <span><%= view.error%></span>
+    </div>
+    <% } %>
+    <div class="gallery">
+      <form name="edit" id="edit_Id" action="/account/galleries/<%= album.id %>" method="POST" enctype="multipart/form-data">
+        <fieldset>
+          <legend>Make changes to gallery</legend>
+          <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
+          <label for="name">Album Name:</label>
+          <input type="text" name="name" id="name_Id" value="<%= album.name %>" size="80" tabindex="3">
+          <br>
+          <label for="description">Album Description:</label>
+          <input type="text" name="description" id="description_Id" value="<%= album.description%>" size="80" tabindex="2">
+          <br>
+          <label for="public">Make Public:</label>
+          <input type="checkbox" name="public" id="public_Id" <%= (album.public) ? "checked" : '' %> tabindex="4">
+          <br>
+          <input type="submit" name="submit" id="submit_Id" value="Upload" tabindex="5">
+          <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="6">
+        </fieldset>
+      </form>
+      <script nonce="<%= nonce %>">
+        const origin = '<%= origin %>'
+        const jwtAccess = '<%= jwtAccess %>'
+        const form = document.forms[0]
+
+      </script>
+    </div>
+    <div id="images">
+      <% (await album.getJson()).images.forEach((image) => {
+        // const img = document.createElement('img')
+        // img.src = `${origin}/${image.url}`
+        // img.setAttribute('width', '150px')
+        // img.setAttribute('alt', image.description)
+        // img.classList.add('imgThumbnail')
+      %>
+        <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgThumbnail" width="150px">
+      <% }) %>
+    </div>
+  </article>
+</main>
+
