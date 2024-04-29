@@ -431,7 +431,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
   } else {
     log('ctx.fields: %o', ctx.request.body)
     log('ctx.files: %o', ctx.request.files)
-    const albumName = ctx.request.body?.albumName?.[0] ?? null
+    let albumName = ctx.request.body?.albumName?.[0] ?? null
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
     const albumPublic = ctx.request.body?.albumPublic?.[0] ?? false
     // const sessionId = ctx.cookies.get('session')
@@ -479,14 +479,15 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
           log(`       |-originalFilename: ${originalFilenamePath}`)
           unpacker = new Unpacker()
           await unpacker.setPath(originalFilenamePath)
+          albumName = albumName ?? unpacker.getFileBasename()
           extracted = await unpacker.unpack(newPath)
           const config = {
             collection: db.collection('albums'),
             // rootDir: userPubDir,
             rootDir: newPath,
-            albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/`,
-            albumImageUrl: `${ctx.state.sessionUser.publicDir}galleries/`,
-            albumName: albumName ?? unpacker.getFileBasename(),
+            albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/${albumName}`,
+            albumImageUrl: `${ctx.state.sessionUser.publicDir}${galleries}/${albumName}/`,
+            albumName,
             albumOwner: ctx.state.sessionUser.username,
             albumDescription,
             public: albumPublic,
