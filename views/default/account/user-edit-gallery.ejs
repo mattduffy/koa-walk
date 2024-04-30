@@ -16,13 +16,13 @@
         <fieldset>
           <legend>Make changes to gallery</legend>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
-          <label for="name">Album Name:</label>
+          <label for="name_Id">Album Name:</label>
           <input type="text" name="name" id="name_Id" value="<%= album.name %>" size="80" tabindex="3">
           <br>
-          <label for="description">Album Description:</label>
+          <label for="description_Id">Album Description:</label>
           <input type="text" name="description" id="description_Id" value="<%= album.description%>" size="80" tabindex="2">
           <br>
-          <label for="public">Make Public:</label>
+          <label for="public_Id">Make Public:</label>
           <input type="checkbox" name="public" id="public_Id" <%= (album.public) ? "checked" : '' %> tabindex="4">
           <br>
           <input type="submit" name="submit" id="submit_Id" value="Upload" tabindex="5">
@@ -44,7 +44,17 @@
         // img.setAttribute('alt', image.description)
         // img.classList.add('imgThumbnail')
       %>
-        <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgThumbnail" width="150px">
+        <figure style="display: inline-block;">
+          <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
+          <figcaption>Full size image.</figcaption>
+        </figure>
+      <% if (image.thumbnail) { %>
+        <figure style="display: inline-block;">
+          <img src="<%= `${origin}/${image.thumbnail}` %>" alt="<%= image.description %>" class="imgThumbnail" width="*">
+          <figcaption>Thumbnail image.</figcaption>
+        </figure>
+      <% } %>
+        <br>
       <% }) %>
     </div>
   </article>

@@ -483,7 +483,6 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
           extracted = await unpacker.unpack(newPath)
           const config = {
             collection: db.collection('albums'),
-            // rootDir: userPubDir,
             rootDir: newPath,
             albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/${albumName}`,
             albumImageUrl: `${ctx.state.sessionUser.publicDir}${galleries}/${albumName}/`,
@@ -495,9 +494,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
           album = new Album(config)
           album = await album.init(extracted.finalPath)
           const saved = await album.save()
-          log(`was the album saved?: ${saved}`)
-          // ctx.status = 200
-          // ctx.type = 'application/json; charset=utf-8'
+          log('was the album saved?: %o', saved)
           ctx.body = {
             albumId: album.id,
             albumName: album.name,
@@ -514,7 +511,6 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
       }
       ctx.status = 200
       ctx.type = 'application/json; charset=utf-8'
-      // ctx.body = { csrfToken: csrfTokenHidden, file: 'what?' }
     }
   }
 })
