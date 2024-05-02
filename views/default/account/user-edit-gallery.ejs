@@ -44,6 +44,7 @@
         // img.setAttribute('alt', image.description)
         // img.classList.add('imgThumbnail')
       %>
+      <div class="imagePair">
         <figure style="display: inline-block;">
           <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
           <figcaption>Full size image.</figcaption>
@@ -55,6 +56,10 @@
         </figure>
       <% } %>
         <br>
+        <label>Title: <input type="text" name="title" id="title_Id" value="<%= image.title %>" class="title"></label><br>
+        <label>Description: <input type="text" name="description" id="description_Id" value="<%= image.description %>" class="description"></label><br>
+        <label>Keywords: <input type="text" name="description" id="description_Id" value="<%= image.keywords %>" class="keywords"></label><br>
+      </div>
       <% }) %>
     </div>
   </article>
