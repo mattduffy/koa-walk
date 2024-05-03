@@ -37,7 +37,7 @@
       </script>
     </div>
     <div id="images">
-      <% (await album.getJson()).images.forEach((image) => {
+      <% (await album.getJson()).images.forEach((image, i) => {
         // const img = document.createElement('img')
         // img.src = `${origin}/${image.url}`
         // img.setAttribute('width', '150px')
@@ -45,20 +45,26 @@
         // img.classList.add('imgThumbnail')
       %>
       <div class="imagePair">
-        <figure style="display: inline-block;">
-          <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
-          <figcaption>Full size image.</figcaption>
-        </figure>
-      <% if (image.thumbnail) { %>
-        <figure style="display: inline-block;">
-          <img src="<%= `${origin}/${image.thumbnail}` %>" alt="<%= image.description %>" class="imgThumbnail" width="*">
-          <figcaption>Thumbnail image.</figcaption>
-        </figure>
-      <% } %>
-        <br>
-        <label>Title: <input type="text" name="title" id="title_Id" value="<%= image.title %>" class="title"></label><br>
-        <label>Description: <input type="text" name="description" id="description_Id" value="<%= image.description %>" class="description"></label><br>
-        <label>Keywords: <input type="text" name="description" id="description_Id" value="<%= image.keywords %>" class="keywords"></label><br>
+        <form id="<%= `${album.name}_${image.name}` %>">
+          <fieldset>
+              <figure style="display: inline-block;">
+                <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
+                <figcaption>Full size image.</figcaption>
+              </figure>
+            <% if (image.thumbnail) { %>
+              <figure style="display: inline-block;">
+                <img src="<%= `${origin}/${image.thumbnail}` %>" alt="<%= image.description %>" class="imgThumbnail" width="*">
+                <figcaption>Thumbnail image.</figcaption>
+              </figure>
+            <% } %>
+            <br>
+            <input type="hidden" id="name_Id_<%= i %>" value="<%= image.name %>">
+            <label>Title: <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title"></label><br>
+            <label>Description: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description"></label><br>
+            <label>Keywords: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.keywords %>" class="keywords"></label><br>
+            <input type="submit" value="Update Image Metadata">
+          </fieldset>
+        </form>
       </div>
       <% }) %>
     </div>
