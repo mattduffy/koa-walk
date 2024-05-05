@@ -24,7 +24,7 @@
           <input type="text" name="albumDescription" id="albumDescription_Id" value="<%= album.description%>" size="80" tabindex="2">
           <br>
           <label for="albumKeywords_Id">Album Keywords:</label>
-          <input type="text" name="albumKeywords" id="albumKeywords_Id" value="<%= album.keywords%>" size="80" tabindex="2">
+          <input type="text" name="albumKeywords" id="albumKeywords_Id" value="<%= album.keywords.join(', ') %>" size="80" tabindex="2">
           <br>
           <label for="albumPublic_Id">Make Public:</label>
           <input type="checkbox" name="albumPublic" id="albumPublic_Id" <%= (album.public) ? "checked" : '' %> tabindex="4">
