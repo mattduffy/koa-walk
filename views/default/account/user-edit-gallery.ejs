@@ -16,16 +16,20 @@
         <fieldset>
           <legend>Make changes to gallery</legend>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
-          <label for="name_Id">Album Name:</label>
-          <input type="text" name="name" id="name_Id" value="<%= album.name %>" size="80" tabindex="3">
+          <input type="hidden" name="albumId" id="albumId_Id" value="<%= album.id %>" required>
+          <label for="albumName_Id">Album Name:</label>
+          <input type="text" name="albumName" id="albumName_Id" value="<%= album.name %>" size="80" tabindex="3">
           <br>
-          <label for="description_Id">Album Description:</label>
-          <input type="text" name="description" id="description_Id" value="<%= album.description%>" size="80" tabindex="2">
+          <label for="albumDescription_Id">Album Description:</label>
+          <input type="text" name="albumDescription" id="albumDescription_Id" value="<%= album.description%>" size="80" tabindex="2">
           <br>
-          <label for="public_Id">Make Public:</label>
-          <input type="checkbox" name="public" id="public_Id" <%= (album.public) ? "checked" : '' %> tabindex="4">
+          <label for="albumKeywords_Id">Album Keywords:</label>
+          <input type="text" name="albumKeywords" id="albumKeywords_Id" value="<%= album.keywords%>" size="80" tabindex="2">
           <br>
-          <input type="submit" name="submit" id="submit_Id" value="Upload" tabindex="5">
+          <label for="albumPublic_Id">Make Public:</label>
+          <input type="checkbox" name="albumPublic" id="albumPublic_Id" <%= (album.public) ? "checked" : '' %> tabindex="4">
+          <br>
+          <input type="submit" name="submit" id="submit_Id" value="Update Album" tabindex="5">
           <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="6">
         </fieldset>
       </form>
@@ -33,6 +37,52 @@
         const origin = '<%= origin %>'
         const jwtAccess = '<%= jwtAccess %>'
         const form = document.forms[0]
+        async function updateAlbum(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          const formData = new FormData()
+          const csrfToken = form.elements['csrf-token']
+          formData.append('csrfTokenHidden', csrfToken.value)
+          const albumId = form.elements['albumId']
+          formData.append('albumId', albumId.value)
+          if (form.elements['albumName'].value !== '') {
+            const albumName = form.elements['albumName']
+            formData.append('albumName', albumName.value)
+          }
+          if (form.elements['albumDescription'].value !== '') {
+            const albumDescription = form.elements['albumDescription']
+            formData.append('albumDescription', albumDescription.value)
+          }
+          if (form.elements['albumKeywords'].value !== '') {
+            const albumKeywords = form.elements['albumKeywords']
+            formData.append('albumKeywords', albumKeywords.value)
+          }
+          const albumPublic = form.elements['albumPublic']
+          formData.append('albumPublic', albumPublic.checked)
+          const opts = {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${jwtAccess}`,
+            },
+            body: formData,
+          }
+          const request = new Request(`${origin}/account/galleries/${albumId.value}`, opts)
+          console.dir(request)
+          const response = await fetch(request, { credentials: 'same-origin' })
+          if (!response.ok) {
+            console.error(response.statusText)
+          } else {
+            const updateResult = await response.json()
+            if (updateResult.status > 200) {
+              console.error(updateResult)
+            } else {
+              console.log(updateResult)
+              
+            }
+          }
+        }
+        form.addEventListener('submit', updateAlbum) 
 
       </script>
     </div>

@@ -47,16 +47,17 @@
           const csrfToken = form.elements['csrf-token']
           formData.append('methodOverride', 'PUT')
           formData.append('csrfTokenHidden', csrfToken.value)
-         if (form.elements['name'].value !== '') {
+          if (form.elements['name'].value !== '') {
             const albumName = form.elements['name']
             formData.append('albumName', albumName.value)
           }
-         if ( form.elements['description'].value !== '') {
+          if (form.elements['description'].value !== '') {
             const albumDescription = form.elements['description']
             formData.append('albumDescription', albumDescription.value)
             const albumPublic = form.elements['public']
             formData.append('albumPublic', albumPublic.checked)
-          } formData.append('archive', file.files[0])
+          }
+          formData.append('archive', file.files[0])
           const opts = {
             method: 'PUT',
             headers: {
