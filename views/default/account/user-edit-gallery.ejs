@@ -15,49 +15,52 @@
       <form name="edit" id="edit_Id" action="/account/galleries/<%= album.id %>" method="POST" enctype="multipart/form-data">
         <fieldset>
           <legend>Make changes to gallery</legend>
+          <div id="galleryUpdateMsg" class="messages hidden"></div>
+          <div id="galleryUpdateErr" class="errors hidden"></div>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
           <input type="hidden" name="albumId" id="albumId_Id" value="<%= album.id %>" required>
           <label for="albumName_Id">Album Name:</label>
-          <input type="text" name="albumName" id="albumName_Id" value="<%= album.name %>" size="80" tabindex="3">
+          <input type="text" name="albumName" id="albumName_Id" value="<%= album.name %>" size="80" tabindex="1">
           <br>
           <label for="albumDescription_Id">Album Description:</label>
           <input type="text" name="albumDescription" id="albumDescription_Id" value="<%= album.description%>" size="80" tabindex="2">
           <br>
           <label for="albumKeywords_Id">Album Keywords:</label>
-          <input type="text" name="albumKeywords" id="albumKeywords_Id" value="<%= album.keywords.join(', ') %>" size="80" tabindex="2">
+          <input type="text" name="albumKeywords" id="albumKeywords_Id" value="<%= album.keywords?.join(', ') %>" size="80" tabindex="3">
           <br>
           <label for="albumPublic_Id">Make Public:</label>
           <input type="checkbox" name="albumPublic" id="albumPublic_Id" <%= (album.public) ? "checked" : '' %> tabindex="4">
           <br>
-          <input type="submit" name="submit" id="submit_Id" value="Update Album" tabindex="5">
+          <input type="submit" name="submit" id="submYit_Id" value="Update Album" tabindex="5">
           <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="6">
         </fieldset>
       </form>
       <script nonce="<%= nonce %>">
         const origin = '<%= origin %>'
         const jwtAccess = '<%= jwtAccess %>'
-        const form = document.forms[0]
+        const albumName = '<%= album.name %>'
+        const galleryForm = document.forms[0]
         async function updateAlbum(e) {
           e.preventDefault()
           e.stopPropagation()
           const formData = new FormData()
-          const csrfToken = form.elements['csrf-token']
+          const csrfToken = galleryForm.elements['csrf-token']
           formData.append('csrfTokenHidden', csrfToken.value)
-          const albumId = form.elements['albumId']
+          const albumId = galleryForm.elements['albumId']
           formData.append('albumId', albumId.value)
-          if (form.elements['albumName'].value !== '') {
-            const albumName = form.elements['albumName']
+          if (galleryForm.elements['albumName'].value !== '') {
+            const albumName = galleryForm.elements['albumName']
             formData.append('albumName', albumName.value)
           }
-          if (form.elements['albumDescription'].value !== '') {
-            const albumDescription = form.elements['albumDescription']
+          if (galleryForm.elements['albumDescription'].value !== '') {
+            const albumDescription = galleryForm.elements['albumDescription']
             formData.append('albumDescription', albumDescription.value)
           }
-          if (form.elements['albumKeywords'].value !== '') {
-            const albumKeywords = form.elements['albumKeywords']
+          if (galleryForm.elements['albumKeywords'].value !== '') {
+            const albumKeywords = galleryForm.elements['albumKeywords']
             formData.append('albumKeywords', albumKeywords.value)
           }
-          const albumPublic = form.elements['albumPublic']
+          const albumPublic = galleryForm.elements['albumPublic']
           formData.append('albumPublic', albumPublic.checked)
           const opts = {
             method: 'POST',
@@ -75,49 +78,138 @@
           } else {
             const updateResult = await response.json()
             if (updateResult.status > 200) {
+              const err = document.querySelector('div#galleryUpdateErr')
+              err.textContent = 'Update failed for some reason.'
+              err.classList.remove('hidden')
               console.error(updateResult)
             } else {
               console.log(updateResult)
-              
+              const msg = document.querySelector('div#galleryUpdateMsg')
+              msg.textContent = 'Gallery details updated.'
+              msg.classList.remove('hidden')
+              galleryForm.reset()
             }
           }
         }
-        form.addEventListener('submit', updateAlbum) 
+        galleryForm.addEventListener('submit', updateAlbum) 
 
       </script>
     </div>
     <div id="images">
-      <% (await album.getJson()).images.forEach((image, i) => {
-        // const img = document.createElement('img')
-        // img.src = `${origin}/${image.url}`
-        // img.setAttribute('width', '150px')
-        // img.setAttribute('alt', image.description)
-        // img.classList.add('imgThumbnail')
-      %>
+      <% (await album.getJson()).images.forEach((image, i) => { %>
       <div class="imagePair">
         <form id="<%= `${album.name}_${image.name}` %>">
           <fieldset>
-              <figure style="display: inline-block;">
-                <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
-                <figcaption>Full size image.</figcaption>
-              </figure>
+            <figure style="display: inline-block;">
+              <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
+              <figcaption>Full size image.</figcaption>
+            </figure>
             <% if (image.thumbnail) { %>
-              <figure style="display: inline-block;">
-                <img src="<%= `${origin}/${image.thumbnail}` %>" alt="<%= image.description %>" class="imgThumbnail" width="*">
-                <figcaption>Thumbnail image.</figcaption>
-              </figure>
+            <figure style="display: inline-block;">
+              <img src="<%= `${origin}/${image.thumbnail}` %>" alt="<%= image.description %>" class="imgThumbnail" width="*">
+              <figcaption>Thumbnail image.</figcaption>
+            </figure>
             <% } %>
             <br>
-            <input type="hidden" id="name_Id_<%= i %>" value="<%= image.name %>">
-            <label>Title: <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title"></label><br>
-            <label>Description: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description"></label><br>
-            <label>Keywords: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.keywords %>" class="keywords"></label><br>
-            <input type="submit" value="Update Image Metadata">
+            <div id="imageUpdateMsg" class="messages hidden"></div>
+            <div id="imageUpdateErr" class="errors hidden"></div>
+            <input type="hidden" name="csrf-token" id="csrf-token_Id_<%= i %>" value="<%= csrfToken %>">
+            <input type="hidden" name="albumId" id="albumId_Id_<%= i %>" value="<%= album.id %>">
+            <label>File Name: <input type="text" name="fileName" id="fileName_Id_<%= i %>" value="<%= image.name %>" disabled></label><br>
+            <label>Title: <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title" tabindex="7"></label><br>
+            <label>Description: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description" tabindex="7"></label><br>
+            <label>Keywords: <input type="text" name="keywords" id="keywords_Id_<%= i %>" value="<%= image.keywords?.join(', ') ?? '' %>" class="keywords" tabindex="7"></label><br>
+            <input type="submit" value="Update Image Metadata" tabindex="7">
+            <input type="reset" name="reset" id="reset_Id_<%= i %>" value="Reset" tabindex="7">
           </fieldset>
         </form>
       </div>
       <% }) %>
     </div>
+    <script nonce="<%= nonce %>">
+      async function updateImage(e) {
+        e.stopPropagation()
+        e.preventDefault()
+        form = e.target
+        const formData = new FormData()
+        const csrfToken = form.elements['csrf-token']
+        formData.append('csrfTokenHidden', csrfToken.value)
+        const albumId = form.elements['albumId']
+        formData.append('albumId', albumId.value)
+        const name = form.elements.fileName
+        formData.append('imageName', name.value)
+        if (form.elements['title'].value !== '') {
+          const title = form.elements.title
+          formData.append('imageTitle', title.value)
+        }
+        if (form.elements['description'].value !== '') {
+          const description = form.elements.description
+          formData.append('imageDescription', description.value)
+        }
+        if (form.elements['keywords'].value !== '') {
+          const keywords = form.elements.keywords
+          formData.append('imageKeywords', keywords.value)
+        }
+        // for (const a of formData.entries()) {
+        //   console.log(a)
+        // }
+        const opts = {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${jwtAccess}`,
+          },
+          body: formData,
+        }
+        const err = form.querySelector(':scope > fieldset > div#imageUpdateErr')
+        const msg = form.querySelector(':scope > fieldset > div#imageUpdateMsg')
+        const request = new Request(`${origin}/account/galleries/${albumId.value}/image/${name.value}`, opts)
+        let response
+        let updateResult
+        try {
+          response = await fetch(request, { credentials: 'same-origin' })
+          console.log(response)
+        } catch (e) {
+          err.textContent = 'Response was not good.'
+          err.classList.remove('hidden')
+          console.warn(e)
+          return
+        }
+        if (!response.ok) {
+          err.textContent = 'Request failed.'
+          err.classList.remove('hidden')
+          console.warn(`response status text: (${response.status}) ${response.statusText}`)
+          return
+        }
+        try {
+          updateResult = await response.json()
+          console.info(updateResult)
+          if (response.status > 200) {
+            err.textContent = 'Update failed for some reason.'
+            err.classList.remove('hidden')
+            console.info(updateResult)
+          } else if (response.status === 200 && updatedResult?.err) {
+            err.textContent = updatedResult.msg
+            err.classList.remove('hidden')
+            console.info(updateResult)
+          } else {
+            msg.textContent = 'Image details updated.'
+            msg.classList.remove('hidden')
+          }
+        } catch (e) {
+          // err.textContent = 'JSON was not good.'
+          err.textContent = updateResult.err
+          err.classList.remove('hidden')
+          console.warn(e)
+          return
+        }
+      }
+      // 
+      const imgForms = document.querySelectorAll(`form[id^=${albumName}]`)
+      for (const form of imgForms) {
+        form.addEventListener('submit', updateImage)
+      }
+    </script>
   </article>
 </main>
 

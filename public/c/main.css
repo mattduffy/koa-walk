@@ -5,6 +5,10 @@ body {
   font-size: 1.125em;
 }
 
+.hidden {
+  display: none;
+}
+
 .smallem {
   font-style: italic;
   font-size: .9em;

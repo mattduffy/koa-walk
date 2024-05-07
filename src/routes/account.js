@@ -351,6 +351,94 @@ router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx)
   }
 })
 
+router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', async (ctx) => {
+  const log = accountLog.extend('POST-account-galleries-image-edit')
+  const error = accountError.extend('POST-account-galleries-image-edit')
+  if (!ctx.state.isAsyncRequest) {
+    ctx.status = 400
+    ctx.redirect('/')
+  }
+  let status
+  let body
+  let album
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
+    error(`CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
+    status = 401
+    body = { error: 'csrf token mismatch' }
+  } else {
+    const form = formidable({
+      encoding: 'utf-8',
+      uploadDir: ctx.app.dirs.private.uploads,
+      keepExtensions: true,
+      multipart: true,
+      maxFileSize: (200 * 1024 * 1024),
+    })
+    await new Promise((resolve, reject) => {
+      form.parse(ctx.req, (err, fields, files) => {
+        if (err) {
+          error('There was a problem parsing the multipart form data.')
+          error(err)
+          reject(err)
+          return
+        }
+        log('Multipart form data was successfully parsed.')
+        ctx.request.body = fields
+        ctx.request.files = files
+        // log('fields: %o', fields)
+        resolve()
+      })
+    })
+    log(`album id: ${ctx.params.id}`)
+    log(`image name: ${ctx.params.name}`)
+    log(ctx.request.body)
+    const albumId = ctx.params.id
+    const fileName = ctx.params.name
+    const imageName = ctx.request.body?.imageName?.[0] ?? null
+    const imageTitle = ctx.request.body?.ImageTitle?.[0] ?? ''
+    const imageDescription = ctx.request.body?.ImageDescription?.[0] ?? ''
+    const imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', ')) ?? null
+    const csrfTokenCookie = ctx.cookies.get('csrfToken')
+    const csrfTokenSession = ctx.session.csrfToken
+    const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
+    if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
+    if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+      error(`                     hidden: ${csrfTokenHidden}`)
+      error(`                    session: ${csrfTokenSession}`)
+      status = 403
+      body = { status: 'Error, csrf tokens do not match' }
+    } else {
+      try {
+        const db = ctx.state.mongodb.client.db().collection('albums')
+        album = await Albums.getById(db, albumId)
+
+        const saved = await album.save()
+        log(saved)
+        if (!saved) {
+          status = 418
+          body = { err: `Failed to update image: ${fileName}` }
+        } else {
+          status = 200
+          body = saved
+        }
+      } catch (e) {
+        error(e)
+        status = 500
+        body = { msg: `failed to find album with id: ${albumId}` }
+      }
+    }
+  }
+  ctx.status = status
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = body
+})
+
 router.post('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx) => {
   const log = accountLog.extend('POST-account-galleries-edit')
   const error = accountError.extend('POST-account-galleries-edit')
@@ -397,7 +485,7 @@ router.post('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx
     const albumId = ctx.params.id
     const albumName = ctx.request.body?.albumName?.[0] ?? null
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
-    const albumPublic = ctx.request.body?.albumPublic?.[0] ?? false
+    const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
     const albumKeywords = Array.from(ctx.request.body?.albumKeywords?.[0].split(', ')) ?? null
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
@@ -531,7 +619,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
     log('ctx.files: %o', ctx.request.files)
     let albumName = ctx.request.body?.albumName?.[0] ?? null
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
-    const albumPublic = ctx.request.body?.albumPublic?.[0] ?? false
+    const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]

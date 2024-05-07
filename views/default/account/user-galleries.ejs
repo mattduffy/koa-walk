@@ -16,6 +16,8 @@
       <form name="uploader" id="uploader_Id" action="/account/gallery/upload/archive" method="POST" enctype="multipart/form-data">
         <fieldset>
           <legend>Select an archive</legend>
+          <div id="msg" class="messages hidden">hide this</div>
+          <div id="err" class="errors hidden">hide this</div>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
           <input type="file" name="archive" id="archive_Id" accept="application/gzip, application/x-tar, application/x-rar, application/zip" tabindex="1" required>
           <br>
@@ -29,7 +31,7 @@
           <input type="checkbox" name="public" id="public_Id" tabindex="4">
           <br>
           <input type="submit" name="submit" id="submit_Id" value="Upload" tabindex="5">
-          <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="6">
+          <input type="reset" name="reset_button" id="reset_Id" value="Clear" tabindex="6">
         </fieldset>
       </form>
       <script nonce="<%= nonce %>">
@@ -74,6 +76,9 @@
           } else {
             const newAlbum = await response.json()
             if (newAlbum.status > 200) {
+              const err = document.querySelector('div#err')
+              err.textContent = 'Upload failed for some reason.'
+              err.classList.remove('hidden')
               console.error(newAlbum)
             } else {
               console.log(newAlbum)
@@ -88,6 +93,10 @@
               } else {
                 document.querySelector('ul#private').appendChild(li)
               }
+              const msg = document.querySelector('div#msg')
+              msg.textContent = 'Archive uploaded and album created.'
+              msg.classList.remove('hidden')
+              form.reset()
             }
           }
         }
