@@ -187,18 +187,16 @@
           if (response.status > 200) {
             err.textContent = 'Update failed for some reason.'
             err.classList.remove('hidden')
-            console.info(updateResult)
-          } else if (response.status === 200 && updatedResult?.err) {
-            err.textContent = updatedResult.msg
+          } else if (response.status === 200 && updateResult?.err) {
+            err.textContent = updateResult.msg
             err.classList.remove('hidden')
-            console.info(updateResult)
           } else {
             msg.textContent = 'Image details updated.'
             msg.classList.remove('hidden')
           }
         } catch (e) {
-          // err.textContent = 'JSON was not good.'
-          err.textContent = updateResult.err
+          err.textContent = 'JSON was not good.'
+          // err.textContent = updateResult.err
           err.classList.remove('hidden')
           console.warn(e)
           return

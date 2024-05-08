@@ -398,8 +398,8 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
     const albumId = ctx.params.id
     const fileName = ctx.params.name
     const imageName = ctx.request.body?.imageName?.[0] ?? null
-    const imageTitle = ctx.request.body?.ImageTitle?.[0] ?? ''
-    const imageDescription = ctx.request.body?.ImageDescription?.[0] ?? ''
+    const imageTitle = ctx.request.body?.imageTitle?.[0] ?? ''
+    const imageDescription = ctx.request.body?.imageDescription?.[0] ?? ''
     const imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', ')) ?? null
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
@@ -417,8 +417,19 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
       try {
         const db = ctx.state.mongodb.client.db().collection('albums')
         album = await Albums.getById(db, albumId)
-
-        const saved = await album.save()
+        const i = {}
+        i.name = imageName
+        if (imageTitle !== '') {
+          i.title = imageTitle
+        }
+        if (imageDescription !== '') {
+          i.description = imageDescription
+        }
+        if (imageKeywords) {
+          i.keywords = imageKeywords
+        }
+        log('new image details: %o', i)
+        const saved = await album.updateImage(i)
         log(saved)
         if (!saved) {
           status = 418
