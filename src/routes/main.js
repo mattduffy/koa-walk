@@ -58,34 +58,16 @@ router.get('galleries', '/galleries', hasFlash, async (ctx) => {
     error(e)
   }
   log('recent10: ', recent10)
-  if (recent10?.length < 1) {
-    recent10 = [
-      { name: 'one' },
-      { name: 'two' },
-      { name: 'three' },
-      { name: 'four' },
-      { name: 'five' },
-      { name: 'six' },
-      { name: 'seven' },
-    ]
-  }
-  let userAlbums
+  let publicAlbums
   try {
-    userAlbums = await Albums.usersWithPublicAlbums(ctx.state.mongodb.client.db())
+    publicAlbums = await Albums.usersWithPublicAlbums(ctx.state.mongodb.client.db())
   } catch (e) {
     error(e)
   }
-  if (userAlbums?.length < 1) {
-    userAlbums = [
-      { ownerUsername: '@user1', url: '/@user1' },
-      { ownerUsername: '@user1', url: '/@user1' },
-      { ownerUsername: '@user1', url: '/@user1' },
-    ]
-  }
-  log('userAlbums: ', userAlbums)
+  log('users with public albums: ', publicAlbums)
   await ctx.render('galleries', {
     recent10,
-    userAlbums,
+    publicAlbums,
     body: ctx.body,
     origin: ctx.request.origin,
     flash: ctx.flash?.galleries ?? {},

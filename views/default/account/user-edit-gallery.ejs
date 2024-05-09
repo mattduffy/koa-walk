@@ -71,7 +71,7 @@
             body: formData,
           }
           const request = new Request(`${origin}/account/galleries/${albumId.value}`, opts)
-          console.dir(request)
+          // console.log(request)
           const response = await fetch(request, { credentials: 'same-origin' })
           if (!response.ok) {
             console.error(response.statusText)
@@ -87,7 +87,7 @@
               const msg = document.querySelector('div#galleryUpdateMsg')
               msg.textContent = 'Gallery details updated.'
               msg.classList.remove('hidden')
-              galleryForm.reset()
+              // galleryForm.reset()
             }
           }
         }

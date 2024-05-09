@@ -89,9 +89,17 @@
               a.textContent = newAlbum.albumName
               li.appendChild(a)
               if (newAlbum.public) {
-                document.querySelector('ul#public').appendChild(li) 
+                const ulPublic = document.querySelector('ul#public') 
+                if (ulPublic.children[0].nodeName === 'P') {
+                  ulPublic.removeChild(ulPublic.children[0])
+                }
+                ulPublic.appendChild(li)
               } else {
-                document.querySelector('ul#private').appendChild(li)
+                const ulPrivate = document.querySelector('ul#private')
+                if (ulPrivate.children[0].nodeName === 'P') {
+                  ulPrivate.removeChild(ulPrivate.children[0])
+                }
+                ulPrivate.appendChild(li)
               }
               const msg = document.querySelector('div#msg')
               msg.textContent = 'Archive uploaded and album created.'
@@ -105,25 +113,25 @@
     </div>
     <div class="existing-galleries">
       <h2>Current Public Galleries</h2>
-      <% if (public.length > 0) { %>
       <ul id="public" class="public">
-        <% public.forEach((g) => { %>
+      <% if (public.length > 0) {
+          public.forEach((g) => { %>
         <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
-      </ul>
-    <% } else { %>
+      <% } else { %>
       <p>No public galleries created yet.</p>
-    <% } %>
+      <% } %>
+      </ul>
       <h2>Current Private Galleries</h2>
-      <% if (private.length > 0) { %>
       <ul id="private" class="private">
-        <% private.forEach((g) => { %>
+      <% if (private.length > 0) {
+          private.forEach((g) => { %>
         <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
-      </ul>
-    <% } else { %>
+      <% } else { %>
       <p>No private galleries created yet.</p>
-    <% } %>
+      <% } %>
+    </ul>
     </div>
   </article>
 </main>

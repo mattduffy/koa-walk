@@ -19,6 +19,7 @@ import { Unpacker } from '@mattduffy/unpacker'
 import { _log, _error } from '../utils/logging.js'
 /* eslint-disable-next-line no-unused-vars */
 import { Users, AdminUser } from '../models/users.js'
+import { redis } from '../daos/impl/redis/redis-client.js'
 
 const USERS = 'users'
 const accountLog = _log.extend('account')
@@ -333,7 +334,7 @@ router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx)
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
     const db = ctx.state.mongodb.client.db()
-    const album = await Albums.getById(db, ctx.params.id)
+    const album = await Albums.getById(db, ctx.params.id, redis)
     log(album)
     log(`album keywords: ${album.keywords}`)
     const locals = {
@@ -513,7 +514,7 @@ router.post('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx
     } else {
       try {
         const db = ctx.state.mongodb.client.db().collection('albums')
-        album = await Albums.getById(db, albumId)
+        album = await Albums.getById(db, albumId, redis)
         if (album.name !== albumName) {
           log(`updating album name from: ${album.name} to: ${albumName}`)
           album.name = albumName
@@ -678,6 +679,8 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
           albumName = albumName ?? unpacker.getFileBasename()
           extracted = await unpacker.unpack(newPath)
           const config = {
+            new: true,
+            redis,
             collection: db.collection('albums'),
             rootDir: newPath,
             albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/${albumName}`,
