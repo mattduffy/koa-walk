@@ -566,9 +566,18 @@ router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
     // Get list of albums, if they exist
     const albumList = await Albums.list(db, ctx.state.sessionUser.username)
     log(albumList)
-    const pub = (albumList?.[0]?._id === 'public') ? albumList[0].albums : []
-    log(pub[0])
-    const pri = (albumList?.[1]?._id === false) ? albumList[1].albums : []
+    let pub
+    let pri
+    albumList.forEach((list) => {
+      if (list._id === 'public') {
+        pub = list.albums
+        log('public albums: ', pub[0])
+      }
+      if (list._id === false) {
+        pri = list.albums
+        log('private albums: ', pri)
+      }
+    })
     const csrfToken = ulid()
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })

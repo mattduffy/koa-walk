@@ -114,7 +114,7 @@
     <div class="existing-galleries">
       <h2>Current Public Galleries</h2>
       <ul id="public" class="public">
-      <% if (public.length > 0) {
+      <% if (public?.length > 0) {
           public.forEach((g) => { %>
         <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
@@ -124,7 +124,7 @@
       </ul>
       <h2>Current Private Galleries</h2>
       <ul id="private" class="private">
-      <% if (private.length > 0) {
+      <% if (private?.length > 0) {
           private.forEach((g) => { %>
         <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
