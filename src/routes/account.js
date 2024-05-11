@@ -599,6 +599,87 @@ router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
   }
 })
 
+router.delete('deleteGallery', '/account/galleries/delete/:id', async (ctx) => {
+  const log = accountLog.extend('DELETE-account-galleries-delete')
+  const error = accountError.extend('DELETE-account-galleries-delete')
+  const form = formidable({
+    encoding: 'utf-8',
+    uploadDir: ctx.app.dirs.private.uploads,
+    keepExtensions: true,
+    multipart: true,
+    maxFileSize: (200 * 1024 * 1024),
+  })
+  await new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        error('There was a problem parsing the multipart form data.')
+        error(err)
+        reject(err)
+        return
+      }
+      log('Multipart form data was successfully parsed.')
+      ctx.request.body = fields
+      ctx.request.files = files
+      log('fields: %o', fields)
+      log('files: %o', files)
+      resolve()
+    })
+  })
+  log(ctx.request.body)
+  let album
+  let body
+  let status
+  let type
+  if (!ctx.state?.isAuthenticated) {
+    ctx.flash = {
+      index: {
+        message: null,
+        error: 'You need to be logged in to make account changes.',
+      },
+    }
+    error('Tried to delete an album archive without first being authenticated.')
+    ctx.redirect('/')
+  } else {
+    log('ctx.fields: %o', ctx.request.body)
+    log('ctx.files: %o', ctx.request.files)
+    const albumId = ctx.request.body?.albumId?.[0] ?? ''
+    const csrfTokenCookie = ctx.cookies.get('csrfToken')
+    const csrfTokenSession = ctx.session.csrfToken
+    const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
+    if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
+    if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+      error(`                     hidden: ${csrfTokenHidden}`)
+      error(`                    session: ${csrfTokenSession}`)
+      status = 403
+      type = 'application/json'
+      body = { status: 'Error, csrf tokens do not match' }
+    } else {
+      try {
+        const db = ctx.state.mongodb.client.db().collection('albums')
+        album = await Albums.getById(db, albumId, redis)
+        const deleted = await album.deleteAlbum()
+        if (deleted === undefined) {
+          body = { msg: `Album ${albumId} was permanently deleted.`, deleted: true }
+        } else {
+          body = { msg: `Album ${albumId} was not deleted.`, deleted: false }
+        }
+      } catch (e) {
+        error(`Failed to delete album ${albumId}`)
+        error(e)
+        status = 500
+        type = 'application/json; charset=utf-8'
+        body = { err: e }
+      }
+    }
+  }
+  ctx.status = status
+  ctx.type = type
+  ctx.body = body
+})
+
 router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
   const log = accountLog.extend('PUT-account-galleries-add')
   const error = accountError.extend('PUT-account-galleries-add')

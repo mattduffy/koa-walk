@@ -35,6 +35,16 @@
           <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="6">
         </fieldset>
       </form>
+      <form name="delete" id="delete_id" action="/account/galleries/delete/<%= album.id %>" method="POST" enctype="multipart/form-data">
+        <fieldset>
+          <legend>Delete this gallery</legend>
+          <div id="galleryDeleteMsg" class="messages hidden"></div>
+          <div id="galleryDeleteErr" class="errors hidden"></div>
+          <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
+          <input type="hidden" name="albumId" id="albumId_Id" value="<%= album.id %>" required>
+          <input type="submit" name="deleteGallery" id="deleteGallery_Id" value="Permanently delete this gallery." tabindex="1000">
+        </fieldset>
+      </form>
       <script nonce="<%= nonce %>">
         const origin = '<%= origin %>'
         const jwtAccess = '<%= jwtAccess %>'
