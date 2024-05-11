@@ -498,7 +498,7 @@ router.post('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx
     const albumName = ctx.request.body?.albumName?.[0] ?? null
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
     const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
-    const albumKeywords = Array.from(ctx.request.body?.albumKeywords?.[0].split(', ')) ?? null
+    const albumKeywords = (ctx.request.body?.albumKeywords) ? Array.from(ctx.request.body?.albumKeywords?.[0]?.split(', ')) : []
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]

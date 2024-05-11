@@ -82,11 +82,19 @@
               err.textContent = 'Update failed for some reason.'
               err.classList.remove('hidden')
               console.error(updateResult)
+              setTimeout(() => {
+                err.classList.add('hidden')
+                err.textContent = ''
+              }, 1750)
             } else {
               console.log(updateResult)
               const msg = document.querySelector('div#galleryUpdateMsg')
               msg.textContent = 'Gallery details updated.'
               msg.classList.remove('hidden')
+              setTimeout(() => {
+                msg.classList.add('hidden')
+                msg.textContent = ''
+              }, 1750)
               // galleryForm.reset()
             }
           }
