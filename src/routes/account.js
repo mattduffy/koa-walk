@@ -661,6 +661,7 @@ router.delete('deleteGallery', '/account/galleries/delete/:id', async (ctx) => {
         const db = ctx.state.mongodb.client.db().collection('albums')
         album = await Albums.getById(db, albumId, redis)
         const deleted = await album.deleteAlbum()
+        status = 200
         if (deleted === undefined) {
           body = { msg: `Album ${albumId} was permanently deleted.`, deleted: true }
         } else {
@@ -702,7 +703,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
       ctx.request.body = fields
       ctx.request.files = files
       log('fields: %o', fields)
-      log('files: %o', files)
+      // log('files: %o', files)
       resolve()
     })
   })
@@ -718,7 +719,9 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
     ctx.redirect('/')
   } else {
     log('ctx.fields: %o', ctx.request.body)
-    log('ctx.files: %o', ctx.request.files)
+    // log('ctx.files: %o', ctx.request.files)
+    log('uploaded filepath: ', ctx.request.files?.PersistentFile?.filepath)
+    log('uploaded originalFilename: ', ctx.request.files?.PersistentFile?.originalFilename)
     let albumName = ctx.request.body?.albumName?.[0] ?? null
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
     const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
@@ -754,6 +757,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
       }
       log(archive)
       if (archive.size > 0) {
+        let newName = null
         newPath = path.resolve(ctx.app.dirs.public.dir, ctx.state.sessionUser.publicDir, galleries)
         try {
           log(`uploads: ${ctx.app.dirs.private.uploads}`)
@@ -766,8 +770,26 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
           log(`       |-originalFilename: ${originalFilenamePath}`)
           unpacker = new Unpacker()
           await unpacker.setPath(originalFilenamePath)
-          albumName = albumName ?? unpacker.getFileBasename()
-          extracted = await unpacker.unpack(newPath)
+          if (albumName) {
+            newName = { rename: true, newName: albumName }
+            log('renaming the gallery directory name: ', newName)
+          } else {
+            albumName = unpacker.getFileBasename()
+          }
+        } catch (e) {
+          ctx.status = 500
+          ctx.type = 'application/json; charset=utf-8'
+          ctx.body = { status: 500, step: 'unpack setup', _error: e.message }
+        }
+        try {
+          extracted = await unpacker.unpack(newPath, null, newName)
+          log('extraction results: ', extracted)
+        } catch (e) {
+          ctx.status = 500
+          ctx.type = 'application/json; charset=utf-8'
+          ctx.body = { status: 500, step: 'unpack extraction', _error: e.message }
+        }
+        try {
           const config = {
             new: true,
             redis,
@@ -781,7 +803,15 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
             public: albumPublic,
           }
           album = new Album(config)
+          log(`init'ing album with ${extracted.finalPath}`)
           album = await album.init(extracted.finalPath)
+        } catch (e) {
+          log(e.message)
+          ctx.status = 500
+          ctx.type = 'application/json; charset=utf-8'
+          ctx.body = { status: 500, step: 'album init', _error: e.message }
+        }
+        try {
           const saved = await album.save()
           log('was the album saved?: %o', saved)
           ctx.body = {
@@ -793,9 +823,10 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
             public: album.public,
           }
         } catch (e) {
+          log(e.message)
           ctx.status = 500
           ctx.type = 'application/json; charset=utf-8'
-          ctx.body = { status: 500, step: 'unpacking', error: e.message }
+          ctx.body = { status: 500, step: 'album save', _error: e.message }
         }
       }
       ctx.status = 200

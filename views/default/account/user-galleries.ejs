@@ -41,6 +41,8 @@
         async function uploadArchive(e) {
           e.preventDefault()
           e.stopPropagation()
+          const submitButton = form.elements.submit
+          submitButton.disabled = true
           const file = form.elements.archive
           if (file.files.length === 0) {
             return
@@ -69,7 +71,7 @@
             body: formData,
           }
           const request = new Request(`${origin}/account/galleries/add`, opts)
-          console.dir(request)
+          // console.dir(request)
           const response = await fetch(request, { credentials: 'same-origin' })
           if (!response.ok) {
             console.error(response.statusText)
@@ -105,9 +107,22 @@
               msg.textContent = 'Archive uploaded and album created.'
               msg.classList.remove('hidden')
               form.reset()
+              submitButton.disabled = false
             }
           }
         }
+        function clearUploadForm(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          const err = document.querySelector('div#err')
+          err.textContent = ''
+          err.classList.add('hidden')
+          const msg = document.querySelector('div#msg')
+          msg.textContent = ''
+          msg.classList.add('hidden')
+          form.reset()
+        }
+        form.elements.reset_button.addEventListener('click', clearUploadForm) 
         form.addEventListener('submit', uploadArchive) 
       </script>
     </div>
