@@ -1,0 +1,28 @@
+<main>
+  <article>
+    <h1>@<%= displayUser.username %>'s Galleries</h1>
+    <% if (view?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= view.message %></span>
+    </div>
+    <% } %>
+    <% if (view?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= view.error%></span>
+    </div>
+    <% } %>
+    <div class="existing-galleries">
+      <h2>Current Public Galleries</h2>
+      <ul id="public" class="public">
+      <% if (public?.length > 0) {
+          public.forEach((g) => { %>
+        <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
+        <% }) %>
+      <% } else { %>
+      <p>No public galleries created yet.</p>
+      <% } %>
+      </ul>
+    </div>
+  </article>
+</main>
+

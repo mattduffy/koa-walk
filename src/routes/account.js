@@ -835,6 +835,39 @@ router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
   }
 })
 
+router.get('accountUsernameGallery', '/:username/galleries', hasFlash, async (ctx) => {
+  const log = accountLog.extend('GET-account-Username-Gallery')
+  const error = accountError.extend('GET-account-Username-Gallery')
+  let { username } = ctx.params
+  let displayUser
+  try {
+    log(ctx.state.mongodb.client.options.credentials)
+    const users = new Users(ctx.state.mongodb, ctx)
+    if (username[0] === '@') {
+      username = username.slice(1)
+    }
+    displayUser = await users.getByUsername(username)
+  } catch (e) {
+    error(`Failed to find user by @${username}`)
+    error(e)
+  }
+  let publicList
+  try {
+    const db = ctx.state.mongodb.client.db().collection('albums')
+    publicList = await Albums.list(db, username)
+  } catch (e) {
+    error(`Failed to find any public galleries for @${username}`)
+    error(e)
+  }
+  const locals = {}
+  locals.view = ctx.flash.view ?? {}
+  locals.displayUser = displayUser
+  locals.body = ctx.body
+  locals.public = publicList
+  locals.title = `${ctx.app.site}: ${displayUser.username}'s galleries`
+  await ctx.render('account/user-public-galleries', locals)
+})
+
 router.get('accountView', '/account/view', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-view')
   const error = accountError.extend('GET-account-view')
