@@ -1,0 +1,35 @@
+<main>
+  <article>
+    <h1>Gallery: <%= album.name %></h1>
+    <% if (view.message) { %>
+    <div id="messages" class="messages">
+      <span><%= view.message %></span>
+    </div>
+    <% } %>
+    <% if (view.error) { %>
+    <div id="errors" class="errors">
+      <span><%= view.error%></span>
+    </div>
+    <% } %>
+    <div class="gallery">
+      <div id="images">
+        <% (await album.getJson()).images.forEach((image, i) => { %>
+        <div class="imagePair">
+          <figure style="display: inline-block;">
+            <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
+            <figcaption>Full size image.</figcaption>
+          </figure>
+          <% if (image.thumbnail) { %>
+          <figure style="display: inline-block;">
+            <img src="<%= `${origin}/${image.thumbnail}` %>" alt="<%= image.description %>" class="imgThumbnail" width="*">
+            <figcaption>Thumbnail image.</figcaption>
+          </figure>
+          <% } %>
+        <br>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </article>
+</main>
+

@@ -12,11 +12,10 @@
     </div>
     <% } %>
     <div class="existing-galleries">
-      <h2>Current Public Galleries</h2>
       <ul id="public" class="public">
       <% if (public?.length > 0) {
           public.forEach((g) => { %>
-        <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
+          <li><a href="<%= origin %>/@<%= displayUser.username %>/gallery/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
       <% } else { %>
       <p>No public galleries created yet.</p>
