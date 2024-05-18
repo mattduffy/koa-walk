@@ -31,8 +31,27 @@
           <label for="albumPublic_Id">Make Public:</label>
           <input type="checkbox" name="albumPublic" id="albumPublic_Id" <%= (album.public) ? "checked" : '' %> tabindex="4">
           <br>
-          <input type="submit" name="submit" id="submYit_Id" value="Update Album" tabindex="5">
-          <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="6">
+          <label for="albumPreviewImage_Id">Select Preview Image</label>
+          <select name="albumPreviewImage" id="albumPreviewImage_Id" tabindex="5">
+            <option value=''>--select an image--</option>
+            <% album.images.forEach((img) => { %>
+              <% if (img.thumbnail) { %>
+                <% if (album.previewImage === img.thumbnail) { %> 
+                <option value="<%= img.thumbnail %>" selected><%= (img.thumbnail.split('/').slice(-1))[0] %></option>
+                <% } else { %>
+                <option value="<%= img.thumbnail %>"><%= (img.thumbnail.split('/').slice(-1))[0] %></option>
+                <% } %>
+              <% } %>
+                <% if (album.previewImage === img.url) { %> 
+              <option value="<%= img.url %>" selected><%= img.name %></option>    
+              <% } else { %>
+              <option value="<%= img.url %>"><%= img.name %></option>    
+              <% } %>
+            <% }) %>
+          </select>
+          <br>
+          <input type="submit" name="submit" id="submYit_Id" value="Update Album" tabindex="6">
+          <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="7">
         </fieldset>
       </form>
       <form name="delete" id="delete_id" action="/account/galleries/delete/<%= album.id %>" method="POST" enctype="multipart/form-data">
@@ -117,6 +136,10 @@
           if (galleryForm.elements['albumKeywords'].value !== '') {
             const albumKeywords = galleryForm.elements['albumKeywords']
             formData.append('albumKeywords', albumKeywords.value)
+          }
+          const prev = galleryForm.elements['albumPreviewImage']
+          if (prev[prev.selectedIndex].value !== '') {
+            formData.append('albumPreviewImage', prev[prev.selectedIndex].value)
           }
           const albumPublic = galleryForm.elements['albumPublic']
           formData.append('albumPublic', albumPublic.checked)
