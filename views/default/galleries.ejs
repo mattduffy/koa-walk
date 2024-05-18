@@ -22,7 +22,12 @@
         <div class="recentlyAdded">
         <% recent10.forEach((a) => { %>
           <div class="recentlyAddedAlbum"> 
-            <%= a.name %> 
+            <figure>
+              <img src="<%= `${origin}/${a.preview}` %>" alt="<%= a.description %>">
+              <figcaption>
+                <%= a.name %> 
+              </figcaption>
+            </figure>
           </div>
         <% }) %>
         </div>
