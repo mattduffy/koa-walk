@@ -5,6 +5,24 @@ body {
   font-size: 1.125em;
 }
 
+.rotate {
+  max-width: 1.75em;
+  max-height: 1.75em;
+  vertical-align: middle; 
+}
+
+.right90 {
+  transform: rotate(45deg) scaleX(-1); 
+}
+
+.left90 {
+  transform: rotate(-45deg);
+}
+
+.flip {
+  transform: rotate(90deg) scaleX(-1);
+}
+
 .hidden {
   display: none;
 }
