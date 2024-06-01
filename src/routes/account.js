@@ -348,7 +348,7 @@ router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx)
       csrfToken,
       title: `${ctx.app.site}: View Account Details`,
     }
-    await ctx.render('account/user-edit-gallery', locals)
+    await ctx.render('account/user-gallery-edit', locals)
   }
 })
 
@@ -883,7 +883,7 @@ router.get('accountUsernamePublicGalleries', '/:username/galleries', hasFlash, a
   locals.body = ctx.body
   locals.public = publicList
   locals.title = `${ctx.app.site}: ${displayUser.username}'s galleries`
-  await ctx.render('account/user-public-galleries', locals)
+  await ctx.render('account/user-galleries-public', locals)
 })
 
 router.get('accountUsernamePublicGallery', '/:username/gallery/:id', hasFlash, async (ctx) => {
@@ -917,7 +917,7 @@ router.get('accountUsernamePublicGallery', '/:username/gallery/:id', hasFlash, a
   locals.body = ctx.body
   locals.album = album
   locals.title = `${ctx.app.site}: ${displayUser.username}'s gallery, ${album.name}`
-  await ctx.render('account/user-public-gallery', locals)
+  await ctx.render('account/user-gallery-public', locals)
 })
 
 router.get('accountView', '/account/view', hasFlash, async (ctx) => {
@@ -943,7 +943,7 @@ router.get('accountView', '/account/view', hasFlash, async (ctx) => {
       title: `${ctx.app.site}: View Account Details`,
     }
     ctx.status = 200
-    await ctx.render('account/user-view-details', locals)
+    await ctx.render('account/user-details-view', locals)
   }
 })
 
@@ -970,7 +970,7 @@ router.get('accountEdit', '/account/edit', hasFlash, async (ctx) => {
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
     ctx.status = 200
-    await ctx.render('account/user-edit-details', locals)
+    await ctx.render('account/user-details-edit', locals)
   }
 })
 
@@ -1241,7 +1241,7 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       error(e)
       ctx.throw(500, `Error trying to retrieve ${ctx.params.username}'s account.`)
     }
-    await ctx.render('account/admin-user-view-details', locals)
+    await ctx.render('account/admin-user-details-view', locals)
   }
 })
 
@@ -1286,7 +1286,7 @@ router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async 
       error(e)
       ctx.throw(500, `Error trying to retrieve ${ctx.params.username}'s account.`)
     }
-    await ctx.render('account/admin-user-edit-details', locals)
+    await ctx.render('account/admin-user-details-edit', locals)
   }
 })
 

@@ -189,10 +189,10 @@
     <div id="images">
       <% (await album.getJson()).images.forEach((image, i) => { %>
       <div class="imagePair">
-        <form id="<%= `${album.name}_${image.name}` %>" name="<%= image.name %>">
+        <form id="<%= `${album.name}_${image.name}` %>" name="<%= image.name %>" data-type="image">
           <fieldset>
             <figure style="display: inline-block;">
-              <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
+              <img src="<%= `${origin}/${image.big}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
               <figcaption>Full size image.</figcaption>
             </figure>
             <% if (image.thumbnail) { %>
@@ -246,7 +246,7 @@
       function imageReset(e) {
         e.target.elements[0].children[0].firstElementChild.style = "transform: rotate(0deg)"
       }
-      const imgEditForms = document.querySelectorAll('form[id^="custom-books"]')
+      const imgEditForms = document.querySelectorAll('form[data-type="image"]')
       imgEditForms.forEach((f) => {
         f.addEventListener('reset', imageReset)
         f.elements.rotate.forEach((r) => {
