@@ -73,6 +73,7 @@
         async function deleteAlbum(e) {
           e.preventDefault()
           e.stopPropagation()
+          deleteForm.elements.deleteGallery.disabled = true
           const formdata = new FormData()
           const csrfToken = deleteForm.elements['csrf-token']
           formdata.append('csrfTokenHidden', csrfToken.value)
@@ -102,6 +103,7 @@
               setTimeout(() => {
                 err.classList.add('hidden')
                 err.textContent = ''
+                deleteForm.elements.deleteGallery.disabled = false
               }, 1750)
             } else {
               console.log(deleteResult)
@@ -187,7 +189,7 @@
     <div id="images">
       <% (await album.getJson()).images.forEach((image, i) => { %>
       <div class="imagePair">
-        <form id="<%= `${album.name}_${image.name}` %>">
+        <form id="<%= `${album.name}_${image.name}` %>" name="<%= image.name %>">
           <fieldset>
             <figure style="display: inline-block;">
               <img src="<%= `${origin}/${image.url}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
@@ -205,6 +207,24 @@
             <input type="hidden" name="csrf-token" id="csrf-token_Id_<%= i %>" value="<%= csrfToken %>">
             <input type="hidden" name="albumId" id="albumId_Id_<%= i %>" value="<%= album.id %>">
             <label>File Name: <input type="text" name="fileName" id="fileName_Id_<%= i %>" value="<%= image.name %>" disabled></label><br>
+            Rotate: 
+            <label>
+              <img src="/i/rotate_40x40.png" class="rotate right0" title="Rotate clockwise 0&deg; "alt="Rotate clockwise 0&deg;"> 
+              <input type="radio" name="rotate" id="rotate_0_<%= i %>" value="0">
+            </label>
+            <label>
+              <img src="/i/rotate_40x40.png" class="rotate right90" title="Rotate clockwise 90&deg; "alt="Rotate clockwise 90&deg;"> 
+              <input type="radio" name="rotate" id="rotate_90_<%= i %>" value="90">
+            </label>
+            <label>
+              <img src="/i/rotate_40x40.png" class="rotate flip" title="Rotate clockwise 180&deg; "alt="Rotate clockwise 180&deg;"> 
+              <input type="radio" name="rotate" id="rotate_180_<%= i %>" value="180">
+            </label>
+            <label>
+              <img src="/i/rotate_40x40.png" class="rotate right270" title="Rotate clockwise 270&deg; "alt="Rotate clockwise 270&deg;"> 
+              <input type="radio" name="rotate" id="rotate_270_<%= i %>" value="270">
+            </label>
+            <br>
             <label>Title: <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title" tabindex="7"></label><br>
             <label>Description: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description" tabindex="7"></label><br>
             <label>Keywords: <input type="text" name="keywords" id="keywords_Id_<%= i %>" value="<%= image.keywords?.join(', ') ?? '' %>" class="keywords" tabindex="7"></label><br>
@@ -216,6 +236,23 @@
       <% }) %>
     </div>
     <script nonce="<%= nonce %>">
+      function rotateImage(e) {
+        e.stopPropagation()
+        e.preventDefault()
+        const image = e.target.parentElement.parentElement.children[0].children[0]
+        const degrees = `${e.target.value}deg`
+        image.style.transform = `rotate(${degrees})`
+      }
+      function imageReset(e) {
+        e.target.elements[0].children[0].firstElementChild.style = "transform: rotate(0deg)"
+      }
+      const imgEditForms = document.querySelectorAll('form[id^="custom-books"]')
+      imgEditForms.forEach((f) => {
+        f.addEventListener('reset', imageReset)
+        f.elements.rotate.forEach((r) => {
+          r.addEventListener('change', rotateImage)
+        })
+      })
       async function updateImage(e) {
         e.stopPropagation()
         e.preventDefault()
@@ -227,6 +264,10 @@
         formData.append('albumId', albumId.value)
         const name = form.elements.fileName
         formData.append('imageName', name.value)
+        if (form.element['rotate'].value !== '') {
+          const rotate = `${form.element.rotate.value}deg`
+          formData.append('rotate', rotate)
+        }
         if (form.elements['title'].value !== '') {
           const title = form.elements.title
           formData.append('imageTitle', title.value)

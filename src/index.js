@@ -282,7 +282,7 @@ async function logRequest(ctx, next) {
           geo.zip = city?.postal?.code
           geo.coords = [city?.location?.latitude, city?.location?.longitude]
           logEntry.geo = geo
-          logg('Request ip geo:     %0', geo)
+          logg('Request ip geo:     %O', geo)
         } catch (e) {
           logg(e.message)
         }

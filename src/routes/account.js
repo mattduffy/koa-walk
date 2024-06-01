@@ -399,6 +399,7 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
     const albumId = ctx.params.id
     const fileName = ctx.params.name
     const imageName = ctx.request.body?.imageName?.[0] ?? null
+    const imageRotate = ctx.request.body?.rotate?.[0] ?? null
     const imageTitle = ctx.request.body?.imageTitle?.[0] ?? ''
     const imageDescription = ctx.request.body?.imageDescription?.[0] ?? ''
     const imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', ')) ?? null
@@ -420,6 +421,10 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
         album = await Albums.getById(db, albumId)
         const i = {}
         i.name = imageName
+        if (imageRotate) {
+          log(`Rotate image ${imageName} clockwise ${imageRotate}`)
+          i.rotate = imageRotate
+        }
         if (imageTitle !== '') {
           i.title = imageTitle
         }
