@@ -878,6 +878,8 @@ router.get('accountUsernamePublicGalleries', '/:username/galleries', hasFlash, a
     error(e)
   }
   const locals = {}
+  locals.sessionUser = ctx.state.sessionUser
+  locals.isAuthenticated = ctx.state.isAuthenticated
   locals.view = ctx.flash.view ?? {}
   locals.displayUser = displayUser
   locals.body = ctx.body
@@ -913,6 +915,8 @@ router.get('accountUsernamePublicGallery', '/:username/gallery/:id', hasFlash, a
   }
   const locals = {}
   locals.view = ctx.flash.view ?? {}
+  locals.sessionUser = ctx.state.sessionUser
+  locals.isAuthenticated = ctx.state.isAuthenticated
   locals.displayUser = displayUser
   locals.body = ctx.body
   locals.album = album
