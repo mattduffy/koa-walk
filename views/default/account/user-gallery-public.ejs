@@ -1,6 +1,6 @@
 <main>
   <article>
-    <h1>Gallery: <%= album.name %></h1>
+    <h1><a href="<%= `${origin}/${displayUser.username}/galleries` %>" title="<%= %>'s Galleries">&lt</a> Gallery: <%= album.name %></h1>
     <% if (view.message) { %>
     <div id="messages" class="messages">
       <span><%= view.message %></span>
