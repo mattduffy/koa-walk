@@ -419,11 +419,11 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
     } else {
       try {
         const db = ctx.state.mongodb.client.db().collection('albums')
-        album = await Albums.getById(db, albumId)
+        album = await Albums.getById(db, albumId, redis)
         const i = {}
         i.name = imageName
         if (imageRotate) {
-          log(`Rotate image ${imageName} clockwise ${imageRotate}`)
+          log(`Rotate image ${imageName} counter-clockwise ${imageRotate}`)
           i.rotate = imageRotate
         }
         if (imageTitle !== '') {
@@ -437,7 +437,7 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
         }
         i.hide = imageHide
         log('new image details: %o', i)
-        const saved = await album.updateImage(i)
+        const saved = await album.updateImage(i, true)
         log(saved)
         if (!saved) {
           status = 418

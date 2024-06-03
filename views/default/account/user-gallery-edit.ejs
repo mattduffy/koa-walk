@@ -210,15 +210,15 @@
             Rotate: 
             <label>
               <img src="/i/rotate_40x40.png" class="rotate left90" title="Rotate counter-clockwise -90&deg; "alt="Rotate counter-clockwise -90&deg;"> 
-              <input type="radio" name="rotate" id="rotate_90_<%= i %>" value="-90" tabindex="7">
+              <input type="radio" name="rotate" id="rotate_90_<%= i %>" value="90" tabindex="7">
             </label>
             <label>
               <img src="/i/rotate_40x40.png" class="rotate left180" title="Rotate counter-clockwise -1800&deg; "alt="Rotate counter-clockwise -180&deg;"> 
-              <input type="radio" name="rotate" id="rotate_180_<%= i %>" value="-180" tabindex="7">
+              <input type="radio" name="rotate" id="rotate_180_<%= i %>" value="180" tabindex="7">
             </label>
             <label>
               <img src="/i/rotate_40x40.png" class="rotate left270" title="Rotate counter-clockwise -270&deg; "alt="Rotate counter-clockwise -270&deg;"> 
-              <input type="radio" name="rotate" id="rotate_270_<%= i %>" value="-270" tabindex="7">
+              <input type="radio" name="rotate" id="rotate_270_<%= i %>" value="270" tabindex="7">
             </label>
             <label>
               <img src="/i/rotate_40x40.png" class="rotate left360" title="Rotate counter-clockwise -360&deg; "alt="Rotate counter-clockwise -3600&deg;"> 
@@ -228,7 +228,7 @@
             <label>Title: <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title" tabindex="7"></label><br>
             <label>Description: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description" tabindex="7"></label><br>
             <label>Keywords: <input type="text" name="keywords" id="keywords_Id_<%= i %>" value="<%= image.keywords?.join(', ') ?? '' %>" class="keywords" tabindex="7"></label><br>
-            <label>Hide Image: <input type="checkbox" name="hideImage" id="hideImage_Id_<%= i %>" tabindex="7"></label><br>
+            <label>Hide Image: <input type="checkbox" name="hideImage" id="hideImage_Id_<%= i %>" <%= (image.hide === 'true') ? 'checked' : ''  %> tabindex="7"></label><br>
             <input type="submit" value="Update Image Metadata" tabindex="7">
             <input type="reset" name="reset" id="reset_Id_<%= i %>" value="Reset" tabindex="7">
           </fieldset>
@@ -241,7 +241,7 @@
         e.stopPropagation()
         e.preventDefault()
         const image = e.target.parentElement.parentElement.children[0].children[0]
-        const degrees = `${e.target.value}deg`
+        const degrees = `-${e.target.value}deg`
         image.style.transform = `rotate(${degrees})`
       }
       function imageReset(e) {
@@ -266,7 +266,7 @@
         const name = form.elements.fileName
         formData.append('imageName', name.value)
         if (form.elements['rotate']?.value !== '') {
-          const rotate = `${form.element.rotate.value}deg`
+          const rotate = form.elements.rotate.value
           formData.append('rotate', rotate)
         }
         if (form.elements['title'].value !== '') {
@@ -325,6 +325,15 @@
           } else {
             msg.textContent = 'Image details updated.'
             msg.classList.remove('hidden')
+            setTimeout(() => {
+              msg.classList.add('hidden')
+              msg.textContent = ''
+            }, 1750)
+            if (updateResult.sizes) {
+              const figs = form.querySelectorAll(':scope > fieldset > figure')
+              figs[0].children[0].src = `${origin}/${updateResult.sizes.big}`
+              figs[1].children[0].src = `${origin}/${updateResult.sizes.thb}`
+            }
           }
         } catch (e) {
           err.textContent = 'JSON was not good.'
