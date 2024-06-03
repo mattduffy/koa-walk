@@ -14,6 +14,7 @@
     <div class="gallery">
       <div id="images">
         <% (await album.getJson()).images.forEach((image, i) => { %>
+          <% if (!image?.hide) { %>
         <div class="imagePair">
           <figure style="display: inline-block;">
             <img src="<%= `${origin}/${image.big}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
@@ -27,6 +28,7 @@
           <% } %>
         <br>
         </div>
+          <% } %>
         <% }) %>
       </div>
     </div>

@@ -403,6 +403,7 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
     const imageTitle = ctx.request.body?.imageTitle?.[0] ?? ''
     const imageDescription = ctx.request.body?.imageDescription?.[0] ?? ''
     const imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', ')) ?? null
+    const imageHide = ctx.request.body?.imageHide?.[0]
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
@@ -434,6 +435,7 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
         if (imageKeywords) {
           i.keywords = imageKeywords
         }
+        i.hide = imageHide
         log('new image details: %o', i)
         const saved = await album.updateImage(i)
         log(saved)

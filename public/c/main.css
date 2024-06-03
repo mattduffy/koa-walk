@@ -11,16 +11,20 @@ body {
   vertical-align: middle; 
 }
 
-.right0 {
-  transform: scaleX(-1);
+.left90 {
+  /*transform: scaleX(0);*/
 }
 
-.right90 {
-  transform: rotate(45deg) scaleX(-1); 
+.left180 {
+  transform: rotate(-90deg); 
 }
 
-.right270 {
-  transform: scaleX(-1) rotate(180deg);
+.left270 {
+  transform: rotate(-180deg);
+}
+
+.left360 {
+  transform: rotate(-270deg);
 }
 
 .flip {

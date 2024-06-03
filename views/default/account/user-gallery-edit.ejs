@@ -209,25 +209,26 @@
             <label>File Name: <input type="text" name="fileName" id="fileName_Id_<%= i %>" value="<%= image.name %>" disabled></label><br>
             Rotate: 
             <label>
-              <img src="/i/rotate_40x40.png" class="rotate right0" title="Rotate clockwise 0&deg; "alt="Rotate clockwise 0&deg;"> 
-              <input type="radio" name="rotate" id="rotate_0_<%= i %>" value="0">
+              <img src="/i/rotate_40x40.png" class="rotate left90" title="Rotate counter-clockwise -90&deg; "alt="Rotate counter-clockwise -90&deg;"> 
+              <input type="radio" name="rotate" id="rotate_90_<%= i %>" value="-90" tabindex="7">
             </label>
             <label>
-              <img src="/i/rotate_40x40.png" class="rotate right90" title="Rotate clockwise 90&deg; "alt="Rotate clockwise 90&deg;"> 
-              <input type="radio" name="rotate" id="rotate_90_<%= i %>" value="90">
+              <img src="/i/rotate_40x40.png" class="rotate left180" title="Rotate counter-clockwise -1800&deg; "alt="Rotate counter-clockwise -180&deg;"> 
+              <input type="radio" name="rotate" id="rotate_180_<%= i %>" value="-180" tabindex="7">
             </label>
             <label>
-              <img src="/i/rotate_40x40.png" class="rotate flip" title="Rotate clockwise 180&deg; "alt="Rotate clockwise 180&deg;"> 
-              <input type="radio" name="rotate" id="rotate_180_<%= i %>" value="180">
+              <img src="/i/rotate_40x40.png" class="rotate left270" title="Rotate counter-clockwise -270&deg; "alt="Rotate counter-clockwise -270&deg;"> 
+              <input type="radio" name="rotate" id="rotate_270_<%= i %>" value="-270" tabindex="7">
             </label>
             <label>
-              <img src="/i/rotate_40x40.png" class="rotate right270" title="Rotate clockwise 270&deg; "alt="Rotate clockwise 270&deg;"> 
-              <input type="radio" name="rotate" id="rotate_270_<%= i %>" value="270">
+              <img src="/i/rotate_40x40.png" class="rotate left360" title="Rotate counter-clockwise -360&deg; "alt="Rotate counter-clockwise -3600&deg;"> 
+              <input type="radio" name="rotate" id="rotate_360_<%= i %>" value="0" tabindex="7">
             </label>
             <br>
             <label>Title: <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title" tabindex="7"></label><br>
             <label>Description: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description" tabindex="7"></label><br>
             <label>Keywords: <input type="text" name="keywords" id="keywords_Id_<%= i %>" value="<%= image.keywords?.join(', ') ?? '' %>" class="keywords" tabindex="7"></label><br>
+            <label>Hide Image: <input type="checkbox" name="hideImage" id="hideImage_Id_<%= i %>" tabindex="7"></label><br>
             <input type="submit" value="Update Image Metadata" tabindex="7">
             <input type="reset" name="reset" id="reset_Id_<%= i %>" value="Reset" tabindex="7">
           </fieldset>
@@ -264,7 +265,7 @@
         formData.append('albumId', albumId.value)
         const name = form.elements.fileName
         formData.append('imageName', name.value)
-        if (form.element['rotate'].value !== '') {
+        if (form.elements['rotate']?.value !== '') {
           const rotate = `${form.element.rotate.value}deg`
           formData.append('rotate', rotate)
         }
@@ -280,6 +281,7 @@
           const keywords = form.elements.keywords
           formData.append('imageKeywords', keywords.value)
         }
+        formData.append('imageHide', form.elements['hideImage'].checked)
         // for (const a of formData.entries()) {
         //   console.log(a)
         // }
