@@ -402,7 +402,10 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
     const imageRotate = ctx.request.body?.rotate?.[0] ?? null
     const imageTitle = ctx.request.body?.imageTitle?.[0] ?? ''
     const imageDescription = ctx.request.body?.imageDescription?.[0] ?? ''
-    const imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', ')) ?? null
+    let imageKeywords = null
+    if (ctx.request.body?.imageKeywords) {
+      imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', '))
+    }
     const imageHide = ctx.request.body?.imageHide?.[0]
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
