@@ -54,7 +54,7 @@
           <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="7">
         </fieldset>
       </form>
-      <form name="delete" id="delete_id" action="/account/galleries/delete/<%= album.id %>" method="POST" enctype="multipart/form-data">
+      <form name="delete" id="delete_Id" action="/account/galleries/delete/<%= album.id %>" method="POST" enctype="multipart/form-data">
         <fieldset>
           <legend>Delete this gallery</legend>
           <div id="galleryDeleteMsg" class="messages hidden"></div>
@@ -64,12 +64,117 @@
           <input type="submit" name="deleteGallery" id="deleteGallery_Id" value="Permanently delete this gallery." tabindex="1000">
         </fieldset>
       </form>
+      <form name="addImage" id="addImage_Id" action="/account/galleries/<%= album.id %>/addImage" method="POST" enctype="multipart/form-data">
+        <fieldset>
+          <legend>Add image to gallery</legend>
+          <div id="galleryNewImageMsg" class="messages hidden"></div>
+          <div id="galleryNewImageErr" class="errors hidden"></div>
+          <label>New image: <input type="file" name="image" id="image_Id" accept="image/*"></label><br>
+          <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
+          <input type="hidden" name="albumId" id="albumId_Id" value="<%= album.id %>" required>
+          <input type="submit" name="add" id="add_Id" value="Add image to this gallery." tabindex="6">
+          <input type="reset" name="reset" value="Reset">
+        </fieldset>
+      </form>
       <script nonce="<%= nonce %>">
         const origin = '<%= origin %>'
         const jwtAccess = '<%= jwtAccess %>'
         const albumName = '<%= album.name %>'
-        const galleryForm = document.forms[0]
-        const deleteForm = document.forms[1]
+        window.forms = document.forms
+        const galleryForm = forms.namedItem('edit')
+        const deleteForm = forms.namedItem('delete')
+        const addImageForm = forms.namedItem('addImage')
+        function addImageReset(e) {
+          e.target.elements['add'].disabled = false
+          const div = e.target.querySelector(':scope div#galleryNewImageErr')
+          div.textContent = ''
+          div.classList.add('hidden')
+        }
+        addImageForm.addEventListener('reset', addImageReset)
+        async function addImage(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          const form = e.target
+          form.elements['add'].disabled = true
+          if ( form.elements['image'].files.length < 1) {
+            console.warn('no file selected.')
+            return
+          }
+          const errDiv = form.querySelector(':scope div#galleryNewImageErr')
+          const msgDiv = form.querySelector(':scope div#galleryNewImageMsg')
+          const file = form.elements['image'].files[0]
+          for (const f of window.forms) {
+            if (f.name === file.name) {
+              const err = `${file.name} already exists in this gallery.`
+              console.log('File naming conflict!')
+              console.log(err)
+              errDiv.textContent = err
+              errDiv.classList.remove('hidden')
+              return false
+            }
+          }
+          const formData = new FormData()
+          formData.append('methodOverride', 'PUT')
+          const albumId = form.elements['albumId']
+          formData.append('albumId', albumId.value)
+          const csrfToken = form.elements['csrf-token']
+          formData.append('csrfTokenHidden', csrfToken.value)
+          formData.append('image', file)
+          for (const a of formData.entries()) {
+            console.log(a)
+          }
+          const opts = {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${jwtAccess}`,
+              'X-Http-Method-Override': 'PUT',
+            },
+            body: formData,
+          }
+          const request = new Request(`${origin}/account/galleries/${albumId.value}/addImage`, opts)
+          const response = await fetch(request, { credentials: 'same-origin' })
+          if (!response.ok) {
+            // console.error(response.statusText)
+            console.error(response)
+          } else {
+            const addImageResult = await response.json()
+            // console.log(addImageResult)
+            if (addImageResult.status > 200) {
+              errDiv.textContent = 'Image wasn\'t added to the gallery for some reason.'
+              errDiv.classList.remove('hidden')
+              console.error(addImageResult)
+              setTimeout(() => {
+                errDiv.classList.add('hidden')
+                errDiv.textContent = ''
+                form.elements['add'].disabled = false
+                form.elements['reset'].click()
+              }, 5000)
+            } else {
+              console.log(addImageResult)
+              msgDiv.textContent = `${file.name} was added to the gallery.`
+              msgDiv.classList.remove('hidden')
+              appendNewImage(addImageResult)
+              setTimeout(() => {
+                form.elements['add'].disabled = false
+                msgDiv.classList.add('hidden')
+                msgDiv.textContent = ''
+                form.elements['reset'].click()
+              }, 5000)
+              // fill in rest of sucessful event handling functionality
+            }
+          }
+        }
+        addImageForm.addEventListener('submit', addImage)
+
+        function appendNewImage(result) {
+          console.log('appending new image to end of list...')
+          // console.log(result)
+          const div = document.querySelector('div#images')
+          const newDiv = div.children[0].cloneNode(true)
+          // console.log(newDiv)
+        }
+
         async function deleteAlbum(e) {
           e.preventDefault()
           e.stopPropagation()
@@ -228,7 +333,7 @@
             <label>Title: <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title" tabindex="7"></label><br>
             <label>Description: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description" tabindex="7"></label><br>
             <label>Keywords: <input type="text" name="keywords" id="keywords_Id_<%= i %>" value="<%= image.keywords?.join(', ') ?? '' %>" class="keywords" tabindex="7"></label><br>
-            <label>Hide Image: <input type="checkbox" name="hideImage" id="hideImage_Id_<%= i %>" <%= (image.hide === 'true') ? 'checked' : ''  %> tabindex="7"></label><br>
+            <label>Hide Image: <input type="checkbox" name="hideImage" id="hideImage_Id_<%= i %>" <%= (image.hide) ? 'checked' : ''  %> tabindex="7"></label><br>
             <input type="submit" value="Update Image Metadata" tabindex="7">
             <input type="reset" name="reset" id="reset_Id_<%= i %>" value="Reset" tabindex="7">
           </fieldset>
@@ -282,9 +387,9 @@
           formData.append('imageKeywords', keywords.value)
         }
         formData.append('imageHide', form.elements['hideImage'].checked)
-        // for (const a of formData.entries()) {
-        //   console.log(a)
-        // }
+        for (const a of formData.entries()) {
+          console.log(a)
+        }
         const opts = {
           method: 'POST',
           headers: {
@@ -332,6 +437,8 @@
             if (updateResult.sizes) {
               const figs = form.querySelectorAll(':scope > fieldset > figure')
               figs[0].children[0].src = `${origin}/${updateResult.sizes.big}`
+              figs[0].children[0].style = 'transform: rotate(0deg)'
+              figs[1].children[0].src = null 
               figs[1].children[0].src = `${origin}/${updateResult.sizes.thb}`
             }
           }

@@ -13,8 +13,10 @@
     <% } %>
     <div class="gallery">
       <div id="images">
-        <% (await album.getJson()).images.forEach((image, i) => { %>
-          <% if (!image?.hide || image.hide === 'false') { %>
+        <% (await album.getJson()).images.forEach((image, i) => { 
+        console.log(`is image hidden? ${image.hide}`)
+        %>
+          <% if (!image.hide ) { %>
         <div class="imagePair">
           <figure style="display: inline-block;">
             <img src="<%= `${origin}/${image.big}` %>" alt="<%= image.description %>" class="imgFull" width="150px">

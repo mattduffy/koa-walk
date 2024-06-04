@@ -352,6 +352,106 @@ router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx)
   }
 })
 
+router.put('accountGalleryAddImage', '/account/galleries/:id/addImage', async (ctx) => {
+  const log = accountLog.extend('PUT-account-galleries-addImage')
+  const error = accountError.extend('PUT-account-galleries-addImage')
+  if (!ctx.state.isAsyncRequest) {
+    ctx.status = 400
+    ctx.redirect('/')
+  }
+  let status
+  let body
+  let album
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
+    error(`CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
+    status = 401
+    body = { error: 'csrf token mismatch' }
+  } else {
+    const form = formidable({
+      encoding: 'utf-8',
+      uploadDir: ctx.app.dirs.private.uploads,
+      keepExtensions: true,
+      multipart: true,
+      maxFileSize: (200 * 1024 * 1024),
+    })
+    await new Promise((resolve, reject) => {
+      form.parse(ctx.req, (err, fields, files) => {
+        if (err) {
+          error('There was a problem parsing the multipart form data.')
+          error(err)
+          reject(err)
+          return
+        }
+        log('Multipart form data was successfully parsed.')
+        ctx.request.body = fields
+        ctx.request.files = files
+        resolve()
+      })
+    })
+    log(`album id: ${ctx.params.id}`)
+    log(`image name: ${ctx.params.name}`)
+    log(ctx.request.body)
+    log(ctx.request.files)
+    const albumId = ctx.params.id
+    const image = ctx.request.files.image[0]
+    // log(image)
+    const originalFilenameCleaned = sanitizeFilename(image.originalFilename)
+    const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
+    log('uploaded filepath:             ', image.filepath)
+    log('uploaded originalFilename:     ', image.originalFilename)
+    log('uploaded originalFilenamePath: ', originalFilenamePath)
+    const csrfTokenCookie = ctx.cookies.get('csrfToken')
+    const csrfTokenSession = ctx.session.csrfToken
+    const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
+    if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
+    if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+      error(`                     hidden: ${csrfTokenHidden}`)
+      error(`                    session: ${csrfTokenSession}`)
+      status = 403
+      body = { status: 'Error, csrf tokens do not match' }
+    } else {
+      let albumDir
+      try {
+        const db = ctx.state.mongodb.client.db().collection('albums')
+        album = await Albums.getById(db, albumId, redis)
+        albumDir = album.albumDir
+        log(`albumDir: ${albumDir}`)
+      } catch (e) {
+        const err = `Failed to initialize album id: ${albumId}`
+        error(err)
+        status = 500
+        body = { status: 500, err, cause: e.message }
+        // throw new Error(err, { cause: e })
+      }
+      try {
+        // this should rename uploaded file to inside the album dir
+        await rename(image.filepath, originalFilenamePath)
+        // add image to album
+        // album.addImage(image)
+        //
+        status = 200
+        body = { image, originalFilenamePath }
+      } catch (e) {
+        const err = `Failed to rename uploaded image back to its original name ${originalFilenamePath}.`
+        error(err)
+        status = 500
+        body = { status: 500, err, cause: e.message }
+        // throw new Error(err, { cause: e })
+      }
+    }
+  }
+  ctx.status = status
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = body
+})
+
 router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', async (ctx) => {
   const log = accountLog.extend('POST-account-galleries-image-edit')
   const error = accountError.extend('POST-account-galleries-image-edit')
@@ -400,13 +500,18 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
     const fileName = ctx.params.name
     const imageName = ctx.request.body?.imageName?.[0] ?? null
     const imageRotate = ctx.request.body?.rotate?.[0] ?? null
-    const imageTitle = ctx.request.body?.imageTitle?.[0] ?? ''
-    const imageDescription = ctx.request.body?.imageDescription?.[0] ?? ''
+    const imageTitle = ctx.request.body?.imageTitle?.[0] ?? null
+    const imageDescription = ctx.request.body?.imageDescription?.[0] ?? null
     let imageKeywords = null
     if (ctx.request.body?.imageKeywords) {
       imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', '))
     }
-    const imageHide = ctx.request.body?.imageHide?.[0]
+    let imageHide
+    if (ctx.request.body?.imageHide[0] === 'false') {
+      imageHide = false
+    } else {
+      imageHide = true
+    }
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
@@ -429,10 +534,10 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
           log(`Rotate image ${imageName} counter-clockwise ${imageRotate}`)
           i.rotate = imageRotate
         }
-        if (imageTitle !== '') {
+        if (imageTitle) {
           i.title = imageTitle
         }
-        if (imageDescription !== '') {
+        if (imageDescription) {
           i.description = imageDescription
         }
         if (imageKeywords) {
@@ -440,7 +545,8 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
         }
         i.hide = imageHide
         log('new image details: %o', i)
-        const saved = await album.updateImage(i, true)
+        const sizes = (imageRotate)
+        const saved = await album.updateImage(i, sizes)
         log(saved)
         if (!saved) {
           status = 418
