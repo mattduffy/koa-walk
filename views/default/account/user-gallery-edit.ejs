@@ -54,7 +54,7 @@
           <input type="reset" name="reset" id="reset_Id" value="Clear" tabindex="7">
         </fieldset>
       </form>
-      <form name="delete" id="delete_Id" action="/account/galleries/delete/<%= album.id %>" method="POST" enctype="multipart/form-data">
+      <form name="delete" data-name="<%= album.name %>" id="delete_Id" action="/account/galleries/delete/<%= album.id %>" method="POST" enctype="multipart/form-data">
         <fieldset>
           <legend>Delete this gallery</legend>
           <div id="galleryDeleteMsg" class="messages hidden"></div>
@@ -175,52 +175,102 @@
           // console.log(newDiv)
         }
 
+        function createDialog(album) {
+          const spanPrompt = document.createElement('span')
+          spanPrompt.setAttribute('id', 'prompt')
+          const dialogText = `You are about to delete <em>${album.name}</em>.<br>`
+            + 'This action cannot be undone.<br>'
+            + 'Are you sure you want to delete this album?<br>'
+          spanPrompt.innerHTML = dialogText
+          const spanYes = document.createElement('span')
+          spanYes.innerHTML = 'Yes'
+          spanYes.setAttribute('id', 'yes')
+          spanYes.classList.add('dialogYes')
+          const spanNo = document.createElement('span')
+          spanNo.innerHTML = 'No'
+          spanNo.setAttribute('id', 'no')
+          spanNo.classList.add('dialogNo')
+          const dialog = document.createElement('dialog')
+          // dialog.setAttribute('data-uid', dataset.id)
+          dialog.appendChild(spanPrompt)
+          dialog.appendChild(document.createElement('br'))
+          dialog.appendChild(spanNo)
+          dialog.appendChild(spanYes)
+          document.body.appendChild(dialog)
+          spanYes.addEventListener('click', (y) => {
+            y.preventDefault()
+            y.stopPropagation()
+            dialog.close('yes')
+          })
+          spanNo.addEventListener('click', (n) => {
+            n.preventDefault()
+            n.stopPropagation()
+            dialog.close('no')
+          })
+          return dialog
+        }
         async function deleteAlbum(e) {
           e.preventDefault()
           e.stopPropagation()
           deleteForm.elements.deleteGallery.disabled = true
-          const formdata = new FormData()
-          const csrfToken = deleteForm.elements['csrf-token']
-          formdata.append('csrfTokenHidden', csrfToken.value)
-          const albumId = deleteForm.elements['albumId']
-          formdata.append('albumId', albumId.value)
-          const opts = {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              Authorization: `Bearer ${jwtAccess}`,
-              'X-Http-Method-Override': 'delete',
-            },
-            body: formdata,
-          }
-          const request = new Request(`${origin}/account/galleries/delete/${albumId.value}`, opts)
-          const response = await fetch(request, { credentials: 'same-origin' })
-          if (!response.ok) {
-            // console.error(response.statusText)
-            console.error(response)
-          } else {
-            const deleteResult = await response.json()
-            if (deleteResult.status > 200) {
-              const err = document.querySelector('div#galleryDeleteErr')
-              err.textContent = 'Delete failed for some reason.'
-              err.classList.remove('hidden')
-              console.error(deleteResult)
-              setTimeout(() => {
-                err.classList.add('hidden')
-                err.textContent = ''
-                deleteForm.elements.deleteGallery.disabled = false
-              }, 1750)
+          const modalDialog = createDialog({ name: deleteForm.dataset.name })
+          modalDialog.addEventListener('close', async () => {
+            // console.info(`dialog.returnValue: ${modalDialog.returnValue}`)
+            if (modalDialog.returnValue === 'yes') {
+              console.log('Dialog Yes clicked')
+              const formdata = new FormData()
+              const csrfToken = deleteForm.elements['csrf-token']
+              formdata.append('csrfTokenHidden', csrfToken.value)
+              const albumId = deleteForm.elements['albumId']
+              formdata.append('albumId', albumId.value)
+              const opts = {
+                method: 'POST',
+                headers: {
+                  Accept: 'application/json',
+                  Authorization: `Bearer ${jwtAccess}`,
+                  'X-Http-Method-Override': 'delete',
+                },
+                body: formdata,
+              }
+              for (f of formdata) {
+                console.log(f.value())
+              }
+              const request = new Request(`${origin}/account/galleries/delete/${albumId.value}`, opts)
+              const response = await fetch(request, { credentials: 'same-origin' })
+              if (!response.ok) {
+                // console.error(response.statusText)
+                console.error(response)
+              } else {
+                const deleteResult = await response.json()
+                if (deleteResult.status > 200) {
+                  const err = document.querySelector('div#galleryDeleteErr')
+                  err.textContent = 'Delete failed for some reason.'
+                  err.classList.remove('hidden')
+                  console.error(deleteResult)
+                  setTimeout(() => {
+                    err.classList.add('hidden')
+                    err.textContent = ''
+                    deleteForm.elements.deleteGallery.disabled = false
+                  }, 1750)
+                } else {
+                  console.log(deleteResult)
+                  const msg = document.querySelector('div#galleryDeleteMsg')
+                  msg.textContent = 'Gallery deleted.'
+                  msg.classList.remove('hidden')
+                  setTimeout(() => {
+                    msg.classList.add('hidden')
+                    msg.textContent = ''
+                  }, 1750)
+                }
+              }     
             } else {
-              console.log(deleteResult)
-              const msg = document.querySelector('div#galleryDeleteMsg')
-              msg.textContent = 'Gallery deleted.'
-              msg.classList.remove('hidden')
-              setTimeout(() => {
-                msg.classList.add('hidden')
-                msg.textContent = ''
-              }, 1750)
+              console.log('delete canceled.')
+              deleteForm.elements.deleteGallery.disabled = false
+              deleteForm.reset()
             }
-          }
+          })
+          modalDialog.showModal()
+          
         }
         deleteForm.addEventListener('submit', deleteAlbum)
 
