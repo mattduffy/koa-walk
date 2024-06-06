@@ -418,32 +418,45 @@ router.put('accountGalleryAddImage', '/account/galleries/:id/addImage', async (c
       body = { status: 'Error, csrf tokens do not match' }
     } else {
       let albumDir
+      let newImageAlbumDirPath
       try {
         const db = ctx.state.mongodb.client.db().collection('albums')
         album = await Albums.getById(db, albumId, redis)
         albumDir = album.albumDir
         log(`albumDir: ${albumDir}`)
+        newImageAlbumDirPath = path.join(albumDir, originalFilenameCleaned)
       } catch (e) {
         const err = `Failed to initialize album id: ${albumId}`
         error(err)
+        ctx.type = 'application/json; charset=utf-8'
         status = 500
         body = { status: 500, err, cause: e.message }
-        // throw new Error(err, { cause: e })
+        return
       }
       try {
-        // this should rename uploaded file to inside the album dir
-        await rename(image.filepath, originalFilenamePath)
-        // add image to album
-        // album.addImage(image)
-        //
-        status = 200
-        body = { image, originalFilenamePath }
+        log(`newImageAlbumDirPath: ${newImageAlbumDirPath}`)
+        await rename(image.filepath, newImageAlbumDirPath)
       } catch (e) {
-        const err = `Failed to rename uploaded image back to its original name ${originalFilenamePath}.`
+        const err = `Failed to rename uploaded image back to its original name ${originalFilenamePath}, and move to album dir ${newImageAlbumDirPath}.`
         error(err)
+        ctx.type = 'application/json; charset=utf-8'
         status = 500
         body = { status: 500, err, cause: e.message }
-        // throw new Error(err, { cause: e })
+        return
+      }
+      let result
+      try {
+        result = await album.addImage(newImageAlbumDirPath)
+        status = 200
+        body = { result, newImageAlbumDirPath }
+        log(body)
+      } catch (e) {
+        const err = 'Failed to add new iamge to album.'
+        error(err)
+        ctx.type = 'application/json; charset=utf-8'
+        status = 500
+        body = { status: 500, err, cause: e.message }
+        return
       }
     }
   }
