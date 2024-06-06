@@ -353,6 +353,7 @@ body {
     padding-top: .5em;
     padding-left: 2em;
     float: right;
+    cursor: pointer;
   }
 
   dialog > span#no {
@@ -360,6 +361,7 @@ body {
     padding-top: .5em;
     padding-right: 2em;
     float: left;
+    cursor: pointer;
   }
 
   div.account-tokens dl {
