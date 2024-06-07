@@ -348,6 +348,14 @@ body {
   div.account-list > div:nth-of-type(2n+5) {
   }
 
+  span.deleteImage {
+    position: relative;
+    top: 0px;
+    display: block;
+    text-align: right;
+    cursor: pointer;
+  }
+
   dialog > span#yes {
     position: relative;
     padding-top: .5em;

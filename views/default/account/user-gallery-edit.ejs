@@ -64,7 +64,7 @@
           <input type="submit" name="deleteGallery" id="deleteGallery_Id" value="Permanently delete this gallery." tabindex="1000">
         </fieldset>
       </form>
-      <form name="addImage" id="addImage_Id" action="/account/galleries/<%= album.id %>/addImage" method="POST" enctype="multipart/form-data">
+      <form name="addImage" id="addImage_Id" action="/account/gallery/<%= album.id %>/image/add" method="POST" enctype="multipart/form-data">
         <fieldset>
           <legend>Add image to gallery</legend>
           <div id="galleryNewImageMsg" class="messages hidden"></div>
@@ -120,9 +120,9 @@
           const csrfToken = form.elements['csrf-token']
           formData.append('csrfTokenHidden', csrfToken.value)
           formData.append('image', file)
-          for (const a of formData.entries()) {
-            console.log(a)
-          }
+          // for (const a of formData.entries()) {
+          //   console.log(a)
+          // }
           const opts = {
             method: 'POST',
             headers: {
@@ -132,8 +132,9 @@
             },
             body: formData,
           }
-          const request = new Request(`${origin}/account/galleries/${albumId.value}/addImage`, opts)
+          const request = new Request(`${origin}/account/gallery/${albumId.value}/image/add`, opts)
           const response = await fetch(request, { credentials: 'same-origin' })
+          console.log(response.ok, response.status, response.statusText)
           if (!response.ok) {
             // console.error(response.statusText)
             console.error(response)
@@ -175,12 +176,12 @@
           // console.log(newDiv)
         }
 
-        function createDialog(album) {
+        function createDialog(thing) {
           const spanPrompt = document.createElement('span')
           spanPrompt.setAttribute('id', 'prompt')
-          const dialogText = `You are about to delete <em>${album.name}</em>.<br>`
+          const dialogText = `You are about to delete <em>${thing.name}</em>.<br>`
             + 'This action cannot be undone.<br>'
-            + 'Are you sure you want to delete this album?<br>'
+            + `Are you sure you want to delete this ${thing.type}?<br>`
           spanPrompt.innerHTML = dialogText
           const spanYes = document.createElement('span')
           spanYes.innerHTML = 'Yes'
@@ -213,7 +214,7 @@
           e.preventDefault()
           e.stopPropagation()
           deleteForm.elements.deleteGallery.disabled = true
-          const modalDialog = createDialog({ name: deleteForm.dataset.name })
+          const modalDialog = createDialog({ name: deleteForm.dataset.name, type: 'album' })
           modalDialog.addEventListener('close', async () => {
             // console.info(`dialog.returnValue: ${modalDialog.returnValue}`)
             if (modalDialog.returnValue === 'yes') {
@@ -232,9 +233,9 @@
                 },
                 body: formdata,
               }
-              for (f of formdata) {
-                console.log(f.value())
-              }
+              // for (f of formdata) {
+              //   console.log(f.value())
+              // }
               const request = new Request(`${origin}/account/galleries/delete/${albumId.value}`, opts)
               const response = await fetch(request, { credentials: 'same-origin' })
               if (!response.ok) {
@@ -270,7 +271,6 @@
             }
           })
           modalDialog.showModal()
-          
         }
         deleteForm.addEventListener('submit', deleteAlbum)
 
@@ -346,6 +346,7 @@
       <div class="imagePair">
         <form id="<%= `${album.name}_${image.name}` %>" name="<%= image.name %>" data-type="image">
           <fieldset>
+            <span class="deleteImage" data-name="<%= image.name %>" data-albumid="<%= album.id %>" data-token="<%= csrfToken %>">Delete this image.</span>
             <figure style="display: inline-block;">
               <img src="<%= `${origin}/${image.big}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
               <figcaption>Full size image.</figcaption>
@@ -407,6 +408,76 @@
         f.addEventListener('reset', imageReset)
         f.elements.rotate.forEach((r) => {
           r.addEventListener('change', rotateImage)
+        })
+      })
+      async function deleteImage(e, dataset) {
+        e.preventDefault()
+        e.stopPropagation()
+        console.log(dataset)
+        const modalDialog = createDialog({ name: dataset.name, type: 'image' })
+        const formData = new FormData()
+        formData.append('image', dataset.name)
+        formData.append('csrfToken', dataset.token)
+        formData.append('csrfTokenHidden', dataset.token)
+        formData.append('methodOverride', 'DELETE')
+        for (const a of formData.entries()) {
+          console.log(a)
+        }
+        const opts = {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${jwtAccess}`,
+            'X-Http-Method-Override': 'delete',
+          },
+          body: formData,
+        }
+        const request = new Request(`${origin}/account/gallery/${dataset.albumid}/image/delete`, opts)
+        let response
+        let deleteResult
+        try {
+          response = await fetch(request, { credentials: 'same-origin' })
+          console.log(response)
+        } catch (e) {
+          console.warn('Response was not good.')
+          console.warn(e)
+          return
+        }
+        if (!response.ok) {
+          console.warn('Request failed.')
+          console.warn(`response status text: (${response.status}) ${response.statusText}`)
+          return
+        }
+        try {
+          deleteResult = await response.json()
+          console.info(deleteResult)
+          if (response.status > 200) {
+            console.warn(response.statusText)
+            // err.textContent = 'Delete failed for some reason.'
+            // err.classList.remove('hidden')
+          } else if (response.status === 200 && deleteResult?.err) {
+            console.warn(deleteResult.err)
+            // err.textContent = deleteResult.msg
+            // err.classList.remove('hidden')
+          } else {
+            // msg.textContent = 'Image was deleted.'
+            // msg.classList.remove('hidden')
+            // setTimeout(() => {
+            //   msg.classList.add('hidden')
+            //   msg.textContent = ''
+            // }, 1750)
+            console.log('things seem ok.') 
+          }
+        } catch (e) {
+          console.warn(e)
+          return
+        }
+
+        modalDialog.showModal()
+      }
+      document.querySelectorAll('span.deleteImage').forEach((d) => {
+        d.addEventListener('click', async (e) => {
+          await deleteImage(e, d.dataset)
         })
       })
       async function updateImage(e) {
