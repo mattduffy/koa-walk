@@ -526,7 +526,7 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', async (ct
       try {
         result = await album.addImage(newImageAlbumDirPath)
         status = 200
-        body = { result, newImageAlbumDirPath }
+        body = { result }
         log(body)
       } catch (e) {
         const err = 'Failed to add new iamge to album.'

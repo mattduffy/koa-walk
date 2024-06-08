@@ -153,6 +153,7 @@
               }, 5000)
             } else {
               console.log(addImageResult)
+              const { sizes } = addImageResult.result
               msgDiv.textContent = `${file.name} was added to the gallery.`
               msgDiv.classList.remove('hidden')
               appendNewImage(addImageResult)
@@ -163,6 +164,49 @@
                 form.elements['reset'].click()
               }, 5000)
               // fill in rest of sucessful event handling functionality
+              const imagesDiv = document.querySelector('div#images')
+              const cloney = imagesDiv.lastElementChild.cloneNode(true)
+              cloney.children[0].id = `${albumName}_${file.name}`
+              cloney.children[0].name = file.name
+              cloney.children[0][0].children[0].dataset.name = file.name
+              cloney.children[0][0].children[1].children[0].src = `${origin}/${sizes.big}`
+              cloney.children[0][0].children[2].children[0].src = `${origin}/${sizes.thb}`
+              const num = parseInt(cloney.children[0][0].children[6].id.lastIndexOf('_')) + 1
+              const re = new RegExp(`${num}$`)
+              // csrf-token_Id_<n>
+              cloney.children[0][0].children[6].id.replace(re, num + 1)
+              // albumId_Id _<n>
+              cloney.children[0][0].children[7].id.replace(re, num + 1)
+              // fileName_Id_<n>
+              cloney.children[0][0].children[8].children[0].id.replace(re, num + 1)
+              cloney.children[0][0].children[8].children[0].value = file.name
+              // rotate_90_<n>
+              cloney.children[0][0].children[10].children[1].id.replace(re, num + 1)
+              // rotate_180_<n>
+              cloney.children[0][0].children[11].children[1].id.replace(re, num + 1)
+              // rotate_270_<n>
+              cloney.children[0][0].children[12].children[1].id.replace(re, num + 1)
+              // rotate_360_<n>
+              cloney.children[0][0].children[13].children[1].id.replace(re, num + 1)
+              // title_Id_<n>
+              cloney.children[0][0].children[15].children[0].id.replace(re, num + 1)
+              cloney.children[0][0].children[15].children[0].value = addImageResult.result?.title ?? null
+              // description_Id_<n>
+              cloney.children[0][0].children[17].children[0].id.replace(re, num + 1)
+              cloney.children[0][0].children[17].children[0].value = addImageResult.result?.description ?? null
+              // keywords_Id_<n>
+              cloney.children[0][0].children[19].children[0].id.replace(re, num + 1)
+              cloney.children[0][0].children[19].children[0].value = addImageResult.result?.keywords ?? null
+              // hideImage_Id_<n>
+              cloney.children[0][0].children[21].children[0].id.replace(re, num + 1)
+              cloney.children[0][0].children[21].children[0].checked = false
+              // reset_Id_<n>
+              cloney.children[0][0].children[24].id.replace(re, num + 1)
+              cloney.children[0].elements.rotate.forEach((r) => {
+                // console.log(r)
+                r.addEventListener('change', rotateImage)
+              })
+              images.appendChild(cloney)
             }
           }
         }
@@ -396,12 +440,13 @@
       function rotateImage(e) {
         e.stopPropagation()
         e.preventDefault()
-        const image = e.target.parentElement.parentElement.children[0].children[0]
+        const image = e.target.parentElement.parentElement.children[1].children[0]
         const degrees = `-${e.target.value}deg`
+        // console.log(e.target, image, degrees)
         image.style.transform = `rotate(${degrees})`
       }
       function imageReset(e) {
-        e.target.elements[0].children[0].firstElementChild.style = "transform: rotate(0deg)"
+        e.target.elements[0].children[1].firstElementChild.style = "transform: rotate(0deg)"
       }
       const imgEditForms = document.querySelectorAll('form[data-type="image"]')
       imgEditForms.forEach((f) => {
@@ -514,9 +559,9 @@
           formData.append('imageKeywords', keywords.value)
         }
         formData.append('imageHide', form.elements['hideImage'].checked)
-        for (const a of formData.entries()) {
-          console.log(a)
-        }
+        // for (const a of formData.entries()) {
+        //   console.log(a)
+        // }
         const opts = {
           method: 'POST',
           headers: {
