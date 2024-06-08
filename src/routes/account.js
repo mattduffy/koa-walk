@@ -397,7 +397,6 @@ router.delete('deleteGalleryImage', '/account/gallery/:id/image/delete', async (
     log(ctx.request.files)
     const albumId = ctx.params.id
     const image = ctx.request.body.image[0]
-    log(image)
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
@@ -414,11 +413,13 @@ router.delete('deleteGalleryImage', '/account/gallery/:id/image/delete', async (
       try {
         const db = ctx.state.mongodb.client.db()
         album = await Albums.getById(db, albumId, redis)
+        log(image)
         log(album)
-        // await album.deleteImage(image)
+        const deleted = await album.deleteImage(image)
         status = 200
-        body = { data: ctx.request.body, albumId }
+        body = { deleted }
       } catch (e) {
+        error(e)
         status = 500
         body = { status: 500, err: 'album failure.' }
       }

@@ -413,66 +413,72 @@
       async function deleteImage(e, dataset) {
         e.preventDefault()
         e.stopPropagation()
-        console.log(dataset)
+        // console.log(dataset)
         const modalDialog = createDialog({ name: dataset.name, type: 'image' })
-        const formData = new FormData()
-        formData.append('image', dataset.name)
-        formData.append('csrfToken', dataset.token)
-        formData.append('csrfTokenHidden', dataset.token)
-        formData.append('methodOverride', 'DELETE')
-        for (const a of formData.entries()) {
-          console.log(a)
-        }
-        const opts = {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${jwtAccess}`,
-            'X-Http-Method-Override': 'delete',
-          },
-          body: formData,
-        }
-        const request = new Request(`${origin}/account/gallery/${dataset.albumid}/image/delete`, opts)
-        let response
-        let deleteResult
-        try {
-          response = await fetch(request, { credentials: 'same-origin' })
-          console.log(response)
-        } catch (e) {
-          console.warn('Response was not good.')
-          console.warn(e)
-          return
-        }
-        if (!response.ok) {
-          console.warn('Request failed.')
-          console.warn(`response status text: (${response.status}) ${response.statusText}`)
-          return
-        }
-        try {
-          deleteResult = await response.json()
-          console.info(deleteResult)
-          if (response.status > 200) {
-            console.warn(response.statusText)
-            // err.textContent = 'Delete failed for some reason.'
-            // err.classList.remove('hidden')
-          } else if (response.status === 200 && deleteResult?.err) {
-            console.warn(deleteResult.err)
-            // err.textContent = deleteResult.msg
-            // err.classList.remove('hidden')
+        modalDialog.addEventListener('close', async () => {
+          // console.info(`dialog.returnValue: ${modalDialog.returnValue}`)
+          if (modalDialog.returnValue === 'yes') {
+            console.log('Dialog Yes clicked')
+            const formData = new FormData()
+            formData.append('image', dataset.name)
+            formData.append('csrfToken', dataset.token)
+            formData.append('csrfTokenHidden', dataset.token)
+            formData.append('methodOverride', 'DELETE')
+            // for (const a of formData.entries()) {
+            //   console.log(a)
+            // }
+            const opts = {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                Authorization: `Bearer ${jwtAccess}`,
+                'X-Http-Method-Override': 'delete',
+              },
+              body: formData,
+            }
+            const request = new Request(`${origin}/account/gallery/${dataset.albumid}/image/delete`, opts)
+            let response
+            let deleteResult
+            try {
+              response = await fetch(request, { credentials: 'same-origin' })
+              // console.log(response)
+            } catch (e) {
+              console.warn('Response was not good.')
+              console.warn(e)
+              return
+            }
+            if (!response.ok) {
+              console.warn('Request failed.')
+              console.warn(`response status text: (${response.status}) ${response.statusText}`)
+              return
+            }
+            try {
+              deleteResult = await response.json()
+              console.info(deleteResult)
+              if (response.status > 200) {
+                console.warn(response.statusText)
+              } else if (response.status === 200 && deleteResult?.err) {
+                console.warn(deleteResult.err)
+              } else {
+                console.log('things seem ok.') 
+                const deleteSpanText = `${dataset.name} has been deleted!`
+                e.target.textContent = deleteSpanText
+                setTimeout(() => {
+                  const parent = document.querySelector('div#images')
+                  const deleted = e.target.parentNode.parentNode.parentNode
+                  // console.log('deleted: ', deleted)
+                  // console.log('parent: ', parent)
+                  parent.removeChild(deleted)
+                }, 3000)
+              }
+            } catch (e) {
+              console.warn(e)
+              return
+            }
           } else {
-            // msg.textContent = 'Image was deleted.'
-            // msg.classList.remove('hidden')
-            // setTimeout(() => {
-            //   msg.classList.add('hidden')
-            //   msg.textContent = ''
-            // }, 1750)
-            console.log('things seem ok.') 
+            console.log('delete canceled.')
           }
-        } catch (e) {
-          console.warn(e)
-          return
-        }
-
+        })
         modalDialog.showModal()
       }
       document.querySelectorAll('span.deleteImage').forEach((d) => {
