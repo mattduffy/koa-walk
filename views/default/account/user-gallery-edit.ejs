@@ -20,13 +20,13 @@
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
           <input type="hidden" name="albumId" id="albumId_Id" value="<%= album.id %>" required>
           <label for="albumName_Id">Album Name:</label>
-          <input type="text" name="albumName" id="albumName_Id" value="<%= album.name %>" size="80" tabindex="1">
+          <input type="text" name="albumName" id="albumName_Id" value="<%= album.name %>" tabindex="1">
           <br>
           <label for="albumDescription_Id">Album Description:</label>
-          <input type="text" name="albumDescription" id="albumDescription_Id" value="<%= album.description%>" size="80" tabindex="2">
+          <input type="text" name="albumDescription" id="albumDescription_Id" value="<%= album.description%>" tabindex="2">
           <br>
           <label for="albumKeywords_Id">Album Keywords:</label>
-          <input type="text" name="albumKeywords" id="albumKeywords_Id" value="<%= album.keywords?.join(', ') %>" size="80" tabindex="3">
+          <input type="text" name="albumKeywords" id="albumKeywords_Id" value="<%= album.keywords?.join(', ') %>" tabindex="3">
           <br>
           <label for="albumPublic_Id">Make Public:</label>
           <input type="checkbox" name="albumPublic" id="albumPublic_Id" <%= (album.public) ? "checked" : '' %> tabindex="4">
@@ -411,7 +411,6 @@
             <label>
               <img src="/i/rotate_40x40.png" class="rotate left90" title="Rotate counter-clockwise -90&deg; "alt="Rotate counter-clockwise -90&deg;"> 
               <input type="radio" name="rotate" id="rotate_90_<%= i %>" value="90" tabindex="7">
-            </label>
             <label>
               <img src="/i/rotate_40x40.png" class="rotate left180" title="Rotate counter-clockwise -1800&deg; "alt="Rotate counter-clockwise -180&deg;"> 
               <input type="radio" name="rotate" id="rotate_180_<%= i %>" value="180" tabindex="7">
@@ -425,10 +424,14 @@
               <input type="radio" name="rotate" id="rotate_360_<%= i %>" value="0" tabindex="7">
             </label>
             <br>
-            <label>Title: <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title" tabindex="7"></label><br>
-            <label>Description: <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description" tabindex="7"></label><br>
-            <label>Keywords: <input type="text" name="keywords" id="keywords_Id_<%= i %>" value="<%= image.keywords?.join(', ') ?? '' %>" class="keywords" tabindex="7"></label><br>
-            <label>Hide Image: <input type="checkbox" name="hideImage" id="hideImage_Id_<%= i %>" <%= (image.hide) ? 'checked' : ''  %> tabindex="7"></label><br>
+            <label for="title_Id_<%= i %>">Title: </label>
+            <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title" tabindex="7"><br>
+            <label for="description_Id_<%= i %>">Description: </label>
+            <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description" tabindex="7"><br>
+            <label for="keywords_Id_<%= i %>">Keywords: </label>
+            <input type="text" name="keywords" id="keywords_Id_<%= i %>" value="<%= image.keywords?.join(', ') ?? '' %>" class="keywords" tabindex="7"><br>
+            <label for="hideImage_Id_<%= i %>">Hide Image: </label>
+            <input type="checkbox" name="hideImage" id="hideImage_Id_<%= i %>" <%= (image.hide) ? 'checked' : ''  %> tabindex="7"><br>
             <input type="submit" value="Update Image Metadata" tabindex="7">
             <input type="reset" name="reset" id="reset_Id_<%= i %>" value="Reset" tabindex="7">
           </fieldset>

@@ -40,11 +40,20 @@ body {
   font-size: .9em;
 }
 
-@media screen and (min-width: 576px) {
+@media screen and (max-width: 400px) {
+  form {
+    margin: 0 auto .5em auto
+  }
+  input[type=text] {
+    width: 100%;
+  }
 
+  nav#foot-nav {
+    display: none;
+  }
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (max-width: 768px) {
 
 }
 
@@ -416,6 +425,7 @@ body {
   }
   
   input[type="text"] {
+    width: 100%; 
   }
   
   input[type="button"] {
