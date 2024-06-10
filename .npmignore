@@ -3,6 +3,7 @@ TODO.md
 keys/*
 migrations/*
 archive/*
+cached_pages/*
 private/a/*
 public/sitemap.xml
 public/a/*

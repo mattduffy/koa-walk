@@ -24,6 +24,7 @@ keys/*
 archive/*
 uploads/*
 public/a/*
+cached_pages/*
 public/sitemap.xml
 private/a/*
 migrations/*

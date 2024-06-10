@@ -1,7 +1,8 @@
 <section id="grid-gutter-left" class="grid-gutter-left">
   <aside>
     <nav class="sidebar-nav-wrapper">
-      <% if (isAuthenticated) { %>
+      <% console.log('caching: ', caching) %>
+      <% if (!caching && isAuthenticated) { %>
       <div id="loggedInAs">
         <%- sessionUser.displayName -%>
       </div>
@@ -18,7 +19,7 @@
       <% } else { %>
       <a href="/login">Login</a>
       <% } %>
-      <% if (/admin/i.test(sessionUser?.type)) { %>
+      <% if (!caching && /admin/i.test(sessionUser?.type)) { %>
       Admin level actions go here
       <ul id="adminLinks" class="adminLinks">
         <li><a href="/admin/account/listusers">List Users</a><li> 

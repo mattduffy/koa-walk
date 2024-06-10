@@ -6,7 +6,9 @@
  */
 
 import path from 'node:path'
-import { rename } from 'node:fs/promises'
+import {
+  mkdir, readFile, rename, writeFile,
+} from 'node:fs/promises'
 import Router from '@koa/router'
 import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
@@ -751,6 +753,30 @@ router.post('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx
         } else {
           status = 200
           body = saved
+          try {
+            const displayUser = ctx.state.sessionUser
+            const locals = {
+              caching: true,
+              view: ctx.flash.view ?? {},
+              // sessionUser: ctx.state.sessionUser,
+              sessionUser: {},
+              isAuthenticated: ctx.state.isAuthenticated,
+              displayUser: displayUser ?? {},
+              body: ctx.body,
+              album,
+              title: `${ctx.app.site}: ${displayUser.username}'s gallery, ${album.name}`,
+            }
+            log(locals)
+            const renderedPage = await ctx.render('account/user-gallery-public', locals)
+            const dir = path.join(ctx.app.dirs.cache.pages, `@${displayUser.username}/gallery`)
+            log(dir)
+            await mkdir(dir, { recursive: true })
+            const written = await writeFile(`${dir}/${album.id}`, renderedPage)
+            log('cached page was written to cache dir? ', written)
+          } catch (e) {
+            error('failed to create a cached version of gallery page after edit.')
+            error(e)
+          }
         }
       } catch (e) {
         error(e)
@@ -1106,6 +1132,18 @@ router.get('accountUsernamePublicGallery', '/:username/gallery/:id', hasFlash, a
   } catch (e) {
     error(`Failed to find user by @${username}`)
     error(e)
+  }
+  if (username !== displayUser.username) {
+    try {
+      const cachedPage = await readFile(path.join(ctx.app.dirs.cache.pages, ctx.path), { encoding: 'utf8' })
+      ctx.status = 200
+      ctx.type = 'text/html; charset=utf-8'
+      ctx.body = cachedPage
+      return
+    } catch (e) {
+      error(e)
+      error('No cached page to load.')
+    }
   }
   let album
   try {
