@@ -99,6 +99,9 @@ app.dirs = {
   archive: {
     archive: `${appRoot}/archive`,
   },
+  cache: {
+    pages: `${appRoot}/cached_pages`,
+  },
   keys: `${appRoot}/keys`,
   public: {
     dir: `${appRoot}/public`,
@@ -246,6 +249,7 @@ async function viewGlobals(ctx, next) {
   ctx.state.appName = ctx.app.site.toProperCase()
   ctx.state.pageDescription = 'Things that I have made.'
   ctx.state.stylesheets = []
+  ctx.state.caching = false
   ctx.state.structredData = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'website',
