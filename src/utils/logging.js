@@ -7,10 +7,11 @@
 
 import Debug from 'debug'
 
+const { pid } = process
 Debug.log = console.log.bind(console)
-const _log = Debug('koa-stub-LOG')
-const _info = Debug('koa-stub-INFO')
-const _error = Debug('koa-stub-ERROR')
+const _log = Debug(`${pid}-koa-stub-LOG`)
+const _info = Debug(`${pid}-koa-stub-INFO`)
+const _error = Debug(`${pid}-koa-stub-ERROR`)
 
 /* eslint-disable no-extend-native */
 /* eslint-disable-next-line func-names */
