@@ -1,0 +1,52 @@
+<main>
+  <article>
+    <h1>Blogs Main Page</h1>
+    <% if (flash?.info) { %>
+    <div id="info" class="info">
+      <span><%= flash.info %></span>
+    </div>
+    <% } %>
+    <% if (flash?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= flash.message %></span>
+    </div>
+    <% } %>
+    <% if (flash?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= flash.error %></span>
+    </div>
+    <% } %> 
+    <% if (recent10?.length > 0) { %>
+      <h2>Recently Added</h2>    
+      <section id="recent10">
+        <div class="recentlyAdded">
+        <% recent10.forEach((p) => { %>
+          <div class="recentlyAddedPosts"> 
+            <figure>
+              <a href="<%= `${origin}/@${p.owner}/blog/${p.id}` %>">
+                <img src="<%= `${origin}/${p.preview}` %>" alt="<%= p.description %>">
+              </a>
+              <figcaption>
+                <%= b.title %>
+                <br>
+                by: <%= b.owner %>
+              </figcaption>
+            </figure>
+          </div>
+        <% }) %>
+        </div>
+      </section>
+    <% } %>
+    <br>
+    <section id="userBlogs">
+      <h2>Users With Public Blogs</h2>
+      <% if (publicBlogs?.length > 0) { %>
+      <ul id="usersBlogList">
+        <% publicBlogs.forEach((b) => { %>
+          <li><a href="<%- origin -%>/@<%- b._id -%>/blog">@<%- b._id -%></a></li>
+        <% }) %>
+      </ul>
+      <% } %>
+    </section>
+  </article>
+</main>

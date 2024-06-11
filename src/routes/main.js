@@ -8,6 +8,7 @@
 import Router from '@koa/router'
 // import { ObjectId } from 'mongodb'
 import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
+import { Blogs } from '@mattduffy/blogs/Blogs' // eslint-disable-line import/no-unresolved
 // import { Users } from '../models/users.js'
 import { _log, _error } from '../utils/logging.js'
 import { redis } from '../daos/impl/redis/redis-client.js'
@@ -72,6 +73,37 @@ router.get('galleries', '/galleries', hasFlash, async (ctx) => {
     origin: ctx.request.origin,
     flash: ctx.flash?.galleries ?? {},
     title: `${ctx.app.site}: Galleries`,
+    sessionUser: ctx.state.sessionUser,
+    isAuthenticated: ctx.state.isAuthenticated,
+  })
+})
+
+router.get('blogs', '/blog', hasFlash, async (ctx) => {
+  const log = mainLog.extend('blogs')
+  const error = mainError.extend('blogs')
+  log('inside index router: /blogs')
+  ctx.status = 200
+  let recent10
+  try {
+    recent10 = await Blogs?.recentlyAdded(redis)
+  } catch (e) {
+    error(e)
+  }
+  log('recent10: ', recent10)
+  let publicBlogs
+  try {
+    publicBlogs = await Blogs?.usersWithPublicBlogs(ctx.state.mongodb.client.db())
+  } catch (e) {
+    error(e)
+  }
+  log('users with public blogs: ', publicBlogs)
+  await ctx.render('blogs', {
+    recent10,
+    publicBlogs,
+    body: ctx.body,
+    origin: ctx.request.origin,
+    flash: ctx.flash?.galleries ?? {},
+    title: `${ctx.app.site}: Blogs`,
     sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
   })
