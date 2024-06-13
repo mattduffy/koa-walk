@@ -14,6 +14,8 @@ import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 import formidable from 'formidable'
 /* eslint-disable */
+import { Blog } from '@mattduffy/blogs'
+import { Blogs } from '@mattduffy/blogs/Blogs'
 import { Album } from '@mattduffy/albums'
 import { Albums } from '@mattduffy/albums/Albums'
 import { Unpacker } from '@mattduffy/unpacker'
@@ -320,6 +322,54 @@ router.get('accountDecryptData', '/account/decrypt/:ciphertext', hasFlash, async
   console.log(ctx)
 })
 
+router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
+  const log = accountLog.extend('GET-account-blog')
+  const error = accountError.extend('GET-account-blog')
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    log(`View ${ctx.state.sessionUser.username}'s account details.`)
+    log('flash %O', ctx.flash)
+    const db = ctx.state.mongodb.client.db()
+    // Get list of albums, if they exist
+    const blog = await Blogs.getById(db, ctx.params.id, redis) ?? {}
+    log(blog)
+    // let pub
+    // let pri
+    // blog.forEach((list) => {
+    //   if (list._id === 'public') {
+    //     pub = list.blog
+    //     log('public blog: ', pub[0])
+    //   }
+    //   if (list._id === false) {
+    //     pri = list.blog
+    //     log('private blog: ', pri)
+    //   }
+    // })
+    const csrfToken = ulid()
+    ctx.session.csrfToken = csrfToken
+    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+    const locals = {
+      sessionUser: ctx.state.sessionUser,
+      blog,
+      body: ctx.body,
+      view: ctx.flash.view ?? {},
+      edit: ctx.flash.edit ?? {},
+      origin: `${ctx.request.origin}`,
+      jwtAccess: (ctx.state.sessionUser.jwts).token,
+      csrfToken,
+      // public: pub,
+      // private: pri,
+      isAuthenticated: ctx.state.isAuthenticated,
+      title: `${ctx.app.site}: View Blog Details`,
+    }
+    ctx.status = 200
+    await ctx.render('account/user-blog-edit', locals)
+  }
+})
+
 router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-galleries-edit')
   const error = accountError.extend('GET-account-galleries-edit')
@@ -348,7 +398,7 @@ router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx)
       origin: `${ctx.request.origin}`,
       jwtAccess: (ctx.state.sessionUser.jwts).token,
       csrfToken,
-      title: `${ctx.app.site}: View Account Details`,
+      title: `${ctx.app.site}: View ALbum Details`,
     }
     await ctx.render('account/user-gallery-edit', locals)
   }

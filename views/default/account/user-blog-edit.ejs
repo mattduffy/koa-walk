@@ -1,0 +1,19 @@
+<main>
+  <article>
+    <h1>Blog: <%= blog.name %></h1>
+    <% if (view.message) { %>
+    <div id="messages" class="messages">
+      <span><%= view.message %></span>
+    </div>
+    <% } %>
+    <% if (view.error) { %>
+    <div id="errors" class="errors">
+      <span><%= view.error%></span>
+    </div>
+    <% } %>
+    <div class="blog">
+
+    </div>
+
+  </article>
+</main>
