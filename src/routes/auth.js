@@ -8,8 +8,7 @@
 import Router from '@koa/router'
 import formidable from 'formidable'
 import { ulid } from 'ulid'
-/* eslint-disable-next-line no-unused-vars */
-import { ObjectId } from 'mongodb'
+// import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
 
@@ -32,12 +31,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
     ctx.redirect('/')
   }
   const csrfToken = ulid()
-  // const flashMessage = ctx.flash
   const locals = {
-    // origin: ctx.request.origin,
-    // siteName: ctx.app.site,
-    // appName: ctx.app.site.toProperCase(),
-    // nonce: ctx.app.nonce,
     body: ctx.body,
     title: `${ctx.app.site}: Login`,
     sessionUser: ctx.state.sessionUser,
@@ -92,12 +86,16 @@ router.post('postLogin', '/login', async (ctx) => {
     ctx.body = { status: 'Error, csrf tokens do not match' }
   } else {
     const db = ctx.state.mongodb.client.db()
-    // await next()
     const collection = db.collection('users')
     const users = new Users(collection, ctx)
     const authUser = await users.authenticateAndGetUser(username, password)
+    log('authentication result: %o', authUser)
     if (!authUser.user) {
-      error(authUser.error)
+      const doc = { attemptedAt: new Date(), username, password }
+      if (ctx.state?.logEntry) {
+        doc.from = { ip: ctx.state.logEntry.ip, geo: ctx.state.logEntry.geo }
+      }
+      await db.collection('loginAttempts').insertOne(doc)
       ctx.state.isAuthenticated = false
       ctx.flash = {
         login: {

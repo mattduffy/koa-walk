@@ -297,12 +297,13 @@ async function logRequest(ctx, next) {
       logEntry.httpVersion = `${ctx.req.httpVersionMajor}.${ctx.req.httpVersionMinor}`
       logEntry.referer = ctx.request.headers?.referer
       logEntry.userAgent = ctx.request.headers['user-agent']
+      ctx.state.logEntry = { ip: logEntry.remoteIp[0], geo: logEntry.geo }
       await mainLog.insertOne(logEntry)
     }
-    logg(`Request href:       ${ctx.request.href}`)
-    logg(`Request remote ips: ${ctx.request.ips}`)
-    logg(`Request remote ip:  ${ctx.request.ip}`)
-    logg('Request headers:    %O', ctx.request.headers)
+    logg(`Request href:        ${ctx.request.href}`)
+    logg(`Request remote ips:  ${ctx.request.ips}`)
+    logg(`Request remote ip:   ${ctx.request.ip}`)
+    logg('Request headers:     %O', ctx.request.headers)
     await next()
   } catch (e) {
     err(e)
