@@ -12,7 +12,27 @@
     </div>
     <% } %>
     <div class="blog">
-
+      <form name="edit" id="edit_Id" action="/account/blog/<%= blog.id %>" method="POST" enctype="multipart/form-data">
+        <fieldset>
+          <legend>Your blog details</legend>
+          <div id="blogUpdateMsg" class="messages hidden"></div>
+          <div id="blogUpdateErr" class="errors hidden"></div>
+          <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
+          <input type="hidden" name="blogId" id="blogId_Id" value="<%= blog.id %>" required>
+          <label for="blogTitle_Id">Blog Title:</label>
+          <input type="text" name="blogTitle" id="blogTitle_Id" value="<%= blog.title %>" tabindex="1">
+          <br>
+          <label for="blogDescription_Id">Blog Description:</label>
+          <textarea id="blogDescription_Id" name="blogDescription" rows="3" cols="50">
+            <%= blog.description %>
+          </textarea>
+          <label for="blogKeywords_Id">Blog Keywords:</label>
+          <input type="text" name="blogKeywords" id="blogKeywords_Id" value="<%= blog.keywords%>" tabindex="1">
+          <br>
+          <input type="submit" name="submit" id="submit_Id" value="Update Blog" tabindex="6">
+          <input type="reset" name="reset" id="reset_Id" value="Reset" tabindex="7">
+        </fieldset>
+      </form>
     </div>
 
   </article>

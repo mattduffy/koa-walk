@@ -333,7 +333,7 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
     log(`View ${ctx.state.sessionUser.username}'s account details.`)
     log('flash %O', ctx.flash)
     const db = ctx.state.mongodb.client.db()
-    // Get list of albums, if they exist
+    // Get list of blogs, if they exist
     const blog = await Blogs.getById(db, ctx.params.id, redis) ?? {}
     log(blog)
     // let pub
