@@ -370,6 +370,44 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
   }
 })
 
+router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
+  const log = accountLog.extend('POST-account-blog-edit')
+  const error = accountError.extend('POST-account-blog-edit')
+  const form = formidable({
+    encoding: 'utf-8',
+    uploadDir: ctx.app.dirs.private.uploads,
+    keepExtensions: true,
+    multipart: true,
+    maxFileSize: (200 * 1024 * 1024),
+  })
+  await new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        error('There was a problem parsing the multipart form data.')
+        error(err)
+        reject(err)
+        return
+      }
+      log('Multipart form data was successfully parsed.')
+      ctx.request.body = fields
+      ctx.request.files = files
+      log('fields: %o', fields)
+      log('files: %o', files)
+      resolve()
+    })
+  })
+  log(ctx.request.body)
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    ctx.status = 200
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = { status: 'ok' }
+  }
+})
+
 router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-galleries-edit')
   const error = accountError.extend('GET-account-galleries-edit')
