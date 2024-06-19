@@ -23,9 +23,7 @@
           <input type="text" name="blogTitle" id="blogTitle_Id" value="<%= blog.title %>" tabindex="1">
           <br>
           <label for="blogDescription_Id">Blog Description:</label>
-          <textarea id="blogDescription_Id" name="blogDescription" rows="3" cols="50">
-            <%= blog.description %>
-          </textarea>
+          <textarea id="blogDescription_Id" name="blogDescription" rows="3" cols="50" tabindex="1"><%= blog.description %></textarea>
           <label for="blogKeywords_Id">Blog Keywords:</label>
           <input type="text" name="blogKeywords" id="blogKeywords_Id" value="<%= blog.keywords%>" tabindex="1">
           <br>
@@ -36,8 +34,72 @@
       <script nonce="<%= nonce %>">
         const origin = '<%= origin %>'
         const jwtAccess = '<%= jwtAccess %>'
-        const form = document.forms[0]
- 
+        window.forms = document.forms
+        const blogForm = forms.namedItem('edit')
+        async function editBlogDetails(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          blogForm.elements.submit.disabled = true
+          const formData = new FormData()
+          const csrfToken = blogForm.elements['csrf-token']
+          formData.append('csrfTokenHidden', csrfToken.value)
+          const blogId = blogForm.elements['blogId']
+          if (blogId.value !== '') {
+            formData.append('id', blogId.value)
+          }
+          const blogTitle = blogForm.elements['blogTitle']
+          formData.append('title', blogTitle.value)
+          const blogDescription = blogForm.elements['blogDescription']
+          formData.append('description', blogDescription.value)
+          const blogKeywords = blogForm.elements['blogKeywords']
+          formData.append('keywords', blogKeywords.value)
+          const opts = {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${jwtAccess}`
+            },
+            body: formData,
+          }
+          const request = new Request(`${origin}/account/blog/edit`, opts)
+          let response
+          let blogJson
+          try {
+            response = await fetch(request, { credentials: 'same-origin' })
+            console.log(response)
+            if (!response.ok) {
+              console.info('fetch failed')
+              console.error(response)
+            } else if (response.status > 200) {
+              const err = document.querySelector('div#blogUpdateErr')
+              err.textContent = 'Update failed for some reason.'
+              err.classList.remove('hidden')
+              console.error(blogJson)
+              setTimeout(() => {
+                err.classList.add('hidden')
+                err.textContent = ''
+                blogForm.elements['submit'].disabled = false
+                blogForm.elements['reset'].click()
+              }, 5000)
+            } else {
+              blogJson = await response.json() 
+              console.log(blogJson)
+              const msg = document.querySelector('div#blogUpdateMsg')
+              msg.textContent = 'Blog details saved.'
+              msg.classList.remove('hidden')
+              console.log(msg)
+              setTimeout(() => {
+                blogForm.elements['submit'].disabled = false
+                msg.classList.add('hidden')
+                msg.textContent = ''
+              }, 5000) 
+            }
+          } catch (e) {
+            console.error(e)
+          }
+          console.log('finished')
+        }
+        blogForm.addEventListener('submit', editBlogDetails)
       </script>
     </div>
 
