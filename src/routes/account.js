@@ -373,39 +373,89 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
 router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
   const log = accountLog.extend('POST-account-blog-edit')
   const error = accountError.extend('POST-account-blog-edit')
-  const form = formidable({
-    encoding: 'utf-8',
-    uploadDir: ctx.app.dirs.private.uploads,
-    keepExtensions: true,
-    multipart: true,
-    maxFileSize: (200 * 1024 * 1024),
-  })
-  await new Promise((resolve, reject) => {
-    form.parse(ctx.req, (err, fields, files) => {
-      if (err) {
-        error('There was a problem parsing the multipart form data.')
-        error(err)
-        reject(err)
-        return
-      }
-      log('Multipart form data was successfully parsed.')
-      ctx.request.body = fields
-      ctx.request.files = files
-      log('fields: %o', fields)
-      log('files: %o', files)
-      resolve()
-    })
-  })
-  log(ctx.request.body)
+  if (!ctx.state.isAsyncRequest) {
+    ctx.status = 400
+    ctx.redirect('/')
+  }
+  let body
+  let status
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
     ctx.redirect('/')
+  } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
+    error(`CSR-Token mismatch: header: ${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
+    status = 401
+    body = { error: 'csrf token mismatch' }
   } else {
-    ctx.status = 200
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = { status: 'ok' }
+    const form = formidable({
+      encoding: 'utf-8',
+      uploadDir: ctx.app.dirs.private.uploads,
+      keepExtensions: true,
+      multipart: true,
+      maxFileSize: (200 * 1024 * 1024),
+    })
+    await new Promise((resolve, reject) => {
+      form.parse(ctx.req, (err, fields, files) => {
+        if (err) {
+          error('There was a problem parsing the multipart form data.')
+          error(err)
+          reject(err)
+          return
+        }
+        log('Multipart form data was successfully parsed.')
+        ctx.request.body = fields
+        ctx.request.files = files
+        // log('fields: %O', fields)
+        // log('files: %o', files)
+        resolve()
+      })
+    })
+    log(ctx.request.body)
+    let blog
+    const blogId = ctx.request.body?.id[0] ?? null
+    const blogTitle = ctx.request.body?.title[0] ?? ''
+    const blogDescription = ctx.request.body?.description[0] ?? ''
+    const blogKeywords = (ctx.request.body?.keywords) ? Array.from(ctx.request.body?.keywords?.[0]?.split(',')) : []
+    const csrfTokenCookie = ctx.cookies.get('csrfToken')
+    const csrfTokenSession = ctx.session.csrfToken
+    const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
+    if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
+    if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+      error(`                     hidden: ${csrfTokenHidden}`)
+      error(`                    session: ${csrfTokenSession}`)
+      status = 403
+      body = { status: 'Error, csrf tokens do not match' }
+    } else {
+      try {
+        const db = ctx.state.mongodb.client.db().collection('blogs')
+        const o = {
+          blogId,
+          blogTitle,
+          blogDescription,
+          blogKeywords,
+        }
+        if (!blogId) {
+          blog = await Blogs.new(db, o)
+        } else {
+          blog = await Blogs.getById(db, o)
+        }
+        const saved = await blog.save()
+        status = 200
+        body = { status: 'ok', saved }
+      } catch (e) {
+        error(e)
+        status = 500
+        body = { msg: 'failed to update blog.' }
+      }
+    }
   }
+  ctx.status = status
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = body
 })
 
 router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx) => {
