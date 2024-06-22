@@ -31,8 +31,9 @@ const accountError = _error.extend('account')
 
 const router = new Router()
 
-function isAsyncRequest(req) {
-  return (req.get('X-ASYNCREQUEST') === true)
+// function isAsyncRequest(req) {
+function isAsyncRequest(ctx) {
+  return (ctx.request.get('X-ASYNCREQUEST') === true)
 }
 
 /* eslint-disable-next-line no-unused-vars */
@@ -65,6 +66,26 @@ async function hasFlash(ctx, next) {
   await next()
 }
 
+function doTokensMatch(ctx) {
+  const log = _log.extend('doTokensMatch')
+  const error = _error.extend('doTokensMatch')
+  const csrfTokenCookie = ctx.cookies.get('csrfToken')
+  const csrfTokenSession = ctx.session.csrfToken
+  const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
+  if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
+  if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+  if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+  if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+    error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+    error(`                     hidden: ${csrfTokenHidden}`)
+    error(`                    session: ${csrfTokenSession}`)
+    ctx.status = 403
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = { status: 'Error, csrf tokens do not match' }
+  }
+  return true
+}
+
 router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-change-password')
   const error = accountError.extend('GET-account-change-password')
@@ -78,7 +99,8 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
     const csrfToken = ulid()
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-    if (isAsyncRequest(ctx.request)) {
+    // if (isAsyncRequest(ctx.request)) {
+    if (isAsyncRequest(ctx)) {
       // async request, send back json
       ctx.type = 'application/json; charset=utf-8'
       // ctx.body = ctx.headers
@@ -191,7 +213,8 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx) => {
   } else {
     log(`View ${ctx.state.sessionUser.username}'s account tokens.`)
 
-    if (isAsyncRequest(ctx.request)) {
+    // if (isAsyncRequest(ctx.request)) {
+    if (isAsyncRequest(ctx)) {
       // async request, send back json
       ctx.type = 'application/json; charset=utf-8'
       ctx.body = ctx.state.sessionUser.jwts
@@ -373,7 +396,7 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
 router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
   const log = accountLog.extend('POST-account-blog-edit')
   const error = accountError.extend('POST-account-blog-edit')
-  if (!ctx.state.isAsyncRequest) {
+  if (!isAsyncRequest(ctx)) {
     ctx.status = 400
     ctx.redirect('/')
   }
@@ -413,23 +436,24 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
     })
     log(ctx.request.body)
     let blog
-    const blogId = ctx.request.body?.id[0] ?? null
-    const blogTitle = ctx.request.body?.title[0] ?? ''
-    const blogDescription = ctx.request.body?.description[0] ?? ''
+    const blogId = ctx.request.body.id?.[0] ?? null
+    const blogTitle = ctx.request.body.title?.[0] ?? ''
+    const blogDescription = ctx.request.body.description[0] ?? ''
     const blogKeywords = (ctx.request.body?.keywords) ? Array.from(ctx.request.body?.keywords?.[0]?.split(',')) : []
-    const csrfTokenCookie = ctx.cookies.get('csrfToken')
-    const csrfTokenSession = ctx.session.csrfToken
-    const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
-    if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
-    if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
-    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
-    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
-      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
-      error(`                     hidden: ${csrfTokenHidden}`)
-      error(`                    session: ${csrfTokenSession}`)
-      status = 403
-      body = { status: 'Error, csrf tokens do not match' }
-    } else {
+    // const csrfTokenCookie = ctx.cookies.get('csrfToken')
+    // const csrfTokenSession = ctx.session.csrfToken
+    // const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
+    // if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
+    // if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
+    // if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    // if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
+    //   error(`csrf token mismatch: header: ${csrfTokenCookie}`)
+    //   error(`                     hidden: ${csrfTokenHidden}`)
+    //   error(`                    session: ${csrfTokenSession}`)
+    //   status = 403
+    //   body = { status: 'Error, csrf tokens do not match' }
+    // } else {
+    if (doTokensMatch(ctx)) {
       try {
         const db = ctx.state.mongodb.client.db().collection('blogs')
         const o = {
