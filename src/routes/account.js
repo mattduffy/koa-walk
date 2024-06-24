@@ -463,7 +463,7 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
           blogKeywords,
         }
         if (!blogId) {
-          blog = await Blogs.new(db, o)
+          blog = await Blogs.newBlog(db, o)
         } else {
           blog = await Blogs.getById(db, o)
         }
