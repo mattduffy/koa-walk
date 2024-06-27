@@ -440,22 +440,12 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
     const blogTitle = ctx.request.body.title?.[0] ?? ''
     const blogDescription = ctx.request.body.description[0] ?? ''
     const blogKeywords = (ctx.request.body?.keywords) ? Array.from(ctx.request.body?.keywords?.[0]?.split(',')) : []
-    // const csrfTokenCookie = ctx.cookies.get('csrfToken')
-    // const csrfTokenSession = ctx.session.csrfToken
-    // const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
-    // if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
-    // if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
-    // if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
-    // if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
-    //   error(`csrf token mismatch: header: ${csrfTokenCookie}`)
-    //   error(`                     hidden: ${csrfTokenHidden}`)
-    //   error(`                    session: ${csrfTokenSession}`)
-    //   status = 403
-    //   body = { status: 'Error, csrf tokens do not match' }
-    // } else {
     if (doTokensMatch(ctx)) {
+      //
+      // copy this refactor to other route handlers
+      //
       try {
-        const db = ctx.state.mongodb.client.db().collection('blogs')
+        const db = ctx.state.mongodb.client.db()
         const o = {
           blogId,
           blogTitle,
@@ -463,9 +453,9 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
           blogKeywords,
         }
         if (!blogId) {
-          blog = await Blogs.newBlog(db, o)
+          blog = await Blogs.newBlog(db, o, redis)
         } else {
-          blog = await Blogs.getById(db, o)
+          blog = await Blogs.getById(db, o, redis)
         }
         const saved = await blog.save()
         status = 200
