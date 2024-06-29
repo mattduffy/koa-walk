@@ -357,8 +357,10 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
     log('flash %O', ctx.flash)
     const db = ctx.state.mongodb.client.db()
     // Get list of blogs, if they exist
-    const blog = await Blogs.getById(db, ctx.params.id, redis) ?? {}
-    log(blog)
+    const { username } = ctx.state.sessionUser
+    log(`username for blog owner: ${username}`)
+    const blog = await Blogs.getByUsername(db, username, redis) ?? {}
+    log(`found ${username}'s blog: ${blog.name}`)
     // let pub
     // let pri
     // blog.forEach((list) => {
@@ -439,6 +441,8 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
     const blogId = ctx.request.body.id?.[0] ?? null
     const blogTitle = ctx.request.body.title?.[0] ?? ''
     const blogDescription = ctx.request.body.description[0] ?? ''
+    const blogPublic = (ctx.request.body?.public?.[0]) ? ((ctx.request.body.public[0] === 'true') ? true : false) : false // eslint-disable-line
+    log(`blog access: ${blogPublic}`)
     const blogKeywords = (ctx.request.body?.keywords) ? Array.from(ctx.request.body?.keywords?.[0]?.split(',')) : []
     if (doTokensMatch(ctx)) {
       //
@@ -447,15 +451,21 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
       try {
         const db = ctx.state.mongodb.client.db()
         const o = {
+          creator: ctx.state.sessionUser.username,
           blogId,
           blogTitle,
           blogDescription,
           blogKeywords,
+          public: blogPublic,
         }
         if (!blogId) {
           blog = await Blogs.newBlog(db, o, redis)
         } else {
-          blog = await Blogs.getById(db, o, redis)
+          blog = await Blogs.getById(db, blogId, redis)
+          blog.public = blogPublic
+          blog.name = blogTitle
+          blog.description = blogDescription
+          blog.keywords = blogKeywords
         }
         const saved = await blog.save()
         status = 200
