@@ -28,7 +28,7 @@
           <input type="text" name="blogKeywords" id="blogKeywords_Id" value="<%= blog.keywords%>" tabindex="1">
           <br>
           <label for="blogPublic">Public:</label>
-          <input type="checkbox" name="blogPublic" id="blogPublic_Id" <%= (blog.public === 'true') ? 'checked' : '' %> tabindex="1">
+          <input type="checkbox" name="blogPublic" id="blogPublic_Id" <%= (blog.public) ? 'checked' : '' %> tabindex="1">
           <br>
           <input type="submit" name="submit" id="submit_Id" value="Update Blog" tabindex="6">
           <input type="reset" name="reset" id="reset_Id" value="Reset" tabindex="7">
@@ -107,6 +107,16 @@
         }
         blogForm.addEventListener('submit', editBlogDetails)
       </script>
+    </div>
+    <div id="posts">
+      <% if (posts.length > 0) {
+        post.forEach((p, i) => { %>
+
+        <% })
+      } else { %>
+      <h1>No blog posts created yet.</h1>
+      <a href="">Create a new post.</a>
+      <% } %>
     </div>
 
   </article>

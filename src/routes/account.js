@@ -361,6 +361,7 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
     log(`username for blog owner: ${username}`)
     const blog = await Blogs.getByUsername(db, username, redis) ?? {}
     log(`found ${username}'s blog: ${blog.name}`)
+    const posts = []
     // let pub
     // let pri
     // blog.forEach((list) => {
@@ -379,6 +380,7 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
     const locals = {
       sessionUser: ctx.state.sessionUser,
       blog,
+      posts,
       body: ctx.body,
       view: ctx.flash.view ?? {},
       edit: ctx.flash.edit ?? {},
