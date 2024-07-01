@@ -462,16 +462,19 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
         }
         if (!blogId) {
           blog = await Blogs.newBlog(db, o, redis)
+          blog.url = blogTitle
         } else {
           blog = await Blogs.getById(db, blogId, redis)
           blog.public = blogPublic
-          blog.name = blogTitle
+          blog.title = blogTitle
+          blog.url = blogTitle
           blog.description = blogDescription
           blog.keywords = blogKeywords
         }
         const saved = await blog.save()
+        log(`blog slug: ${blog.url}`)
         status = 200
-        body = { status: 'ok', saved }
+        body = { status: 'ok', saved, blog }
       } catch (e) {
         error(e)
         status = 500

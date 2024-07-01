@@ -20,7 +20,7 @@
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
           <input type="hidden" name="blogId" id="blogId_Id" value="<%= blog.id %>" required>
           <label for="blogTitle_Id">Blog Title:</label>
-          <input type="text" name="blogTitle" id="blogTitle_Id" value="<%= blog.name %>" tabindex="1">
+          <input type="text" name="blogTitle" id="blogTitle_Id" value="<%= blog.title %>" tabindex="1">
           <br>
           <label for="blogDescription_Id">Blog Description:</label>
           <textarea id="blogDescription_Id" name="blogDescription" rows="3" cols="50" tabindex="1"><%= blog.description %></textarea>
@@ -29,6 +29,9 @@
           <br>
           <label for="blogPublic">Public:</label>
           <input type="checkbox" name="blogPublic" id="blogPublic_Id" <%= (blog.public) ? 'checked' : '' %> tabindex="1">
+          <br>
+          <label for="blogSlug_Id">Blog Url Slug:</label>
+          <input type="text" name="blogSlug" id="blogSlug_Id" value="<%= blog.url %>" disabled>
           <br>
           <input type="submit" name="submit" id="submit_Id" value="Update Blog" tabindex="6">
           <input type="reset" name="reset" id="reset_Id" value="Reset" tabindex="7">
@@ -90,6 +93,8 @@
             } else {
               blogJson = await response.json() 
               console.log(blogJson)
+              blogForm.elements['blogId'].value = blogJson.saved.insertedId
+              blogForm.elements['blogSlug'].value = blogJson.blog._slug
               const msg = document.querySelector('div#blogUpdateMsg')
               msg.textContent = 'Blog details saved.'
               msg.classList.remove('hidden')
