@@ -31,7 +31,6 @@ const accountError = _error.extend('account')
 
 const router = new Router()
 
-// function isAsyncRequest(req) {
 function isAsyncRequest(ctx) {
   return (ctx.request.get('X-ASYNCREQUEST') === true)
 }
@@ -362,18 +361,6 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
     const blog = await Blogs.getByUsername(db, username, redis) ?? {}
     log(`found ${username}'s blog: ${blog.name}`)
     const posts = []
-    // let pub
-    // let pri
-    // blog.forEach((list) => {
-    //   if (list._id === 'public') {
-    //     pub = list.blog
-    //     log('public blog: ', pub[0])
-    //   }
-    //   if (list._id === false) {
-    //     pri = list.blog
-    //     log('private blog: ', pri)
-    //   }
-    // })
     const csrfToken = ulid()
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
@@ -613,10 +600,6 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', async (ct
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
     ctx.redirect('/')
-  } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-    error(`CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
-    status = 401
-    body = { error: 'csrf token mismatch' }
   } else {
     const form = formidable({
       encoding: 'utf-8',
@@ -651,19 +634,7 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', async (ct
     log('uploaded filepath:             ', image.filepath)
     log('uploaded originalFilename:     ', image.originalFilename)
     log('uploaded originalFilenamePath: ', originalFilenamePath)
-    const csrfTokenCookie = ctx.cookies.get('csrfToken')
-    const csrfTokenSession = ctx.session.csrfToken
-    const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
-    if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
-    if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
-    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
-    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
-      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
-      error(`                     hidden: ${csrfTokenHidden}`)
-      error(`                    session: ${csrfTokenSession}`)
-      status = 403
-      body = { status: 'Error, csrf tokens do not match' }
-    } else {
+    if (doTokensMatch(ctx)) {
       let albumDir
       let newImageAlbumDirPath
       try {
@@ -772,19 +743,7 @@ router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', asy
     } else {
       imageHide = true
     }
-    const csrfTokenCookie = ctx.cookies.get('csrfToken')
-    const csrfTokenSession = ctx.session.csrfToken
-    const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
-    if (csrfTokenCookie === csrfTokenSession) log(`cookie ${csrfTokenCookie} === session ${csrfTokenSession}`)
-    if (csrfTokenCookie === csrfTokenHidden) log(`cookie ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
-    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
-    if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
-      error(`csrf token mismatch: header: ${csrfTokenCookie}`)
-      error(`                     hidden: ${csrfTokenHidden}`)
-      error(`                    session: ${csrfTokenSession}`)
-      status = 403
-      body = { status: 'Error, csrf tokens do not match' }
-    } else {
+    if (doTokensMatch(ctx)) {
       try {
         const db = ctx.state.mongodb.client.db().collection('albums')
         album = await Albums.getById(db, albumId, redis)
