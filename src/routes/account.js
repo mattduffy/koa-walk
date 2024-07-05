@@ -683,7 +683,7 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', async (ct
   ctx.body = body
 })
 
-router.post('accountEditGalleryImage', '/account/galleries/:id/image/:name', async (ctx) => {
+router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async (ctx) => {
   const log = accountLog.extend('POST-account-galleries-image-edit')
   const error = accountError.extend('POST-account-galleries-image-edit')
   if (!ctx.state.isAsyncRequest) {
