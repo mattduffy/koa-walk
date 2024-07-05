@@ -134,7 +134,7 @@
           }
           const request = new Request(`${origin}/account/gallery/${albumId.value}/image/add`, opts)
           const response = await fetch(request, { credentials: 'same-origin' })
-          console.log(response.ok, response.status, response.statusText)
+          // console.log(response.ok, response.status, response.statusText)
           if (!response.ok) {
             // console.error(response.statusText)
             console.error(response)
@@ -176,7 +176,7 @@
               const numIndex = Number.parseInt(cloney.children[0][0].children[6].id.lastIndexOf('_')) + 1
               const num = Number.parseInt(cloney.children[0][0].children[6].id.substr(numIndex), 10)
               const re = new RegExp(`${num}$`)
-              console.log(`cloney num: ${num}, re: ${re}`)
+              // console.log(`cloney num: ${num}, re: ${re}`)
               // csrf-token_Id_<n>
               cloney.children[0][0].children[6].id = 
                 cloney.children[0][0].children[6].id.replace(re, num + 1)
@@ -607,7 +607,8 @@
         }
         const err = form.querySelector(':scope > fieldset > div#imageUpdateErr')
         const msg = form.querySelector(':scope > fieldset > div#imageUpdateMsg')
-        const request = new Request(`${origin}/account/galleries/${albumId.value}/image/${name.value}`, opts)
+        // const request = new Request(`${origin}/account/galleries/${albumId.value}/image/${name.value}`, opts)
+        const request = new Request(`${origin}/account/gallery/${albumId.value}/image/${name.value}`, opts)
         let response
         let updateResult
         try {
