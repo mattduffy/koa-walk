@@ -646,8 +646,8 @@
               const figs = form.querySelectorAll(':scope > fieldset > figure')
               figs[0].children[0].src = `${origin}/${updateResult.sizes.big}`
               figs[0].children[0].style = 'transform: rotate(0deg)'
-              figs[1].children[0].src = null 
               figs[1].children[0].src = `${origin}/${updateResult.sizes.thb}`
+              figs[1].children[0].style = '' 
             }
           }
         } catch (e) {

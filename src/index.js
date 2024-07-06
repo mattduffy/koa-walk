@@ -301,8 +301,9 @@ async function logRequest(ctx, next) {
       await mainLog.insertOne(logEntry)
     }
     logg(`Request href:        ${ctx.request.href}`)
+    logg(`Request url:         ${ctx.request.url}`)
+    // logg(`Request originalUrl: ${ctx.request.originalUrl}`)
     logg(`Request remote ips:  ${ctx.request.ips}`)
-    logg(`Request remote ip:   ${ctx.request.ip}`)
     logg('Request headers:     %O', ctx.request.headers)
     await next()
   } catch (e) {
