@@ -230,6 +230,13 @@
               form.elements.rotate.forEach((r) => {
                 r.addEventListener('change', rotateImage)
               })
+              const deleteImageSpan = cloney
+                .firstElementChild
+                .firstElementChild
+                .firstElementChild
+              deleteImageSpan.addEventListener('click', async (e) => {
+                await deleteImage(e, deleteImageSpan.dataset)
+              })
             }
           }
         }
