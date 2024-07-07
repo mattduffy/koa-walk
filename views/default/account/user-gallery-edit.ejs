@@ -437,37 +437,57 @@
             <input type="hidden" name="csrf-token" id="csrf-token_Id_<%= i %>" value="<%= csrfToken %>">
             <input type="hidden" name="albumId" id="albumId_Id_<%= i %>" value="<%= album.id %>">
             <label>File Name: <input type="text" name="fileName" id="fileName_Id_<%= i %>" value="<%= image.name %>" disabled></label><br>
-            Rotate: 
-            <label>
-              <img src="/i/rotate_40x40.png" class="rotate left90" title="Rotate counter-clockwise -90&deg; "alt="Rotate counter-clockwise -90&deg;"> 
-              <input type="radio" name="rotate" id="rotate_90_<%= i %>" value="90" tabindex="7">
-            </label>
-            <label>
-              <img src="/i/rotate_40x40.png" class="rotate left180" title="Rotate counter-clockwise -1800&deg; "alt="Rotate counter-clockwise -180&deg;"> 
-              <input type="radio" name="rotate" id="rotate_180_<%= i %>" value="180" tabindex="7">
-            </label>
-            <label>
-              <img src="/i/rotate_40x40.png" class="rotate left270" title="Rotate counter-clockwise -270&deg; "alt="Rotate counter-clockwise -270&deg;"> 
-              <input type="radio" name="rotate" id="rotate_270_<%= i %>" value="270" tabindex="7">
-            </label>
-            <label>
-              <img src="/i/rotate_40x40.png" class="rotate left360" title="Rotate counter-clockwise -360&deg; "alt="Rotate counter-clockwise -3600&deg;"> 
-              <input type="radio" name="rotate" id="rotate_360_<%= i %>" value="0" tabindex="7">
-            </label>
-            <br>
-            <label for="title_Id_<%= i %>">Title:
+            <fieldset>
+              <legend>Rotate Full Size Image</legend>
+              <label>
+                <img src="/i/rotate_40x40.png" class="rotate left90" title="Rotate counter-clockwise -90&deg; "alt="Rotate counter-clockwise -90&deg;"> 
+                <input type="radio" name="rotate_full_size_image" id="rotate_90_fsi_<%= i %>" value="90" tabindex="7">
+              </label>
+              <label>
+                <img src="/i/rotate_40x40.png" class="rotate left180" title="Rotate counter-clockwise -1800&deg; "alt="Rotate counter-clockwise -180&deg;"> 
+                <input type="radio" name="rotate_full_size_image" id="rotate_180_fsi_<%= i %>" value="180" tabindex="7">
+              </label>
+              <label>
+                <img src="/i/rotate_40x40.png" class="rotate left270" title="Rotate counter-clockwise -270&deg; "alt="Rotate counter-clockwise -270&deg;"> 
+                <input type="radio" name="rotate_full_size_image" id="rotate_270_fsi_<%= i %>" value="270" tabindex="7">
+              </label>
+              <label>
+                <img src="/i/rotate_40x40.png" class="rotate left360" title="Rotate counter-clockwise -360&deg; "alt="Rotate counter-clockwise -3600&deg;"> 
+                <input type="radio" name="rotate_full_size_image" id="rotate_360_fsi_<%= i %>" value="0" tabindex="7">
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>Rotate Thumbnail Image</legend>
+              <label>
+                <img src="/i/rotate_40x40.png" class="rotate left90" title="Rotate counter-clockwise -90&deg; "alt="Rotate counter-clockwise -90&deg;"> 
+                <input type="radio" name="rotate_thumbnail_image" id="rotate_90_thb_<%= i %>" value="90" tabindex="7">
+              </label>
+              <label>
+                <img src="/i/rotate_40x40.png" class="rotate left180" title="Rotate counter-clockwise -1800&deg; "alt="Rotate counter-clockwise -180&deg;"> 
+                <input type="radio" name="rotate_thumbnail_image" id="rotate_180_thb_<%= i %>" value="180" tabindex="7">
+              </label>
+              <label>
+                <img src="/i/rotate_40x40.png" class="rotate left270" title="Rotate counter-clockwise -270&deg; "alt="Rotate counter-clockwise -270&deg;"> 
+                <input type="radio" name="rotate_thumbnail_image" id="rotate_270_thb_<%= i %>" value="270" tabindex="7">
+              </label>
+              <label>
+                <img src="/i/rotate_40x40.png" class="rotate left360" title="Rotate counter-clockwise -360&deg; "alt="Rotate counter-clockwise -3600&deg;"> 
+                <input type="radio" name="rotate_thumbnail_image" id="rotate_360_thb_<%= i %>" value="0" tabindex="7">
+              </label>
+            </fieldset>
+            <label>Title:
               <input type="text" name="title" id="title_Id_<%= i %>" value="<%= image.title %>" class="title" tabindex="7">
             </label>
             <br>
-            <label for="description_Id_<%= i %>">Description: 
+            <label>Description: 
               <input type="text" name="description" id="description_Id_<%= i %>" value="<%= image.description %>" class="description" tabindex="7">
             </label>
             <br>
-            <label for="keywords_Id_<%= i %>">Keywords: 
+            <label>Keywords: 
               <input type="text" name="keywords" id="keywords_Id_<%= i %>" value="<%= image.keywords?.join(', ') ?? '' %>" class="keywords" tabindex="7">
             </label>
             <br>
-            <label for="hideImage_Id_<%= i %>">Hide Image: 
+            <label>Hide Image: 
               <input type="checkbox" name="hideImage" id="hideImage_Id_<%= i %>" <%= (image.hide) ? 'checked' : ''  %> tabindex="7">
             </label>
             <br>
@@ -482,18 +502,33 @@
       function rotateImage(e) {
         e.stopPropagation()
         e.preventDefault()
-        const image = e.target.parentElement.parentElement.children[1].children[0]
+        let size = e.target.id.match(/(?<size>fsi|thb)/)?.groups?.size ?? null
+        if (size === null) {
+          console.info(`rotate image size failed: size is ${size}`)
+          return
+        }
+        // console.log(`size: ${size}`)
+        let image 
+        if (size === 'fsi') {
+          image = e.target.parentElement.parentElement.parentElement.children[1].children[0]
+        } else {
+          image = e.target.parentElement.parentElement.parentElement.children[2].children[0]
+        }
         const degrees = `-${e.target.value}deg`
         // console.log(e.target, image, degrees)
         image.style.transform = `rotate(${degrees})`
       }
       function imageReset(e) {
         e.target.elements[0].children[1].firstElementChild.style = "transform: rotate(0deg)"
+        e.target.elements[0].children[2].firstElementChild.style = "transform: rotate(0deg)"
       }
       const imgEditForms = document.querySelectorAll('form[data-type="image"]')
       imgEditForms.forEach((f) => {
         f.addEventListener('reset', imageReset)
-        f.elements.rotate.forEach((r) => {
+        f.elements['rotate_full_size_image'].forEach((r) => {
+          r.addEventListener('change', rotateImage)
+        })
+        f.elements['rotate_thumbnail_image'].forEach((r) => {
           r.addEventListener('change', rotateImage)
         })
       })
