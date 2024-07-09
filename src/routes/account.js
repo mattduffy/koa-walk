@@ -730,7 +730,8 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
     const albumId = ctx.params.id
     const fileName = ctx.params.name
     const imageName = ctx.request.body?.imageName?.[0] ?? null
-    const imageRotate = ctx.request.body?.rotate?.[0] ?? null
+    const imageRotateFullSize = ctx.request.body?.rotate_full_size_image?.[0] ?? null
+    const imageRotateThumbnail = ctx.request.body?.rotate_thumbnail_image?.[0] ?? null
     const imageTitle = ctx.request.body?.imageTitle?.[0] ?? null
     const imageDescription = ctx.request.body?.imageDescription?.[0] ?? null
     let imageKeywords = null
@@ -749,9 +750,13 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
         album = await Albums.getById(db, albumId, redis)
         const i = {}
         i.name = imageName
-        if (imageRotate) {
-          log(`Rotate image ${imageName} counter-clockwise ${imageRotate}`)
-          i.rotate = imageRotate
+        if (imageRotateFullSize) {
+          log(`Rotate full size image ${imageName} counter-clockwise ${imageRotateFullSize}`)
+          i.rotateFullSize = imageRotateFullSize
+        }
+        if (imageRotateThumbnail) {
+          log(`Rotate thumbnail image ${imageName} counter-clockwise ${imageRotateThumbnail}`)
+          i.rotateThumbnail = imageRotateThumbnail
         }
         if (imageTitle) {
           i.title = imageTitle
@@ -764,7 +769,7 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
         }
         i.hide = imageHide
         log('new image details: %o', i)
-        const sizes = (imageRotate)
+        const sizes = (imageRotateFullSize || imageRotateThumbnail)
         const saved = await album.updateImage(i, sizes)
         log(saved)
         if (!saved) {

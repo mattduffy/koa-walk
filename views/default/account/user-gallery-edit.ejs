@@ -619,9 +619,13 @@
         formData.append('albumId', albumId.value)
         const name = form.elements.fileName
         formData.append('imageName', name.value)
-        if (form.elements['rotate']?.value !== '') {
-          const rotate = form.elements.rotate.value
-          formData.append('rotate', rotate)
+        if (form.elements['rotate_full_size_image']?.value !== '') {
+          const rotate_full = form.elements['rotate_full_size_image'].value
+          formData.append('rotate_full_size_image', rotate_full)
+        }
+        if (form.elements['rotate_thumbnail_image']?.value !== '') {
+          const rotate_thb = form.elements['rotate_thumbnail_image'].value
+          formData.append('rotate_thumbnail_image', rotate_thb)
         }
         if (form.elements['title'].value !== '') {
           const title = form.elements.title
@@ -636,9 +640,10 @@
           formData.append('imageKeywords', keywords.value)
         }
         formData.append('imageHide', form.elements['hideImage'].checked)
-        // for (const a of formData.entries()) {
-        //   console.log(a)
-        // }
+        for (const a of formData.entries()) {
+          console.log(a)
+        }
+        // return
         const opts = {
           method: 'POST',
           headers: {
