@@ -474,7 +474,7 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
   ctx.body = body
 })
 
-router.get('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx) => {
+router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-galleries-edit')
   const error = accountError.extend('GET-account-galleries-edit')
   if (!ctx.state?.isAuthenticated) {
@@ -684,8 +684,8 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', async (ct
 })
 
 router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async (ctx) => {
-  const log = accountLog.extend('POST-account-galleries-image-edit')
-  const error = accountError.extend('POST-account-galleries-image-edit')
+  const log = accountLog.extend('POST-account-gallery-image-edit')
+  const error = accountError.extend('POST-account-gallery-image-edit')
   if (!ctx.state.isAsyncRequest) {
     ctx.status = 400
     ctx.redirect('/')
@@ -769,7 +769,8 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
         }
         i.hide = imageHide
         log('new image details: %o', i)
-        const sizes = (imageRotateFullSize || imageRotateThumbnail)
+        const sizes = (!!imageRotateFullSize || !!imageRotateThumbnail)
+        log(`sizes, if TRUE, remake thumbs: ${sizes}`)
         const saved = await album.updateImage(i, sizes)
         log(saved)
         if (!saved) {
@@ -791,9 +792,9 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
   ctx.body = body
 })
 
-router.post('accountEditGallery', '/account/galleries/:id', hasFlash, async (ctx) => {
-  const log = accountLog.extend('POST-account-galleries-edit')
-  const error = accountError.extend('POST-account-galleries-edit')
+router.post('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) => {
+  const log = accountLog.extend('POST-account-gallery-edit')
+  const error = accountError.extend('POST-account-gallery-edit')
   if (!ctx.state.isAsyncRequest) {
     ctx.status = 400
     ctx.redirect('/')

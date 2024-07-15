@@ -87,7 +87,8 @@
               const li = document.createElement('li')
               const a = document.createElement('a')
               // a.href = newAlbum.albumUrl
-              a.href = `${origin}/account/galleries/${newAlbum.albumId}`
+              // a.href = `${origin}/account/galleries/${newAlbum.albumId}`
+              a.href = `${origin}/account/gallery/${newAlbum.albumId}`
               a.textContent = newAlbum.albumName
               li.appendChild(a)
               if (newAlbum.public) {
@@ -131,7 +132,7 @@
       <ul id="public" class="public">
       <% if (public?.length > 0) {
           public.forEach((g) => { %>
-        <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
+        <li><a href="<%= origin %>/account/gallery/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
       <% } else { %>
       <p>No public galleries created yet.</p>
@@ -141,7 +142,7 @@
       <ul id="private" class="private">
       <% if (private?.length > 0) {
           private.forEach((g) => { %>
-        <li><a href="<%= origin %>/account/galleries/<%= g.id %>"><%= g.name %></a></li>
+        <li><a href="<%= origin %>/account/gallery/<%= g.id %>"><%= g.name %></a></li>
         <% }) %>
       <% } else { %>
       <p>No private galleries created yet.</p>

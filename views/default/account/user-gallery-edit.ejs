@@ -12,7 +12,7 @@
     </div>
     <% } %>
     <div class="gallery">
-      <form name="edit" id="edit_Id" action="/account/galleries/<%= album.id %>" method="POST" enctype="multipart/form-data">
+      <form name="edit" id="edit_Id" action="/account/gallery/<%= album.id %>" method="POST" enctype="multipart/form-data">
         <fieldset>
           <legend>Make changes to gallery</legend>
           <div id="galleryUpdateMsg" class="messages hidden"></div>
@@ -379,7 +379,7 @@
             },
             body: formData,
           }
-          const request = new Request(`${origin}/account/galleries/${albumId.value}`, opts)
+          const request = new Request(`${origin}/account/gallery/${albumId.value}`, opts)
           // console.log(request)
           const response = await fetch(request, { credentials: 'same-origin' })
           if (!response.ok) {
@@ -651,7 +651,6 @@
         }
         const err = form.querySelector(':scope > fieldset > div#imageUpdateErr')
         const msg = form.querySelector(':scope > fieldset > div#imageUpdateMsg')
-        // const request = new Request(`${origin}/account/galleries/${albumId.value}/image/${name.value}`, opts)
         const request = new Request(`${origin}/account/gallery/${albumId.value}/image/${name.value}`, opts)
         let response
         let updateResult
