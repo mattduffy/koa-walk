@@ -687,12 +687,21 @@
             }, 1750)
             if (updateResult.sizes) {
               const figs = form.querySelectorAll(':scope > fieldset > figure')
+              figs[0].children[0] = null
+              figs[0].children[0] = new Image()
               figs[0].children[0].src = `${origin}/${updateResult.sizes.big}`
               figs[0].children[0].style = 'transform: rotate(0deg)'
+              figs[0].children[0].setAttribute('alt', '')
+              figs[0].children[0].classList.add('imgFull')
+              figs[1].children[0] = null 
+              figs[1].children[0] = new Image()
               figs[1].children[0].src = `${origin}/${updateResult.sizes.thb}`
-              figs[1].children[0].style = '' 
+              figs[1].children[0].setAttribute('alt', '')
+              figs[1].children[0].classList.add('imgThumbnail')
+              figs[1].children[0].style = 'transform: rotate(0deg)' 
             }
           }
+          form.elements['reset'].click()
         } catch (e) {
           err.textContent = 'JSON was not good.'
           // err.textContent = updateResult.err
