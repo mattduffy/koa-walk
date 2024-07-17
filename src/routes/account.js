@@ -731,6 +731,7 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
     const fileName = ctx.params.name
     const imageName = ctx.request.body?.imageName?.[0] ?? null
     const imageRotateFullSize = ctx.request.body?.rotate_full_size_image?.[0] ?? null
+    const thumbnailName = ctx.request.body?.thumbnailName?.[0] ?? null
     const imageRotateThumbnail = ctx.request.body?.rotate_thumbnail_image?.[0] ?? null
     const imageTitle = ctx.request.body?.imageTitle?.[0] ?? null
     const imageDescription = ctx.request.body?.imageDescription?.[0] ?? null
@@ -754,8 +755,9 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
           log(`Rotate full size image ${imageName} counter-clockwise ${imageRotateFullSize}`)
           i.rotateFullSize = imageRotateFullSize
         }
-        if (imageRotateThumbnail) {
-          log(`Rotate thumbnail image ${imageName} counter-clockwise ${imageRotateThumbnail}`)
+        if (imageRotateThumbnail && thumbnailName) {
+          log(`Rotate thumbnail image ${thumbnailName} counter-clockwise ${imageRotateThumbnail}`)
+          i.thumbnailName = thumbnailName
           i.rotateThumbnail = imageRotateThumbnail
         }
         if (imageTitle) {
@@ -771,7 +773,8 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
         log('new image details: %o', i)
         const sizes = (!!imageRotateFullSize || !!imageRotateThumbnail)
         log(`sizes, if TRUE, remake thumbs: ${sizes}`)
-        const saved = await album.updateImage(i, sizes)
+        // const saved = await album.updateImage(i, sizes)
+        const saved = await album.updateImage(i, false)
         log(saved)
         if (!saved) {
           status = 418
@@ -787,6 +790,7 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
       }
     }
   }
+  // ctx.set('Cache-Control', 'no-cache, no-store, must-revalidate')
   ctx.status = status
   ctx.type = 'application/json; charset=utf-8'
   ctx.body = body

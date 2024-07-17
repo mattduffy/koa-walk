@@ -418,12 +418,12 @@
         <form id="<%= `${album.name}_${image.name}` %>" name="<%= image.name %>" data-type="image">
           <fieldset>
             <span class="deleteImage" data-name="<%= image.name %>" data-albumid="<%= album.id %>" data-token="<%= csrfToken %>">Delete this image.</span>
-            <figure style="display: inline-block;">
+            <figure style="display: inline-block;" data-type="fullsize" data-name="<%= image.name %>">
               <img src="<%= `${origin}/${image.big}` %>" alt="<%= image.description %>" class="imgFull" width="150px">
               <figcaption>Full size image.</figcaption>
             </figure>
             <% if (image.thumbnail) { %>
-            <figure style="display: inline-block;">
+            <figure style="display: inline-block;" data-type="thumbnail" data-name="<%= image.thumbnail.slice(image.thumbnail.lastIndexOf('/')+1) %>">
               <img src="<%= `${origin}/${image.thumbnail}` %>" alt="<%= image.description %>" class="imgThumbnail" width="*">
               <figcaption>Thumbnail image.</figcaption>
             </figure>
@@ -623,6 +623,7 @@
         if (form.elements['rotate_thumbnail_image']?.value !== '') {
           const rotate_thb = form.elements['rotate_thumbnail_image'].value
           formData.append('rotate_thumbnail_image', rotate_thb)
+          formData.append('thumbnailName', form.querySelector(':scope figure[data-type="thumbnail"]').dataset.name)
         }
         if (form.elements['title'].value !== '') {
           const title = form.elements.title
