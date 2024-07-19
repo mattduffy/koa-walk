@@ -474,6 +474,39 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
   ctx.body = body
 })
 
+router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) => {
+  const log = accountLog.extend('GET-account-blog-list')
+  const error = accountError.extend('GET-account-blog-list')
+  if (!isAsyncRequest(ctx)) {
+    ctx.status = 400
+    ctx.redirect('/')
+  }
+  let body
+  let status
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  }
+  if (doTokensMatch(ctx)) {
+    try {
+      const db = ctx.state.mongodb.client.db()
+      const blog = await Blogs.getByCreator(db, ctx.state.sessionUser.username, redis)
+      const posts = await blog.getPosts()
+      log(`blog slug: ${blog.url}`)
+      status = 200
+      body = { status: 'ok', posts }
+    } catch (e) {
+      error(e)
+      status = 500
+      body = { msg: 'failed to get blog posts.' }
+    }
+  }
+  ctx.status = status
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = body
+})
+
 router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-galleries-edit')
   const error = accountError.extend('GET-account-galleries-edit')
