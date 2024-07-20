@@ -506,13 +506,16 @@
         }
         // console.log(`size: ${size}`)
         let image 
+        let name
         if (size === 'fsi') {
           image = e.target.parentElement.parentElement.parentElement.children[1].children[0]
+          name = e.target.parentElement.parentElement.parentElement.children[1].dataset.name
         } else {
           image = e.target.parentElement.parentElement.parentElement.children[2].children[0]
+          name = e.target.parentElement.parentElement.parentElement.children[2].dataset.name
         }
         const degrees = `-${e.target.value}deg`
-        // console.log(e.target, image, degrees)
+        console.log('rotate %s, %s', name, degrees)
         image.style.transform = `rotate(${degrees})`
       }
       function imageReset(e) {
