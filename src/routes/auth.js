@@ -128,7 +128,8 @@ router.post('postLogin', '/login', async (ctx) => {
           error: null,
         },
       }
-      ctx.redirect('/')
+      // ctx.redirect('/')
+      ctx.redirect('/account')
     }
   }
 })

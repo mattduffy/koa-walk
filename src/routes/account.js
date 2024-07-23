@@ -1560,6 +1560,37 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
   }
 })
 
+router.get('account', '/account', hasFlash, async (ctx) => {
+  const log = accountLog.extend('GET-account')
+  const error = accountError.extend('GET-account')
+  if (!ctx.state?.isAuthenticated) {
+    ctx.flash = {
+      index: {
+        message: null,
+        error: 'You need to be logged in to do that.',
+      },
+    }
+    error('Tried to view something without being authenticated.')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    const locals = {
+      sessionUser: ctx.state.sessionUser,
+      body: ctx.body,
+      // view: ctx.flash.view ?? {},
+      flash: ctx.flash.index ?? {},
+      origin: `${ctx.request.origin}`,
+      jwtAccess: (ctx.state.sessionUser.jwts).token,
+      // csrfToken,
+      isAuthenticated: ctx.state.isAuthenticated,
+      title: `${ctx.app.site}: ${ctx.state.sessionUser.username}`,
+    }
+    log(locals)
+    ctx.status = 200
+    await ctx.render('account/user', locals)
+  }
+})
+
 router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-admin-listusers')
   const error = accountError.extend('GET-admin-listuers')

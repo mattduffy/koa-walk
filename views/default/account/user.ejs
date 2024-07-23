@@ -1,0 +1,24 @@
+<main>
+  <article>
+    <h1><span class="userpng"></span> <%= sessionUser.username %></h1>
+    
+    <% if (flash?.info) { %>
+    <div id="info" class="info">
+      <span><%= flash.info %></span>
+    </div>
+    <% } %>
+    <% if (flash?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= flash.message %></span>
+    </div>
+    <% } %>
+    <% if (flash?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= flash.error%></span>
+    </div>
+    <% } %>
+    <div class="account-stuff">
+    </div>
+  </article>
+</main>
+
