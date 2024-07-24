@@ -1,0 +1,36 @@
+<main>
+  <article>
+    <h1><%= blog.title %></h1>
+    By <span class="blogAuthor"><%= blog.creator %></span>
+
+    <% if (flash?.info) { %>
+    <div id="info" class="info">
+      <span><%= flash.info %></span>
+    </div>
+    <% } %>
+    <% if (flash?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= flash.message %></span>
+    </div>
+    <% } %>
+    <% if (flash?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= flash.error %></span>
+    </div>
+    <% } %> 
+    <section id="userBlog">
+      <% if (posts.forEach && posts.length > 0) { %>
+      <ul id="postList">
+        <% posts.forEach((b) => { %>
+          <li>
+            <a href="<%= `${origin}/@${b.creator}` %>/blog"><%= b.title %></a>
+            <br>by: <span class="blogAuthor"><%= b.creator || b.creatorName %></span>
+          </li>
+        <% }) %>
+      </ul>
+      <% } else { %>
+        No blog posts written yet.
+      <% } %>
+    </section>
+  </article>
+</main>

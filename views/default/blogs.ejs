@@ -40,10 +40,13 @@
     <br>
     <section id="userBlogs">
       <h2>Users With Public Blogs</h2>
-      <% if (publicBlogs?.length > 0) { %>
+      <% if (publicBlogs.forEach && publicBlogs.length > 0) { %>
       <ul id="usersBlogList">
-        <% publicBlogs.forEach((b) => { %>
-          <li><a href="<%- origin -%>/@<%- b._id -%>/blog">@<%- b._id -%></a></li>
+        <% publicBlogs?.forEach((b) => { %>
+          <li>
+            <a href="<%= `${origin}/@${b.creator}` %>/blog"><%= b.title %></a>
+            <br>by: <span class="blogAuthor"><%= b.creator || b.creatorName %></span>
+          </li>
         <% }) %>
       </ul>
       <% } %>

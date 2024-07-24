@@ -8,7 +8,7 @@
 import Router from '@koa/router'
 // import { ObjectId } from 'mongodb'
 import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
-import { Blogs } from '@mattduffy/blogs/Blogs' // eslint-disable-line import/no-unresolved
+import { Blogs } from '@mattduffy/blogs' // eslint-disable-line import/no-unresolved
 // import { Users } from '../models/users.js'
 import { _log, _error } from '../utils/logging.js'
 import { redis } from '../daos/impl/redis/redis-client.js'
@@ -85,14 +85,14 @@ router.get('blogs', '/blog', hasFlash, async (ctx) => {
   ctx.status = 200
   let recent10
   try {
-    recent10 = await Blogs?.recentlyAdded(redis)
+    recent10 = await Blogs.recentlyUpdated(redis)
   } catch (e) {
     error(e)
   }
   log('recent10: ', recent10)
   let publicBlogs
   try {
-    publicBlogs = await Blogs?.usersWithPublicBlogs(ctx.state.mongodb.client.db())
+    publicBlogs = await Blogs.usersWithPublicBlogs(ctx.state.mongodb.client.db())
   } catch (e) {
     error(e)
   }
