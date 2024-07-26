@@ -42,6 +42,13 @@
         const jwtAccess = '<%= jwtAccess %>'
         window.forms = document.forms
         const blogForm = forms.namedItem('edit')
+        function slugUpdate(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          console.log(blogForm.elements['blogTitle'].value)
+        }
+        blogForm.elements['blogTitle'].addEventListener('change', slugUpdate)
+
         async function editBlogDetails(e) {
           e.preventDefault()
           e.stopPropagation()
@@ -50,9 +57,8 @@
           const csrfToken = blogForm.elements['csrf-token']
           formData.append('csrfTokenHidden', csrfToken.value)
           const blogId = blogForm.elements['blogId']
-          if (blogId.value !== '') {
-            formData.append('id', blogId.value)
-          }
+          const blogIdValue = (blogId.value !== '') ? blogId.value : '' 
+          formData.append('id', blogIdValue)
           const blogTitle = blogForm.elements['blogTitle']
           formData.append('title', blogTitle.value)
           const blogDescription = blogForm.elements['blogDescription']

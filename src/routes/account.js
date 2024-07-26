@@ -426,7 +426,7 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
     })
     log(ctx.request.body)
     let blog
-    const blogId = ctx.request.body.id?.[0] ?? null
+    const blogId = (!ctx.request.body.id?.[0]?.length) ? null : ctx.request.body.id[0]
     const blogTitle = ctx.request.body.title?.[0] ?? ''
     const blogDescription = ctx.request.body.description[0] ?? ''
     const blogPublic = (ctx.request.body?.public?.[0]) ? ((ctx.request.body.public[0] === 'true') ? true : false) : false // eslint-disable-line
@@ -440,6 +440,7 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
         const db = ctx.state.mongodb.client.db()
         const o = {
           creator: ctx.state.sessionUser.username,
+          newBlog: (!blogId?.length),
           blogId,
           blogTitle,
           blogDescription,
