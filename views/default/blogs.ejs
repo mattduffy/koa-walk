@@ -39,16 +39,17 @@
     <% } %>
     <br>
     <section id="userBlogs">
-      <h2>Users With Public Blogs</h2>
       <% if (publicBlogs.forEach && publicBlogs.length > 0) { %>
       <ul id="usersBlogList">
         <% publicBlogs?.forEach((b) => { %>
           <li>
-            <a href="<%= `${origin}/@${b.creator}` %>/blog"><%= b.title %></a>
-            <br>by: <span class="blogAuthor"><%= b.creator || b.creatorName %></span>
+            <a href="<%= `${origin}/@${b.creatorName}` %>/blog"><%= b.title %></a>
+            <br>by: <span class="blogAuthor"><%= b.creatorName %></span>
           </li>
         <% }) %>
       </ul>
+      <% } else { %>
+        No public blogs yet.
       <% } %>
     </section>
   </article>

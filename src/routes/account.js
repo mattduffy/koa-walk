@@ -439,8 +439,9 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
       try {
         const db = ctx.state.mongodb.client.db()
         const o = {
-          creator: ctx.state.sessionUser.username,
           newBlog: (!blogId?.length),
+          blogOwnerId: ctx.state.sessionUser.id,
+          blogOwnerName: ctx.state.sessionUser.username,
           blogId,
           blogTitle,
           blogDescription,
