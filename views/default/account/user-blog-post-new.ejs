@@ -1,0 +1,50 @@
+<main>
+  <article>
+    <h1>Blog: <%= blog.name %></h1>
+    <% if (view.message) { %>
+    <div id="messages" class="messages">
+      <span><%= view.message %></span>
+    </div>
+    <% } %>
+    <% if (view.error) { %>
+    <div id="errors" class="errors">
+      <span><%= view.error%></span>
+    </div>
+    <% } %>
+    <div class="post">
+      <form name="edit" id="newPost_id" action="/account/blog/post/new" method="POST" enctype="multipart/form-data">
+        <fieldset>
+          <legend>New Blog Post</legend>
+          <div id="newPostMsg" class="messages hidden"></div>
+          <div id="newPostErr" class="errors hidden"></div>
+          <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
+          <input type="hidden" name="postId" id="postId_Id" value="<%= post?.id %>" >
+          <label for="postTitle_Id">Post Title:</label>
+          <input type="text" name="postTitle" id="postTitle_Id" value="<%= post?.title %>" tabindex="1">
+          <br>
+          <label for="postSlug_Id">Post Url Slug:</label>
+          <input type="text" name="postSlug" id="postSlug_Id" value="<%= post?.url %>" disabled>
+          <br>
+          <label for="postDescription_Id">Post Description:</label>
+          <textarea id="postDescription_Id" name="postDescription" rows="3" cols="50" tabindex="1"><%= post?.description %></textarea>
+          <label for="postContent_Id">Post Content:</label>
+          <textarea id="postContent_Id" name="postConent" rows="5" cols="50" tabindex="1"><%= post?.content%></textarea>
+          <label for="postKeywords_Id">Post Keywords:</label>
+          <input type="text" name="postKeywords" id="postKeywords_Id" value="<%= post?.keywords%>" tabindex="1">
+          <br>
+          <label for="postPublic">Public:</label>
+          <input type="checkbox" name="postPublic" id="postPublic_Id" <%= (post?.public) ? 'checked' : '' %> tabindex="1">
+          <br>
+          <input type="submit" name="submit" id="submit_Id" value="Create Post" tabindex="6">
+          <input type="reset" name="reset" id="reset_Id" value="Reset" tabindex="7">
+        </fieldset>
+      </form>
+      <script nonce="<%= nonce %>">
+        const origin = '<%= origin %>'
+        const jwtAccess = '<%= jwtAccess %>'
+        window.forms = document.forms
+        const blogForm = forms.namedItem('edit')
+      </script>
+    </div>
+  </article>
+</main>

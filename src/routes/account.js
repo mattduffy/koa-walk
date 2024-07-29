@@ -490,6 +490,9 @@ router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) 
     ctx.redirect('/')
   }
   if (doTokensMatch(ctx)) {
+    const csrfToken = ulid()
+    ctx.session.csrfToken = csrfToken
+    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
     try {
       const db = ctx.state.mongodb.client.db()
       const blog = await Blogs.getByCreator(db, ctx.state.sessionUser.username, redis)
@@ -506,6 +509,44 @@ router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) 
   ctx.status = status
   ctx.type = 'application/json; charset=utf-8'
   ctx.body = body
+})
+
+router.get('accountBlogPostNew', '/account/blog/post/new', hasFlash, async (ctx) => {
+  const log = accountLog.extend('GET-account-blog-post-new')
+  const error = accountError.extend('GET-account-blog-post-new')
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    log(`View ${ctx.state.sessionUser.username}'s account details.`)
+    log('flash %O', ctx.flash)
+    const db = ctx.state.mongodb.client.db()
+    // Get list of blogs, if they exist
+    const { username } = ctx.state.sessionUser
+    log(`username for blog owner: ${username}`)
+    const blog = await Blogs.getByUsername(db, username, redis) ?? {}
+    log(`found ${username}'s blog: ${blog.name}`)
+    const post = {}
+    const csrfToken = ulid()
+    ctx.session.csrfToken = csrfToken
+    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+    const locals = {
+      sessionUser: ctx.state.sessionUser,
+      blog,
+      post,
+      body: ctx.body,
+      view: ctx.flash.view ?? {},
+      edit: ctx.flash.edit ?? {},
+      origin: `${ctx.request.origin}`,
+      jwtAccess: (ctx.state.sessionUser.jwts).token,
+      csrfToken,
+      isAuthenticated: ctx.state.isAuthenticated,
+      title: `${ctx.app.site}: New Blog Post`,
+    }
+    ctx.status = 200
+    await ctx.render('account/user-blog-post-new', locals)
+  }
 })
 
 router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) => {
