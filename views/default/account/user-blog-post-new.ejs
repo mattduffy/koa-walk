@@ -18,6 +18,7 @@
           <div id="newPostMsg" class="messages hidden"></div>
           <div id="newPostErr" class="errors hidden"></div>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
+          <input type="hidden" name="blogId" id="blogId_Id" value="<%= blog.id %>" requred>
           <input type="hidden" name="postId" id="postId_Id" value="<%= post?.id %>" >
           <label for="postTitle_Id">Post Title:</label>
           <input type="text" name="postTitle" id="postTitle_Id" value="<%= post?.title %>" tabindex="1">
@@ -28,7 +29,7 @@
           <label for="postDescription_Id">Post Description:</label>
           <textarea id="postDescription_Id" name="postDescription" rows="3" cols="50" tabindex="1"><%= post?.description %></textarea>
           <label for="postContent_Id">Post Content:</label>
-          <textarea id="postContent_Id" name="postConent" rows="5" cols="50" tabindex="1"><%= post?.content%></textarea>
+          <textarea id="postContent_Id" name="postContent" rows="5" cols="50" tabindex="1"><%= post?.content%></textarea>
           <label for="postKeywords_Id">Post Keywords:</label>
           <input type="text" name="postKeywords" id="postKeywords_Id" value="<%= post?.keywords%>" tabindex="1">
           <br>

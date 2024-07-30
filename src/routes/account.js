@@ -14,7 +14,7 @@ import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 import formidable from 'formidable'
 /* eslint-disable */
-import { Blog, Blogs } from '@mattduffy/blogs'
+import { Blog, Blogs, slugify } from '@mattduffy/blogs'
 import { Album } from '@mattduffy/albums'
 import { Albums } from '@mattduffy/albums/Albums'
 import { Unpacker } from '@mattduffy/unpacker'
@@ -504,6 +504,75 @@ router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) 
       error(e)
       status = 500
       body = { msg: 'failed to get blog posts.' }
+    }
+  }
+  ctx.status = status
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = body
+})
+
+router.post('accountBlogPostNew-POST', '/account/blog/post/new', hasFlash, async (ctx) => {
+  const log = accountLog.extend('POST-account-blog-post-new')
+  const error = accountError.extend('POST-account-blog-post-new')
+  if (!ctx.state.isAsyncRequest) {
+    error('Tried to directly access route rather than via async request.')
+    ctx.status = 400
+    ctx.redirect('/')
+  }
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  }
+  let status
+  let body
+  const form = formidable({
+    encoding: 'utf-8',
+    uploadDir: ctx.app.dirs.private.uploads,
+    keepExtensions: true,
+    multipart: true,
+    maxFileSize: (200 * 1024 * 1024),
+  })
+  await new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        error('There was a problem parsing the multipart form data.')
+        error(err)
+        reject(err)
+      }
+      log('Multipart form data was successfully parsed.')
+      ctx.request.body = fields
+      ctx.request.files = files
+      // log('fields: %o', fields)
+      resolve()
+    })
+  })
+  log(ctx.request.body)
+  let blog
+  let post
+  const blogId = ctx.request.body?.blogId[0] || null
+  const postTitle = ctx.request.body?.postTitle?.[0] || null
+  const postSlug = slugify(postTitle)
+  const postDescription = ctx.request.body?.postDescription?.[0] || null
+  const postContent = ctx.request.body?.postContent?.[0] || null
+  const postKeywords = (ctx.request.body?.postKeywords) ? Array.from(ctx.request.body.postKeywords[0].split(',')) : []
+  const postPublic = (ctx.request.body?.postPublic) ? ((ctx.request.body.public[0] === 'true') ? true : false) : false // eslint-disable-line
+  if (doTokensMatch(ctx)) {
+    try {
+      blog = await Blogs.getById(ctx.state.mongodb.client.db(), blogId, redis)
+      post = {
+        postTitle,
+        postDescription,
+        postContent,
+        postKeywords,
+        postSlug,
+      }
+      status = 200
+      body = { msg: 'sucess', post }
+    } catch (e) {
+      error(e)
+      status = 500
+      body = { msg: 'Failed to create new post.' }
     }
   }
   ctx.status = status
