@@ -12,7 +12,7 @@
     </div>
     <% } %>
     <div class="post">
-      <form name="edit" id="newPost_id" action="/account/blog/post/new" method="POST" enctype="multipart/form-data">
+      <form name="newPost" id="newPost_id" action="/account/blog/post/save" method="POST" enctype="multipart/form-data">
         <fieldset>
           <legend>New Blog Post</legend>
           <div id="newPostMsg" class="messages hidden"></div>
@@ -44,7 +44,79 @@
         const origin = '<%= origin %>'
         const jwtAccess = '<%= jwtAccess %>'
         window.forms = document.forms
-        const blogForm = forms.namedItem('edit')
+        const postForm = forms.namedItem('newPost')
+        async function createPost(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          const formData = new FormData()
+          const csrfTokenHidden = postForm.elements['csrf-token']
+          formData.append('csrfTokenHidden', csrfTokenHidden.value)
+          const blogId = postForm.elements['blogId']
+          formData.append('blogId', blogId.value)
+          const postId = postForm.elements['postId']
+          formData.append('postId', postId.value)
+          const postTitle = postForm.elements['postTitle']
+          formData.append('postTitle', postTitle.value)
+          const postSlug = postForm.elements['postSlug']
+          formData.append('postSlug', postSlug.value)
+          const postDescription = postForm.elements['postDescription']
+          formData.append('postDescription', postDescription.value)
+          const postContent = postForm.elements['postContent']
+          formData.append('postContent', postContent.value)
+          const postKeywords = postForm.elements['postKeywords']
+          formData.append('postKeywords', postKeywords.value)
+          const postPublic = postForm.elements['postPublic']
+          formData.append('postPublic', (postPublic.checked) ? 'true' : 'false')
+          const opts = {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${jwtAccess}`
+            },
+            body: formData,
+          }
+          const request = new Request(`${origin}/account/blog/post/save`, opts)
+          let response
+          let postJson
+          try {
+            response = await fetch(request, { credentials: 'same-origin' })
+            console.log(response)
+            if (!response.ok) {
+              console.info('fetch failed')
+              console.error(response)
+              postForm.elements['submit'].disabled = false
+            } else if (response.status > 200) {
+              const err = document.querySelector('div#newPostErr')
+              err.textContent = 'Update failed for some reason.'
+              err.classList.remove('hidden')
+              console.error(postJson)
+              setTimeout(() => {
+                err.classList.add('hidden')
+                err.textContent = ''
+                postForm.elements['submit'].disabled = false
+                postForm.elements['reset'].click()
+              }, 5000)
+            } else {
+              postJson = await response.json() 
+              console.log(postJson)
+              postForm.elements['postId'].value = postJson.post.saved.insertedId
+              postForm.elements['postSlug'].value = postJson.post._slug
+              const msg = document.querySelector('div#newPostMsg')
+              msg.textContent = 'Post details saved.'
+              msg.classList.remove('hidden')
+              console.log(msg)
+              setTimeout(() => {
+                postForm.elements['submit'].disabled = false
+                msg.classList.add('hidden')
+                msg.textContent = ''
+              }, 5000) 
+            }
+          } catch (e) {
+            console.error(e)
+          }
+          console.log('finished')
+        }
+        postForm.addEventListener('submit', createPost)
       </script>
     </div>
   </article>

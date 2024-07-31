@@ -511,7 +511,7 @@ router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) 
   ctx.body = body
 })
 
-router.post('accountBlogPostNew-POST', '/account/blog/post/new', hasFlash, async (ctx) => {
+router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, async (ctx) => {
   const log = accountLog.extend('POST-account-blog-post-new')
   const error = accountError.extend('POST-account-blog-post-new')
   if (!ctx.state.isAsyncRequest) {
@@ -556,7 +556,7 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/new', hasFlash, async
   const postDescription = ctx.request.body?.postDescription?.[0] || null
   const postContent = ctx.request.body?.postContent?.[0] || null
   const postKeywords = (ctx.request.body?.postKeywords) ? Array.from(ctx.request.body.postKeywords[0].split(',')) : []
-  const postPublic = (ctx.request.body?.postPublic) ? ((ctx.request.body.public[0] === 'true') ? true : false) : false // eslint-disable-line
+  const postPublic = (ctx.request.body?.postPublic) ? ((ctx.request.body.postPublic[0] === 'true') ? true : false) : false // eslint-disable-line
   if (doTokensMatch(ctx)) {
     try {
       blog = await Blogs.getById(ctx.state.mongodb.client.db(), blogId, redis)
@@ -566,6 +566,8 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/new', hasFlash, async
         postContent,
         postKeywords,
         postSlug,
+        _slug: postSlug,
+        saved: { insertedId: 1 },
       }
       status = 200
       body = { msg: 'sucess', post }
