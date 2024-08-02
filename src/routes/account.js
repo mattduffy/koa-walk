@@ -512,8 +512,8 @@ router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) 
 })
 
 router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, async (ctx) => {
-  const log = accountLog.extend('POST-account-blog-post-new')
-  const error = accountError.extend('POST-account-blog-post-new')
+  const log = accountLog.extend('POST-account-blog-post-save')
+  const error = accountError.extend('POST-account-blog-post-save')
   if (!ctx.state.isAsyncRequest) {
     error('Tried to directly access route rather than via async request.')
     ctx.status = 400
@@ -552,7 +552,7 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, asyn
   let post
   const blogId = ctx.request.body?.blogId[0] || null
   const postTitle = ctx.request.body?.postTitle?.[0] || null
-  const postSlug = slugify(postTitle)
+  const postSlug = (ctx.request.body?.postSlug?.[0] === '') ? slugify(postTitle) : slugify(ctx.request.body.postSlug[0])
   const postDescription = ctx.request.body?.postDescription?.[0] || null
   const postContent = ctx.request.body?.postContent?.[0] || null
   const postKeywords = (ctx.request.body?.postKeywords) ? Array.from(ctx.request.body.postKeywords[0].split(',')) : []
@@ -560,17 +560,18 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, asyn
   if (doTokensMatch(ctx)) {
     try {
       blog = await Blogs.getById(ctx.state.mongodb.client.db(), blogId, redis)
-      post = {
+      const newPost = {
+        postAuthors: [{ author: ctx.state.sessionUser.username, id: ctx.state.sessionUser.id }],
         postTitle,
         postDescription,
         postContent,
         postKeywords,
         postSlug,
-        _slug: postSlug,
-        saved: { insertedId: 1 },
       }
+      post = await blog.createPost(newPost)
+      log('finally, newly created post: ', post.id)
       status = 200
-      body = { msg: 'sucess', post }
+      body = { msg: 'sucess', post: post.postJson }
     } catch (e) {
       error(e)
       status = 500
