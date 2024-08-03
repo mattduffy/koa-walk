@@ -358,8 +358,9 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
     const { username } = ctx.state.sessionUser
     log(`username for blog owner: ${username}`)
     const blog = await Blogs.getByUsername(db, username, redis) ?? {}
-    log(`found ${username}'s blog: ${blog.name}`)
-    const posts = []
+    log(`found ${username}'s blog: ${blog.title}`)
+    const posts = await blog.posts(0, 'all')
+    log(`found ${posts.length} posts. `, posts)
     const csrfToken = ulid()
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
