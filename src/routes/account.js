@@ -592,7 +592,7 @@ router.get('accountBlogPostNew', '/account/blog/post/new', hasFlash, async (ctx)
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    log(`View ${ctx.state.sessionUser.username}'s account details.`)
+    log(`Creating ${ctx.state.sessionUser.username}'s blog post.`)
     log('flash %O', ctx.flash)
     const db = ctx.state.mongodb.client.db()
     // Get list of blogs, if they exist
@@ -619,6 +619,44 @@ router.get('accountBlogPostNew', '/account/blog/post/new', hasFlash, async (ctx)
     }
     ctx.status = 200
     await ctx.render('account/user-blog-post-new', locals)
+  }
+})
+
+router.get('accountBlogPostNew', '/account/blog/post/:id', hasFlash, async (ctx) => {
+  const log = accountLog.extend(`GET-account-blog-post-${ctx.params.id}`)
+  const error = accountError.extend(`GET-account-blog-post-${ctx.params.id}`)
+  if (!ctx.state?.isAuthenticated) {
+    error('User is not authenticated.  Redirect to /')
+    ctx.status = 401
+    ctx.redirect('/')
+  } else {
+    log(`Editing ${ctx.state.sessionUser.username}'s blog post.`)
+    log('flash %O', ctx.flash)
+    const db = ctx.state.mongodb.client.db()
+    // Get list of blogs, if they exist
+    const { username } = ctx.state.sessionUser
+    log(`username for blog owner: ${username}`)
+    const blog = await Blogs.getByUsername(db, username, redis) ?? {}
+    log(`found ${username}'s blog: ${blog.title}`)
+    const post = await blog.getPost(ctx.params.id)
+    const csrfToken = ulid()
+    ctx.session.csrfToken = csrfToken
+    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+    const locals = {
+      sessionUser: ctx.state.sessionUser,
+      blog,
+      post,
+      body: ctx.body,
+      view: ctx.flash.view ?? {},
+      edit: ctx.flash.edit ?? {},
+      origin: `${ctx.request.origin}`,
+      jwtAccess: (ctx.state.sessionUser.jwts).token,
+      csrfToken,
+      isAuthenticated: ctx.state.isAuthenticated,
+      title: `${ctx.app.site}: New Blog Post`,
+    }
+    ctx.status = 200
+    await ctx.render('account/user-blog-post-edit', locals)
   }
 })
 
