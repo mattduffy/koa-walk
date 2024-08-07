@@ -1,6 +1,6 @@
 <main>
   <article>
-    <h1>Blog: <%= blog.name %></h1>
+    <h1>Blog: <%= blog.title%></h1>
     <h2><a href="<%= `${origin}/@${sessionUser.username}/blog/${post.slug}` %>"><%= `${origin}/@${sessionUser.username}/blog/${post.url}` %></a></h2>
     <% if (view.message) { %>
     <div id="messages" class="messages">
@@ -101,8 +101,7 @@
               postJson = await response.json() 
               console.log(postJson)
               if (postJson?.post) {
-                // postForm.elements['postId'].value = postJson.post.saved.insertedId
-                postForm.elements['postId'].value = postJson.post._id
+                // postForm.elements['postId'].value = postJson.post.id ?? postJson.post._id
                 postForm.elements['postSlug'].value = postJson.post.slug
                 postForm.elements['postSlug'].disabled = false
                 const msg = document.querySelector('div#newPostMsg')

@@ -551,26 +551,42 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, asyn
   log(ctx.request.body)
   let blog
   let post
-  const blogId = ctx.request.body?.blogId[0] || null
-  const postTitle = ctx.request.body?.postTitle?.[0] || null
+  const postId = ctx.request.body?.postId[0] ?? null
+  const blogId = ctx.request.body?.blogId[0] ?? null
+  const postTitle = ctx.request.body?.postTitle?.[0] ?? null
   const postSlug = (ctx.request.body?.postSlug?.[0] === '') ? slugify(postTitle) : slugify(ctx.request.body.postSlug[0])
-  const postDescription = ctx.request.body?.postDescription?.[0] || null
-  const postContent = ctx.request.body?.postContent?.[0] || null
+  const postDescription = ctx.request.body?.postDescription?.[0] ?? null
+  const postContent = ctx.request.body?.postContent?.[0] ?? null
   const postKeywords = (ctx.request.body?.postKeywords) ? Array.from(ctx.request.body.postKeywords[0].split(',')) : []
   const postPublic = (ctx.request.body?.postPublic) ? ((ctx.request.body.postPublic[0] === 'true') ? true : false) : false // eslint-disable-line
   if (doTokensMatch(ctx)) {
     try {
       blog = await Blogs.getById(ctx.state.mongodb.client.db(), blogId, redis)
-      const newPost = {
-        postAuthors: [{ author: ctx.state.sessionUser.username, id: ctx.state.sessionUser.id }],
-        postTitle,
-        postDescription,
-        postContent,
-        postKeywords,
-        postSlug,
+      if (!postId) {
+        const newPost = {
+          postAuthors: [{ author: ctx.state.sessionUser.username, id: ctx.state.sessionUser.id }],
+          postTitle,
+          postDescription,
+          postContent,
+          postKeywords,
+          postSlug,
+        }
+        post = await blog.createPost(newPost)
+        log('finally, newly created post: ', post.id)
+      } else {
+        const updatePost = {
+          _id: postId,
+          blogId,
+          postTitle,
+          postDescription,
+          postContent,
+          postKeywords,
+          postSlug,
+        }
+        // log(updatePost)
+        post = await blog.updatePost(updatePost)
+        log('updated post: ', post.id, post.title, post.slug)
       }
-      post = await blog.createPost(newPost)
-      log('finally, newly created post: ', post.id)
       status = 200
       body = { msg: 'sucess', post: post.postJson }
     } catch (e) {
@@ -635,10 +651,12 @@ router.get('accountBlogPostNew', '/account/blog/post/:id', hasFlash, async (ctx)
     const db = ctx.state.mongodb.client.db()
     // Get list of blogs, if they exist
     const { username } = ctx.state.sessionUser
-    log(`username for blog owner: ${username}`)
     const blog = await Blogs.getByUsername(db, username, redis) ?? {}
     log(`found ${username}'s blog: ${blog.title}`)
     const post = await blog.getPost(ctx.params.id)
+    if (!post) {
+      throw new Error()
+    }
     const csrfToken = ulid()
     ctx.session.csrfToken = csrfToken
     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
