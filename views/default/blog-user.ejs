@@ -1,0 +1,44 @@
+<main>
+  <article>
+    <h1>@<%= username %>'s Blog</h1>
+    <h2><%= blog.title %></h2>
+    <% if (flash?.info) { %>
+    <div id="info" class="info">
+      <span><%= flash.info %></span>
+    </div>
+    <% } %>
+    <% if (flash?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= flash.message %></span>
+    </div>
+    <% } %>
+    <% if (flash?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= flash.error %></span>
+    </div>
+    <% } %> 
+    <section id="userBlogs">
+      <% if (posts && posts.length > 0) { %>
+      <ul id="usersBlogPosts">
+        <% posts.forEach((p) => {
+          if (p.public) {%>
+          <li>
+            <%= p.title %>
+            <br>
+            by: <span class="postAuthor"><%= blog.author %></span>
+            <br>
+            created on: <%= new Date(p.createdOn).toDateString() %>  
+            <br>
+            <div class="postContent">
+              <%= p.content %>
+            </div>
+          </li>
+          <% }
+        }) %>
+      </ul>
+      <% } else { %>
+        @<%= username %> hasn't made any public blog posts yet.
+      <% } %>
+    </section>
+  </article>
+</main>

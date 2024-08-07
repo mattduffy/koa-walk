@@ -102,11 +102,42 @@ router.get('blogs', '/blog', hasFlash, async (ctx) => {
     publicBlogs,
     body: ctx.body,
     origin: ctx.request.origin,
-    flash: ctx.flash?.galleries ?? {},
+    flash: ctx.flash?.blogs ?? {},
     title: `${ctx.app.site}: Blogs`,
     sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
   })
+})
+
+router.get('userBlog', '/:username/blog', async (ctx) => {
+  const log = mainLog.extend('userBlog')
+  const error = mainError.extend('userBlog')
+  log('inside index router: /@<username>/blog')
+  let blog
+  let posts
+  const username = ctx.params.username.slice(1)
+  log(username)
+  try {
+    blog = await Blogs.getByUsername(ctx.state.mongodb.client.db(), username)
+    posts = await blog.posts(0, 'all')
+    log(posts)
+  } catch (e) {
+    const msg = `Failed to get blog for ${username}.`
+    error(msg)
+    error(e)
+  }
+  const locals = {
+    blog,
+    posts,
+    body: ctx.body,
+    // origin: ctx.request.origin,
+    flash: ctx.flash?.blogs ?? {},
+    title: `${ctx.app.site}: Blog: @${username}`,
+    username,
+    sessionUser: null,
+    isAuthenticated: ctx.state.isAuthenticated,
+  }
+  await ctx.render('blog-user', locals)
 })
 
 router.get('about', '/about', hasFlash, async (ctx) => {
