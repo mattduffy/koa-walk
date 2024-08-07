@@ -134,7 +134,7 @@ router.get('userBlog', '/:username/blog', async (ctx) => {
     flash: ctx.flash?.blogs ?? {},
     title: `${ctx.app.site}: Blog: @${username}`,
     username,
-    sessionUser: null,
+    sessionUser: ctx.state.sessionUser ?? null,
     isAuthenticated: ctx.state.isAuthenticated,
   }
   await ctx.render('blog-user', locals)
