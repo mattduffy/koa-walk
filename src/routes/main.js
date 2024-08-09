@@ -119,7 +119,7 @@ router.get('userBlog', '/:username/blog', async (ctx) => {
   log(username)
   try {
     blog = await Blogs.getByUsername(ctx.state.mongodb.client.db(), username)
-    posts = await blog.getPosts(0, 'all')
+    posts = await blog.getPosts(0, 'all', 'desc', 'public')
     log(posts)
   } catch (e) {
     const msg = `Failed to get blog for ${username}.`
