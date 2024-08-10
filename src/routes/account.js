@@ -582,6 +582,7 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, asyn
           postContent,
           postKeywords,
           postSlug,
+          postPublic,
         }
         // log(updatePost)
         post = await blog.updatePost(updatePost)
