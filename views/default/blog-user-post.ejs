@@ -1,0 +1,29 @@
+<main>
+  <article>
+    <h1><%= post.title %></h1>
+    <h2>By: <% post.authors.forEach((a) => { %>
+      <%= `@${a.author}` %>
+    <% }) %></h2>
+    <h3>On: <%= new Date(post.createdOn).toDateString() %></h3>
+    <% if (flash?.info) { %>
+    <div id="info" class="info">
+      <span><%= flash.info %></span>
+    </div>
+    <% } %>
+    <% if (flash?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= flash.message %></span>
+    </div>
+    <% } %>
+    <% if (flash?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= flash.error %></span>
+    </div>
+    <% } %> 
+    <section id="userBlogPost">
+      <div class="postContent">
+        <%= post.content %>
+      </div>
+    </section>
+  </article>
+</main>

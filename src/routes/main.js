@@ -110,13 +110,12 @@ router.get('blogs', '/blog', hasFlash, async (ctx) => {
 })
 
 router.get('userBlog', '/:username/blog', async (ctx) => {
-  const log = mainLog.extend('userBlog')
-  const error = mainError.extend('userBlog')
-  log('inside index router: /@<username>/blog')
+  const log = mainLog.extend('user-blog')
+  const error = mainError.extend('user-blog')
   let blog
   let posts
   const username = ctx.params.username.slice(1)
-  log(username)
+  log(`inside main router: /@${username}/blog`)
   try {
     blog = await Blogs.getByUsername(ctx.state.mongodb.client.db(), username)
     posts = await blog.getPosts(0, 'all', 'desc', 'public')
@@ -125,6 +124,7 @@ router.get('userBlog', '/:username/blog', async (ctx) => {
     const msg = `Failed to get blog for ${username}.`
     error(msg)
     error(e)
+    posts = false
   }
   const locals = {
     blog,
@@ -138,6 +138,40 @@ router.get('userBlog', '/:username/blog', async (ctx) => {
     isAuthenticated: ctx.state.isAuthenticated,
   }
   await ctx.render('blog-user', locals)
+})
+
+router.get('userBlogPost', '/:username/blog/:slug', async (ctx) => {
+  const log = mainLog.extend('user-blog-post')
+  const error = mainError.extend('user-blog-post')
+  let blog
+  let post
+  const username = ctx.params.username.slice(1)
+  const { slug } = ctx.params
+  try {
+    blog = await Blogs.getByUsername(ctx.state.mongodb.client.db(), username)
+    post = await blog.getPostBySlug(slug)
+    log(post.id)
+    log(post.title)
+    log(post.slug)
+    log(post.authors)
+    log(post.createdOn)
+  } catch (e) {
+    const msg = `Failed to retrieve post by slug: ${slug}`
+    error(msg)
+    error(e)
+    post = false
+  }
+  const locals = {
+    blog,
+    post,
+    body: ctx.body,
+    title: `${ctx.app.site}: Blog: @${username}: ${post.title}`,
+    flash: ctx.flash?.blogPost ?? {},
+    username,
+    sessionUser: ctx.state.sessionUser ?? null,
+    isAuthenticated: ctx.state.isAuthenticated,
+  }
+  await ctx.render('blog-user-post', locals)
 })
 
 router.get('about', '/about', hasFlash, async (ctx) => {
