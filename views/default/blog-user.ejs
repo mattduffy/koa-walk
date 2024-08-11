@@ -23,7 +23,7 @@
         <% posts.forEach((p) => {
           if (p.public) {%>
           <li>
-            <%= p.title %>
+            <a href="<%=`${origin}/@${username}/blog/${p.slug}` %>"><%= p.title %></a>
             <br>
             by: <span class="postAuthor"><%= blog.author %></span>
             <br>
