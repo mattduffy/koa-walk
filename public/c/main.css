@@ -256,7 +256,11 @@ span.userpng {
   }
   
   main article h2 {
-    font-size: 95%;
+    font-size: 90%;
+  }
+  
+  main article h3 {
+    font-size: 80%;
   }
   
   div.info {
@@ -278,6 +282,77 @@ span.userpng {
   div.errors::before {
     content: "\274C";
     font-size: 0.65em;
+  }
+
+  div.post-card {
+    padding: 30px 0 30px;
+    position: relative;
+    border-top: 1px solid #EDEDED;
+  }
+
+  div.post-card a {
+    text-decoration: none;
+  }
+
+  div.post-card img.small {
+    max-width: 100%;
+    max-height: 240px;
+    border: 1px solid #2c2c2c;
+  }
+
+  div.post-card div.post-card-thumbnail {
+    display: table-cell;
+    width: 240px;
+    padding-right: 20px;
+  }
+
+  div.post-card div.post-card-info {
+    display: table-cell;
+    vertical-align: middle;
+  }
+
+  div.post-card div.post-card-info h2.post-card-title {
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 400;
+    margin-bottom: 0;
+    margin-top: 0;
+    color: #2c2c2c;
+  }
+
+  div.post-card div.post-card-info div.post-card-meta-keywords {
+    text-transform: uppercase;
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 600;
+    margin: 6px 0 -5px;
+  }
+
+  div.post-card div.post-card-info div.post-card-meta {
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 200;
+    margin-right: 5px;
+  }
+
+  span.post-card-meta-by {
+    font-size: 16px;
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  span.post-card-meta-author {
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 200;
+    color: #000;
+  }
+
+  span.post-card-meta-data {
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 200;
+    color: #000;
   }
 
   div.account-details {

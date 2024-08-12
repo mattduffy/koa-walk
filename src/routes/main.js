@@ -137,7 +137,8 @@ router.get('userBlog', '/:username/blog', async (ctx) => {
     sessionUser: ctx.state.sessionUser ?? null,
     isAuthenticated: ctx.state.isAuthenticated,
   }
-  await ctx.render('blog-user', locals)
+  // await ctx.render('blog-user', locals)
+  await ctx.render('blog-user-gog', locals)
 })
 
 router.get('userBlogPost', '/:username/blog/:slug', async (ctx) => {
