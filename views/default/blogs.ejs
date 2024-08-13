@@ -40,14 +40,40 @@
     <br>
     <section id="userBlogs">
       <% if (publicBlogs.forEach && publicBlogs.length > 0) { %>
-      <ul id="usersBlogList">
         <% publicBlogs?.forEach((b) => { %>
-          <li>
-            <a href="<%= `${origin}/@${b.creatorName}` %>/blog"><%= b.title %></a>
-            <br>by: <span class="blogAuthor"><%= b.creatorName %></span>
-          </li>
+          <div class="post-card" id="usersBlogList">
+            <div class="post-card-thumbnail">
+              <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
+                <% if (b.headerImageUrl) { %>
+                <img class="small" 
+                  alt="<%= b.title %>"
+                  title="<%= b.title %>" 
+                  src="<%=`${origin}/a/xx123bc/galleries/post-title/${b.headerImageUrl}` %>"
+                >
+                <% } else { %>
+                <div class="post-card-thumbnail-blank">
+                  <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
+                    <span><%= b.creatorName %></span>
+                  </a>
+                </div>
+                <% } %>
+              </a>
+            </div>
+            <div class="post-card-info">
+              <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
+                <h2 class="post-card-title"><%= b.title %></h2> 
+              </a>
+              <div class="post-card-meta-keywords">
+                <span><%= b.keywords.join(', ') %></span>
+              </div>
+              <div class="post-card-meta">
+                <span class="post-card-meta-by">by </span>
+                <span class="post-card-meta-author"><%= b.creatorName %></span>
+                <span class="post-card-meta-data">· <%= new Date(b.createdOn).toDateString() %></span>
+              </div>
+            </div>
+          </div>
         <% }) %>
-      </ul>
       <% } else { %>
         No public blogs yet.
       <% } %>

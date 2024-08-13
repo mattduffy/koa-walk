@@ -306,6 +306,15 @@ span.userpng {
     padding-right: 20px;
   }
 
+  div.post-card div.post-card-thumbnail-blank {
+    width: 240px;
+    height: 240px;
+    background-color: #75b9e7;
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+  }
+
   div.post-card div.post-card-info {
     display: table-cell;
     vertical-align: middle;
@@ -315,7 +324,7 @@ span.userpng {
     font-size: 32px;
     font-style: normal;
     font-weight: 400;
-    margin-bottom: 0;
+    margin-bottom: 0.5em;
     margin-top: 0;
     color: #2c2c2c;
   }
@@ -325,7 +334,8 @@ span.userpng {
     font-size: 15px;
     font-style: normal;
     font-weight: 600;
-    margin: 6px 0 -5px;
+    margin: 6px 0 1px;
+    color: #8F8F8F;
   }
 
   div.post-card div.post-card-info div.post-card-meta {

@@ -20,10 +20,10 @@
     <section id="userPosts">
       <% if (posts && posts.length > 0) { %>
         <% posts.forEach((p) => { %>
-          <div class="post-card">  
+          <div class="post-card">
             <div class="post-card-thumbnail">
               <a href="<%= `${origin}/@${username}/blog/${p.slug}` %>">
-                <img class="small" alt="post alt text goes here." title="post alt/title text goes here." src="<%= `${origin}/a/xx123bc/galleries/post-title/post-thumbnail.jpg` %>"> 
+                <img class="small" alt="<%= p.title %>" title="<%= p.title %>" src="<%= `${origin}/a/xx123bc/galleries/post-title/post-thumbnail.jpg` %>"> 
               </a>
             </div>
             <div class="post-card-info">
