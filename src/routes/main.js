@@ -38,13 +38,14 @@ router.get('index', '/', hasFlash, async (ctx) => {
   log('inside main router: /')
   ctx.status = 200
   // log(ctx.state.sessionUser)
-  await ctx.render('index', {
+  const locals = {
     sessionUser: ctx.state.sessionUser,
     body: ctx.body,
     flash: ctx.flash?.index ?? {},
     title: `${ctx.app.site}: Home`,
     isAuthenticated: ctx.state.isAuthenticated,
-  })
+  }
+  await ctx.render('index', locals)
 })
 
 router.get('galleries', '/galleries', hasFlash, async (ctx) => {
@@ -66,7 +67,7 @@ router.get('galleries', '/galleries', hasFlash, async (ctx) => {
     error(e)
   }
   log('users with public albums: ', publicAlbums)
-  await ctx.render('galleries', {
+  const locals = {
     recent10,
     publicAlbums,
     body: ctx.body,
@@ -75,7 +76,8 @@ router.get('galleries', '/galleries', hasFlash, async (ctx) => {
     title: `${ctx.app.site}: Galleries`,
     sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
-  })
+  }
+  await ctx.render('albums/index', locals)
 })
 
 router.get('blogs', '/blog', hasFlash, async (ctx) => {
@@ -97,7 +99,7 @@ router.get('blogs', '/blog', hasFlash, async (ctx) => {
     error(e)
   }
   log('users with public blogs: ', publicBlogs)
-  await ctx.render('blogs', {
+  const locals = {
     recent10,
     publicBlogs,
     body: ctx.body,
@@ -106,73 +108,8 @@ router.get('blogs', '/blog', hasFlash, async (ctx) => {
     title: `${ctx.app.site}: Blogs`,
     sessionUser: ctx.state.sessionUser,
     isAuthenticated: ctx.state.isAuthenticated,
-  })
-})
-
-router.get('userBlog', '/:username/blog', async (ctx) => {
-  const log = mainLog.extend('user-blog')
-  const error = mainError.extend('user-blog')
-  let blog
-  let posts
-  const username = ctx.params.username.slice(1)
-  log(`inside main router: /@${username}/blog`)
-  try {
-    blog = await Blogs.getByUsername(ctx.state.mongodb.client.db(), username)
-    posts = await blog.getPosts(0, 'all', 'desc', 'public')
-    log(posts)
-  } catch (e) {
-    const msg = `Failed to get blog for ${username}.`
-    error(msg)
-    error(e)
-    posts = false
   }
-  const locals = {
-    blog,
-    posts,
-    body: ctx.body,
-    // origin: ctx.request.origin,
-    flash: ctx.flash?.blogs ?? {},
-    title: `${ctx.app.site}: Blog: @${username}`,
-    username,
-    sessionUser: ctx.state.sessionUser ?? null,
-    isAuthenticated: ctx.state.isAuthenticated,
-  }
-  // await ctx.render('blog-user', locals)
-  await ctx.render('blog-user-gog', locals)
-})
-
-router.get('userBlogPost', '/:username/blog/:slug', async (ctx) => {
-  const log = mainLog.extend('user-blog-post')
-  const error = mainError.extend('user-blog-post')
-  let blog
-  let post
-  const username = ctx.params.username.slice(1)
-  const { slug } = ctx.params
-  try {
-    blog = await Blogs.getByUsername(ctx.state.mongodb.client.db(), username)
-    post = await blog.getPostBySlug(slug)
-    log(post.id)
-    log(post.title)
-    log(post.slug)
-    log(post.authors)
-    log(post.createdOn)
-  } catch (e) {
-    const msg = `Failed to retrieve post by slug: ${slug}`
-    error(msg)
-    error(e)
-    post = false
-  }
-  const locals = {
-    blog,
-    post,
-    body: ctx.body,
-    title: `${ctx.app.site}: Blog: @${username}: ${post.title}`,
-    flash: ctx.flash?.blogPost ?? {},
-    username,
-    sessionUser: ctx.state.sessionUser ?? null,
-    isAuthenticated: ctx.state.isAuthenticated,
-  }
-  await ctx.render('blog-user-post', locals)
+  await ctx.render('blog/index', locals)
 })
 
 router.get('about', '/about', hasFlash, async (ctx) => {
