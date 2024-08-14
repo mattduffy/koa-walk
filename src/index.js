@@ -215,9 +215,14 @@ async function cors(ctx, next) {
   const err = error.extend('CORS')
   logg('Cors middleware checking headers.')
   ctx.set('Vary', 'Origin')
-  ctx.set('Access-Control-Allow-Origin', ctx.request.origin)
+  if (/webfinger/.test(ctx.request.url)) {
+    ctx.set('Access-Control-Allow-Origin', '*')
+    ctx.set('Access-Control-Allow-Methods', 'GET')
+  } else {
+    ctx.set('Access-Control-Allow-Origin', ctx.request.origin)
+    ctx.set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS')
+  }
   ctx.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
-  ctx.set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS')
   try {
     await next()
   } catch (e) {

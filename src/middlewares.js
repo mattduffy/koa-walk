@@ -266,7 +266,7 @@ export async function errors(ctx, next) {
     error(e)
     switch (ctx.response.status) {
       case 400:
-        ctx.response.message = 'bad request'
+        ctx.response.message = ctx.response.message ?? 'bad request'
         break
       case 401:
         ctx.response.message = 'unauthorized'
