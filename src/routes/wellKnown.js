@@ -169,21 +169,15 @@ router.get('webfinger', '/.well-known/webfinger', async (ctx, next) => {
     ctx.throw(500, 'Missing database connection.')
   }
   try {
-    log('awaiting next return')
-    await next()
-  } catch (e) {
-    error('Webfinger failure - 200')
-    error(e)
-    ctx.throw(500, 'Webfinger failure - 200', e)
-  }
-  try {
     const re = /^acct:([^\\s][A-Za-z0-9_-]{2,30})(?:@)?([^\\s].*)?$/
     const username = re.exec(ctx.request.query?.resource)
+    log(username)
     if (!ctx.request.query.resource || !username) {
       error('Missing resource query parameter.')
       ctx.status = 400
       ctx.type = 'text/plain; charset=utf-8'
-      ctx.body = 'Bad request'
+      ctx.response.message = 'Bad request - missing required webfinger URL parameter: resource=<query-uri>'
+      ctx.body = 'Bad request - missing required URL parameter: resource'
     } else {
       const { origin, host, protocol } = ctx.request
       const localAcct = new RegExp(`(${host})`)
@@ -220,6 +214,33 @@ router.get('webfinger', '/.well-known/webfinger', async (ctx, next) => {
     // throw new Error(e)
     ctx.throw(500, 'Webfinger failure - 100', e)
   }
+  return next()
+  // try {
+  //   log('awaiting next return')
+  //   await next()
+  // } catch (e) {
+  //   error('Webfinger failure - 200')
+  //   error(e)
+  //   ctx.throw(500, 'Webfinger failure - 200', e)
+  // }
+})
+
+router.get('wellknownIndex', '/.well-known', async (ctx) => {
+  const log = wellKnownInfo.extend('GET-wellknown-uris')
+  const wellknown = router.stack.map((i) => i.path)
+  log(wellknown)
+  wellknown.pop()
+  wellknown.sort()
+  console.dir(router.stack)
+  const locals = {
+    body: ctx.body,
+    title: `${ctx.app.site}: .well-known`,
+    flash: ctx.flash?.wellknown ?? {},
+    sessionUser: ctx.state.sessionUser ?? null,
+    isAuthenticated: ctx.state.isAuthenticated,
+    wellknown,
+  }
+  await ctx.render('wellknown/index', locals)
 })
 
 export { router as wellKnown }
