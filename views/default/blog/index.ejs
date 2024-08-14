@@ -43,21 +43,21 @@
         <% publicBlogs?.forEach((b) => { %>
           <div class="post-card" id="usersBlogList">
             <div class="post-card-thumbnail">
+              <% if (b.headerImageUrl) { %>
               <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
-                <% if (b.headerImageUrl) { %>
                 <img class="small" 
                   alt="<%= b.title %>"
                   title="<%= b.title %>" 
                   src="<%=`${origin}/a/xx123bc/galleries/post-title/${b.headerImageUrl}` %>"
                 >
-                <% } else { %>
-                <div class="post-card-thumbnail-blank">
-                  <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
-                    <span><%= b.creatorName %></span>
-                  </a>
-                </div>
-                <% } %>
               </a>
+              <% } else { %>
+                <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
+                  <div class="post-card-thumbnail-blank">
+                    <span><%= b.creatorName %></span>
+                  </div>
+                </a>
+              <% } %>
             </div>
             <div class="post-card-info">
               <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
