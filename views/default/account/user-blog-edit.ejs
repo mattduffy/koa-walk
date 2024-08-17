@@ -14,7 +14,7 @@
     <% } %>
     <div class="blog">
       <form name="edit" id="edit_Id" action="/account/blog/<%= blog.id %>" method="POST" enctype="multipart/form-data">
-        <fieldset>
+        <fieldset name="details">
           <legend>Your blog details</legend>
           <div id="blogUpdateMsg" class="messages hidden"></div>
           <div id="blogUpdateErr" class="errors hidden"></div>
@@ -34,6 +34,24 @@
           <label for="blogSlug_Id">Blog Url Slug:</label>
           <input type="text" name="blogSlug" id="blogSlug_Id" value="<%= blog.url %>" disabled>
           <br>
+        </fieldset>
+        <fieldset name="images">
+          <legend>Images</legend>
+          <div style="display: table-cell;">
+            <input type="file" id="headerImageSmall_Id" name="headerImageSmall">
+            <div id="small" style="display: inline-flex; border: 1px solid black; width: 220px; height: 220px; background-color: lightgray;">
+              <img style="margin: 0 auto;" id="previewSmall" src="">
+            </div>
+          </div>
+          <br>
+          <div style="display: table-cell;">
+            <input type="file" id="headerImageBig_Id" name="headerImageBig">
+            <div id="big" style="display: inline-flex; border: 1px solid black; width: 750px; height: 300px; background-color: lightgray;">
+              <img style="margin: 0 auto;" id="previewBig" src="">
+            </div>
+          </div>
+        </fieldset>
+        <fieldset name="buttons">
           <input type="submit" name="submit" id="submit_Id" value="Update Blog" tabindex="6">
           <input type="reset" name="reset" id="reset_Id" value="Reset" tabindex="7">
         </fieldset>
@@ -49,7 +67,19 @@
           console.log(blogForm.elements['blogTitle'].value)
         }
         blogForm.elements['blogTitle'].addEventListener('change', slugUpdate)
-
+        function displayPreviewImage(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          // console.log(e)
+          const img = e.target.nextElementSibling.firstElementChild
+          const fileReader = new window.FileReader()
+          fileReader.addEventListener('load', (e) => {
+            img.src = e.target.result  
+          })
+          fileReader.readAsDataURL(e.target.files[0])
+        }
+        blogForm.elements['headerImageSmall'].addEventListener('change', displayPreviewImage)
+        blogForm.elements['headerImageBig'].addEventListener('change', displayPreviewImage)
         async function editBlogDetails(e) {
           e.preventDefault()
           e.stopPropagation()
