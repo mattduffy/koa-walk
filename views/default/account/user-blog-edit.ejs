@@ -38,16 +38,18 @@
         <fieldset name="images">
           <legend>Images</legend>
           <div style="display: table-cell;">
+            <label for="headerImageSmall_Id">Small 220x220 preview image</label>
             <input type="file" id="headerImageSmall_Id" name="headerImageSmall">
-            <div id="small" style="display: inline-flex; border: 1px solid black; width: 220px; height: 220px; background-color: lightgray;">
-              <img style="margin: 0 auto;" id="previewSmall" src="">
+            <div id="small">
+              <img id="previewSmall" src="<%= (blog.headerImageSmall) ? `${origin}/${blog.headerImageSmall}` : '' %>">
             </div>
           </div>
           <br>
           <div style="display: table-cell;">
+            <label for="headerImageBig_Id">Large 750x300 preview image</label>
             <input type="file" id="headerImageBig_Id" name="headerImageBig">
-            <div id="big" style="display: inline-flex; border: 1px solid black; width: 750px; height: 300px; background-color: lightgray;">
-              <img style="margin: 0 auto;" id="previewBig" src="">
+            <div id="big">
+              <img id="previewBig" src="<%= (blog.headerImageBig) ? `${origin}/${blog.headerImageBig}` : '' %>">
             </div>
           </div>
         </fieldset>
@@ -77,6 +79,7 @@
             img.src = e.target.result  
           })
           fileReader.readAsDataURL(e.target.files[0])
+          console.log(e.target.files)
         }
         blogForm.elements['headerImageSmall'].addEventListener('change', displayPreviewImage)
         blogForm.elements['headerImageBig'].addEventListener('change', displayPreviewImage)
@@ -98,6 +101,17 @@
           formData.append('keywords', blogKeywords.value)
           const blogPublic = blogForm.elements['blogPublic']
           formData.append('public', (blogPublic.checked) ? 'true' : 'false')
+          const small = blogForm.elements['headerImageSmall'] 
+          if (small.files.length > 0) {
+            formData.append('headerImageSmall', small.files[0])
+          }
+          const big = blogForm.elements['headerImageBig'] 
+          if (big.files.length > 0) {
+            formData.append('headerImageBig', big.files[0])
+          }
+          for (e of formData.entries()) {
+            console.log(e)
+          }
           const opts = {
             method: 'POST',
             headers: {

@@ -64,6 +64,33 @@ async function hasFlash(ctx, next) {
   await next()
 }
 
+async function processFormData(ctx, next) {
+  const log = accountLog.extend('processFormData')
+  const error = accountError.extend('processFormData')
+  const form = formidable({
+    encoding: 'utf-8',
+    uploadDir: ctx.app.dirs.private.uploads,
+    keepExtensions: true,
+    multipart: true,
+    maxFileSize: (200 * 1024 * 1024),
+  })
+  await new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        error('There was a problem parsing the multipart form data.')
+        error(err)
+        reject(err)
+        return
+      }
+      log('Multipart form data was successfully parsed.')
+      ctx.request.body = fields
+      ctx.request.files = files
+      resolve()
+    })
+  })
+  await next()
+}
+
 function doTokensMatch(ctx) {
   const log = _log.extend('doTokensMatch')
   const error = _error.extend('doTokensMatch')
@@ -384,7 +411,7 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
   }
 })
 
-router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
+router.post('accountBlogEdit', '/account/blog/edit', hasFlash, processFormData, async (ctx) => {
   const log = accountLog.extend('POST-account-blog-edit')
   const error = accountError.extend('POST-account-blog-edit')
   if (!isAsyncRequest(ctx)) {
@@ -402,30 +429,29 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
     status = 401
     body = { error: 'csrf token mismatch' }
   } else {
-    const form = formidable({
-      encoding: 'utf-8',
-      uploadDir: ctx.app.dirs.private.uploads,
-      keepExtensions: true,
-      multipart: true,
-      maxFileSize: (200 * 1024 * 1024),
-    })
-    await new Promise((resolve, reject) => {
-      form.parse(ctx.req, (err, fields, files) => {
-        if (err) {
-          error('There was a problem parsing the multipart form data.')
-          error(err)
-          reject(err)
-          return
-        }
-        log('Multipart form data was successfully parsed.')
-        ctx.request.body = fields
-        ctx.request.files = files
-        // log('fields: %O', fields)
-        // log('files: %o', files)
-        resolve()
-      })
-    })
+    // const form = formidable({
+    //   encoding: 'utf-8',
+    //   uploadDir: ctx.app.dirs.private.uploads,
+    //   keepExtensions: true,
+    //   multipart: true,
+    //   maxFileSize: (200 * 1024 * 1024),
+    // })
+    // await new Promise((resolve, reject) => {
+    //   form.parse(ctx.req, (err, fields, files) => {
+    //     if (err) {
+    //       error('There was a problem parsing the multipart form data.')
+    //       error(err)
+    //       reject(err)
+    //       return
+    //     }
+    //     log('Multipart form data was successfully parsed.')
+    //     ctx.request.body = fields
+    //     ctx.request.files = files
+    //     resolve()
+    //   })
+    // })
     log(ctx.request.body)
+    log(ctx.request.files)
     let blog
     const blogId = (!ctx.request.body.id?.[0]?.length) ? null : ctx.request.body.id[0]
     const blogTitle = ctx.request.body.title?.[0] ?? ''
@@ -433,10 +459,45 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
     const blogPublic = (ctx.request.body?.public?.[0]) ? ((ctx.request.body.public[0] === 'true') ? true : false) : false // eslint-disable-line
     log(`blog access: ${blogPublic}`)
     const blogKeywords = (ctx.request.body?.keywords) ? Array.from(ctx.request.body?.keywords?.[0]?.split(',')) : []
+    // const blogHeaderImageSmall = ctx.request.files
     if (doTokensMatch(ctx)) {
       //
       // copy this refactor to other route handlers
       //
+      const blogDirPath = path.join(
+        ctx.app.dirs.public.dir,
+        ctx.state.sessionUser.publicDir,
+        'blog',
+      )
+      let blogDir
+      let smallImg
+      let smallImgPath
+      let bigImg
+      let bigImgPath
+      try {
+        log(blogDirPath)
+        blogDir = await mkdir(path.resolve(blogDirPath), { recursive: true })
+        if (blogDir !== false) {
+          log(`blogDir exists?: (${blogDir}) ${blogDirPath}`)
+        }
+        if (ctx.request?.files && ctx.request.files?.headerImageSmall) {
+          const originalNameSmall = ctx.request.files.headerImageSmall[0].originalFilename
+          smallImg = path.resolve(blogDirPath, originalNameSmall)
+          await rename(ctx.request.files.headerImageSmall[0].filepath, smallImg)
+          smallImgPath = `${ctx.state.sessionUser.publicDir}blog/${originalNameSmall}`
+        }
+        if (ctx.request?.files && ctx.request.files?.headerImageBig) {
+          const originalNameBig = ctx.request.files.headerImageBig[0].originalFilename
+          bigImg = path.resolve(blogDirPath, originalNameBig)
+          bigImgPath = `${ctx.state.sessionUser.publicDir}blog/${originalNameBig}`
+          await rename(ctx.request.files.headerImageBig[0].filepath, bigImg)
+        }
+      } catch (e) {
+        const msg = `Failed to create (or it doesn't exist) ${blogDirPath}`
+        error(msg)
+        error(e)
+        throw new Error(msg, { cause: e })
+      }
       try {
         const db = ctx.state.mongodb.client.db()
         const o = {
@@ -449,6 +510,12 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
           blogKeywords,
           public: blogPublic,
         }
+        if (smallImgPath) {
+          o.headerImageSmall = smallImgPath
+        }
+        if (bigImgPath) {
+          o.headerImageBig = bigImgPath
+        }
         if (!blogId) {
           blog = await Blogs.newBlog(db, o, redis)
           blog.url = blogTitle
@@ -459,6 +526,12 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, async (ctx) => {
           blog.url = blogTitle
           blog.description = blogDescription
           blog.keywords = blogKeywords
+          if (smallImgPath) {
+            blog.headerImageSmall = smallImgPath
+          }
+          if (bigImgPath) {
+            blog.headerImageBig = bigImgPath
+          }
         }
         const saved = await blog.save()
         log(`blog slug: ${blog.url}`)
