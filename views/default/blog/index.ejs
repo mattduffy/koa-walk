@@ -43,12 +43,12 @@
         <% publicBlogs?.forEach((b) => { %>
           <div class="post-card" id="usersBlogList">
             <div class="post-card-thumbnail">
-              <% if (b.headerImageUrl) { %>
+              <% if (b.headerImageSmallUrl) { %>
               <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
                 <img class="small" 
                   alt="<%= b.title %>"
                   title="<%= b.title %>" 
-                  src="<%=`${origin}/a/xx123bc/galleries/post-title/${b.headerImageUrl}` %>"
+                  src="<%=`${origin}/${b.headerImageSmallUrl}` %>"
                 >
               </a>
               <% } else { %>
@@ -63,6 +63,9 @@
               <a href="<%= `${origin}/@${b.creatorName}/blog` %>">
                 <h2 class="post-card-title"><%= b.title %></h2> 
               </a>
+              <div class="post-card-meta">
+                <span><%= b.postCount %> post<%= (b.postCount > 1) ? 's' : '' %></span>
+              </div>
               <div class="post-card-meta-keywords">
                 <span><%= b.keywords.join(', ') %></span>
               </div>

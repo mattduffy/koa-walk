@@ -336,6 +336,12 @@ span.userpng {
     padding-right: 20px;
   }
 
+  div.post-card div.post-card-thumbnail img {
+    margin: 0 auto;
+    width: 100%;
+    object-fit: cover;
+  }
+
   div.post-card div.post-card-thumbnail-blank {
     width: 240px;
     height: 240px;
