@@ -56,10 +56,16 @@
               <input type="checkbox" tabindex="10" id="isGroup" name="isGroup" <% if (sessionUser) { %><%= (sessionUser?.group) ? 'checked' : ''%><% } %>>
               
               <label for="avatar">Avatar:</label>
-              <input type="file" tabindex="12" id="avatar" name="avatar" accept="image/png, image/jpeg, image/gif">
+              <div>
+                <input type="file" tabindex="12" id="avatar" name="avatar" accept="image/png, image/jpeg, image/gif">
+                <img src="<%= `${origin}/${sessionUser?.avatar}` %>">
+              </div>
 
               <label for="header">Header: </label>
-              <input type="file" tabindex="13" id="header" name="header" accept="image/png, image/jpeg, image/gif">
+              <div>
+                <input type="file" tabindex="13" id="header" name="header" accept="image/png, image/jpeg, image/gif">
+                <img src="<%= `${origin}/${sessionUser?.header}` %>">
+              </div>
 
               <!--
               <label for="url">Url: </label>
@@ -72,6 +78,24 @@
             <input type="reset" tabindex="16" id="reset" name="reset" value="Reset">
         </fieldset>
       </form>  
+      <script nonce="<%= nonce %>">
+        const origin = '<%= origin %>'
+        window.form = document.forms.namedItem('userEdit')
+        function displayPreviewImage(e) {
+          e.preventDefault()
+          e.stopPropagation()
+          console.log(e)
+          const img = e.target.nextElementSibling
+          const fileReader = new window.FileReader()
+          fileReader.addEventListener('load', (e) => {
+            img.src = e.target.result  
+          })
+          fileReader.readAsDataURL(e.target.files[0])
+          console.log(e.target.files)
+        }
+        form.elements['avatar'].addEventListener('change', displayPreviewImage)
+        form.elements['header'].addEventListener('change', displayPreviewImage)
+      </script>
   </article>
 </main>
 
