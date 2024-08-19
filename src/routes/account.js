@@ -69,10 +69,12 @@ async function processFormData(ctx, next) {
   const error = accountError.extend('processFormData')
   const form = formidable({
     encoding: 'utf-8',
+    allowEmptyFiles: true,
+    minFileSize: 0,
+    maxFileSize: (200 * 1024 * 1024),
     uploadDir: ctx.app.dirs.private.uploads,
     keepExtensions: true,
     multipart: true,
-    maxFileSize: (200 * 1024 * 1024),
   })
   await new Promise((resolve, reject) => {
     form.parse(ctx.req, (err, fields, files) => {
@@ -147,31 +149,9 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
   }
 })
 
-router.post('accountPasswordPOST', '/account/change/password', hasFlash, async (ctx) => {
+router.post('accountPasswordPOST', '/account/change/password', hasFlash, processFormData, async (ctx) => {
   const log = accountLog.extend('POST-account-change-password')
   const error = accountError.extend('POST-account-change-password')
-  const form = formidable({
-    encoding: 'utf-8',
-    uploadDir: ctx.app.dirs.private.uploads,
-    keepExtensions: true,
-    multipart: true,
-  })
-  await new Promise((resolve, reject) => {
-    form.parse(ctx.req, (err, fields, files) => {
-      if (err) {
-        error('There was a problem parsing the multipart form data.')
-        error(err)
-        reject(err)
-        return
-      }
-      log('Multipart form data was successfully parsed.')
-      ctx.request.body = fields
-      ctx.request.files = files
-      log('fields: %o', fields)
-      log('files: %o', files)
-      resolve()
-    })
-  })
   if (!ctx.state?.isAuthenticated) {
     error('User is not authenticated.  Redirect to /')
     ctx.status = 401
@@ -429,27 +409,6 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, processFormData, 
     status = 401
     body = { error: 'csrf token mismatch' }
   } else {
-    // const form = formidable({
-    //   encoding: 'utf-8',
-    //   uploadDir: ctx.app.dirs.private.uploads,
-    //   keepExtensions: true,
-    //   multipart: true,
-    //   maxFileSize: (200 * 1024 * 1024),
-    // })
-    // await new Promise((resolve, reject) => {
-    //   form.parse(ctx.req, (err, fields, files) => {
-    //     if (err) {
-    //       error('There was a problem parsing the multipart form data.')
-    //       error(err)
-    //       reject(err)
-    //       return
-    //     }
-    //     log('Multipart form data was successfully parsed.')
-    //     ctx.request.body = fields
-    //     ctx.request.files = files
-    //     resolve()
-    //   })
-    // })
     log(ctx.request.body)
     log(ctx.request.files)
     let blog
@@ -585,7 +544,7 @@ router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) 
   ctx.body = body
 })
 
-router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, async (ctx) => {
+router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, processFormData, async (ctx) => {
   const log = accountLog.extend('POST-account-blog-post-save')
   const error = accountError.extend('POST-account-blog-post-save')
   if (!ctx.state.isAsyncRequest) {
@@ -600,27 +559,6 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, asyn
   }
   let status
   let body
-  const form = formidable({
-    encoding: 'utf-8',
-    uploadDir: ctx.app.dirs.private.uploads,
-    keepExtensions: true,
-    multipart: true,
-    maxFileSize: (200 * 1024 * 1024),
-  })
-  await new Promise((resolve, reject) => {
-    form.parse(ctx.req, (err, fields, files) => {
-      if (err) {
-        error('There was a problem parsing the multipart form data.')
-        error(err)
-        reject(err)
-      }
-      log('Multipart form data was successfully parsed.')
-      ctx.request.body = fields
-      ctx.request.files = files
-      // log('fields: %o', fields)
-      resolve()
-    })
-  })
   log(ctx.request.body)
   let blog
   let post
@@ -786,7 +724,7 @@ router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) =
   }
 })
 
-router.delete('deleteGalleryImage', '/account/gallery/:id/image/delete', async (ctx) => {
+router.delete('deleteGalleryImage', '/account/gallery/:id/image/delete', processFormData, async (ctx) => {
   const log = accountLog.extend('DELETE-account-gallery-image-delete')
   const error = accountError.extend('DELETE-account-gallery-image-delete')
   if (!ctx.state.isAsyncRequest) {
@@ -805,27 +743,6 @@ router.delete('deleteGalleryImage', '/account/gallery/:id/image/delete', async (
     status = 401
     body = { error: 'csrf token mismatch' }
   } else {
-    const form = formidable({
-      encoding: 'utf-8',
-      uploadDir: ctx.app.dirs.private.uploads,
-      keepExtensions: true,
-      multipart: true,
-      maxFileSize: (200 * 1024 * 1024),
-    })
-    await new Promise((resolve, reject) => {
-      form.parse(ctx.req, (err, fields, files) => {
-        if (err) {
-          error('There was a problem parsing the multipart form data.')
-          error(err)
-          reject(err)
-          return
-        }
-        log('Multipart form data was successfully parsed.')
-        ctx.request.body = fields
-        ctx.request.files = files
-        resolve()
-      })
-    })
     log(`album id: ${ctx.params.id}`)
     log(ctx.request.body)
     log(ctx.request.files)
@@ -864,7 +781,7 @@ router.delete('deleteGalleryImage', '/account/gallery/:id/image/delete', async (
   ctx.body = body
 })
 
-router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', async (ctx) => {
+router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', processFormData, async (ctx) => {
   const log = accountLog.extend('PUT-account-gallery-image-add')
   const error = accountError.extend('PUT-account-gallery-imageadd')
   if (!ctx.state.isAsyncRequest) {
@@ -879,27 +796,6 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', async (ct
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    const form = formidable({
-      encoding: 'utf-8',
-      uploadDir: ctx.app.dirs.private.uploads,
-      keepExtensions: true,
-      multipart: true,
-      maxFileSize: (200 * 1024 * 1024),
-    })
-    await new Promise((resolve, reject) => {
-      form.parse(ctx.req, (err, fields, files) => {
-        if (err) {
-          error('There was a problem parsing the multipart form data.')
-          error(err)
-          reject(err)
-          return
-        }
-        log('Multipart form data was successfully parsed.')
-        ctx.request.body = fields
-        ctx.request.files = files
-        resolve()
-      })
-    })
     log(`album id: ${ctx.params.id}`)
     log(`image name: ${ctx.params.name}`)
     log(ctx.request.body)
@@ -961,7 +857,7 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', async (ct
   ctx.body = body
 })
 
-router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async (ctx) => {
+router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', processFormData, async (ctx) => {
   const log = accountLog.extend('POST-account-gallery-image-edit')
   const error = accountError.extend('POST-account-gallery-image-edit')
   if (!ctx.state.isAsyncRequest) {
@@ -980,28 +876,6 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
     status = 401
     body = { error: 'csrf token mismatch' }
   } else {
-    const form = formidable({
-      encoding: 'utf-8',
-      uploadDir: ctx.app.dirs.private.uploads,
-      keepExtensions: true,
-      multipart: true,
-      maxFileSize: (200 * 1024 * 1024),
-    })
-    await new Promise((resolve, reject) => {
-      form.parse(ctx.req, (err, fields, files) => {
-        if (err) {
-          error('There was a problem parsing the multipart form data.')
-          error(err)
-          reject(err)
-          return
-        }
-        log('Multipart form data was successfully parsed.')
-        ctx.request.body = fields
-        ctx.request.files = files
-        // log('fields: %o', fields)
-        resolve()
-      })
-    })
     log(`album id: ${ctx.params.id}`)
     log(`image name: ${ctx.params.name}`)
     log(ctx.request.body)
@@ -1074,7 +948,7 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', async
   ctx.body = body
 })
 
-router.post('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) => {
+router.post('accountEditGallery', '/account/gallery/:id', hasFlash, processFormData, async (ctx) => {
   const log = accountLog.extend('POST-account-gallery-edit')
   const error = accountError.extend('POST-account-gallery-edit')
   if (!ctx.state.isAsyncRequest) {
@@ -1093,28 +967,6 @@ router.post('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) 
     status = 401
     body = { error: 'csrf token mismatch' }
   } else {
-    const form = formidable({
-      encoding: 'utf-8',
-      uploadDir: ctx.app.dirs.private.uploads,
-      keepExtensions: true,
-      multipart: true,
-      maxFileSize: (200 * 1024 * 1024),
-    })
-    await new Promise((resolve, reject) => {
-      form.parse(ctx.req, (err, fields, files) => {
-        if (err) {
-          error('There was a problem parsing the multipart form data.')
-          error(err)
-          reject(err)
-          return
-        }
-        log('Multipart form data was successfully parsed.')
-        ctx.request.body = fields
-        ctx.request.files = files
-        // log('fields: %o', fields)
-        resolve()
-      })
-    })
     log(`album id: ${ctx.params.id}`)
     log(ctx.request.body)
     const albumId = ctx.params.id
@@ -1251,32 +1103,9 @@ router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
   }
 })
 
-router.delete('deleteGallery', '/account/galleries/delete/:id', async (ctx) => {
+router.delete('deleteGallery', '/account/galleries/delete/:id', processFormData, async (ctx) => {
   const log = accountLog.extend('DELETE-account-galleries-delete')
   const error = accountError.extend('DELETE-account-galleries-delete')
-  const form = formidable({
-    encoding: 'utf-8',
-    uploadDir: ctx.app.dirs.private.uploads,
-    keepExtensions: true,
-    multipart: true,
-    maxFileSize: (200 * 1024 * 1024),
-  })
-  await new Promise((resolve, reject) => {
-    form.parse(ctx.req, (err, fields, files) => {
-      if (err) {
-        error('There was a problem parsing the multipart form data.')
-        error(err)
-        reject(err)
-        return
-      }
-      log('Multipart form data was successfully parsed.')
-      ctx.request.body = fields
-      ctx.request.files = files
-      log('fields: %o', fields)
-      log('files: %o', files)
-      resolve()
-    })
-  })
   log(ctx.request.body)
   let album
   let body
@@ -1333,32 +1162,9 @@ router.delete('deleteGallery', '/account/galleries/delete/:id', async (ctx) => {
   ctx.body = body
 })
 
-router.put('accountGalleriesAdd', '/account/galleries/add', async (ctx) => {
+router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, async (ctx) => {
   const log = accountLog.extend('PUT-account-galleries-add')
   const error = accountError.extend('PUT-account-galleries-add')
-  const form = formidable({
-    encoding: 'utf-8',
-    uploadDir: ctx.app.dirs.private.uploads,
-    keepExtensions: true,
-    multipart: true,
-    maxFileSize: (200 * 1024 * 1024),
-  })
-  await new Promise((resolve, reject) => {
-    form.parse(ctx.req, (err, fields, files) => {
-      if (err) {
-        error('There was a problem parsing the multipart form data.')
-        error(err)
-        reject(err)
-        return
-      }
-      log('Multipart form data was successfully parsed.')
-      ctx.request.body = fields
-      ctx.request.files = files
-      log('fields: %o', fields)
-      // log('files: %o', files)
-      resolve()
-    })
-  })
   log(ctx.request.body)
   if (!ctx.state?.isAuthenticated) {
     ctx.flash = {
@@ -1632,34 +1438,9 @@ router.get('accountEdit', '/account/edit', hasFlash, async (ctx) => {
   }
 })
 
-router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
+router.post('accountEditPost', '/account/edit', hasFlash, processFormData, async (ctx) => {
   const log = accountLog.extend('POST-account-edit')
   const error = accountError.extend('POST-account-edit')
-  const form = formidable({
-    encoding: 'utf-8',
-    allowEmptyFiles: true,
-    minFileSize: 0,
-    uploadDir: ctx.app.dirs.private.uploads,
-    keepExtensions: true,
-    multipart: true,
-  })
-  await new Promise((resolve, reject) => {
-    form.parse(ctx.req, (err, fields, files) => {
-      if (err) {
-        error('There was a problem parsing the multipart form data.')
-        error(err)
-        reject(err)
-        return
-      }
-      log('Multipart form data was successfully parsed.')
-      ctx.request.body = fields
-      ctx.request.files = files
-      log('fields: %o', fields)
-      log('files: %o', files)
-      resolve()
-    })
-  })
-  log(ctx.request.body)
   if (!ctx.state?.isAuthenticated) {
     ctx.flash = {
       index: {
@@ -1670,15 +1451,15 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
     error('Tried to edit account without being authenticated.')
     ctx.redirect('/')
   } else {
-    log(`ctx.fields: ${ctx.request.body}`)
-    log('ctx.files: %o', ctx.request.files)
+    log('ctx.fields: %O', ctx.request.body)
+    log('ctx.files: %O', ctx.request.files)
     // const sessionId = ctx.cookies.get('session')
     const csrfTokenCookie = ctx.cookies.get('csrfToken')
     const csrfTokenSession = ctx.session.csrfToken
     const csrfTokenHidden = ctx.request.body['csrf-token'][0]
     if (csrfTokenCookie === csrfTokenSession) log(`cookie  ${csrfTokenCookie} === session ${csrfTokenSession}`)
-    if (csrfTokenCookie === csrfTokenHidden) log(`cookie  ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
-    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
+    if (csrfTokenCookie === csrfTokenHidden) log(`cookie  ${csrfTokenCookie} === hidden  ${csrfTokenHidden}`)
+    if (csrfTokenSession === csrfTokenHidden) log(`session ${csrfTokenSession} === hidden  ${csrfTokenHidden}`)
     if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
       error(`csrf token mismatch: header: ${csrfTokenCookie}`)
       error(`                     hidden: ${csrfTokenHidden}`)
@@ -1754,30 +1535,36 @@ router.post('accountEditPost', '/account/edit', hasFlash, async (ctx) => {
           ctx.state.sessionUser.discoverable = false
         }
       }
-      // log('avatar file: %O', ctx.request.files.avatar.size)
-      // log('avatar file: %O', ctx.request.files.avatar.filepath)
       if (ctx.state.sessionUser.publicDir === '') {
         // log('users ctx: %O', ctx.state.sessionUser._ctx)
         log(`${ctx.state.sessionUser.username} - no upload directory set yet, setting it now.`)
         ctx.state.sessionUser.publicDir = 'a'
       }
-      const { avatar } = ctx.request.files
+      const [avatar] = ctx.request.files.avatar
       if (avatar.size > 0) {
+        log('avatar file size:      %O', ctx.request.files.avatar[0].size)
+        log('avatar file temp path: %O', ctx.request.files.avatar[0].filepath)
         const avatarOriginalFilenameCleaned = sanitizeFilename(avatar.originalFilename)
-        // const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`)
         const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}avatar-${avatarOriginalFilenameCleaned}`)
-        await rename(avatar.filepath, avatarSaved)
-        // ctx.state.sessionUser.avatar = `${ctx.state.sessionUser.publicDir}avatar-${avatar.originalFilename}`
+        try {
+          await rename(avatar.filepath, avatarSaved)
+        } catch (e) {
+          error(e)
+        }
         ctx.state.sessionUser.avatar = `${ctx.state.sessionUser.publicDir}avatar-${avatarOriginalFilenameCleaned}`
       }
-      // log('header file: %O', ctx.request.files.header)
-      const { header } = ctx.request.files
+      const [header] = ctx.request.files.header
       if (header.size > 0) {
+        log('header file size:      %O', ctx.request.files.header[0].size)
+        log('header file temp path: %O', ctx.request.files.header[0].filepath)
         const headerOriginalFilenameCleaned = sanitizeFilename(header.originalFilename)
-        // const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`)
         const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}header-${headerOriginalFilenameCleaned}`)
-        await rename(header.filepath, headerSaved)
-        // ctx.state.sessionUser.header = `${ctx.state.sessionUser.publicDir}header-${header.originalFilename}`
+        try {
+          log(headerSaved)
+          await rename(header.filepath, headerSaved)
+        } catch (e) {
+          error(e)
+        }
         ctx.state.sessionUser.header = `${ctx.state.sessionUser.publicDir}header-${headerOriginalFilenameCleaned}`
       }
       try {
@@ -1979,7 +1766,7 @@ router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async 
   }
 })
 
-router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) => {
+router.post('adminEditUserPost', '/admin/account/edit', hasFlash, processFormData, async (ctx) => {
   const log = accountLog.extend('POST-admin-editusers')
   const error = accountError.extend('POST-admin-editusers')
   if (!ctx.state?.isAuthenticated) {
@@ -1995,30 +1782,6 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) =>
     ctx.redirect('/')
   } else {
     try {
-      const form = formidable({
-        encoding: 'utf-8',
-        allowEmptyFiles: true,
-        minFileSize: 0,
-        uploadDir: ctx.app.dirs.private.uploads,
-        keepExtensions: true,
-        multipart: true,
-      })
-      await new Promise((resolve, reject) => {
-        form.parse(ctx.req, (err, fields, files) => {
-          if (err) {
-            error('There was a problem parsing the multipart form data.')
-            error(err)
-            reject(err)
-            return
-          }
-          log('Multipart form data was successfully parsed.')
-          ctx.request.body = fields
-          ctx.request.files = files
-          log('fields: %o', fields)
-          log('files: %o', files)
-          resolve()
-        })
-      })
       const users = new Users(ctx.state.mongodb, ctx)
       // const sessionId = ctx.cookies.get('session')
       const csrfTokenCookie = ctx.cookies.get('csrfToken')
@@ -2157,7 +1920,7 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, async (ctx) =>
   }
 })
 
-router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async (ctx) => {
+router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, processFormData, async (ctx) => {
   const log = accountLog.extend('POST-account-delete')
   const error = accountError.extend('POST-account-delete')
   if (!ctx.state?.isAuthenticated) {
@@ -2165,24 +1928,6 @@ router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, async 
     ctx.status = 401
     ctx.redirect('/')
   } else {
-    const form = formidable({
-      encoding: 'utf-8',
-      multipart: true,
-    })
-    await new Promise((resolve, reject) => {
-      form.parse(ctx.req, (err, fields) => {
-        if (err) {
-          error('There was a problem parsing the multipart form data.')
-          error(err)
-          reject(err)
-          return
-        }
-        log('Multipart form data was successfully parsed.')
-        ctx.request.body = fields
-        log(fields)
-        resolve()
-      })
-    })
     //
     // Check that route param :id and form field id values match
     //
