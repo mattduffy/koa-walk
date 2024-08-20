@@ -72,7 +72,7 @@
               <input tpye="text" size="50" tabindex="14" id="url" name="url" value="<% if (sessionUser) { %><%=sessionUser.url%><% } %>">
               -->
 
-              <input type="hidden" required id="csrf-token" name="csrf-token" value="<%= csrfToken %>">
+              <input type="hidden" required id="csrf-token" name="csrfTokenHidden" value="<%= csrfToken %>">
             </div> 
             <input type="submit" tabindex="15" id="submit" name="submit" value="Save">
             <input type="reset" tabindex="16" id="reset" name="reset" value="Reset">
