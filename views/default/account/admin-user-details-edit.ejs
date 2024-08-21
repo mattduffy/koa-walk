@@ -49,6 +49,9 @@
               <label for="description">Description: </label>
               <input type="text" size="100%" tabindex="7" id="description" name="description" value="<% if (displayUser) { %><%=displayUser?.description%><% } %>">
               
+              <label for="userStatus">User Status: </label>
+              <input type="checkbox" tabindex="8" id="userStatus" name="userStatus" <% if (displayUser) { %><%= (displayUser.status === 'active') ? 'checked' : '' %><% } %>>
+
               <label for="isLocked">Require Follow Requests: </label>
               <input type="checkbox" tabindex="8" id="isLocked" name="isLocked" <% if (displayUser) { %><%= (displayUser.locked) ? 'checked' : '' %><% } %>>
 
