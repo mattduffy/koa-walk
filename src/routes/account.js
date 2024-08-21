@@ -12,7 +12,7 @@ import {
 import Router from '@koa/router'
 import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
-import formidable from 'formidable'
+// import formidable from 'formidable'
 /* eslint-disable */
 import { Blog, Blogs, slugify } from '@mattduffy/blogs'
 import { Album } from '@mattduffy/albums'
@@ -23,6 +23,7 @@ import { _log, _error } from '../utils/logging.js'
 /* eslint-disable-next-line no-unused-vars */
 import { Users, AdminUser } from '../models/users.js'
 import { redis } from '../daos/impl/redis/redis-client.js'
+import { doTokensMatch, processFormData, hasFlash } from './middlewares.js'
 
 const USERS = 'users'
 const accountLog = _log.extend('account')
@@ -53,71 +54,12 @@ function sanitizeFilename(filename) {
   return cleanName
 }
 
-async function hasFlash(ctx, next) {
-  const log = accountLog.extend('hasFlash')
-  const error = accountError.extend('hasFlash')
-  if (ctx.flash) {
-    log('ctx.flash is present: %o', ctx.flash)
-  } else {
-    error('ctx.flash is missing.')
-  }
-  await next()
-}
-
-async function processFormData(ctx, next) {
-  const log = accountLog.extend('processFormData')
-  const error = accountError.extend('processFormData')
-  const form = formidable({
-    encoding: 'utf-8',
-    allowEmptyFiles: true,
-    minFileSize: 0,
-    maxFileSize: (200 * 1024 * 1024),
-    uploadDir: ctx.app.dirs.private.uploads,
-    keepExtensions: true,
-    multipart: true,
-  })
-  await new Promise((resolve, reject) => {
-    form.parse(ctx.req, (err, fields, files) => {
-      if (err) {
-        error('There was a problem parsing the multipart form data.')
-        error(err)
-        reject(err)
-        return
-      }
-      log('Multipart form data was successfully parsed.')
-      ctx.request.body = fields
-      ctx.request.files = files
-      resolve()
-    })
-  })
-  await next()
-}
-
-function doTokensMatch(ctx) {
-  const log = _log.extend('doTokensMatch')
-  const error = _error.extend('doTokensMatch')
-  const csrfTokenCookie = ctx.cookies.get('csrfToken')
-  const csrfTokenSession = ctx.session.csrfToken
-  const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
-  if (csrfTokenCookie === csrfTokenSession) {
-    log(`cookie  ${csrfTokenCookie} === session ${csrfTokenSession}`)
-  }
-  if (csrfTokenCookie === csrfTokenHidden) {
-    log(`cookie  ${csrfTokenCookie} === hidden ${csrfTokenHidden}`)
-  }
-  if (csrfTokenSession === csrfTokenHidden) {
-    log(`session ${csrfTokenSession} === hidden ${csrfTokenHidden}`)
-  }
-  if (!(csrfTokenCookie === csrfTokenSession && csrfTokenSession === csrfTokenHidden)) {
-    error(`csrf token mismatch: header: ${csrfTokenCookie}`)
-    error(`                     hidden: ${csrfTokenHidden}`)
-    error(`                    session: ${csrfTokenSession}`)
-    ctx.status = 403
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = { status: 'Error, csrf tokens do not match' }
-  }
-  return true
-}
+//
+// Middleware functions located in ./middlewares.js file:
+// - doTokensMatch()
+// - processFormData()
+// - hasFlash()
+//
 
 router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-change-password')
@@ -548,8 +490,8 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
     log(ctx.request.body)
     let blog
     let post
-    let album
-    let smallImg
+    // let album
+    // let smallImg
     const postId = ctx.request.body?.postId[0] ?? null
     const blogId = ctx.request.body?.blogId[0] ?? null
     const postTitle = ctx.request.body?.postTitle?.[0] ?? null
@@ -1635,7 +1577,7 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       // locals.nonce = ctx.app.nonce
       locals.csrfToken = csrfToken
       locals.displayUser = displayUser
-      log(displayUser)
+      // log(displayUser)
       locals.view = ctx.flash.view ?? {}
       locals.origin = ctx.request.origin
       locals.pageName = 'admin_account_view'
@@ -1644,8 +1586,8 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       locals.isAuthenticated = ctx.state.isAuthenticated
       locals.jwtAccess = (ctx.state.sessionUser.jwts).token
       locals.title = `${ctx.app.site}: View ${ctx.params.username}`
-      locals.defaultAvatar = `${ctx.request.origin}/i/accounts/avatars/missing.png`
-      locals.defaultHeader = `${ctx.request.origin}/i/accounts/headers/generic.png`
+      locals.defaultAvatar = `${ctx.request.origin}/i/missing.png`
+      locals.defaultHeader = `${ctx.request.origin}/i/missing.png`
     } catch (e) {
       error(`Error trying to retrieve ${ctx.params.username}'s account.`)
       error(e)
@@ -1736,6 +1678,7 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, processFormDat
             }
           }
         }
+        log('ctx.request.body: %O', ctx.request.body)
         const [firstname] = ctx.request.body.firstname
         if (firstname !== '') displayUser.firstName = firstname
         const [lastname] = ctx.request.body.lastname
@@ -1748,21 +1691,29 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, processFormDat
         if (secondaryEmail !== '') displayUser.secondaryEmail = secondaryEmail
         const [description] = ctx.request.body.description
         if (description !== '') displayUser.description = description
+        if (ctx.request.body?.userStatus) {
+          const [userStatus] = ctx.request.body.userStatus
+          if (userStatus === 'on') {
+            displayUser.status = 'active'
+          }
+        } else {
+          displayUser.status = 'inactive'
+        }
         if (ctx.request.body.isLocked) {
-          const { isLocked } = ctx.request.body
+          const [isLocked] = ctx.request.body.isLocked
           if (isLocked === 'on') {
             displayUser.locked = true
-          } else {
-            displayUser.locked = false
           }
+        } else {
+          displayUser.locked = false
         }
         if (ctx.request.body.isBot) {
           const [isBot] = ctx.request.body.isBot
           if (isBot === 'on') {
             displayUser.bot = true
-          } else {
-            displayUser.bot = false
           }
+        } else {
+          displayUser.bot = false
         }
         if (ctx.request.body.isGroup) {
           const [isGroup] = ctx.request.body.isGroup
