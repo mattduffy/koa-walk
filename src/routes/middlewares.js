@@ -13,7 +13,13 @@ export function doTokensMatch(ctx) {
   const error = _error.extend('doTokensMatch')
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
-  const csrfTokenHidden = ctx.request.body.csrfTokenHidden[0]
+  let csrfTokenHidden
+  if (ctx.request.body?.['csrf-token']) {
+    [csrfTokenHidden] = ctx.request.body['csrf-token']
+  }
+  if (ctx.request.body?.csrfTokenHidden) {
+    [csrfTokenHidden] = ctx.request.body.csrfTokenHidden
+  }
   if (csrfTokenCookie === csrfTokenSession) {
     log(`cookie  ${csrfTokenCookie} === session ${csrfTokenSession}`)
   }
