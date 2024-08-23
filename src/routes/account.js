@@ -490,8 +490,9 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
     log(ctx.request.body)
     let blog
     let post
-    // let album
-    // let smallImg
+    let createPostAlbum
+    let album
+    let smallImg
     const postId = ctx.request.body?.postId[0] ?? null
     const blogId = ctx.request.body?.blogId[0] ?? null
     const postTitle = ctx.request.body?.postTitle?.[0] ?? null
@@ -503,7 +504,7 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
     if (ctx.request.files?.postPreviewImageSmall) {
       const originalNameSmall = ctx.request.files.headerImageSmall[0].originalFilename
       log(originalNameSmall)
-      // smallImg = path.resolve()
+      createPostAlbum = true
     }
     try {
       blog = await Blogs.getById(ctx.state.mongodb.client.db(), blogId, redis)
@@ -515,6 +516,9 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
           postContent,
           postKeywords,
           postSlug,
+        }
+        if (createPostAlbum) {
+          newPost.postAlbumName = postSlug
         }
         post = await blog.createPost(newPost)
         log('finally, newly created post: ', post.id)
