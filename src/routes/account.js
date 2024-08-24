@@ -522,6 +522,12 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         }
         post = await blog.createPost(newPost)
         log('finally, newly created post: ', post.id)
+        const c = {
+          rootDir: `${ctx.request.origin}/${ctx.state.sessionUser.url}/galleries/`,
+          collection: ctx.state.mongodb.client.db().collection('albums'),
+        }
+        const postAlbum = await post.createAlbum(c)
+        log(postAlbum)
       } else {
         // const tmp = blog.getPost(postId)
         // if (tmp.album) {
