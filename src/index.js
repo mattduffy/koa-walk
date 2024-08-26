@@ -123,7 +123,26 @@ const o = {
   db: path.resolve(`${app.root}/src`, 'daos/impl/mongodb/mongo-client.js'),
   db_name: mongoClient.dbname ?? appEnv.MONGODB_DBNAME ?? 'test',
 }
+
+let isHTTPS
+log(`isHTTPS: ${isHTTPS}`)
+app.use(async (ctx, next) => {
+  if (!ctx.request.secure) {
+    log('isHTTPS: ', ctx.request.secure)
+    isHTTPS = false
+    config.secure = false
+  }
+  log(config)
+  return next()
+})
+log(`isHTTPS: ${isHTTPS}`)
+if (!isHTTPS) {
+  // config.secure = false
+  log('request is NOT secure.')
+  log('session cookie stored in the clear.')
+}
 app.use(session(config, app))
+
 if (app.env === 'development') {
   app.use(migrations(o, app))
 }
@@ -249,18 +268,28 @@ async function isMongo(ctx, next) {
 }
 
 async function viewGlobals(ctx, next) {
+  const logg = log.extend('viewGlobals')
+  logg(`ctx.host == ${ctx.host}`)
+  if (/:\d{4,}$/.test(ctx.host)) {
+    ctx.state.origin = `${ctx.request.protocol}://${ctx.host}`
+    ctx.state.domain = `${ctx.request.protocol}://${ctx.host}`
+  } else {
+    ctx.state.origin = `${ctx.request.protocol}://${ctx.app.domain}`
+    ctx.state.domain = `${ctx.request.protocol}://${ctx.app.domain}`
+  }
+  logg(ctx.state.origin)
+  logg(ctx.state.domain)
   ctx.state.nonce = crypto.randomBytes(16).toString('base64')
-  ctx.state.origin = ctx.request.origin
   ctx.state.siteName = ctx.app.site
   ctx.state.appName = ctx.app.site.toProperCase()
   ctx.state.pageDescription = 'Things that I have made.'
   ctx.state.stylesheets = []
   ctx.state.caching = false
-  ctx.state.structredData = JSON.stringify({
+  ctx.state.structuredData = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'website',
     name: ctx.app.site,
-    url: ctx.request.origin,
+    url: ctx.state.origin,
   }, null, 2)
   await next()
 }
