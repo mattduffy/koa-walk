@@ -4,6 +4,11 @@
     <% if (typeof openGraph !== undefined) { %>
     <%- openGraph %>
     <% } %>
+    <% if (structuredData) { %>
+    <script type="application/ld+json" nonce="<%= nonce %>">
+        <%- structuredData %>
+    </script>
+    <% } %>
     <title><%- title -%></title>
     <link rel="icon" type="image/x-icon" href="/i/favicon.ico"> 
     <link rel="stylesheet" href="/c/main.css">
