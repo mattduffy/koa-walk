@@ -1092,6 +1092,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, asy
     log('uploaded filepath: ', ctx.request.files?.PersistentFile?.filepath)
     log('uploaded originalFilename: ', ctx.request.files?.PersistentFile?.originalFilename)
     let albumName = ctx.request.body?.albumName?.[0] ?? null
+    const albumNameDir = (albumName) ? slugify(albumName) : null
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
     const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
     let unpacker
@@ -1123,10 +1124,14 @@ router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, asy
         log(`archive: ${archive.filepath}`)
         log(`archive: ${originalFilenamePath}`)
         log(`       |-originalFilename: ${originalFilenamePath}`)
+        log(`albumName: ${albumName}`)
+        log(`albumNameDir: ${albumNameDir}`)
         unpacker = new Unpacker()
         await unpacker.setPath(originalFilenamePath)
-        if (albumName) {
-          newName = { rename: true, newName: albumName }
+        // if (albumName) {
+        // // switch to using slugified version of albumName so directory name does not contain spaces
+        if (albumNameDir) {
+          newName = { rename: true, newName: albumNameDir }
           log('renaming the gallery directory name: ', newName)
         } else {
           albumName = unpacker.getFileBasename()
@@ -1150,9 +1155,10 @@ router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, asy
           redis,
           collection: db.collection('albums'),
           rootDir: newPath,
-          albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/${albumName}`,
-          albumImageUrl: `${ctx.state.sessionUser.publicDir}${galleries}/${albumName}/`,
+          albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/${albumNameDir}`,
+          albumImageUrl: `${ctx.state.sessionUser.publicDir}${galleries}/${albumNameDir}/`,
           albumName,
+          albumSlug: albumNameDir,
           albumOwner: ctx.state.sessionUser.username,
           albumDescription,
           public: albumPublic,
@@ -1172,6 +1178,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, asy
         ctx.body = {
           albumId: album.id,
           albumName: album.name,
+          albumSlug: album.slug,
           albumUrl: album.url,
           albumOwner: album.owner,
           albumDescription: album.description,

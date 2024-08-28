@@ -80,6 +80,7 @@
         const origin = '<%= origin %>'
         const jwtAccess = '<%= jwtAccess %>'
         const albumName = '<%= album.name %>'
+        const albumSlug = '<%= album.slug %>'
         window.forms = document.forms
         const galleryForm = forms.namedItem('edit')
         const deleteForm = forms.namedItem('delete')
@@ -519,8 +520,14 @@
         image.style.transform = `rotate(${degrees})`
       }
       function imageReset(e) {
-        e.target.elements[0].children[1].firstElementChild.style = "transform: rotate(0deg)"
-        e.target.elements[0].children[2].firstElementChild.style = "transform: rotate(0deg)"
+        const fullSize = e.target.elements[0].children[1].firstElementChild
+        console.log(fullSize)
+        fullSize.style = "transform: rotate(0deg)"
+        const thumb = e.target.elements[0]?.children[2]?.firstElementChild
+        console.log(thumb)
+        if (thumb) {
+          thumb.style = "transform: rotate(0deg)"
+        }
       }
       const imgEditForms = document.querySelectorAll('form[data-type="image"]')
       imgEditForms.forEach((f) => {
@@ -715,7 +722,7 @@
         }
       }
       // 
-      const imgForms = document.querySelectorAll(`form[id^=${albumName}]`)
+      const imgForms = document.querySelectorAll(`form[id^="${albumName}"]`)
       for (const form of imgForms) {
         form.addEventListener('submit', updateImage)
       }
