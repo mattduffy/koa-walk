@@ -132,7 +132,7 @@ app.use(async (ctx, next) => {
     isHTTPS = false
     config.secure = false
   }
-  log(config)
+  // log(config)
   return next()
 })
 log(`isHTTPS: ${isHTTPS}`)
@@ -176,7 +176,7 @@ async function proxyCheck(ctx, next) {
 }
 
 async function openGraph(ctx, next) {
-  const logg = log.extend('openGraph')
+  // const logg = log.extend('openGraph')
   // const err = error.extend('openGraph')
   const ogArray = []
   ogArray.push('<meta property="og:type" content="website">')
@@ -190,7 +190,7 @@ async function openGraph(ctx, next) {
   ogArray.push('<meta property="og:image:alt" content="Things that Matt made.">')
   ogArray.push('<meta property="og:description" content="Things that Matt made.">')
   ctx.state.openGraph = ogArray.join('\n')
-  logg(ctx.state.openGraph)
+  // logg(ctx.state.openGraph)
   await next()
 }
 
