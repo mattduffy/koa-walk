@@ -1128,8 +1128,6 @@ router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, asy
         log(`albumNameDir: ${albumNameDir}`)
         unpacker = new Unpacker()
         await unpacker.setPath(originalFilenamePath)
-        // if (albumName) {
-        // // switch to using slugified version of albumName so directory name does not contain spaces
         if (albumNameDir) {
           newName = { rename: true, newName: albumNameDir }
           log('renaming the gallery directory name: ', newName)
