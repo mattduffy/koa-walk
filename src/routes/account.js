@@ -502,6 +502,7 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
     const postKeywords = (ctx.request.body?.postKeywords) ? Array.from(ctx.request.body.postKeywords[0].split(',')) : []
     const postPublic = (ctx.request.body?.postPublic) ? ((ctx.request.body.postPublic[0] === 'true') ? true : false) : false // eslint-disable-line
     if (ctx.request.files?.postPreviewImageSmall) {
+      smallImg = ctx.request.files.headerImageSmall[0]
       const originalNameSmall = ctx.request.files.headerImageSmall[0].originalFilename
       log(originalNameSmall)
       createPostAlbum = true
@@ -528,6 +529,24 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         }
         album = await post.createAlbum(c)
         log(album)
+        const originalFilenameCleaned = sanitizeFilename(smallImg.originalFilename)
+        const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
+        log('uploaded filepath:             ', smallImg.filepath)
+        log('uploaded originalFilename:     ', smallImg.originalFilename)
+        log('uploeded originalFilenamePath: ', originalFilenamePath)
+        const newImageAlbumDirPath = path.join(album.albumDir, originalFilenameCleaned)
+        try {
+          await rename(smallImg.filepath, newImageAlbumDirPath)
+        } catch (e) {
+          const msg = `Failed to move ${smallImg.originalFilename} into album dir: ${album.albumDir}`
+          error(msg)
+          error(e)
+          ctx.type = 'application/json; charset=utf-8'
+          status = 500
+          body = { status: 500, msg, cause: e.message }
+        }
+        const result = await album.addImage(newImageAlbumDirPath)
+        log(result)
       } else {
         // const tmp = blog.getPost(postId)
         // if (tmp.album) {
