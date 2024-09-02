@@ -41,6 +41,7 @@ router.get('userBlog', '/:username/blog', hasFlash, async (ctx) => {
   log(`inside main router: /@${username}/blog`)
   try {
     blog = await Blogs.getByUsername(ctx.state.mongodb.client.db(), username)
+    log(`${blog}`)
     posts = await blog.getPosts(0, 'all', 'desc', 'public')
     log(posts)
   } catch (e) {
