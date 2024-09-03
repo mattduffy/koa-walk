@@ -488,6 +488,7 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
   let body
   if (doTokensMatch(ctx)) {
     log(ctx.request.body)
+    log(ctx.request.files)
     let blog
     let post
     let createPostAlbum
@@ -502,13 +503,14 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
     const postKeywords = (ctx.request.body?.postKeywords) ? Array.from(ctx.request.body.postKeywords[0].split(',')) : []
     const postPublic = (ctx.request.body?.postPublic) ? ((ctx.request.body.postPublic[0] === 'true') ? true : false) : false // eslint-disable-line
     if (ctx.request.files?.postPreviewImageSmall) {
-      smallImg = ctx.request.files.headerImageSmall[0]
-      const originalNameSmall = ctx.request.files.headerImageSmall[0].originalFilename
+      [smallImg] = ctx.request.files.postPreviewImageSmall
+      const originalNameSmall = smallImg.originalFilename
       log(originalNameSmall)
       createPostAlbum = true
     }
     try {
       blog = await Blogs.getById(ctx.state.mongodb.client.db(), blogId, redis)
+      log(`${blog}`)
       if (!postId) {
         const newPost = {
           postAuthors: [{ author: ctx.state.sessionUser.username, id: ctx.state.sessionUser.id }],
@@ -524,17 +526,20 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         post = await blog.createPost(newPost)
         log('finally, newly created post: ', post.id)
         const c = {
-          rootDir: `${ctx.request.origin}/${ctx.state.sessionUser.url}/galleries/`,
+          owner: ctx.state.sessionUser.username,
+          rootDir: `${ctx.app.root}/public/${ctx.state.sessionUser.publicDir}galleries/`,
           collection: ctx.state.mongodb.client.db().collection('albums'),
         }
+        log('creating post album config: ', c)
         album = await post.createAlbum(c)
-        log(album)
+        log(`${album}`)
         const originalFilenameCleaned = sanitizeFilename(smallImg.originalFilename)
-        const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
-        log('uploaded filepath:             ', smallImg.filepath)
-        log('uploaded originalFilename:     ', smallImg.originalFilename)
-        log('uploeded originalFilenamePath: ', originalFilenamePath)
+        // const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
         const newImageAlbumDirPath = path.join(album.albumDir, originalFilenameCleaned)
+        log('uploaded filepath:                 ', smallImg.filepath)
+        log('uploaded originalFilename:         ', smallImg.originalFilename)
+        log('uploeded originalFilename cleaned: ', originalFilenameCleaned)
+        log('album dir path:                    ', newImageAlbumDirPath)
         try {
           await rename(smallImg.filepath, newImageAlbumDirPath)
         } catch (e) {
