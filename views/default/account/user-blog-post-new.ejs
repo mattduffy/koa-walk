@@ -33,12 +33,12 @@
           <label for="postKeywords_Id">Post Keywords:</label>
           <input type="text" name="postKeywords" id="postKeywords_Id" value="<%= post?.keywords%>" tabindex="1">
           <br>
-          <label for="postPublic">Public:</label>
+          <label for="postPublic_Id">Public:</label>
           <input type="checkbox" name="postPublic" id="postPublic_Id" <%= (post?.public) ? 'checked' : '' %> tabindex="1">
           <br>
           <div stlye="display: table-cell;">
-            <label for="previewImageSmall">Preview Image</label>
-            <input type="file" name="previewImageSmall" id="previewImageSmall_Id">
+            <label for="previewImageSmall_Id">Preview Image</label>
+            <input type="file" name="previewImageSmall" id="previewImageSmall_Id" tabindex="1">
             <div id="small">
               <img id="previewSmall" src="<%= (post?.previewImageSmall) ? `${origin}/${post.previewImageSmall}` : '' %>">
             </div>
@@ -61,6 +61,13 @@
           }
           return true
         }
+        document.querySelector('#previewSmall').addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (e.target.getAttribute('src') === '') {
+            postForm.elements['previewImageSmall'].click()
+          }
+        })
         function displayPreviewImage(e) {
           e.preventDefault()
           e.stopPropagation()
