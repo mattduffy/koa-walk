@@ -7,7 +7,7 @@
 
 import path from 'node:path'
 import {
-  mkdir, readFile, rename, writeFile,
+  mkdir, readFile, rename, writeFile, stat,
 } from 'node:fs/promises'
 import Router from '@koa/router'
 import { ulid } from 'ulid'
@@ -542,6 +542,7 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         log('album dir path:                    ', newImageAlbumDirPath)
         try {
           await rename(smallImg.filepath, newImageAlbumDirPath)
+          log(await stat(newImageAlbumDirPath))
         } catch (e) {
           const msg = `Failed to move ${smallImg.originalFilename} into album dir: ${album.albumDir}`
           error(msg)
@@ -550,8 +551,11 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
           status = 500
           body = { status: 500, msg, cause: e.message }
         }
-        const result = await album.addImage(newImageAlbumDirPath)
+        const skipSizes = true
+        const result = await album.addImage(newImageAlbumDirPath, skipSizes)
         log(result)
+        const saved = await album.save()
+        log(saved)
       } else {
         // const tmp = blog.getPost(postId)
         // if (tmp.album) {
@@ -1177,7 +1181,7 @@ router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, asy
           redis,
           collection: db.collection('albums'),
           rootDir: newPath,
-          albumUrl: `${ctx.request.origin}/${ctx.state.sessionUser.url}/${galleries}/${albumNameDir}`,
+          albumUrl: `${ctx.state.sessionUser.url}/${galleries}/${albumNameDir}`,
           albumImageUrl: `${ctx.state.sessionUser.publicDir}${galleries}/${albumNameDir}/`,
           albumName,
           albumSlug: albumNameDir,
