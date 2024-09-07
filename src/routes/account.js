@@ -532,7 +532,9 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         }
         log('creating post album config: ', c)
         album = await post.createAlbum(c)
+        const save = await album.save()
         log(`${album}`)
+        log(`${save}`)
         const originalFilenameCleaned = sanitizeFilename(smallImg.originalFilename)
         // const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
         const newImageAlbumDirPath = path.join(album.albumDir, originalFilenameCleaned)
