@@ -534,17 +534,16 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         album = await post.createAlbum(c)
         const save = await album.save()
         log(`${album}`)
-        log(`${save}`)
+        log(save)
         const originalFilenameCleaned = sanitizeFilename(smallImg.originalFilename)
-        // const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
         const newImageAlbumDirPath = path.join(album.albumDir, originalFilenameCleaned)
         log('uploaded filepath:                 ', smallImg.filepath)
         log('uploaded originalFilename:         ', smallImg.originalFilename)
         log('uploeded originalFilename cleaned: ', originalFilenameCleaned)
-        log('album dir path:                    ', newImageAlbumDirPath)
+        log('new img + album dir path:          ', newImageAlbumDirPath)
         try {
           await rename(smallImg.filepath, newImageAlbumDirPath)
-          log(await stat(newImageAlbumDirPath))
+          await stat(newImageAlbumDirPath)
         } catch (e) {
           const msg = `Failed to move ${smallImg.originalFilename} into album dir: ${album.albumDir}`
           error(msg)
