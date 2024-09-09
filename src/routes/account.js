@@ -533,8 +533,11 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         log('creating post album config: ', c)
         album = await post.createAlbum(c)
         const save = await album.save()
-        log(`${album}`)
+        log(`first album save: ${album}`)
         log(save)
+        log(`album id? ${album.id}`)
+        post.albumId = album.id
+        log(`${post}`)
         const originalFilenameCleaned = sanitizeFilename(smallImg.originalFilename)
         const newImageAlbumDirPath = path.join(album.albumDir, originalFilenameCleaned)
         log('uploaded filepath:                 ', smallImg.filepath)
@@ -555,8 +558,13 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         const skipSizes = true
         const result = await album.addImage(newImageAlbumDirPath, skipSizes)
         log(result)
-        const saved = await album.save()
-        log(saved)
+        const url = `${album.imageUrl}/${originalFilenameCleaned}`
+        post.previewImg = url
+        log(await post.save())
+        log(`${post}`)
+        post = await blog.updatePost({ id: post.id })
+        log(`${post}`)
+        log(await album.save())
       } else {
         // const tmp = blog.getPost(postId)
         // if (tmp.album) {
