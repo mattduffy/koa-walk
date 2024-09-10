@@ -557,13 +557,23 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         }
         const skipSizes = true
         const result = await album.addImage(newImageAlbumDirPath, skipSizes)
-        log(result)
+        log('addImage result: ', result)
         const url = `${album.imageUrl}/${originalFilenameCleaned}`
         post.previewImg = url
-        log(await post.save())
+        const saved = await post.save()
+        log(saved)
         log(`${post}`)
-        post = await blog.updatePost({ id: post.id })
-        log(`${post}`)
+        const update = {
+          id: post.id,
+          title: post.title,
+          slug: post.slug,
+          createOn: post.createdOn,
+          editedOn: post.editedOn,
+          public: post.public,
+          img: post.previewImg,
+        }
+        const x = await blog.updatePostArray(update)
+        log(`${x}`)
         log(await album.save())
       } else {
         // const tmp = blog.getPost(postId)
