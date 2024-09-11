@@ -22,12 +22,12 @@
         <% posts.forEach((p) => { %>
           <div class="post-card">
             <div class="post-card-thumbnail">
-              <% if (p.headerImageUrl) { %>
+              <% if (p.images[0]) { %>
               <a href="<%= `${origin}/@${username}/blog/${p.slug}` %>">
                 <img class="small" 
                   alt="<%= p.title %>"
                   title="<%= p.title %>" 
-                  src="<%=`${origin}/a/xx123bc/galleries/post-title/${p?.headerImageUrl}` %>"
+                  src="<%=`${origin}/${p.images[0]}` %>"
                 >
               </a>
               <% } else { %>
