@@ -1284,54 +1284,6 @@ router.get('accountUsernamePublicGalleries', '/:username/galleries', hasFlash, a
   await ctx.render('account/user-galleries-public', locals)
 })
 
-router.get('accountUsernamePublicGallery', '/:username/gallery/:id', hasFlash, async (ctx) => {
-  const log = accountLog.extend('GET-account-Username-Public-Gallery')
-  const error = accountError.extend('GET-account-Username-Public-Gallery')
-  let { username } = ctx.params
-  const albumId = ctx.params.id
-  let displayUser
-  try {
-    log(ctx.state.mongodb.client.options.credentials)
-    const users = new Users(ctx.state.mongodb, ctx)
-    if (username[0] === '@') {
-      username = username.slice(1)
-    }
-    displayUser = await users.getByUsername(username)
-  } catch (e) {
-    error(`Failed to find user by @${username}`)
-    error(e)
-  }
-  if (username !== displayUser.username) {
-    try {
-      const cachedPage = await readFile(path.join(ctx.app.dirs.cache.pages, ctx.path), { encoding: 'utf8' })
-      ctx.status = 200
-      ctx.type = 'text/html; charset=utf-8'
-      ctx.body = cachedPage
-      return
-    } catch (e) {
-      error(e)
-      error('No cached page to load.')
-    }
-  }
-  let album
-  try {
-    const db = ctx.state.mongodb.client.db()
-    album = await Albums.getById(db, albumId, redis)
-    log(album)
-  } catch (e) {
-    error(`Failed to find @${displayUser.username}'s gallery id: ${albumId}`)
-  }
-  const locals = {}
-  locals.view = ctx.flash.view ?? {}
-  locals.sessionUser = ctx.state.sessionUser
-  locals.isAuthenticated = ctx.state.isAuthenticated
-  locals.displayUser = displayUser
-  locals.body = ctx.body
-  locals.album = album
-  locals.title = `${ctx.app.site}: ${displayUser.username}'s gallery, ${album.name}`
-  await ctx.render('account/user-gallery-public', locals)
-})
-
 router.get('accountView', '/account/view', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-view')
   const error = accountError.extend('GET-account-view')
