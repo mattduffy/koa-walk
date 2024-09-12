@@ -23,7 +23,7 @@
         <% recent10.forEach((a) => { %>
           <div class="recentlyAddedAlbum"> 
             <figure>
-              <a href="<%= `${origin}/@${a.owner}/gallery/${a.id}` %>">
+              <a href="<%= `${origin}/@${a.owner}/gallery/${(a.slug) ? a.slug : a.id}` %>">
                 <img src="<%= `${origin}/${a.preview}` %>" alt="<%= a.description %>">
               </a>
               <figcaption>

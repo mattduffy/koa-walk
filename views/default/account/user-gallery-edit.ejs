@@ -1,6 +1,7 @@
 <main>
   <article>
     <h1>Gallery: <%= album.name %></h1>
+    <h2><a href="<%= `${origin}/@${sessionUser.username}/gallery/${(album.slug) ? album.slug : album.id}` %>"><%= `${origin}/@${sessionUser.username}/gallery/${(album.slug) ? album.slug : album.id}` %></a></h2>
     <% if (view.message) { %>
     <div id="messages" class="messages">
       <span><%= view.message %></span>
