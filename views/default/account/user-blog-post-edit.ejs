@@ -41,7 +41,7 @@
             <label for="previewImageSmall">Preview Image</label>
             <input type="file" name="previewImageSmall" id="previewImageSmall_Id">
             <div id="small">
-              <img id="previewSmall" src="<%= (post?.previewImageSmall) ? `${origin}/${post.previewImageSmall}` : '' %>">
+              <img id="previewSmall" src="<%= (post?.images[0]) ? `${origin}/${post.images[0]}` : '' %>">
             </div>
           </div>
           <br>
