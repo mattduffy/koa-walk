@@ -7,7 +7,7 @@
 
 import path from 'node:path'
 import {
-  mkdir, readFile, rename, writeFile, stat,
+  mkdir, rename, writeFile, stat,
 } from 'node:fs/promises'
 import Router from '@koa/router'
 import { ulid } from 'ulid'
@@ -950,6 +950,7 @@ router.post('accountEditGallery', '/account/gallery/:id', hasFlash, processFormD
     let album
     const albumId = ctx.params.id
     const albumName = ctx.request.body?.albumName?.[0] ?? null
+    const albumSlug = ctx.request.body?.albumSlug?.[0] ?? slugify(albumName)
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
     const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
     const albumKeywords = (ctx.request.body?.albumKeywords) ? Array.from(ctx.request.body?.albumKeywords?.[0]?.split(', ')) : []
@@ -961,6 +962,10 @@ router.post('accountEditGallery', '/account/gallery/:id', hasFlash, processFormD
         if (album.name !== albumName) {
           log(`updating album name from: ${album.name} to: ${albumName}`)
           album.name = albumName
+        }
+        if (album.slug !== albumSlug) {
+          log(`updating album slug from: ${album.slug} to: ${albumSlug}`)
+          album.slug = albumSlug
         }
         if (album.description !== albumDescription) {
           log(`updating album description from: ${album.description} to: ${albumDescription}`)

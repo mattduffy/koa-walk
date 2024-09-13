@@ -23,6 +23,9 @@
           <label for="albumName_Id">Album Name:</label>
           <input type="text" name="albumName" id="albumName_Id" value="<%= album.name %>" tabindex="1">
           <br>
+          <label for="albumSlug_Id">Album URL Slug:</label>
+          <input type="text" name="albumSlug" id="albumSlug_Id" value="<%= album.slug%>" tabindex="1">
+          <br>
           <label for="albumDescription_Id">Album Description:</label>
           <input type="text" name="albumDescription" id="albumDescription_Id" value="<%= album.description%>" tabindex="2">
           <br>
@@ -358,6 +361,10 @@
           if (galleryForm.elements['albumName'].value !== '') {
             const albumName = galleryForm.elements['albumName']
             formData.append('albumName', albumName.value)
+          }
+          if (galleryForm.elements['albumSlug'].value !== '') {
+            const albumSlug = galleryForm.elements['albumSlug']
+            formData.append('albumSlug', albumSlug.value)
           }
           if (galleryForm.elements['albumDescription'].value !== '') {
             const albumDescription = galleryForm.elements['albumDescription']
