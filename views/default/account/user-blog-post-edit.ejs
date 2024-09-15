@@ -22,10 +22,10 @@
           <input type="hidden" name="blogId" id="blogId_Id" value="<%= blog?.id %>" >
           <input type="hidden" name="postId" id="postId_Id" value="<%= post?.id %>" >
           <label for="postTitle_Id">Post Title:</label>
-          <input type="text" name="postTitle" id="postTitle_Id" value="<%= post?.title %>" tabindex="1">
+          <input type="text" name="postTitle" id="postTitle_Id" value="<%= post?.title %>" disabled tabindex="1">
           <br>
           <label for="postSlug_Id">Post Url Slug:</label>
-          <input type="text" name="postSlug" id="postSlug_Id" value="<%= post?.url %>">
+          <input type="text" name="postSlug" id="postSlug_Id" value="<%= post?.url %>" disabled tabindex="1">
           <br>
           <label for="postDescription_Id">Post Description:</label>
           <textarea id="postDescription_Id" name="postDescription" rows="3" cols="50" tabindex="1"><%= post?.description %></textarea>
