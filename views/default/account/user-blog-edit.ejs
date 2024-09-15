@@ -168,7 +168,7 @@
       <a href="<%= `${origin}/account/blog/post/new` %>">Create a new post.</a>
       <% if (posts.length > 0) { %>
       <ul class="postList">
-        <% posts.forEach((p, i) => { %>
+        <% posts.reverse().forEach((p, i) => { %>
         <li class="postListItem">
           <span class="postListItemLink"><a href="<%= `${origin}/account/blog/post/${p.id}` %>"><%= p.title %></a></span><br>
           <span class="postListItemDate">date created: <%= new Date(p.createdOn).toDateString() %></span><br>
