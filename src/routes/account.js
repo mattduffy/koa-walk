@@ -590,7 +590,7 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
           postSlug,
           postPublic,
         }
-        // log(updatePost)
+        log(updatePost)
         post = await blog.updatePost(updatePost)
         log('updated post: ', post.id, post.title, post.slug)
       }
