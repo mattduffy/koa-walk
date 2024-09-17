@@ -58,7 +58,7 @@ const redis = redisStore(redisConnOpts)
 const config = {
   store: redis,
   key: redisEnv.SESSION_KEY,
-  maxAge: redisEnv.SESSION_MAX_AGE,
+  maxAge: redisEnv.SESSION_MAX_AGE * 2,
   httpOnly: redisEnv.SESSION_HTTPONLY,
   signed: redisEnv.SESSION_SIGNED,
   rolling: redisEnv.SESSION_ROLLING,
