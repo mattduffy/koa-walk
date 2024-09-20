@@ -1,7 +1,9 @@
 <main>
   <article>
-    <h1>Blog: <%= blog.title%></h1>
-    <h2><a href="<%= `${origin}/@${sessionUser.username}/blog/${post.slug}` %>"><%= `${origin}/@${sessionUser.username}/blog/${post.url}` %></a></h2>
+    <h1>Blog: <%= blog.title %></h1>
+    <h2>Post: <%= post.title %></h2>
+    <h3>Created On: <%= `${new Date(post.createdOn).toDateString()}` %></h3>
+    <h3><a href="<%= `${origin}/@${sessionUser.username}/blog/${post.slug}` %>"><%= `${origin}/@${sessionUser.username}/blog/${post.url}` %></a></h3>
     <% if (view.message) { %>
     <div id="messages" class="messages">
       <span><%= view.message %></span>
@@ -15,7 +17,7 @@
     <div class="post">
       <form name="editPost" id="editPost_id" action="/account/blog/post/save" method="POST" enctype="multipart/form-data">
         <fieldset>
-          <legend>New Blog Post</legend>
+          <legend>Edit Blog Post</legend>
           <div id="newPostMsg" class="messages hidden"></div>
           <div id="newPostErr" class="errors hidden"></div>
           <input type="hidden" name="csrf-token" id="csrf-token_Id" value="<%= csrfToken %>" required>
