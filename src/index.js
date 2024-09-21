@@ -104,6 +104,7 @@ app.dirs = {
   cache: {
     pages: `${appRoot}/cached_pages`,
   },
+  config: `${appRoot}/config`,
   keys: `${appRoot}/keys`,
   public: {
     dir: `${appRoot}/public`,
