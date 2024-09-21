@@ -38,7 +38,6 @@ const redisConnOpts = {
   username: redisEnv.REDIS_USER,
   password: redisEnv.REDIS_PASSWORD,
   connectionName: 'koa-sessions',
-  // keyPrefix: 'koasessions:',
   keyPrefix: `${redisEnv.REDIS_KEY_PREFIX}:sessions:` ?? 'koa:sessions:',
   enableTLSForSentinelMode: true,
   sentinelRetryStrategy: 100,
@@ -57,16 +56,16 @@ const redis = redisStore(redisConnOpts)
 
 const config = {
   store: redis,
-  key: redisEnv.SESSION_KEY,
-  maxAge: redisEnv.SESSION_1_DAY * 2,
-  rolling: redisEnv.SESSION_ROLLING ?? true,
-  renew: redisEnv.SESSION_RENEW ?? true,
+  key: redisEnv.SESSION_KEY ?? 'session',
+  maxAge: redisEnv.SESSION_1_DAY * 2 ?? (86400000 * 2),
+  rolling: (redisEnv.SESSION_ROLLING.toLowerCase() === 'true') ?? true,
+  renew: (redisEnv.SESSION_RENEW.toLowerCase() === 'true') ?? true,
   overwrite: true,
   autoCommit: true,
+  secure: (redisEnv.SESSION_SECURE.toLowerCase() === 'true') ?? true,
+  httpOnly: (redisEnv.SESSION_HTTPONLY.toLowerCase() === 'true') ?? true,
+  signed: (redisEnv.SESSION_SIGNED.toLowerCase() === 'true') ?? true,
   sameSite: 'strict',
-  secure: redisEnv.SESSION_SECURE,
-  httpOnly: redisEnv.SESSION_HTTPONLY,
-  signed: redisEnv.SESSION_SIGNED,
 }
 
 export { session, config, redis }
