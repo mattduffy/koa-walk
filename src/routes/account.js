@@ -576,10 +576,6 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
         log(`${x}`)
         log(await album.save())
       } else {
-        // const tmp = blog.getPost(postId)
-        // if (tmp.album) {
-
-        // }
         const updatePost = {
           _id: postId,
           blogId,
