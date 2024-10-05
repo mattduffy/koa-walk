@@ -1,17 +1,7 @@
-# My Koa-based Stub Server
+# Talk a walk, and map it out.
 
-This package is meant to be used as a simple stub server to test new node.js packages.  The koa app is very basic and not meant to be run outside of a testing framework.  Currently, the framework of choice is Mocha with Chai and Chai HTTP.
+Take a walk, and map it out.
 
 ## Using Koa-stub
-
-```bash
-npm install --save-dev @mattduffy/koa-stub
-```
-
-```javascript
-import app from '@mattduffy/koa-stub'
-app.use(myNewMiddleware)
-
-```
 
 ...
