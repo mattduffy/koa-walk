@@ -1,7 +1,7 @@
 /**
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/index.js The entry point to set up a koa test app.
+ * @file src/index.js The entry point to set up a koa walk app.
  */
 
 import path from 'node:path'
@@ -30,8 +30,8 @@ import {
 import { apiV1 } from './routes/api_v1.js'
 import { activityV1 } from './routes/activity_stream.js'
 import { auth as Auth } from './routes/auth.js'
-import { blogs as Blogs } from './routes/blogs.js'
-import { galleries as Galleries } from './routes/galleries.js'
+// import { blogs as Blogs } from './routes/blogs.js'
+// import { galleries as Galleries } from './routes/galleries.js'
 import { main as Main } from './routes/main.js'
 import { wellKnown } from './routes/wellKnown.js'
 import { users as Users } from './routes/users.js'
@@ -96,7 +96,7 @@ app.appEnv = appEnv
 
 app.proxy = true
 app.root = appRoot
-app.templateName = 'default'
+app.templateName = appEnv.TEMPLATE_NAME ?? 'default'
 app.dirs = {
   archive: {
     archive: `${appRoot}/archive`,
@@ -182,15 +182,15 @@ async function openGraph(ctx, next) {
   // const err = error.extend('openGraph')
   const ogArray = []
   ogArray.push('<meta property="og:type" content="website">')
-  ogArray.push('<meta property="og:site_name" content="Matt Made These">')
-  ogArray.push('<meta property="og:title" content="Matt Made These.">')
+  ogArray.push('<meta property="og:site_name" content="Walk">')
+  ogArray.push('<meta property="og:title" content="Walk.">')
   ogArray.push(`<meta property="og:url" content="${ctx.request.href}${ctx.request.search}">`)
   ogArray.push(`<meta property="og:image" content="${ctx.request.origin}/i/plane-450x295.jpg">`)
   ogArray.push('<meta property="og:image:type" content="image/jpg">')
   ogArray.push('<meta property="og:image:width" content="450">')
   ogArray.push('<meta property="og:image:height" content="295">')
-  ogArray.push('<meta property="og:image:alt" content="Things that Matt made.">')
-  ogArray.push('<meta property="og:description" content="Things that Matt made.">')
+  ogArray.push('<meta property="og:image:alt" content="Map your walk.">')
+  ogArray.push('<meta property="og:description" content="Map your walk.">')
   ctx.state.openGraph = ogArray.join('\n')
   // logg(ctx.state.openGraph)
   await next()
@@ -387,8 +387,8 @@ app.use(Auth.routes())
 app.use(Account.routes())
 app.use(Users.routes())
 app.use(Main.routes())
-app.use(Blogs.routes())
-app.use(Galleries.routes())
+// app.use(Blogs.routes())
+// app.use(Galleries.routes())
 app.use(wellKnown.routes())
 app.use(Seo.routes())
 app.use(activityV1.routes())
