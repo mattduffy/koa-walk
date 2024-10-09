@@ -1,18 +1,18 @@
 {
-  "name": "@mattduffy/koa-stub",
+  "name": "@mattduffy/koa-walk",
   "version": "1.0.0",
-  "description": "A simple Koa-based stub server to test new packages and middle wares.",
+  "description": "An app to map out your walks.",
   "author": "Matthew Duffy",
   "license": "ISC",
   "main": "index.js",
   "type": "module",
-  "homepage": "https://github.com/mattduffy/koa-stub#readme",
+  "homepage": "https://github.com/mattduffy/koa-walk#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mattduffy/koa-stub.git"
+    "url": "https://github.com/mattduffy/koa-walk.git"
   },
   "bugs": {
-    "url": "https://github.com/mattduffy/koa-stub/issues"
+    "url": "https://github.com/mattduffy/koa-walk/issues"
   },
   "exports": {
     ".": "src/index.js",
@@ -23,7 +23,7 @@
     "newUser": "DEBUG_DEPTH=2 DEBUG=* node src/utils/newUser.js",
     "dev": "DEBUG_DEPTH=2 DEBUG=* node src/index.js",
     "cluster": "DEBUG_DEPTH=2 DEBUG=* node src/cluster.js",
-    "cluster-mmt": "DEBUG_DEPTH=2 DEBUG=* node src/cluster.js"
+    "cluster-walk": "DEBUG_DEPTH=2 DEBUG=* node src/cluster.js"
   },
   "devDependencies": {
     "eslint": "8.38.0",
@@ -33,11 +33,7 @@
   "dependencies": {
     "@koa/ejs": "5.0.0",
     "@koa/router": "12.0.0",
-    "@mattduffy/albums": "file:./../albums",
-    "@mattduffy/blogs": "file:./../blogs",
-    "@mattduffy/exiftool": "file:./../exiftool",
     "@mattduffy/koa-migrations": "file:./../koa-migrations",
-    "@mattduffy/unpacker": "file:./../unpacker",
     "@mattduffy/users": "file:./../users",
     "@mattduffy/webfinger": "file:./../webfinger",
     "@maxmind/geoip2-node": "5.0.0",
@@ -59,6 +55,7 @@
   },
   "keywords": [
     "Koa",
-    "stub server"
+    "take a walk",
+    "map that walk"
   ]
 }
