@@ -26,7 +26,8 @@ const __dirname = path.dirname(__filename)
 const appRoot = path.resolve(`${__dirname}/../..`)
 const appEnv = {}
 log(`appRoot: ${appRoot}`)
-dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv, debug: true })
+// dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv, debug: true })
+dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv })
 // log(appEnv)
 // const mongoEnv = {}
 // dotenv.config({ path: path.resolve(appRoot, 'config/mongodb.env'), processEnv: mongoEnv, debug: true })
@@ -34,24 +35,34 @@ dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEn
 
 const program = new Command()
 program.name('newUser')
-  .requiredOption('--first <name>', 'User\'s first name')
-  .requiredOption('--last <name>', 'User\'s last name')
-  .requiredOption('--email <addr>', 'User\'s email address')
+  .option('--conf <env>', '.env-style config file')
+  .option('--first <name>', 'User\'s first name')
+  .option('--last <name>', 'User\'s last name')
+  .option('--email <addr>', 'User\'s email address')
   // .requiredOption('--desc <description>', 'Short description of the account', 'New account created using cli.')
-  .requiredOption('--password <password>', 'The new user\'s initial password.')
+  .option('--password <password>', 'The new user\'s initial password.')
   .option('-a, --admin', 'Make this user account admin, otherwise regular.')
   .option('-t, --test', 'A test user account, not a real user.')
 
 program.parse(process.argv)
 const options = program.opts()
-log(options)
+// log(process.argv)
+log('options: ', options)
 
-let { email } = options
+const confEnv = {}
+if (options?.conf) {
+  dotenv.config({ path: path.resolve(appRoot, options.conf), processEnv: confEnv })
+}
+let email = confEnv?.email ?? options?.email ?? 'new_user@genevalakepiers.com'
 if (options?.test === true) {
   const rando = crypto.randomBytes(2).toString('hex')
   const at = options.email.indexOf('@')
   email = `${options.email.slice(0, at)}-${rando}${options.email.slice(at)}`
 }
+
+const fName = confEnv?.FIRST_NAME ?? options?.first ?? 'Test'
+const lName = confEnv?.LAST_NAME ?? options?.last ?? 'Test'
+const password = confEnv?.PASSWORD ?? options?.password ?? null
 
 const ctx = {
   app: {
@@ -72,12 +83,13 @@ log(`new mongo _id: ${_id}`)
 
 const userProps = {
   _id,
-  first: options.first ?? 'First',
-  last: options.last ?? 'User',
-  emails: [{ primary: email ?? 'new_user@genevalakepiers.com', verified: false }],
+  // first: options.first ?? 'First',
+  first: fName,
+  last: lName,
+  emails: [{ primary: email, verified: false }],
   description: `A new (${(options?.test) ? 'test' : ''}) ${(options?.admin) ? 'admin' : 'user'} account created from the cli.`,
-  username: `${options.first.toLowerCase()}${options.last.toLowerCase()}`,
-  password: options.password,
+  username: `${fName.toLowerCase()}${lName.toLowerCase()}`,
+  password,
   jwts: { token: '', refresh: '' },
   userStatus: 'active',
   schemaVer: 0,
