@@ -1,5 +1,5 @@
 /**
- * @module @mattduffy/koa-stub
+ * @module @mattduffy/koa-walk
  * @author Matthew Duffy <mattduffy@gmail.com>
  * @file src/index.js The entry point to set up a koa walk app.
  */
@@ -48,7 +48,6 @@ const appRoot = path.resolve(`${__dirname}/..`)
 const appEnv = {}
 const showDebug = process.env.NODE_ENV !== 'production'
 dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv, debug: showDebug })
-// dotenv.config({ path: path.resolve(appRoot, 'config/test.env'), debug: showDebug })
 
 const horizontalborder = '*'
 let _startingup = `Starting up: ${appEnv.SITE_NAME}`
