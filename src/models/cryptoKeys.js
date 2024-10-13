@@ -12,7 +12,7 @@ import { _log, _error } from '../utils/logging.js'
 
 const keysLog = _log.extend('Keys_class')
 const keysError = _error.extend('Keys_class')
-const DATABASE = process.env.MONGODB_DBNAME ?? 'koastub'
+// const DATABASE = process.env.MONGODB_DBNAME ?? 'koastub'
 const COLLECTION = 'app'
 
 class CryptoKeys {
@@ -64,25 +64,37 @@ class CryptoKeys {
 
   constructor(config) {
     const log = keysLog.extend('constructor')
-    const error = keysError.extend('constructor')
+    // const error = keysError.extend('constructor')
+    log(config)
     this._format = config?.format ?? 'pem'
     this._sigKid = ulid()
     this._encKid = ulid()
     this.#publicKeyDir = config?.dirs?.public ?? process.env.KEY_DIR ?? './keys'
     this.#privateKeyDir = config?.dirs?.private ?? process.env.KEY_DIR ?? './keys'
-    this.#db = config?.db?.db().collection(COLLECTION) ?? null
-    this.#siteName = process.env.SITE_NAME ?? 'website'
+    // this.#db = config?.db?.db().collection(COLLECTION) ?? null
+    this.#siteName = config?.SITE_NAME ?? process.env.SITE_NAME ?? 'website'
+    log(`siteName: ${this.#siteName}`)
     this.#keys = config.keys ?? { signing: null, encrypting: null }
+    log(this.#keys)
     // RSA Signing key options
-    this.#rsaSig = process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5'
-    this.#sigBits = parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
-    this.#sigHash = process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256'
+    this.#rsaSig = config?.RSA_SIG_KEY_NAME ?? process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5'
+    log(`rsaSig: ${this.#rsaSig}`)
+    // this.#sigBits = parseInt(config?.RSA_SIG_KEY_MOD, 10) ?? parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
+    this.#sigBits = (config?.RSA_SIG_KEY_MOD) ? parseInt(config?.RSA_SIG_KEY_MOD, 10) : 2048
+    log(`sigBits: ${this.#sigBits}`)
+    this.#sigHash = config?.RSA_ENC_KEY_TYPE ?? process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256'
+    log(`sigHash: ${this.#sigHash}`)
     // RSA Encrypting key options
-    this.#rsaEnc = process.env.RSA_ENC_KEY_NAME ?? 'RSA-OAEP'
-    this.#encBits = parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
-    this.#encHash = process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256'
+    this.#rsaEnc = config?.RSA_ENC_KEY_NAME ?? process.env.RSA_ENC_KEY_NAME ?? 'RSA-OAEP'
+    log(`rsaEnc: ${this.#rsaEnc}`)
+    // this.#encBits = parseInt(config?.RSA_SIG_KEY_MOD, 10) ?? parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
+    this.#encBits = (config?.RSA_SIG_KEY_MOD) ? parseInt(config?.RSA_SIG_KEY_MOD, 10) : 2048
+    log(`encBits: ${this.#encBits}`)
+    this.#encHash = config?.RSA_ENC_KEY_TYPE ?? process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256'
+    log(`encHash: ${this.#encHash}`)
     // ECDSA Signing key options
-    this.#namedCurve = process.env.ECDSA_SIG_KEY_NAMEDCURVE ?? 'P-521'
+    this.#namedCurve = config?.ECDSA_SIG_KEY_NAMEDCURVE ?? process.env.ECDSA_SIG_KEY_NAMEDCURVE ?? 'P-521'
+    log(`namedCurve: ${this.#namedCurve}`)
   }
 
   async generateKey(o) {
@@ -90,6 +102,7 @@ class CryptoKeys {
     const error = keysError.extend('generateKey')
     const options = { use: 'sig', alg: 'RSA', ...o }
     let keys
+    log(options)
     if (options.alg.toLowerCase() === 'rsa') {
       if (options.use === 'sig') {
         keys = await this.#signRSA()
@@ -120,13 +133,13 @@ class CryptoKeys {
     const error = keysError.extend('export')
     if (this.#keys.signing === null && this.#keys.encrypting === null) {
       error('No keys to export.')
-      error(e)
+      // error(e)
       throw new Error('No keys to export.')
     }
     try {
       if (this.#keys.signing !== null) {
         await this.#exportSigning()
-        // log('exported signing: ', this.#exportedSigning)
+        log('exported signing: ', this.#exportedSigning)
       }
     } catch (e) {
       error('Failed to export siging key components.')
@@ -136,7 +149,7 @@ class CryptoKeys {
     try {
       if (this.#keys.encrypting !== null) {
         await this.#exportEncrypting()
-        // log('exported encrypting: ', this.#exportedEncrypting)
+        log('exported encrypting: ', this.#exportedEncrypting)
       }
     } catch (e) {
       error('Failed to export encrypting key components.')
@@ -154,6 +167,7 @@ class CryptoKeys {
   async #exportSigning() {
     const log = keysLog.extend('#exportSigning')
     const error = keysError.extend('#exportSigning')
+    log('exporting signing key')
     try {
       this.#exportedSigning = {}
       this.#exportedSigning.jwk = await subtle.exportKey('jwk', this.#signing.publicKey)
@@ -184,7 +198,7 @@ class CryptoKeys {
   async #exportEncrypting() {
     const log = keysLog.extend('#exportEncrypting')
     const error = keysError.extend('#exportEncrypting')
-    // log('export encrypyting: ', this.#encrypting)
+    log('export encrypyting: ', this.#encrypting)
     try {
       this.#exportedEncrypting = {}
       this.#exportedEncrypting.jwk = await subtle.exportKey('jwk', this.#encrypting.publicKey)
@@ -235,6 +249,7 @@ class CryptoKeys {
     const error = keysError.extend('signRSA')
     let keys
     try {
+      log('generating RSA signing key')
       keys = await subtle.generateKey(
         {
           name: this.#rsaSig,

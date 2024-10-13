@@ -48,8 +48,8 @@ log(mongoClient.uri)
 const config = {
   keyDir: `${appRoot}/keys`,
   db: mongoClient.client.db(),
+  ...appEnv,
 }
-// log(config.db)
 const app = new App(config)
 try {
   await app.init()

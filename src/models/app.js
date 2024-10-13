@@ -40,12 +40,14 @@ class App {
     // const error = appError.extend('constructor')
     log('The App model constructor.')
 
+    this._config = config
     this._keyDir = config.keyDir ?? './keys'
     this._dbHandle = config?.db
     this._db = config?.db.collection(COLLECTION)
-    this._siteName = config.siteName ?? process.env.SITE_NAME ?? 'website'
+    this._siteName = config?.siteName ?? config?.SITE_NAME ?? process.env.SITE_NAME ?? 'website'
     this._keys = config.keys ?? { signing: [], encrypting: [] }
-    this.#cryptoKeys = new CryptoKeys({ dirs: { public: this._keyDir, private: this._keyDir } })
+    // this.#cryptoKeys = new CryptoKeys({ dirs: { public: this._keyDir, private: this._keyDir } })
+    this.#cryptoKeys = new CryptoKeys({ dirs: { public: this._keyDir, private: this._keyDir }, ...config })
   }
 
   async init() {
@@ -121,7 +123,8 @@ class App {
         // set filename and path for keys
         // save keys to file system
         const keyIndex = numSigKeys
-        const filename = `app-${keyIndex}-${process.env.RSA_SIG_KEY_FILENAME}`
+        // const filename = `app-${keyIndex}-${process.env.RSA_SIG_KEY_FILENAME}`
+        const filename = `app-${keyIndex}-${this._config.RSA_SIG_KEY_FILENAME}`
         const pubKeyPath = path.resolve(this._keyDir, `${filename}-public.pem`)
         const jwkeyPath = path.resolve(this._keyDir, `${filename}.jwk`)
         const priKeyPath = path.resolve(this._keyDir, `${filename}-private.pem`)
@@ -146,7 +149,8 @@ class App {
         // set filename and path for keys
         // save keys to file system
         const keyIndex = numEncKeys
-        const filename = `app-${keyIndex}-${process.env.RSA_ENC_KEY_FILENAME}`
+        // const filename = `app-${keyIndex}-${process.env.RSA_ENC_KEY_FILENAME}`
+        const filename = `app-${keyIndex}-${this._config.RSA_ENC_KEY_FILENAME}`
         const pubKeyPath = path.resolve(this._keyDir, `${filename}-public.pem`)
         const jwkeyPath = path.resolve(this._keyDir, `${filename}.jwk`)
         const priKeyPath = path.resolve(this._keyDir, `${filename}-private.pem`)
@@ -175,12 +179,16 @@ class App {
         },
       }
       const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after' }
+      // log('filter: ', filter)
+      // log('update: ', update)
+      // log('options: ', options)
       try {
         const result = await this._db.findOneAndUpdate(filter, update, options)
-        if (result.ok !== 1) {
+        // log(result)
+        // if (result.ok !== 1) {
+        if (!result) {
           throw new Error('Updating keys property failed.')
         }
-        // log(result)
       } catch (e) {
         error('Failed to update db after creating new keys.')
         error(e)
