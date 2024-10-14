@@ -212,8 +212,8 @@ class App {
    */
   async rotate() {
     const log = appLog.extend('rotate')
-    const error = appLog.extend('rotate')
-    log('Rotating server keys.')
+    // const error = appLog.extend('rotate')
+    log(`Rotating server ${this._siteName} keys.`)
   }
 
   get signingPublicKey() {
@@ -299,6 +299,8 @@ class App {
   }
 
   async #openKey(keyPath) {
+    const log = appLog.extend('openKey')
+    log(`${this._siteName}, open key: ${keyPath}`)
     if (!keyPath) {
       throw new Error('Missing required path to key file.')
     }
@@ -308,7 +310,6 @@ class App {
       throw new Error(e)
     }
   }
-
 }
 
 export {
