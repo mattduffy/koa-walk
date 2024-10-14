@@ -65,7 +65,7 @@ class CryptoKeys {
   constructor(config) {
     const log = keysLog.extend('constructor')
     // const error = keysError.extend('constructor')
-    log(config)
+    // log(config)
     this._format = config?.format ?? 'pem'
     this._sigKid = ulid()
     this._encKid = ulid()
@@ -73,28 +73,28 @@ class CryptoKeys {
     this.#privateKeyDir = config?.dirs?.private ?? process.env.KEY_DIR ?? './keys'
     // this.#db = config?.db?.db().collection(COLLECTION) ?? null
     this.#siteName = config?.SITE_NAME ?? process.env.SITE_NAME ?? 'website'
-    log(`siteName: ${this.#siteName}`)
+    // log(`siteName: ${this.#siteName}`)
     this.#keys = config.keys ?? { signing: null, encrypting: null }
-    log(this.#keys)
+    // log(this.#keys)
     // RSA Signing key options
     this.#rsaSig = config?.RSA_SIG_KEY_NAME ?? process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5'
-    log(`rsaSig: ${this.#rsaSig}`)
+    // log(`rsaSig: ${this.#rsaSig}`)
     // this.#sigBits = parseInt(config?.RSA_SIG_KEY_MOD, 10) ?? parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
     this.#sigBits = (config?.RSA_SIG_KEY_MOD) ? parseInt(config?.RSA_SIG_KEY_MOD, 10) : 2048
-    log(`sigBits: ${this.#sigBits}`)
+    // log(`sigBits: ${this.#sigBits}`)
     this.#sigHash = config?.RSA_ENC_KEY_TYPE ?? process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256'
-    log(`sigHash: ${this.#sigHash}`)
+    // log(`sigHash: ${this.#sigHash}`)
     // RSA Encrypting key options
     this.#rsaEnc = config?.RSA_ENC_KEY_NAME ?? process.env.RSA_ENC_KEY_NAME ?? 'RSA-OAEP'
-    log(`rsaEnc: ${this.#rsaEnc}`)
+    // log(`rsaEnc: ${this.#rsaEnc}`)
     // this.#encBits = parseInt(config?.RSA_SIG_KEY_MOD, 10) ?? parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048
     this.#encBits = (config?.RSA_SIG_KEY_MOD) ? parseInt(config?.RSA_SIG_KEY_MOD, 10) : 2048
-    log(`encBits: ${this.#encBits}`)
+    // log(`encBits: ${this.#encBits}`)
     this.#encHash = config?.RSA_ENC_KEY_TYPE ?? process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256'
-    log(`encHash: ${this.#encHash}`)
+    // log(`encHash: ${this.#encHash}`)
     // ECDSA Signing key options
     this.#namedCurve = config?.ECDSA_SIG_KEY_NAMEDCURVE ?? process.env.ECDSA_SIG_KEY_NAMEDCURVE ?? 'P-521'
-    log(`namedCurve: ${this.#namedCurve}`)
+    // log(`namedCurve: ${this.#namedCurve}`)
   }
 
   async generateKey(o) {
