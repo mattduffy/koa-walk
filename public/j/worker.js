@@ -1,5 +1,8 @@
 /*
  * file: public/j/worker.js
  */
-console.log('test tickle')
-const tickle = 'test'
+onmessage = function(e) {
+  console.log('Worker: messagee received from main script.')
+  console.log(e.data)
+  postMessage('Take a walk.')
+}

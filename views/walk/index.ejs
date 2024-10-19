@@ -1,5 +1,13 @@
-<script nonce="<%= nonce %>" src="<%= origin %>/j/worker.js"></script>
 <script nonce="<%= nonce %>">
-  console.log(`test ${tickle}`)
+  if (window.Worker) {
+    console.log('Worker <=> Walker')
+    const walker = new Worker('<%= origin %>/j/worker.js')
+    walker.onmessage = function(e) {
+      console.log(`${e.data}`)
+    }
+    walker.postMessage('What should I do?')
+  } else {
+    console.log('Not compatible with walking.')
+  }
 </script>
 Take a walk.
