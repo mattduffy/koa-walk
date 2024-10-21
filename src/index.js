@@ -196,6 +196,27 @@ async function openGraph(ctx, next) {
   await next()
 }
 
+async function permissions(ctx, next) {
+  const logg = log.extend('Permissions')
+  const err = error.extend('Permissions')
+  let perms
+  logg(ctx.request.origin)
+  logg(ctx.request.hostname)
+  if (/^192(\.\d{1,3})+/.test(ctx.request.hostname)) {
+    perms = 'geolocation=(*)'
+    logg(`Permissions-Policy: ${perms}`)
+  } else {
+    perms = `geolocation=("${ctx.request.origin}")`
+  }
+  ctx.set('Permissions-Policy', perms)
+  try {
+    await next()
+  } catch (e) {
+    err(e)
+    ctx.throw(500, 'Rethrown in Permissions middleware', e)
+  }
+}
+
 async function csp(ctx, next) {
   const logg = log.extend('CSP')
   const err = error.extend('CSP')
@@ -379,6 +400,7 @@ app.use(prepareRequest())
 app.use(tokenAuthMiddleware())
 app.use(checkServerJWKs)
 app.use(proxyCheck)
+app.use(permissions)
 app.use(csp)
 app.use(cors)
 app.use(serve(app.dirs.public.dir))
