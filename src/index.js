@@ -173,7 +173,7 @@ async function proxyCheck(ctx, next) {
     await next()
   } catch (e) {
     err(e)
-    ctx.throw(500, 'Rethrown in CSP middleware', e)
+    ctx.throw(500, 'Rethrown in proxyCheck middleware', e)
   }
 }
 
