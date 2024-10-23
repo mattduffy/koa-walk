@@ -185,10 +185,10 @@ async function openGraph(ctx, next) {
   ogArray.push('<meta property="og:site_name" content="Walk">')
   ogArray.push('<meta property="og:title" content="Walk.">')
   ogArray.push(`<meta property="og:url" content="${ctx.request.href}${ctx.request.search}">`)
-  ogArray.push(`<meta property="og:image" content="${ctx.request.origin}/i/plane-450x295.jpg">`)
+  ogArray.push(`<meta property="og:image" content="${ctx.request.origin}/i/walking-path-450x300.jpg">`)
   ogArray.push('<meta property="og:image:type" content="image/jpg">')
   ogArray.push('<meta property="og:image:width" content="450">')
-  ogArray.push('<meta property="og:image:height" content="295">')
+  ogArray.push('<meta property="og:image:height" content="300">')
   ogArray.push('<meta property="og:image:alt" content="Map your walk.">')
   ogArray.push('<meta property="og:description" content="Map your walk.">')
   ctx.state.openGraph = ogArray.join('\n')
@@ -305,7 +305,7 @@ async function viewGlobals(ctx, next) {
   ctx.state.nonce = crypto.randomBytes(16).toString('base64')
   ctx.state.siteName = ctx.app.site
   ctx.state.appName = ctx.app.site.toProperCase()
-  ctx.state.pageDescription = 'Things that I have made.'
+  ctx.state.pageDescription = 'Take a walk.'
   ctx.state.stylesheets = []
   ctx.state.caching = false
   ctx.state.structuredData = JSON.stringify({
