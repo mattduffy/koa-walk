@@ -1,4 +1,6 @@
 <script nonce="<%= nonce %>">
+  let lat = 0.0
+  let lon = 0.0
   if ("geolocation" in navigator) {
     console.log('where are we?') 
     function success(position) {
@@ -23,7 +25,12 @@
       console.info(x)
       console.warn(`${err.code}: ${err.message}`)
     }
-    navigator.geolocation.getCurrentPosition(success, error) 
+    const location = navigator.geolocation.getCurrentPosition(success, error) 
+    console.log('location: ', location)
+    if (location?.latitude && location?.longitude) {
+      lat = location.latitude
+      lon = location.longitude
+    }
   } else {
     console.log('no way of knowing.')
   }
@@ -34,6 +41,16 @@
       console.log(`${e.data}`)
     }
     walker.postMessage('What should I do?')
+    const tasks = [
+      {TASK: 'START_WALK', msg: 'I am starting a walk'},
+      {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
+      {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
+      {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
+      {TASK: 'GET_WALK', msg: 'Get that previous walk.'}
+    ]
+    tasks.forEach(async (walk) => {
+      walker.postMessage(walk)
+    })
   } else {
     console.log('Not compatible with walking.')
   }
