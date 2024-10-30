@@ -1,0 +1,53 @@
+body {
+  margin: 0px;
+  padding: 0px;
+  font-family: 'Avenir Next', 'HelveticaNeue-Light', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1.125em;
+  color: #000000;
+}
+
+body header {
+  width: 100vw;
+  height: 10vh;
+}
+
+a#skipnav {
+  position: absolute;
+  left: -1000px; 
+}
+
+div#map {
+  width: 100vw;
+  height: 90vh;
+  background-color: blue;
+}
+
+@media screen and (max-width: 400px) {
+  form {
+    margin: 0 auto .5em auto
+  }
+  input[type=text] {
+    width: 100%;
+  }
+
+  input[type=password] {
+    width: 100%;
+  }
+
+  textarea {
+    width: 100%;
+    display: block;
+  }
+
+  nav#foot-nav {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 768px) {
+
+}
+
+@media screen and (min-width: 1200px) { 
+ 
+}
