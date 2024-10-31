@@ -31,6 +31,7 @@ import { apiV1 } from './routes/api_v1.js'
 import { activityV1 } from './routes/activity_stream.js'
 import { auth as Auth } from './routes/auth.js'
 import { walk as Walk } from './routes/walk.js'
+import { mapkit as Mapkit } from './routes/mapkit.js'
 // import { blogs as Blogs } from './routes/blogs.js'
 // import { galleries as Galleries } from './routes/galleries.js'
 // import { main as Main } from './routes/main.js'
@@ -178,7 +179,7 @@ async function proxyCheck(ctx, next) {
 }
 
 async function openGraph(ctx, next) {
-  // const logg = log.extend('openGraph')
+  const logg = log.extend('openGraph')
   // const err = error.extend('openGraph')
   const ogArray = []
   ogArray.push('<meta property="og:type" content="website">')
@@ -192,7 +193,7 @@ async function openGraph(ctx, next) {
   ogArray.push('<meta property="og:image:alt" content="Map your walk.">')
   ogArray.push('<meta property="og:description" content="Map your walk.">')
   ctx.state.openGraph = ogArray.join('\n')
-  // logg(ctx.state.openGraph)
+  logg(ctx.state.openGraph)
   await next()
 }
 
@@ -315,6 +316,7 @@ async function viewGlobals(ctx, next) {
     url: ctx.state.origin,
   }, null, 2)
   ctx.state.searchJwtAccess = appEnv.SEARCHJWTACCESS
+  ctx.state.searchAccessToken = appEnv.SEARCHACCESSTOKEN
   await next()
 }
 
@@ -407,6 +409,7 @@ app.use(cors)
 app.use(serve(app.dirs.public.dir))
 app.use(theApp.routes())
 app.use(Auth.routes())
+app.use(Mapkit.routes())
 app.use(Account.routes())
 app.use(Users.routes())
 app.use(Walk.routes())
