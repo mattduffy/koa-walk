@@ -12,8 +12,9 @@ import { METHODS } from 'node:http'
 import { _log, _error } from './utils/logging.js'
 import { Users } from './models/users.js'
 import { App } from './models/app.js'
+// import { redis } from './daos/impl/redis/redis-om.js'
 
-// const DBNAME = 'koastub'
+// const DBNAME = 'walk'
 const USERS = 'users'
 const middlewareLog = _log.extend('middlewares')
 const middlewareError = _error.extend('middlewares')
@@ -65,6 +66,7 @@ export async function getSessionUser(ctx, next) {
       ctx.app.emit('error', e, ctx)
       ctx.throw(500, 'Error while reconstituting the session.', e)
     }
+    log(`ctx.state.isAuthenticated: ${ctx.state.isAuthenticated}`)
   }
   try {
     await next()
@@ -173,14 +175,24 @@ export function tokenAuthMiddleware(options = {}) {
         ctx.body = `HTTP 400 Bad Request\nWWW-Authenticate: Bearer realm="${ctx.app.domain}"`
       } else {
         try {
-          const db = ctx.state.mongodb.client.db()
-          const collection = db.collection(USERS)
-          const users = new Users(collection, ctx)
-          const tokenUser = await users.authenticateByAccessToken(ctx.state.accessToken)
-          if (tokenUser && tokenUser.message === 'success') {
-            ctx.state.sessionUser = tokenUser.user
-            ctx.state.isAuthenticated = true
-            await next()
+          if (ctx.state.accessToken === ctx.state.searchAccessToken) {
+            log(`ctx.state.accessToken: ${ctx.state.accessToken}`)
+            const db = ctx.state.mongodb.client.db()
+            const collection = db.collection(USERS)
+            const users = new Users(collection, ctx)
+            const tokenUser = await users.authenticateByAccessToken(ctx.state.accessToken)
+            log(`success: ${tokenUser?.message}`)
+            if (tokenUser && tokenUser.message === 'success') {
+              ctx.state.sessionUser = tokenUser.user
+              ctx.state.isAuthenticated = true
+              await next()
+            } else if (ctx.state.searchAccessToken) {
+              // TODO:
+              // 30 Sep 2023
+              // Update token authentication to recognize search access token
+              ctx.state.isAuthenticated = true
+              await next()
+            }
           } else {
             ctx.state.isAuthenticated = false
             ctx.state.sessionUser = {}
@@ -266,7 +278,7 @@ export async function errors(ctx, next) {
     error(e)
     switch (ctx.response.status) {
       case 400:
-        ctx.response.message = ctx.response.message ?? 'bad request'
+        ctx.response.message = 'bad request'
         break
       case 401:
         ctx.response.message = 'unauthorized'
