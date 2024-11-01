@@ -384,7 +384,7 @@ function sanitize(param) {
 //   const radius = parseInt(sanitize(ctx.params.radius.slice(0, 3)), 10)
 //   const units = ['m', 'km', 'mi', 'ft'].find((u) => u === sanitize(ctx.params.units))
 //   info(`locate piers within ${radius} ${units} of coords: ${lon}, ${lat}`)
-// 
+//
 //   const csrfTokenCookie = ctx.cookies.get('csrfToken')
 //   const csrfTokenSession = ctx.session.csrfToken
 //   info(`${csrfTokenCookie},\n${csrfTokenSession}`)
@@ -521,7 +521,8 @@ router.get('mapkitGetToken', '/mapkit/getToken', async (ctx) => {
   let mapKitAccessToken
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
-  info(`${csrfTokenCookie},\n${csrfTokenSession}`)
+  info(`csrfTokenCookie:  ${csrfTokenCookie}`)
+  info(`csrfTokenSession: ${csrfTokenSession}`)
   if (csrfTokenCookie === csrfTokenSession) info('cookie === session')
   if (!(csrfTokenCookie === csrfTokenSession)) {
     error(`CSR-Token mismatch: header:${csrfTokenCookie} - session:${csrfTokenSession}`)
