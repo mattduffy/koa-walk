@@ -9,9 +9,9 @@ import Debug from 'debug'
 
 const { pid } = process
 Debug.log = console.log.bind(console)
-const _log = Debug(`${pid}-koa-stub-LOG`)
-const _info = Debug(`${pid}-koa-stub-INFO`)
-const _error = Debug(`${pid}-koa-stub-ERROR`)
+const _log = Debug(`${pid}-koa-walk-LOG`)
+const _info = Debug(`${pid}-koa-walk-INFO`)
+const _error = Debug(`${pid}-koa-walk-ERROR`)
 
 /* eslint-disable no-extend-native */
 /* eslint-disable-next-line func-names */
