@@ -16,10 +16,14 @@ a#skipnav {
   left: -1000px; 
 }
 
+h1 {
+  margin: auto;
+}
+
 div#map {
   width: 100vw;
   height: 90vh;
-  background-color: blue;
+  background-color: #212223;
 }
 
 @media screen and (max-width: 400px) {

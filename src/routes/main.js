@@ -6,6 +6,7 @@
  */
 
 import Router from '@koa/router'
+import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
 import { Blogs } from '@mattduffy/blogs' // eslint-disable-line import/no-unresolved
@@ -37,8 +38,12 @@ router.get('index', '/', hasFlash, async (ctx) => {
   // const error = mainError.extend('index')
   log('inside main router: /')
   ctx.status = 200
+  const csrfToken = ulid()
+  ctx.session.csrfToken = csrfToken
+  ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
   // log(ctx.state.sessionUser)
   const locals = {
+    csrfToken,
     sessionUser: ctx.state.sessionUser,
     body: ctx.body,
     flash: ctx.flash?.index ?? {},

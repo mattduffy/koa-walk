@@ -536,7 +536,7 @@ router.get('mapkitGetToken', '/mapkit/getToken', async (ctx) => {
     try {
       const mapKitTokenPath = path.resolve(ctx.app.dirs.keys, 'mapkit', 'mapkit.jwt')
       mapKitAccessToken = await readFile(mapKitTokenPath, { encoding: 'utf-8' })
-      info(sanitize(mapKitAccessToken))
+      info(`mapkit token: ${sanitize(mapKitAccessToken)}`)
     } catch (e) {
       error(e)
       error('Failed to get mapkit token from file.')

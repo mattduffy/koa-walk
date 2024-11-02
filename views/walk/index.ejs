@@ -1,94 +1,144 @@
 <div id="map">
-  <script nonce="<%= nonce %>"
+  <script nonce=<%= nonce %>
     src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
-    crossorigin
-    async
-    data-callback='initMapKit"
+    crossorigin async
+    data-callback="initMapKit"
     data-libraries="full-map"
-    data-initial-token=''
+    data-initial-token=""
   ></script>
-  <script nonce="<%= nonce %>">
+  <script nonce="<%= nonce %>" type="module">
     const origin = '<%= origin %>'
     const jwtAccess = '<%= searchJwtAccess %>'
     let map
-    async function setuupMapKitJs() {
+    async function setupMapKitJs() {
       const tokenOpts = {
         method: 'GET',
         headers: {
           Accept: 'application/json',
-          Authorization: `Bearer ${jwtAcces}`,
+          Authorization: `Bearer ${jwtAccess}`,
         },
       }
-      const requeset = new Requeest(`${origin}/mapkit/getToken`, tokenOpts)
+      const request = new Request(`${origin}/mapkit/getToken`, tokenOpts)
       const response = await fetch(request)
-      const { tokenId } = await response.json()
-      console.log('tokenId: ', tokenId)
+      let tokenID
+      if (response.headers.get('content-type').includes("application/json")) {
+        const x = await response.json()
+        tokenID = x.tokenID
+        console.log(`mapkit token: ${tokenID}`)
+      } else {
+        console.info('failed to get mapkit token')
+        console.log(await response.text())
+      }
       if (!window.mapkit || window.mapkit.loadedLibraries.length === 0) {
+        // mapkit.core.js of the libraries are not loaded yet.
+        // Set up the callback and wait for it to be called.
         await new Promise(resolve => { window.initMapKit = resolve })
+        // Clean up
         delete window.initMapKit
-        mapKit.init({
-          authorizationCallback: function(done) {
-            done(tokenId)
-          },
-        })
       }
-    }
-    let lat = 0.0
-    let lon = 0.0
-    if ("geolocation" in navigator) {
-      console.log('where are we?') 
-      function success(position) {
-        console.log(position.coords)
-      }
-      function error(err) {
-        let x
-        switch(err.code) {
-          case err.PERMISSION_DENIED:
-            x = "User denied the request for Geolocation."
-            break;
-          case err.POSITION_UNAVAILABLE:
-            x = "Location information is unavailable."
-            break;
-          case err.TIMEOUT:
-            x = "The request to get user location timed out."
-            break;
-          case err.UNKNOWN_ERROR:
-            x = "An unknown error occurred."
-            break;
-        } 
-        console.info(err)
-        console.info(x)
-        console.warn(`code: ${err.code}: msg: ${err.message}`)
-      }
-      const location = navigator.geolocation.getCurrentPosition(success, error) 
-      console.log('location: ', location)
-      if (location?.latitude && location?.longitude) {
-        lat = location.latitude
-        lon = location.longitude
-      }
-    } else {
-      console.log('no way of knowing.')
-    }
-    if (window.Worker) {
-      console.log('Worker <=> Walker')
-      const walker = new Worker('<%= origin %>/j/worker.js')
-      walker.onmessage = function(e) {
-        console.log(`${e.data}`)
-      }
-      walker.postMessage('What should I do?')
-      const tasks = [
-        {TASK: 'START_WALK', msg: 'I am starting a walk'},
-        {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
-        {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
-        {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
-        {TASK: 'GET_WALK', msg: 'Get that previous walk.'}
-      ]
-      tasks.forEach(async (walk) => {
-        walker.postMessage(walk)
+      mapkit.init({
+        authorizationCallback: function(done) {
+          done(tokenID)
+        },
       })
-    } else {
-      console.log('Not compatible with walking.')
     }
+    async function main() {
+      await setupMapKitJs()
+      let lat = 0.0
+      let lon = 0.0
+      let position
+      const opts = {
+        mapType: mapkit.Map.MapTypes.Satellite,
+        visibleMapRect: new mapkit.MapRect(0, 0, 1, 1),
+        isZoomEnabled: true,
+        showsCompass: mapkit.FeatureVisibility.Visible,
+        showsScale: mapkit.FeatureVisibility.Visible,
+        showsZoomControl: true,
+        cameraDistance: 1,
+        showsPointsOfInterest: true,
+        isRotationEnabled: true,
+        isScrollEnabled: true,
+        showsMapTypeControl: false,
+      }
+      if ("geolocation" in navigator) {
+        console.log('where are we?') 
+        function success(position) {
+          console.log(position)
+          return position
+        }
+        function error(err) {
+          console.info(err)
+          console.info(`code: ${err.code}: msg: ${err.message}`)
+        }
+        try {
+          position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition((geo) => {
+                console.log(geo)
+                resolve(geo)
+              },
+              (err) => {
+                console.log(err)
+                console.info(`code: ${err.code}, msg: ${err.message}`)
+                reject(err)
+              }
+            )
+          })
+        } catch (e) {
+          console.log(e)
+        }
+        console.log('geolocation: ', position)
+        if (position) {
+          lat = position.coords.latitude
+          lon = position.coords.longitude
+          opts.showsUserLocation = true
+          opts.tracksUserLocation = true
+          opts.showsUserLocationControl = true
+        } else {
+          console.log('no geo position available')
+          console.log('using lat: ', lat, ' lon: ', lon)
+          opts.showsUserLocation = true
+          opts.tracksUserLocation = true 
+          opts.showsUserLocationControl = true
+          opts.cameraDistance = 1000
+        }
+      } else {
+        console.log('no way of knowing.')
+        console.log(`using ${lat} ${lon} instead`)
+        console.log('geo error: ', position)
+        opts.showsUserLocation = false
+        opts.tracksUserLocation = false
+        opts.showsUserLocationControl = false
+        opts.cameraDistance = 10000000000
+      }
+      const here = new mapkit.CoordinateRegion(
+        new mapkit.Coordinate(lat, lon),
+        new mapkit.CoordinateSpan(0.1, 0.1)
+      )
+      
+      window.map = new mapkit.Map('map', opts)
+      window.map.region = here
+      if (window.Worker) {
+        console.log('Worker <=> Walker')
+        const walker = new Worker('<%= origin %>/j/worker.js')
+        walker.onmessage = function(e) {
+          console.log(`${e.data}`)
+        }
+        walker.postMessage('What should I do?')
+        const tasks = [
+          {TASK: 'START_WALK', msg: 'I am starting a walk'},
+          {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
+          {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
+          {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
+          {TASK: 'GET_WALK', msg: 'Get that previous walk.'}
+        ]
+        tasks.forEach(async (walk) => {
+          walker.postMessage(walk)
+        })
+      } else {
+        console.log('Not compatible with walking.')
+      }   
+    }
+    await main()
+    
   </script>
-  Take a walk.
 </div>
