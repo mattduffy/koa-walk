@@ -48,13 +48,14 @@
       let lon = -98.583333
       let position
       const opts = {
-        mapType: mapkit.Map.MapTypes.Satellite,
+        mapType: mapkit.Map.MapTypes.Hybrid,
+        loadPriority: mapkit.Map.LoadPriorities.PointsOfInterest,
         visibleMapRect: new mapkit.MapRect(0, 0, 1, 1),
         isZoomEnabled: true,
         showsCompass: mapkit.FeatureVisibility.Visible,
         showsScale: mapkit.FeatureVisibility.Visible,
         showsZoomControl: true,
-        // cameraDistance: 1,
+        cameraDistance: 100,
         showsPointsOfInterest: true,
         isRotationEnabled: true,
         isScrollEnabled: true,
@@ -73,7 +74,7 @@
         try {
           position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition((geo) => {
-                console.log(geo)
+                // console.log(geo)
                 resolve(geo)
               },
               (err) => {
@@ -88,6 +89,7 @@
         }
         console.log('geolocation: ', position)
         if (position) {
+          console.log('show user location')
           lat = position.coords.latitude
           lon = position.coords.longitude
           opts.showsUserLocation = true
@@ -110,19 +112,24 @@
         opts.showsUserLocationControl = false
         // opts.cameraDistance = 1000
       }
-      const here = new mapkit.CoordinateRegion(
-        new mapkit.Coordinate(lat, lon),
-        new mapkit.CoordinateSpan(0.1, 0.1)
+      window.me = new mapkit.Coordinate(lat, lon)
+      window.here = new mapkit.CoordinateRegion(
+        // new mapkit.Coordinate(lat, lon),
+        me,
+        new mapkit.CoordinateSpan(0.05, 0.05)
       )
-      
       window.map = new mapkit.Map('map', opts)
       window.map.region = here
-      // window.map.setCenterAnimated(here, true)
+      window.map.cameraDistance = 100
+      console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+      window.map.showsUserLocation = true 
+      window.map.setCenterAnimated(me, true)
+
       if (window.Worker) {
         console.log('Worker <=> Walker')
         const walker = new Worker('<%= origin %>/j/worker.js')
         walker.onmessage = function(e) {
-          console.log(`${e.data}`)
+          // console.log(`${e.data}`)
         }
         walker.postMessage('What should I do?')
         const tasks = [
