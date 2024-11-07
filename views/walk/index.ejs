@@ -7,6 +7,8 @@
     data-initial-token=""
   ></script>
   <script nonce="<%= nonce %>" type="module">
+    const accuracy = 10 // meters
+    let lowAccuracy = false
     const origin = '<%= origin %>'
     const jwtAccess = '<%= searchJwtAccess %>'
     let map
@@ -63,18 +65,18 @@
       }
       if ("geolocation" in navigator) {
         console.log('where are we?') 
-        function success(position) {
-          console.log(position)
-          return position
+        const geoOpts = {
+          enableHighAccuracy: true,
+          maximumAge: 1000 * 10 * 3,
         }
-        function error(err) {
-          console.info(err)
-          console.info(`code: ${err.code}: msg: ${err.message}`)
-        }
+        console.log(geoOpts)
         try {
           position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition((geo) => {
-                // console.log(geo)
+                if (geo.coords.accuracy > accuracy) {
+                  console.warn(`position.coords.accuracy ($geo.position.coords.accuracy}) is greater than ${accuracy}m`)
+                  lowAccuracy = true
+                }
                 resolve(geo)
               },
               (err) => {
@@ -82,27 +84,14 @@
                 console.info(`code: ${err.code}, msg: ${err.message}`)
                 reject(err)
               }
+              ,geoOpts
             )
           })
         } catch (e) {
-          console.log(e)
+          console.warn('failed to get geoLocation for some reason')
+          console.warn(e)
         }
-        console.log('geolocation: ', position)
-        if (position) {
-          console.log('show user location')
-          lat = position.coords.latitude
-          lon = position.coords.longitude
-          opts.showsUserLocation = true
-          opts.tracksUserLocation = true
-          opts.showsUserLocationControl = true
-        } else {
-          console.log('no geo position available')
-          console.log('using lat: ', lat, ' lon: ', lon)
-          // opts.showsUserLocation = true
-          // opts.tracksUserLocation = true 
-          opts.showsUserLocationControl = true
-          // opts.cameraDistance = 0
-        }
+        
       } else {
         console.log('geolocation not available, no way of knowing.')
         console.log(`using ${lat} ${lon} instead`)
@@ -110,7 +99,23 @@
         opts.showsUserLocation = false
         opts.tracksUserLocation = false
         opts.showsUserLocationControl = false
-        // opts.cameraDistance = 1000
+        opts.cameraDistance = 1000
+      }
+      console.log('geolocation: ', position)
+      if (position && !lowAccuracy) {
+        console.log('show user location')
+        lat = position.coords.latitude
+        lon = position.coords.longitude
+        opts.showsUserLocation = true
+        opts.tracksUserLocation = true
+        opts.showsUserLocationControl = true
+      } else if (position && lowAccuracy) {
+        console.warn(`low geoLocation accuracy: ${position.coords.accuracy}`)
+        console.warn('can\'t track movement accurately.')
+      } else {
+        console.log('no geo position available')
+        console.log('using lat: ', lat, ' lon: ', lon)
+        opts.showsUserLocationControl = true
       }
       window.me = new mapkit.Coordinate(lat, lon)
       window.here = new mapkit.CoordinateRegion(
@@ -120,7 +125,11 @@
       )
       window.map = new mapkit.Map('map', opts)
       window.map.region = here
-      window.map.cameraDistance = 10
+      if (lowAccuracy) {
+        window.map.cameraDistance = 2300000
+      } else {
+        window.map.cameraDistance = 10
+      }
       console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
       window.map.showsUserLocation = true 
       window.map.setCenterAnimated(me, true)
