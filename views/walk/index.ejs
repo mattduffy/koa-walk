@@ -7,7 +7,7 @@
     data-initial-token=""
   ></script>
   <script nonce="<%= nonce %>" type="module">
-    const accuracy = 10 // meters
+    const accuracy = 15 // meters
     let lowAccuracy = false
     const origin = '<%= origin %>'
     const jwtAccess = '<%= searchJwtAccess %>'
@@ -96,43 +96,68 @@
         console.log('geolocation not available, no way of knowing.')
         console.log(`using ${lat} ${lon} instead`)
         console.log('geo error: ', position)
-        opts.showsUserLocation = false
-        opts.tracksUserLocation = false
-        opts.showsUserLocationControl = false
-        opts.cameraDistance = 1000
+        await noPositionCantWalk({ lat, lon })
+        // opts.showsUserLocation = false
+        // opts.tracksUserLocation = false
+        // opts.showsUserLocationControl = false
+        // opts.cameraDistance = 1000
       }
       console.log('geolocation: ', position)
       if (position && !lowAccuracy) {
         console.log('show user location')
-        lat = position.coords.latitude
-        lon = position.coords.longitude
-        opts.showsUserLocation = true
-        opts.tracksUserLocation = true
-        opts.showsUserLocationControl = true
+        await goodAccuracyCanWalk({ lat: position.coords.latitude, lon: position.coords.longitude, })
       } else if (position && lowAccuracy) {
         console.warn(`low geoLocation accuracy: ${position.coords.accuracy}`)
         console.warn('can\'t track movement accurately.')
+        await lowAccuracyPositionCantWalk({ lowAccuracy, lat, lon, })
       } else {
         console.log('no geo position available')
         console.log('using lat: ', lat, ' lon: ', lon)
+        await noPositionCantWalk({ lowAccuracy, lat, lon, })
+        lowAccuracy = true
+      }
+      async function goodAccuracyCanWalk(o) {
+        opts.showsUserLocation = true
+        opts.tracksUserLocation = true
         opts.showsUserLocationControl = true
-      }
-      window.me = new mapkit.Coordinate(lat, lon)
-      window.here = new mapkit.CoordinateRegion(
-        // new mapkit.Coordinate(lat, lon),
-        me,
-        new mapkit.CoordinateSpan(0.05, 0.05)
-      )
-      window.map = new mapkit.Map('map', opts)
-      window.map.region = here
-      if (lowAccuracy) {
-        window.map.cameraDistance = 2300000
-      } else {
+        window.me = new mapkit.Coordinate(o.lat, o.lon)
+        window.here = new mapkit.CoordinateRegion(
+          me,
+          new mapkit.CoordinateSpan(0.05, 0.05)
+        )
+        window.map = new mapkit.Map('map', opts)
+        window.map.region = here
         window.map.cameraDistance = 10
+        console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+        window.map.showsUserLocation = true 
+        window.map.setCenterAnimated(me, true)
       }
-      console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-      window.map.showsUserLocation = true 
-      window.map.setCenterAnimated(me, true)
+      async function lowAccuracyPositionCantWalk(o) {
+        window.me = new mapkit.Coordinate(o.lat, o.lon)
+        window.here = new mapkit.CoordinateRegion(
+          me,
+          new mapkit.CoordinateSpan(0.05, 0.05)
+        )
+        window.map = new mapkit.Map('map', opts)
+        window.map.region = here
+        window.map.cameraDistance = 2300000
+        console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+        window.map.showsUserLocation = true 
+        window.map.setCenterAnimated(me, true)
+      }
+      async function noPositionCantWalk(o) {
+        window.me = new mapkit.Coordinate(o.lat, o.lon)
+        window.here = new mapkit.CoordinateRegion(
+          me,
+          new mapkit.CoordinateSpan(0.05, 0.05)
+        )
+        window.map = new mapkit.Map('map', opts)
+        window.map.region = here
+        window.map.cameraDistance = 2300000
+        console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+        window.map.showsUserLocation = true 
+        window.map.setCenterAnimated(me, true)
+      }
 
       if (window.Worker) {
         console.log('Worker <=> Walker')
