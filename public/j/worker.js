@@ -1,7 +1,7 @@
 /*
  * file: public/j/worker.js
  */
-onmessage = function(e) {
+self.onmessage = (e) => {
   switch (e.data.TASK) {
     case 'START_WALK':
       console.log(e.data.TASK, e.data.msg)
@@ -19,8 +19,13 @@ onmessage = function(e) {
       console.log(e.data.TASK, e.data.msg)
       break
     default:
-      console.log('Worker: messagee received from main script.')
-      console.log(`message data: ${e.data}`)
+      console.warn('Worker: received an unknown task from the main script.')
+      console.warn('message data: ', e.data)
+      throw new Error(`unsupported task: ${e.data.TASK}`)
   }
-  postMessage('Take a walk.')
+  self.onerror = (error) => {
+    console.warn('oops')
+    console.warn(error)
+  }
+  self.postMessage('Take a walk.')
 }

@@ -87,6 +87,7 @@
               ,geoOpts
             )
           })
+          window.p = position
         } catch (e) {
           console.warn('failed to get geoLocation for some reason')
           console.warn(e)
@@ -163,7 +164,13 @@
         console.log('Worker <=> Walker')
         const walker = new Worker('<%= origin %>/j/worker.js')
         walker.onmessage = function(e) {
-          // console.log(`${e.data}`)
+          console.log(`${e.data}`)
+        }
+        walker.onerror = function(e) {
+          e.preventDefault()
+          console.warn('err msg: ', e.message)
+          console.warn('in: ', e.filename)
+          console.warn('at: ', e.lineno)
         }
         walker.postMessage('What should I do?')
         const tasks = [
@@ -171,11 +178,16 @@
           {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
           {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
           {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
-          {TASK: 'GET_WALK', msg: 'Get that previous walk.'}
+          {TASK: 'GET_WALK', msg: 'Get that previous walk.'},
+          {TASK: 'GET_A_LIFE', msg: 'you heard me'}
         ]
-        tasks.forEach(async (walk) => {
-          walker.postMessage(walk)
-        })
+        try {
+          tasks.forEach(async (walk) => {
+            walker.postMessage(walk)
+          })
+        } catch (e) {
+          console.warn(e)
+        }
       } else {
         console.log('Not compatible with walking.')
       }   
