@@ -24,6 +24,22 @@ div#map {
   width: 100vw;
   height: 90vh;
   background-color: #212223;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+div#no-location {
+  display: none;
+  position: absolute;
+  top: 85px;
+  z-index: 100;
+  width: 75vw;
+  height: auto;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: .5em;
+  padding: .25em;
 }
 
 @media screen and (max-width: 400px) {
