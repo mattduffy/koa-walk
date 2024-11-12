@@ -1,7 +1,7 @@
 <div id="map">
-  <div id="no-location">
+  <div id="app">
     <h3></h3>
-    <p>Your walk will not be recorded.</p>
+    <p></p>
   </div>
   <script nonce=<%= nonce %>
     src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
@@ -11,12 +11,13 @@
     data-initial-token=""
   ></script>
   <script nonce="<%= nonce %>" type="module">
-    const accuracy = 45 // meters
-    const accuracyMargin = -5
+    const accuracy = 30 // meters
+    const accuracyMargin = 5 // meters
     let lowAccuracy = false
     const origin = '<%= origin %>'
     const jwtAccess = '<%= searchJwtAccess %>'
     let map
+    const app = document.querySelector('div#app')
     async function setupMapKitJs() {
       const tokenOpts = {
         method: 'GET',
@@ -79,9 +80,11 @@
           position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition((geo) => {
                 if (geo.coords.accuracy > accuracy) {
-                  console.warn(`position.coords.accuracy ($geo.position.coords.accuracy}) is greater than ${accuracy}m`)
+                  console.info(`position.coords.accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
                   lowAccuracy = true
                 }
+                lat = geo.coords.latitude
+                lon = geo.coords.longitude
                 resolve(geo)
               },
               (err) => {
@@ -103,80 +106,83 @@
         console.log(`using ${lat} ${lon} instead`)
         console.log('geo error: ', position)
         await noPositionCantWalk({ lat, lon })
-        // opts.showsUserLocation = false
-        // opts.tracksUserLocation = false
-        // opts.showsUserLocationControl = false
-        // opts.cameraDistance = 1000
       }
       console.log('geolocation: ', position)
+      console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
       if (position && !lowAccuracy) {
         console.log('show user location')
         console.log(`position accuracy: ${position.coords.accuracy}`)
-        await goodAccuracyCanWalk({ lat: position.coords.latitude, lon: position.coords.longitude, })
-      } else if (position && lowAccuracy) {
-        console.warn(`low geoLocation accuracy: ${position.coords.accuracy}`)
-        console.warn('can\'t track movement accurately.')
-        if (position.coords.accuracy >= accuracy + accuracyMargin) {
-          console.log(`${position.coords.accuracy} >= ${accuracy} + ${accuracyMargin}`)
-          await lowAccuracyPositionCantWalk({ lowAccuracy, lat, lon, })
-        } else {
-          await noPositionCantWalk({ lat, lon })
-        }
+        await goodAccuracyCanWalk(opts, position)
+      } else if (position.coords.accuracy > accuracy && position.coords.accuracy <= accuracy + accuracyMargin) {
+        console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
+        console.info('can\'t track movement accurately.')
+        console.info(opts)
+        await lowAccuracyPositionCantWalk(opts, position)
+      } else if (lowAccuracy && position) {
+        console.info(`really low geoLocation accuracy: ${position.coords.accuracy}`)
+        console.info('can\'t track movement accurately.')
+        console.log(opts)
+        await lowAccuracyPositionCantWalk(opts, position)
       } else {
         console.log('no geo position available')
         console.log('using lat: ', lat, ' lon: ', lon)
-        await noPositionCantWalk({ lowAccuracy, lat, lon, })
+        await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
         lowAccuracy = true
       }
-      async function goodAccuracyCanWalk(o) {
-        opts.showsUserLocation = true
-        opts.tracksUserLocation = true
-        opts.showsUserLocationControl = true
-        window.me = new mapkit.Coordinate(o.lat, o.lon)
+      async function goodAccuracyCanWalk(o, g) {
+        console.log(`good accuracy: ${g.coords.accuracy}`)
+        o.showsUserLocation = true
+        o.tracksUserLocation = true
+        o.showsUserLocationControl = true
+        window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
         window.here = new mapkit.CoordinateRegion(
           me,
           new mapkit.CoordinateSpan(0.05, 0.05)
         )
-        window.map = new mapkit.Map('map', opts)
+        window.map = new mapkit.Map('map', o)
         window.map.region = here
         window.map.cameraDistance = 10
         console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
         window.map.showsUserLocation = true 
         window.map.setCenterAnimated(me, true)
+        app.style.display = 'block'
+        app.querySelector('h3').textContent = 'Your starting position looks good.'
+        app.querySelector('p').textContent = 'Tap the start button when you are ready.'
+
       }
-      async function lowAccuracyPositionCantWalk(o) {
-        window.me = new mapkit.Coordinate(o.lat, o.lon)
+      async function lowAccuracyPositionCantWalk(o, g) {
+        console.log(`low accuracy: ${g.coords.accuracy}`)
+        window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
         window.here = new mapkit.CoordinateRegion(
           me,
           new mapkit.CoordinateSpan(0.05, 0.05)
         )
-        window.map = new mapkit.Map('map', opts)
+        window.map = new mapkit.Map('map', o)
+        window.map.region = here
+        window.map.cameraDistance = 10 
+        window.map.showsUserLocation = true 
+        console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+        window.map.setCenterAnimated(me, true)
+        app.style.display = 'block'
+        app.querySelector('h3').textContent = 'Can\'t get a very accurate GPS position.'
+        app.querySelector('p').textContent = 'Your walk may not be recorded very accurately.'
+      }
+      async function noPositionCantWalk(o, g) {
+        console.log(`no position available: ${g.code}`)
+        window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
+        window.here = new mapkit.CoordinateRegion(
+          me,
+          new mapkit.CoordinateSpan(0.05, 0.05)
+        )
+        window.map = new mapkit.Map('map', o)
         window.map.region = here
         window.map.cameraDistance = 2300000
         console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
         window.map.showsUserLocation = true 
         window.map.setCenterAnimated(me, true)
-        const div = document.querySelector('div#no-location')
-        div.style.display = 'block'
-        div.children[0].textContent = 'Can\'t get a very accurate GPS position.'
-        div.children[1].textContent = 'Your walk may not be recorded very accurately.'
-      }
-      async function noPositionCantWalk(o) {
-        window.me = new mapkit.Coordinate(o.lat, o.lon)
-        window.here = new mapkit.CoordinateRegion(
-          me,
-          new mapkit.CoordinateSpan(0.05, 0.05)
-        )
-        window.map = new mapkit.Map('map', opts)
-        window.map.region = here
-        window.map.cameraDistance = 2300000
-        console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-        window.map.showsUserLocation = true 
-        window.map.setCenterAnimated(me, true)
-        const div = document.querySelector('div#no-location')
-        div.style.display = 'block'
-        div.children[0].textContent = 'You have no location.'
-        div.children[1].textContent = 'Your walk will not be recorded.'
+        app.style.display = 'block'
+        app.querySelector('h3').textContent = 'You have no location.'
+        app.querySelector('p').textContent = 'Your walk will not be recorded.'
       }
 
       if (window.Worker) {
@@ -198,7 +204,7 @@
           {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
           {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
           {TASK: 'GET_WALK', msg: 'Get that previous walk.'},
-          {TASK: 'GET_A_LIFE', msg: 'you heard me'}
+          // {TASK: 'GET_A_LIFE', msg: 'you heard me'}
         ]
         try {
           tasks.forEach(async (walk) => {

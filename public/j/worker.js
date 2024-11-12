@@ -1,7 +1,9 @@
 /*
  * file: public/j/worker.js
  */
-self.onmessage = (e) => {
+/* eslint-env worker */
+onmessage = (e) => {
+  console.log(e.data.TASK)
   switch (e.data.TASK) {
     case 'START_WALK':
       console.log(e.data.TASK, e.data.msg)
@@ -19,13 +21,14 @@ self.onmessage = (e) => {
       console.log(e.data.TASK, e.data.msg)
       break
     default:
+      console.info(e)
       console.warn('Worker: received an unknown task from the main script.')
       console.warn('message data: ', e.data)
       throw new Error(`unsupported task: ${e.data.TASK}`)
   }
-  self.onerror = (error) => {
-    console.warn('oops')
-    console.warn(error)
-  }
-  self.postMessage('Take a walk.')
 }
+// onerror = (error) => {
+//   console.warn('oops')
+//   console.warn(error)
+// }
+postMessage('Take a walk.')

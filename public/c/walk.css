@@ -29,7 +29,7 @@ div#map {
   justify-content: center;
 }
 
-div#no-location {
+div#app {
   display: none;
   position: absolute;
   top: 85px;
@@ -40,6 +40,15 @@ div#no-location {
   background-color: white;
   border-radius: .5em;
   padding: .25em;
+}
+
+div#app > h3 {
+  margin: 0px;
+  font-size: 1em;
+}
+
+div#app > p {
+  font-size: .75em;
 }
 
 @media screen and (max-width: 400px) {
