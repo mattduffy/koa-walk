@@ -26,7 +26,6 @@ const __dirname = path.dirname(__filename)
 const appRoot = path.resolve(`${__dirname}/../..`)
 const appEnv = {}
 log(`appRoot: ${appRoot}`)
-// dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv, debug: true })
 dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv })
 // log(appEnv)
 // const mongoEnv = {}
@@ -35,12 +34,11 @@ dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEn
 
 const program = new Command()
 program.name('newUser')
-  .option('--conf <env>', '.env-style config file')
-  .option('--first <name>', 'User\'s first name')
-  .option('--last <name>', 'User\'s last name')
-  .option('--email <addr>', 'User\'s email address')
-  // .requiredOption('--desc <description>', 'Short description of the account', 'New account created using cli.')
-  .option('--password <password>', 'The new user\'s initial password.')
+  .requiredOption('--first <name>', 'User\'s first name')
+  .requiredOption('--last <name>', 'User\'s last name')
+  .requiredOption('--email <addr>', 'User\'s email address')
+  .requiredOption('--desc <description>', 'Short description of the account', 'New account created using cli.')
+  .requiredOption('--password <password>', 'The new user\'s initial password.')
   .option('-a, --admin', 'Make this user account admin, otherwise regular.')
   .option('-t, --test', 'A test user account, not a real user.')
 

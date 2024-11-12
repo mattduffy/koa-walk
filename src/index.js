@@ -369,6 +369,8 @@ async function logRequest(ctx, next) {
         } catch (e) {
           err(e.message)
         }
+      } else {
+        logg(`failed to log ip geo for ${ctx.request.ips}`)
       }
       logEntry.date = new Date()
       logEntry.method = ctx.method
