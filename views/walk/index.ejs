@@ -70,12 +70,12 @@
         showsMapTypeControl: false,
       }
       if ("geolocation" in navigator) {
-        console.log('where are we?') 
+        console.log('Can we get a location fix?') 
         const geoOpts = {
           enableHighAccuracy: true,
           maximumAge: 1000 * 10 * 3,
         }
-        console.log(geoOpts)
+        console.log('geo options: ', geoOpts)
         try {
           position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition((geo) => {
@@ -99,8 +99,11 @@
         } catch (e) {
           console.warn('failed to get geoLocation for some reason')
           console.warn(e)
+          console.log('no geo position available')
+          console.log('using generic lat: ', lat, ' lon: ', lon, ' to initialize the map.')
+          await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
+          lowAccuracy = true
         }
-        
       } else {
         console.log('geolocation not available, no way of knowing.')
         console.log(`using ${lat} ${lon} instead`)
