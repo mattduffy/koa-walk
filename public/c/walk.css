@@ -8,7 +8,11 @@ body {
 
 body header {
   width: 100vw;
-  height: 10vh;
+  height: 8vh;
+}
+
+h1 h2 h3 h4 {
+  margin: 0px;
 }
 
 a#skipnav {
@@ -16,13 +20,40 @@ a#skipnav {
   left: -1000px; 
 }
 
-h1 {
-  margin: auto;
+div#header {
+  
+}
+
+div#header > nav {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+nav#nav > div {
+  min-height: 100%;
+  height: 8vh;
+  background-color: lightgray;
+  flex-grow: 1;
+  margin-right: 1px;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+span.userpng {
+  content: url('/i/user.png');
+  max-width: 1.5em;
+  padding: 10px 10px 10px 10px;
+  background-color: palegoldenrod;
+  border-radius: .5em;
+  flex-grow: 1;
 }
 
 div#map {
   width: 100vw;
-  height: 90vh;
+  height: 92vh;
   background-color: #212223;
   display: flex;
   align-items: center;
@@ -32,9 +63,9 @@ div#map {
 div#app {
   display: none;
   position: absolute;
-  top: 85px;
+  top: 110px;
   z-index: 100;
-  width: 75vw;
+  width: 90vw;
   height: auto;
   margin: 0 auto;
   background-color: white;

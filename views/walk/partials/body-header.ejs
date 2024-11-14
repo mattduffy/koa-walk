@@ -1,9 +1,24 @@
 <header>
   <a id="skipnav" href="#main-content">Skip to main content</a>
-  <div id="masthead">
-    <h1><a href="<%= origin %>">Map a walk</a></h1>
-    <nav id="main-nav" aria-label="Main">
+  <div id="header">
+    <nav id="nav" aria-label="Main">
+      <div><span data-action="login" class="userpng"></span></div>
+      <div><span data-action="list" class="userpng"></span></div>
+      <div><span data-action="list" class="userpng"></span></div>
+      <div><span data-action="list" class="userpng"></span></div>
     </nav>
+    <script nonce="<%= nonce %>">
+      const buttons = Array.from(document.querySelector('nav#nav').children)
+      buttons.forEach((b) => {
+        if (b.firstChild.dataset) {
+          b.firstChild.addEventListener('click', (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            alert(b.firstChild.dataset.action)
+          })
+        }
+      })
+    </script>
     <% if (locals) { %>
       <%- '<!-- html comment -->' %>
     <% } %>
