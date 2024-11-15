@@ -332,7 +332,7 @@ async function logRequest(ctx, next) {
       return re.test(ctx.path)
     }
     if (ignore.find(find) === undefined) {
-      const db = ctx.state.mongodb.client.db(ctx.state.mongodb.client.dbName)
+      const db = ctx.state.mongodb.client.db(ctx.state.mongodb.dbName)
       const mainLog = db.collection('mainLog')
       const logEntry = {}
       logEntry.remoteIps = ctx.request.ips
@@ -351,7 +351,7 @@ async function logRequest(ctx, next) {
               geo.coords = [city?.location?.latitude, city?.location?.longitude]
               logEntry[`geo_${i}`] = geo
               geos.push(geo)
-              logg('Request ip geo:     %O', geo)
+              logg('Request ip geo:     %o', geo)
             })
           } else {
             const city = geoIPCity.city(ctx.request.ip)
@@ -382,10 +382,10 @@ async function logRequest(ctx, next) {
       await mainLog.insertOne(logEntry)
     }
     logg(`Request href:        ${ctx.request.href}`)
-    logg(`Request url:         ${ctx.request.url}`)
-    // logg(`Request originalUrl: ${ctx.request.originalUrl}`)
     logg(`Request remote ips:  ${ctx.request.ips}`)
+    logg(`Request remote ip:   ${ctx.request.ip}`)
     logg('Request headers:     %O', ctx.request.headers)
+    logg('Request querystring: %P', ctx.request.query)
     await next()
   } catch (e) {
     err(e)
