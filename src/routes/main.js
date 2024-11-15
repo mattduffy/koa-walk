@@ -41,13 +41,13 @@ router.get('index', '/', hasFlash, async (ctx) => {
   const csrfToken = ulid()
   ctx.session.csrfToken = csrfToken
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-  // log(ctx.state.sessionUser)
+  log('sessionUser: %O', ctx.state.sessionUser)
   const locals = {
     csrfToken,
     sessionUser: ctx.state.sessionUser,
     body: ctx.body,
     flash: ctx.flash?.index ?? {},
-    title: `${ctx.app.site}: Home`,
+    title: `${ctx.app.site}: Walk`,
     isAuthenticated: ctx.state.isAuthenticated,
   }
   await ctx.render('index', locals)

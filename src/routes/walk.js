@@ -6,6 +6,7 @@
  */
 
 import Router from '@koa/router'
+import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 // import { Users } from '../models/users.js'
 import { _log, _error } from '../utils/logging.js'
@@ -35,14 +36,16 @@ router.get('index', '/', hasFlash, async (ctx) => {
   // const error = walkError.extend('index')
   log('inside walk router: /')
   ctx.status = 200
-  if (ctx.state.sessionUser) {
-    log(ctx.state.sessionUser)
-  }
+  const csrfToken = ulid()
+  ctx.session.csrfToken = csrfToken
+  ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+  log('sessionUser: %O', ctx.state.sessionUser)
   const locals = {
+    csrfToken,
     sessionUser: ctx.state.sessionUser,
     body: ctx.body,
     flash: ctx.flash?.index ?? {},
-    title: `${ctx.app.site}: Home`,
+    title: `${ctx.app.site}: Walk`,
     isAuthenticated: ctx.state.isAuthenticated,
   }
   await ctx.render('index', locals)
