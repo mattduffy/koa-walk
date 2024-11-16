@@ -162,7 +162,12 @@
         )
         window.map = new mapkit.Map('map', o)
         window.map.region = here
-        window.map.cameraDistance = 10 
+        if (Math.trunc(g.coords.accuracy) > 10 * (accuracy + accuracyMargin)) {
+          console.log('really low accuracy')
+          window.map.cameraDistance = Math.trunc(g.coords.accuracy)
+        } else {
+          window.map.cameraDistance = 10 
+        }
         window.map.showsUserLocation = true 
         console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
         window.map.setCenterAnimated(me, true)
@@ -190,7 +195,7 @@
 
       if (window.Worker) {
         console.log('Worker <=> Walker')
-        const walker = new Worker('<%= origin %>/j/worker.js')
+        const walker = new Worker('<%= origin %>/j/worker.js', { name: 'walking_app' })
         walker.onmessage = function(e) {
           console.log(`${e.data}`)
         }
