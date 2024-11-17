@@ -3,6 +3,7 @@ module.exports = {
     window: true,
     document: true,
     origin: true,
+    worker: true,
   },
   env: {
     es2021: true,
