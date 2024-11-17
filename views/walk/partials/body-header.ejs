@@ -4,28 +4,45 @@
     <nav id="nav" aria-label="Main">
       <div>
         <span data-action="showLogin" class="userpng"></span>
-        <span style="margin-left: 5px;">
+        <span data-first="" style="margin-left: 5px;">
           <% if (isAuthenticated) { %>
           <%= sessionUser?.first %>
           <% } %>
         </span>
       </div>
-      <div><span data-action="list" class="userpng"></span></div>
-      <div><span data-action="list" class="userpng"></span></div>
+      <div><span data-action="showList" class="userpng"></span></div>
+      <div><span data-action="showNew" class="userpng"></span></div>
     </nav>
     <script nonce="<%= nonce %>">
       document.addEventListener("DOMContentLoaded", (event) => {
         const buttons = Array.from(document.querySelector('nav#nav').children)
+        console.log(buttons)
         buttons.forEach((b) => {
-          if (b.firstChild.dataset) {
-            b.firstChild.addEventListener('click', (e) => {
+          console.log(b)
+          if (b.firstElementChild.dataset) {
+            const button = b.firstElementChild
+            console.log(button)
+            button.addEventListener('click', (e) => {
               e.preventDefault()
               e.stopPropagation()
-              alert(b.firstChild.dataset.action)
+              function actionName(fnName, a) {
+                return this[fnName](a)
+              }
+              actionName(button.dataset.action, button.dataset.action) 
             })
           }
         })
       })
+
+      function showLogin(o) {
+        alert(o)
+      }
+      function showList(o) {
+        alert(o)
+      }
+      function showNew(o) {
+        alert(o)
+      }
       
     </script>
     <% if (locals) { %>
