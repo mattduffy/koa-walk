@@ -2,14 +2,20 @@
  * file: public/j/worker.js
  */
 /* eslint-env worker */
-onmessage = (e) => {
-  console.log(self.name)
+async function login(credentials) {
+  console.log(credentials)
+  return { TASK: 'LOGIN', user: { first: 'Matt', last: 'Duffy' } }
+}
+
+onmessage = async (e) => {
+  // console.log(self.name)
   console.log(e.data)
   if (e.data?.TASK) {
     switch (e.data.TASK) {
       case 'LOGIN':
         try {
-          const request = new Request()
+          const result = await login(e.data)
+          postMessage(result)
         } catch (err) {
           console.log(err)
           postMessage({ err: 'login failed' })

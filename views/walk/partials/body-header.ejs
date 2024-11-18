@@ -16,12 +16,9 @@
     <script nonce="<%= nonce %>">
       document.addEventListener("DOMContentLoaded", (event) => {
         const buttons = Array.from(document.querySelector('nav#nav').children)
-        console.log(buttons)
         buttons.forEach((b) => {
-          console.log(b)
           if (b.firstElementChild.dataset) {
             const button = b.firstElementChild
-            console.log(button)
             button.addEventListener('click', (e) => {
               e.preventDefault()
               e.stopPropagation()

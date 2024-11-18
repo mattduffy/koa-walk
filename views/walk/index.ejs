@@ -197,7 +197,13 @@
         console.log('Worker <=> Walker')
         const walker = new Worker('<%= origin %>/j/worker.js', { name: 'walking_app' })
         walker.onmessage = function(e) {
-          console.log(`${e.data}`)
+          switch (e.data.TASK) {
+            case 'LOGIN':
+              console.log(e.data.user) 
+              break
+            default:
+              console.log(`${e.data}`)
+          }
         }
         walker.onerror = function(e) {
           e.preventDefault()
@@ -205,6 +211,9 @@
           console.warn('in: ', e.filename)
           console.warn('at: ', e.lineno)
         }
+        const auth = walker.postMessage({TASK: 'LOGIN', username: 'matt', password: '9@zzw0rd'})
+        console.log(auth.data.first)
+
         walker.postMessage('What should I do?')
         const tasks = [
           {TASK: 'START_WALK', msg: 'I am starting a walk'},
@@ -212,11 +221,11 @@
           {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
           {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
           {TASK: 'GET_WALK', msg: 'Get that previous walk.'},
-          // {TASK: 'GET_A_LIFE', msg: 'you heard me'}
+          {TASK: 'GET_A_LIFE', msg: 'you heard me'}
         ]
         try {
           tasks.forEach(async (walk) => {
-            walker.postMessage(walk)
+            // walker.postMessage(walk)
           })
         } catch (e) {
           console.warn(e)
