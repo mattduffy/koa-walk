@@ -1,7 +1,24 @@
 <div id="map">
-  <div id="app">
-    <h3></h3>
-    <p></p>
+  <div id="container">
+    <div id="login">
+      <form id="loginId" name="login">
+        <label for="emailId">Email: </label>
+        <br>
+        <input type="email" id="emailId" name="email" size="40" value="<%= sessionUser?.email %>" placeholder="user@example.com">
+        <br>
+        <label for="passwordId">Password: </label>
+        <br>
+        <input type="password" id="passwordId" name="password" size="40" value="">
+        <br>
+        <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>">
+        <input type="submit" id="submitId" name="submit" value="Login">
+        <button id="cancelId" name="cancel">Cancel</button>
+      </form>
+    </div>
+    <div id="app">
+      <h3></h3>
+      <p></p>
+    </div>
   </div>
   <script nonce=<%= nonce %>
     src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"

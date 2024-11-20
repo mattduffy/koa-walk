@@ -32,7 +32,25 @@
       })
 
       function showLogin(o) {
-        alert(o)
+        const container = document.querySelector('div#container')
+        const app = container.querySelector('div#app')
+        if (app.style.display !== 'none') app.style.display = 'none'
+        const login = container.querySelector('div#login')
+        login.style.display = 'block'
+        const form = login.children[0]
+        const submit = form.elements.submit
+        submit.addEventListener('click', async (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          console.log('trying to login.')
+        })
+        const cancel = form.elements.cancel
+        cancel.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          login.style.display = 'none'
+          app.style.display = 'block'
+        })
       }
       function showList(o) {
         alert(o)
