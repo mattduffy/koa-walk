@@ -100,11 +100,11 @@ div#app > p {
     margin: 0 auto .5em auto
   }
   input[type=text] {
-    width: 100%;
+    width: auto;
   }
 
   input[type=password] {
-    width: 100%;
+    width: auto;
   }
 
   textarea {
