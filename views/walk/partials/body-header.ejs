@@ -36,8 +36,8 @@
         const app = container.querySelector('div#app')
         if (app.style.display !== 'none') app.style.display = 'none'
         const login = container.querySelector('div#login')
-        login.style.display = 'block'
-        // toggleTab(login.dataset.tab)
+        // login.style.display = 'block'
+        toggleTab(login.dataset.tab)
         const form = login.children[0]
         const submit = form.elements.submit
         submit.addEventListener('click', async (e) => {
@@ -50,9 +50,9 @@
           e.preventDefault()
           e.stopPropagation()
           console.log(app.dataset.tab)
-          // toggleTab(app.dataset.tab)
-          login.style.display = 'none'
-          app.style.display = 'block'
+          toggleTab(app.dataset.tab)
+          // login.style.display = 'none'
+          // app.style.display = 'block'
         })
       }
       function showList(o) {
@@ -63,18 +63,27 @@
       }
       function toggleTab(t) {
         const app = document.querySelector('div#app')
-        // const attr = `[data-tab="${t}"]`
-        const attr = `div#${t}`
-        console.log(attr)
-        const tab = document.querySelector(attr)
+        const tab = document.querySelector(`div[data-tab="${t}"]`)
         console.log(tab) 
         console.log('t: ', t, 'style: ', tab.style.display)
-        if (tab.dataset.tab !== 'app' && tab.style.display === 'none') {
-          tab.style.display = 'block'
-          app.style.display = 'none'
-        } else {
-          tab.style.display = 'none'
-          app.style.display = 'block'
+        switch(t) {
+          case 'login':
+            if (tab.style.display === '' || tab.style.display === 'none') {
+              tab.style.display = 'block'
+              app.style.display = 'none'
+            } else {
+              tab.style.display = 'none'
+              app.style.display = 'block'
+            }
+            break
+          default:
+            document.querySelectorAll('[data-tab]').forEach((t) => {
+              if (t.dataset.tab == 'app') {
+                  t.style.display = 'block'
+              } else {
+                  t.style.display = 'none'
+              }
+            }) 
         }
       }
     </script>

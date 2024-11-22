@@ -62,8 +62,8 @@ div#map {
 
 div#container {
   position: absolute;
-  top: 110px;
-  left: 3%;
+  top: 10vh;
+  left: 4.5vw;
   z-index: 100;
   width: 90vw;
   height: auto;
@@ -80,7 +80,7 @@ div#login {
 
 div#app {
   display: none;
-  width: 100%;
+  width: auto;
   background-color: white;
   border-radius: .5em;
   padding: .25em;
