@@ -228,8 +228,7 @@
           console.warn('in: ', e.filename)
           console.warn('at: ', e.lineno)
         }
-        const auth = walker.postMessage({TASK: 'LOGIN', username: 'matt', password: '9@zzw0rd'})
-        console.log(auth.data.first)
+        // const auth = walker.postMessage({TASK: 'LOGIN', username: 'matt', password: '9@zzw0rd'})
 
         walker.postMessage('What should I do?')
         const tasks = [

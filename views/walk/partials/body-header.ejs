@@ -36,7 +36,6 @@
         const app = container.querySelector('div#app')
         if (app.style.display !== 'none') app.style.display = 'none'
         const login = container.querySelector('div#login')
-        // login.style.display = 'block'
         toggleTab(login.dataset.tab)
         const form = login.children[0]
         const submit = form.elements.submit
@@ -49,10 +48,8 @@
         cancel.addEventListener('click', (e) => {
           e.preventDefault()
           e.stopPropagation()
-          console.log(app.dataset.tab)
+          // console.log(app.dataset.tab)
           toggleTab(app.dataset.tab)
-          // login.style.display = 'none'
-          // app.style.display = 'block'
         })
       }
       function showList(o) {
@@ -64,8 +61,8 @@
       function toggleTab(t) {
         const app = document.querySelector('div#app')
         const tab = document.querySelector(`div[data-tab="${t}"]`)
-        console.log(tab) 
-        console.log('t: ', t, 'style: ', tab.style.display)
+        // console.log(tab) 
+        // console.log('t: ', t, 'style: ', tab.style.display)
         switch(t) {
           case 'login':
             if (tab.style.display === '' || tab.style.display === 'none') {
