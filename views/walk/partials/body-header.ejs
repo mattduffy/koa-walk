@@ -40,11 +40,12 @@
         toggleTab(login.dataset.tab)
         const form = login.children[0]
         const submit = form.elements.submit
-        submit.addEventListener('click', async (e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          console.log('trying to login.')
-        })
+        // submit.addEventListener('click', async (e) => {
+        //   e.preventDefault()
+        //   e.stopPropagation()
+        //   console.log('trying to login.')
+        //   await doLogin(document.forms['login'])
+        // })
         const cancel = form.elements.cancel
         cancel.addEventListener('click', (e) => {
           e.preventDefault()

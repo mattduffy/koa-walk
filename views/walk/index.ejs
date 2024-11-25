@@ -209,9 +209,21 @@
         app.querySelector('h3').textContent = 'You have no location.'
         app.querySelector('p').textContent = 'Your walk will not be recorded.'
       }
-
+      async function doLogin(form) {
+        const url = `${origin}/login`
+        console.log(url)
+        console.log(form)
+      }
       if (window.Worker) {
         console.log('Worker <=> Walker')
+        const loginForm = document.forms['login']
+        const login = loginForm.elements.submit
+        login.addEventListener('click', async(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          console.log(e)
+          await doLogin(document.forms['login'])
+        })
         const walker = new Worker('<%= origin %>/j/worker.js', { name: 'walking_app' })
         walker.onmessage = function(e) {
           switch (e.data.TASK) {
