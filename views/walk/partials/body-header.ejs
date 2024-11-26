@@ -39,6 +39,7 @@
         const login = container.querySelector('div#login')
         toggleTab(login.dataset.tab)
         const form = login.children[0]
+        form.elements.email.focus()
         const submit = form.elements.submit
         // submit.addEventListener('click', async (e) => {
         //   e.preventDefault()

@@ -3,18 +3,19 @@
  */
 /* eslint-env worker */
 async function login(credentials) {
-  console.log(credentials)
-  return { TASK: 'LOGIN', user: { first: 'Matt', last: 'Duffy' } }
+  console.log('creds: ', credentials)
+  return { TASK: 'LOGIN', user: { first: credentials.email, last: credentials.password } }
 }
 
 onmessage = async (e) => {
-  // console.log(self.name)
+  console.log(self.name)
   console.log(e.data)
   if (e.data?.TASK) {
     switch (e.data.TASK) {
       case 'LOGIN':
         try {
           const result = await login(e.data)
+          console.log(result)
           postMessage(result)
         } catch (err) {
           console.log(err)
