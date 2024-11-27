@@ -98,7 +98,7 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
         },
       }
       // ctx.redirect('/')
-      ctx.redirect('/account')
+      ctx.redirect('/')
     }
   }
 })
