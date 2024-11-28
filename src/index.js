@@ -18,27 +18,25 @@ import { geoIPCity } from './utils/geoip.js'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
 import { session, config } from './session-handler.js'
 import {
-  getSessionUser,
-  flashMessage,
-  prepareRequest,
-  tokenAuthMiddleware,
-  // errorHandlers,
   errors,
-  httpMethodOverride,
+  // errorHandlers,
+  flashMessage,
+  getSessionUser,
+  prepareRequest,
   checkServerJWKs,
+  httpMethodOverride,
+  tokenAuthMiddleware,
 } from './middlewares.js'
 import { apiV1 } from './routes/api_v1.js'
-import { activityV1 } from './routes/activity_stream.js'
+// import { activityV1 } from './routes/activity_stream.js'
+import { wellKnown } from './routes/wellKnown.js'
+import { account as Account } from './routes/account.js'
 import { auth as Auth } from './routes/auth.js'
 import { walk as Walk } from './routes/walk.js'
 import { mapkit as Mapkit } from './routes/mapkit.js'
-// import { blogs as Blogs } from './routes/blogs.js'
-// import { galleries as Galleries } from './routes/galleries.js'
 // import { main as Main } from './routes/main.js'
-import { wellKnown } from './routes/wellKnown.js'
-import { users as Users } from './routes/users.js'
 import { app as theApp } from './routes/app.js'
-import { account as Account } from './routes/account.js'
+import { users as Users } from './routes/users.js'
 import { seo as Seo } from './routes/seo.js'
 
 const log = _log.extend('index')
@@ -179,8 +177,8 @@ async function proxyCheck(ctx, next) {
 }
 
 async function openGraph(ctx, next) {
-  const logg = log.extend('openGraph')
-  // const err = error.extend('openGraph')
+  const logg = log.extend('OpenGraph-Embed')
+  // const err = error.extend('OpenGraph-Embed')
   const ogArray = []
   ogArray.push('<meta property="og:type" content="website">')
   ogArray.push('<meta property="og:site_name" content="Walk">')
@@ -400,6 +398,7 @@ app.use(openGraph)
 app.use(errors)
 app.use(httpMethodOverride())
 app.use(getSessionUser)
+//
 app.use(flashMessage({}, app))
 app.use(prepareRequest())
 app.use(tokenAuthMiddleware())
@@ -413,13 +412,12 @@ app.use(theApp.routes())
 app.use(Auth.routes())
 app.use(Mapkit.routes())
 app.use(Account.routes())
-app.use(Users.routes())
 app.use(Walk.routes())
-// app.use(Blogs.routes())
-// app.use(Galleries.routes())
+//
+app.use(Users.routes())
 app.use(wellKnown.routes())
 app.use(Seo.routes())
-app.use(activityV1.routes())
+// app.use(activityV1.routes())
 app.use(apiV1.routes())
 
 app.on('error', async (err, ctx) => {

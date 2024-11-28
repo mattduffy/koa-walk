@@ -32,9 +32,10 @@ const redisConnOpts = {
   sentinelPassword: redisEnv.REDIS_SENTINEL_PASSWORD,
   username: redisEnv.REDIS_USER,
   password: redisEnv.REDIS_PASSWORD,
-  connectionName: 'ioredis',
+  connectionName: `ioredis - ${redisEnv.REDIS_CONNECTION_NANE}`,
   enableTLSForSentinelMode: true,
   sentinelRetryStrategy: 100,
+  showFriendlyErrorStack: true,
   tls: {
     ca: await fs.readFile(redisEnv.REDIS_CACERT),
     rejectUnauthorized: false,
@@ -45,7 +46,6 @@ const redisConnOpts = {
     rejectUnauthorized: false,
     requestCert: true,
   },
-  showFriendlyErrorStack: true,
   retryStrategy(times) {
     const delay = Math.min(times * 50, 2000)
     return delay
@@ -61,6 +61,10 @@ const redisConnOpts = {
 }
 console.log(redisConnOpts)
 const redis = new Redis(redisConnOpts)
+redis.on('error', (error) => {
+  console.log('ioredis: sentinel - Error opening connection')
+  console.log(error)
+})
 export {
   redis,
 }
