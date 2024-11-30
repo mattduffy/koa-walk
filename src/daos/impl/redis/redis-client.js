@@ -36,6 +36,7 @@ const redisConnOpts = {
   enableTLSForSentinelMode: true,
   sentinelRetryStrategy: 100,
   showFriendlyErrorStack: true,
+  keepAlive: 10000,
   tls: {
     ca: await fs.readFile(redisEnv.REDIS_CACERT),
     rejectUnauthorized: false,

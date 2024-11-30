@@ -3,7 +3,7 @@
  * @author Matthew Duffy <mattduffy@gmail.com>
  * @file src/session-handler.js The setup and configuration of the koa app session handler.
  */
-
+// "ioredis": "5.3.2",
 // import fs from 'node:fs/promises'
 import fs from 'node:fs'
 import session from 'koa-session'
@@ -19,10 +19,10 @@ const showDebug = process.env.NODE_ENV !== 'production'
 const redisEnv = {}
 dotenv.config({ path: path.resolve(root, 'config/sessions.env'), processEnv: redisEnv, debug: showDebug })
 
-// console.log('redis_user: ', redisEnv.REDIS_USER)
-// console.log('redis_pwd: ', redisEnv.REDIS_PASSWORD)
-// console.log('redis prefix: ', redisEnv.REDIS_KEY_PREFIX)
-// console.log('cacert: %o', process.env.REDIS_CACERT)
+console.log('redis_user: ', redisEnv.REDIS_USER)
+console.log('redis_pwd: ', redisEnv.REDIS_PASSWORD)
+console.log('redis prefix: ', redisEnv.REDIS_KEY_PREFIX)
+console.log('cacert: %o', process.env.REDIS_CACERT)
 
 const sentinelPort = redisEnv.SENTINEL_PORT || 36379
 const redisConnOpts = {
@@ -33,14 +33,15 @@ const redisConnOpts = {
   ],
   name: 'myprimary',
   db: redisEnv.REDIS_DB,
+  keyPrefix: `${redisEnv.REDIS_KEY_PREFIX}:sessions:` ?? 'koa:sessions:',
   sentinelUsername: redisEnv.REDIS_SENTINEL_USER,
   sentinelPassword: redisEnv.REDIS_SENTINEL_PASSWORD,
   username: redisEnv.REDIS_USER,
   password: redisEnv.REDIS_PASSWORD,
-  connectionName: 'koa-sessions',
-  keyPrefix: `${redisEnv.REDIS_KEY_PREFIX}:sessions:` ?? 'koa:sessions:',
+  connectionName: `${redisEnv.REDIS_CONNECTION_NAME}-sessions`,
   enableTLSForSentinelMode: true,
-  sentinelRetryStrategy: 100,
+  showFriendlyErrorStack: true,
+  keepAlive: 10000,
   tls: {
     ca: fs.readFileSync(redisEnv.REDIS_CACERT),
     rejectUnauthorized: false,
@@ -51,13 +52,30 @@ const redisConnOpts = {
     rejectUnauthorized: false,
     requestCert: true,
   },
+  retryStrategy(times) {
+    const delay = Math.min(times * 50, 2000)
+    return delay
+  },
+  // sentinelRetryStrategy: 100,
+  sentinelRetryStrategy(times) {
+    const delay = Math.min(times * 50, 2000)
+    return delay
+  },
+  /* eslint-disable consistent-return */
+  reconnectOnError(err) {
+    const targetError = 'closed'
+    if (err.message.includes(targetError)) {
+      return true
+    }
+    // return false
+  },
 }
 const redis = redisStore(redisConnOpts)
 
 const config = {
   store: redis,
   key: redisEnv.SESSION_KEY ?? 'session',
-  maxAge: redisEnv.SESSION_1_DAY * 5 ?? (86400000 * 5),
+  maxAge: redisEnv.SESSION_1_DAY * 3 ?? (86400000 * 3),
   rolling: (redisEnv.SESSION_ROLLING.toLowerCase() === 'true') ?? true,
   renew: (redisEnv.SESSION_RENEW.toLowerCase() === 'true') ?? true,
   overwrite: true,
@@ -67,5 +85,5 @@ const config = {
   signed: (redisEnv.SESSION_SIGNED.toLowerCase() === 'true') ?? true,
   sameSite: null,
 }
-
+console.log(config)
 export { session, config, redis }
