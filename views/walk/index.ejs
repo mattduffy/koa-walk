@@ -224,7 +224,8 @@
           console.log(e.data)
           switch (e.data.TASK) {
             case 'LOGIN':
-              console.log(e.data.user.first) 
+              doLogin.success(e.data)
+              // doLogin.failed(e.data)
               break
             default:
               console.log(`${e.data}`)
@@ -239,31 +240,27 @@
         // const auth = walker.postMessage({TASK: 'LOGIN', username: 'matt', password: '9@zzw0rd'})
 
         function doLogin(form) {
-          const url = `${origin}/login`
-          const formData = new FormData()
           const credentials = {}
+          credentials.url = `${origin}/login`
           const csrfTokenHidden = form.elements['csrfToken']
           credentials.csrfTokenHidden = csrfTokenHidden.value
-          formData.append('csrfTokenHidden', csrfTokenHidden.value)
           const email = form.elements['email']
           credentials.email = email.value
-          formData.append('email', email.value)
           const password = form.elements['password']
           credentials.password = password.value
           credentials.jwtAccess = jwtAccess
-          credentials.url = url
           credentials.TASK = 'LOGIN'
-          // console.log(credentials)
-          formData.append('password', password.value)
-          const opts = {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              Authorization: `Bearer ${jwtAccess}`,
-            },
-            body: formData,
+          console.log('1', credentials)
+          function success(e) {
+            console.log('login success')
+            console.log(e)
           }
-          const request = new Request(url, opts)
+          doLogin.success = success
+          function failed(e) {
+            console.log('login failed')
+            console.log(e)
+          }
+          doLogin.failed = failed
           walker.postMessage(credentials)
         }
         walker.postMessage('What should I do?')

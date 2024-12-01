@@ -75,7 +75,11 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
         },
       }
       error(`Unsuccesful login attempt for ${username}`)
-      ctx.redirect('/login')
+      if (ctx.state.isAsyncRequest) {
+        ctx.body = { status: 'login failed' }
+      } else {
+        ctx.redirect('/login')
+      }
     } else if (authUser) {
       await db.collection('loginAttempts').insertOne(doc)
       log('successful user login')
@@ -97,8 +101,11 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
           error: null,
         },
       }
-      // ctx.redirect('/')
-      ctx.redirect('/')
+      if (ctx.state.isAsyncRequest) {
+        ctx.body = { status: 'success', user: loggedInUser }
+      } else {
+        ctx.redirect('/')
+      }
     }
   }
 })
@@ -114,7 +121,11 @@ router.get('getLogout', '/logout', async (ctx) => {
   ctx.state.isAuthenticated = false
   ctx.cookies.set('csrfToken')
   ctx.cookies.set('csrfToken.sig')
-  ctx.redirect('/')
+  if (ctx.state.isAsyncRequest) {
+    ctx.body = { status: 'loggedOut' }
+  } else {
+    ctx.redirect('/')
+  }
 })
 
 export { router as auth }

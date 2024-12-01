@@ -55,7 +55,7 @@ function sanitizeFilename(filename) {
 }
 
 //
-// Middleware functions located in ./middlewares.js file:
+// Middleware functions located in src/routes/middlewares.js file:
 // - doTokensMatch()
 // - processFormData()
 // - hasFlash()

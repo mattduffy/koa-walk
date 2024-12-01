@@ -10,7 +10,7 @@ import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 // import { Users } from '../models/users.js'
 import { _log, _error } from '../utils/logging.js'
-import { redis } from '../daos/impl/redis/redis-client.js'
+// import { redis } from '../daos/impl/redis/redis-client.js'
 
 const walkLog = _log.extend('walk')
 const walkError = _error.extend('walk')
