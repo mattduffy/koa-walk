@@ -19,10 +19,10 @@ const showDebug = process.env.NODE_ENV !== 'production'
 const redisEnv = {}
 dotenv.config({ path: path.resolve(root, 'config/sessions.env'), processEnv: redisEnv, debug: showDebug })
 
-console.log('redis_user: ', redisEnv.REDIS_USER)
-console.log('redis_pwd: ', redisEnv.REDIS_PASSWORD)
-console.log('redis prefix: ', redisEnv.REDIS_KEY_PREFIX)
-console.log('cacert: %o', process.env.REDIS_CACERT)
+// console.log('redis_user: ', redisEnv.REDIS_USER)
+// console.log('redis_pwd: ', redisEnv.REDIS_PASSWORD)
+// console.log('redis prefix: ', redisEnv.REDIS_KEY_PREFIX)
+// console.log('cacert: %o', process.env.REDIS_CACERT)
 
 const sentinelPort = redisEnv.REDIS_SENTINEL_PORT || 26379
 const redisConnOpts = {
@@ -85,5 +85,5 @@ const config = {
   signed: (redisEnv.SESSION_SIGNED.toLowerCase() === 'true') ?? true,
   sameSite: null,
 }
-console.log(config)
+
 export { session, config, redis }
