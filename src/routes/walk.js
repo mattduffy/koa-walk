@@ -39,7 +39,8 @@ router.get('index', '/', hasFlash, async (ctx) => {
   const csrfToken = ulid()
   ctx.session.csrfToken = csrfToken
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-  log('sessionUser: %O', ctx.state.sessionUser)
+  log('sessionUser: ', ctx.state?.sessionUser?.username)
+  log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
   const locals = {
     csrfToken,
     sessionUser: ctx.state.sessionUser,

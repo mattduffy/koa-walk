@@ -4,7 +4,7 @@
       <form id="loginId" name="login">
         <label for="emailId">Email: </label>
         <br>
-        <input type="email" id="emailId" name="email" size="40" value="<%= sessionUser?.email %>" placeholder="user@example.com">
+        <input type="email" id="emailId" name="email" size="40" value="<%= sessionUser?.email?.primary %>" placeholder="user@example.com">
         <br>
         <label for="passwordId">Password: </label>
         <br>
@@ -224,8 +224,11 @@
           console.log(e.data)
           switch (e.data.TASK) {
             case 'LOGIN':
-              doLogin.success(e.data)
-              // doLogin.failed(e.data)
+              if (e.data.login === 'failed') {
+                doLogin.failed(e.data)
+              } else {
+                doLogin.success(e.data)
+              }
               break
             default:
               console.log(`${e.data}`)

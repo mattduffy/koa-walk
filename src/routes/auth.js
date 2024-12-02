@@ -57,7 +57,7 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
     const collection = db.collection('users')
     const users = new Users(collection, ctx)
     const authUser = await users.authenticateAndGetUser(username, password)
-    log('authentication result: %o', authUser)
+    log('authentication result: %O', authUser._username)
     const doc = { attemptedAt: new Date(), username }
     if (ctx.state?.logEntry) {
       doc.from = { ip: ctx.state.logEntry.ip, geo: ctx.state.logEntry.geo }
@@ -76,7 +76,13 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
       }
       error(`Unsuccesful login attempt for ${username}`)
       if (ctx.state.isAsyncRequest) {
-        ctx.body = { status: 'login failed' }
+        ctx.type = 'application/json; charset=utf-8'
+        ctx.body = {
+          status: 'login failed',
+          info: authUser.info,
+          messagee: authUser.message,
+          error: authUser.error,
+        }
       } else {
         ctx.redirect('/login')
       }
@@ -84,27 +90,36 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
       await db.collection('loginAttempts').insertOne(doc)
       log('successful user login')
       authUser.user.sessionId = sessionId
-      const loggedInUser = await authUser.user.update()
-      ctx.state.sessionUser = loggedInUser
-      ctx.state.isAuthenticated = true
-      ctx.session.id = loggedInUser.id
-      ctx.session.jwts = loggedInUser.jwts
-      ctx.session.username = loggedInUser.username
-      delete ctx.session.csrfToken
-      ctx.cookies.set('csrfToken')
-      ctx.cookies.set('csrfToken.sig')
-      ctx.flash = {
-        index: {
-          username: loggedInUser.username,
-          message: `Hello ${loggedInUser.firstName}`,
-          info: authUser.message,
-          error: null,
-        },
-      }
-      if (ctx.state.isAsyncRequest) {
-        ctx.body = { status: 'success', user: loggedInUser }
-      } else {
-        ctx.redirect('/')
+      let loggedInUser
+      try {
+        loggedInUser = await authUser.user.update()
+        log('updated user with session id: ', sessionId)
+        ctx.state.sessionUser = loggedInUser
+        ctx.state.isAuthenticated = true
+        ctx.session.id = loggedInUser.id
+        ctx.session.jwts = loggedInUser.jwts
+        ctx.session.username = loggedInUser.username
+        delete ctx.session.csrfToken
+        ctx.cookies.set('csrfToken')
+        ctx.cookies.set('csrfToken.sig')
+        ctx.flash = {
+          index: {
+            username: loggedInUser.username,
+            message: `Hello ${loggedInUser.firstName}`,
+            info: authUser.message,
+            error: null,
+          },
+        }
+        if (ctx.state.isAsyncRequest) {
+          // ctx.type = 'application/json; charset=utf-8'
+          ctx.body = { status: 'success', user: { first: loggedInUser.firstName, email: loggedInUser.email.primary } }
+        } else {
+          ctx.redirect('/')
+        }
+      } catch (e) {
+        error(e)
+        ctx.type = 'application/json; charset=utf-8'
+        ctx.body = { status: 'failed', cause: e }
       }
     }
   }

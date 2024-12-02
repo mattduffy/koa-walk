@@ -3,7 +3,7 @@
  */
 /* eslint-env worker */
 async function login(credentials) {
-  console.log('creds: ', credentials)
+  // console.log('creds: ', credentials)
   const formData = new FormData()
   formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
   formData.append('username', credentials.email)
@@ -41,7 +41,7 @@ onmessage = async (e) => {
           console.log(result)
           postMessage(result)
         } catch (err) {
-          console.log(err)
+          console.log('login failed: ', err)
           postMessage({ err: 'login failed' })
         }
         break
