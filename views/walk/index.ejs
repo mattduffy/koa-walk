@@ -4,13 +4,13 @@
       <form id="loginId" name="login">
         <label for="emailId">Email: </label>
         <br>
-        <input type="email" id="emailId" name="email" size="40" value="<%= sessionUser?.email?.primary %>" placeholder="user@example.com">
+        <input type="email" id="emailId" name="email" size="40" value="<%= sessionUser?.email?.primary %>" placeholder="user@example.com" required>
         <br>
         <label for="passwordId">Password: </label>
         <br>
-        <input type="password" id="passwordId" name="password" size="40" value="">
+        <input type="password" id="passwordId" name="password" size="40" value="" required>
         <br>
-        <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>">
+        <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>" required>
         <input type="submit" id="submitId" name="submit" value="Login">
         <button id="cancelId" name="cancel">Cancel</button>
       </form>
@@ -240,20 +240,37 @@
           console.warn('in: ', e.filename)
           console.warn('at: ', e.lineno)
         }
-        // const auth = walker.postMessage({TASK: 'LOGIN', username: 'matt', password: '9@zzw0rd'})
 
         function doLogin(form) {
           const credentials = {}
           credentials.url = `${origin}/login`
           const csrfTokenHidden = form.elements['csrfToken']
+          if (csrfTokenHidden.value === '' || csrfTokenHidden.value === undefined) {
+            return isRequired(csrfTokenHidden)
+          }
           credentials.csrfTokenHidden = csrfTokenHidden.value
           const email = form.elements['email']
+          if (email.value === '' || email.value === undefined) {
+            return isRequired(email)
+          }
           credentials.email = email.value
           const password = form.elements['password']
+          if (password.value === '' || password.value === undefined) {
+            return isRequired(password)
+          }
           credentials.password = password.value
           credentials.jwtAccess = jwtAccess
           credentials.TASK = 'LOGIN'
           console.log('1', credentials)
+          function isRequired(el) {
+            console.log(el) 
+            el.style.border = '1px solid red'
+            el.addEventListener('change', (e) => {
+              e.target.style.border = ''
+              removeEventListener('change', e.target)
+            })
+            return false
+          }
           function success(e) {
             console.log('login success')
             console.log(e)
