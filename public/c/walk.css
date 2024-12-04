@@ -11,9 +11,10 @@ body header {
   height: 8vh;
 }
 
-h1 h2 h3 h4 {
+h1,h2,h3,h4 {
   margin: 0px;
 }
+
 
 a#skipnav {
   position: absolute;
@@ -76,6 +77,10 @@ div#login {
   background-color: white;
   border-radius: .5em;
   padding: .5em 0em .5em .75em;
+}
+
+div#login > div#welcomeId {
+  display: none;
 }
 
 div#app {

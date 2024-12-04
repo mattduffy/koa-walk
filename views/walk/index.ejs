@@ -14,6 +14,10 @@
         <input type="submit" id="submitId" name="submit" value="Login">
         <button id="cancelId" name="cancel">Cancel</button>
       </form>
+      <div id="welcomeId">
+        <h2>Hi, <span data-first=""></span></h2>
+        <a id="logout" href="/logout">Log out</a>
+      </div>
     </div>
     <div id="app" data-tab="app">
       <h3></h3>
@@ -219,15 +223,21 @@
           e.stopPropagation()
           doLogin(document.forms['login'])
         })
+        const logout = document.querySelector('a#logout')
+        logout.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          doLogout()
+        })
         const walker = new Worker('<%= origin %>/j/worker.js', { name: 'walking_app' })
         walker.onmessage = function(e) {
           console.log(e.data)
           switch (e.data.TASK) {
             case 'LOGIN':
-              if (e.data.login === 'failed') {
-                doLogin.failed(e.data)
+              if (e.data.user.status=== 'login failed') {
+                doLogin.failed(e.data.user)
               } else {
-                doLogin.success(e.data)
+                doLogin.success(e.data.user)
               }
               break
             default:
@@ -240,7 +250,9 @@
           console.warn('in: ', e.filename)
           console.warn('at: ', e.lineno)
         }
-
+        function doLogout() {
+          walker.postMessage({ TASK: 'LOGOUT' })
+        }
         function doLogin(form) {
           const credentials = {}
           credentials.url = `${origin}/login`
@@ -274,9 +286,25 @@
           function success(e) {
             console.log('login success')
             console.log(e)
+            const spans = document.querySelectorAll('span[data-first]')
+            spans.forEach((span) => {
+              console.log(span)
+              span.dataset.first = e.user.first
+              span.innerText = e.user.first
+            })
+            toggleTab('login')
+            form.style.display = 'none'
+            const welcome = document.querySelector('div#welcomeId')
+            welcome.style.display = 'block'
           }
           doLogin.success = success
           function failed(e) {
+            if (e?.error?.match(/wrong password/i)) {
+              form.elements.password.style.border = '1px solid red'
+            }
+            if (e?.info?.match(/no user found with email/i)) {
+              form.elements.email.style.border = '1px solid red'
+            }
             console.log('login failed')
             console.log(e)
           }
