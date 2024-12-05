@@ -234,11 +234,14 @@
           console.log(e.data)
           switch (e.data.TASK) {
             case 'LOGIN':
-              if (e.data.user.status=== 'login failed') {
+              if (e.data.user.status === 'login failed') {
                 doLogin.failed(e.data.user)
               } else {
                 doLogin.success(e.data.user)
               }
+              break
+            case 'LOGOUT':
+              doLogout.finish(e.data)
               break
             default:
               console.log(`${e.data}`)
@@ -251,7 +254,24 @@
           console.warn('at: ', e.lineno)
         }
         function doLogout() {
-          walker.postMessage({ TASK: 'LOGOUT' })
+          const form = document.forms['login']
+          form.elements.password.value = ''
+          form.elements.email.value = ''
+          walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
+          function finish(res) {
+            console.log('logout response: ', res)
+            const spans = document.querySelectorAll('span[data-first]')
+            spans.forEach((span) => {
+              console.log(span)
+              span.dataset.first = ''
+              span.innerText = ''
+            })
+            toggleTab('login')
+            form.style.display = 'block'
+            const welcome = document.querySelector('div#welcomeId')
+            welcome.style.display = 'none'
+          }
+          doLogout.finish = finish
         }
         function doLogin(form) {
           const credentials = {}

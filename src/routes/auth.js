@@ -126,7 +126,7 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
 })
 
 router.get('getLogout', '/logout', async (ctx) => {
-  const log = authLog.extend('logout')
+  const log = authLog.extend('logout-get')
   // const error = authError.extend('logout')
   if (ctx.state.isAuthenticated) {
     log('logging out')

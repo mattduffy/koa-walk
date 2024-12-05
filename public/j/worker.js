@@ -30,6 +30,27 @@ async function login(credentials) {
   return { TASK: 'LOGIN', user }
 }
 
+async function logout(data) {
+  const opts = {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${data.jwtAccess}`,
+      'X-ASYNCREQUEST': true,
+    },
+  }
+  const request = new Request(data.url, opts)
+  let response
+  let json
+  try {
+    response = await fetch(request)
+    json = await response.json()
+  } catch (e) {
+    return { TASK: 'LOGOUT', logout: 'failed', cause: e }
+  }
+  return { TASK: 'LOGOUT', response: json }
+}
+
 onmessage = async (e) => {
   console.log(self.name)
   console.log('2', e.data)
@@ -42,7 +63,17 @@ onmessage = async (e) => {
           postMessage(result)
         } catch (err) {
           console.log('login failed: ', err)
-          postMessage({ err: 'login failed' })
+          postMessage({ err: 'login failed', cause: err })
+        }
+        break
+      case 'LOGOUT':
+        try {
+          const result = await logout(e.data)
+          console.log(result)
+          postMessage(result)
+        } catch (err) {
+          console.log('logout failed: ', err)
+          postMessage({ err: 'logout failed', cause: err })
         }
         break
       case 'START_WALK':
@@ -69,8 +100,4 @@ onmessage = async (e) => {
   }
 }
 
-// onerror = (error) => {
-//   console.warn('oops')
-//   console.warn(error)
-// }
 postMessage('Take a walk.')
