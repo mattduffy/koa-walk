@@ -350,6 +350,7 @@ async function logRequest(ctx, next) {
               logEntry[`geo_${i}`] = geo
               geos.push(geo)
               logg('Request ip geo:     %o', geo)
+              // ctx.session.ip = ctx.request.ips
             })
           } else {
             const city = geoIPCity.city(ctx.request.ip)
@@ -363,6 +364,7 @@ async function logRequest(ctx, next) {
             logEntry.geo = geo
             geos.push(geo)
             logg('Request ip geo:     %O', geo)
+            // ctx.session.ip = ctx.request.ip
           }
         } catch (e) {
           err(e.message)
