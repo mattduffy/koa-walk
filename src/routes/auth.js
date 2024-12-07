@@ -10,7 +10,12 @@ import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { Users } from '../models/users.js'
-import { doTokensMatch, processFormData, hasFlash } from './middlewares.js'
+import {
+  addIpToSession,
+  doTokensMatch,
+  processFormData,
+  hasFlash,
+} from './middlewares.js'
 
 const authLog = _log.extend('auth')
 const authError = _error.extend('auth')

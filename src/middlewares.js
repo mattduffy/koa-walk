@@ -75,7 +75,9 @@ export async function checkServerJWKs(ctx, next) {
 export async function getSessionUser(ctx, next) {
   const log = middlewareLog.extend('getSessionUser')
   const error = middlewareLog.extend('getSessionUser')
+  log('checking for session id')
   if (ctx.session?.id) {
+    log(`session id found: ${ctx.session.id}`)
     try {
       log(`restoring session user: ${ctx.session.id}`)
       log(`requested url: ${ctx.request.originalUrl}`)
@@ -87,6 +89,8 @@ export async function getSessionUser(ctx, next) {
         ctx.state.sessionUser = user
         ctx.state.isAuthenticated = true
       } else {
+        log(`no session user restored for session id: ${ctx.session.id}`)
+        log(user)
         ctx.state.isAuthenticated = false
         ctx.state.sessionUser = null
       }
@@ -97,6 +101,8 @@ export async function getSessionUser(ctx, next) {
       ctx.throw(500, 'Error while reconstituting the session.', e)
     }
     log(`ctx.state.isAuthenticated: ${ctx.state.isAuthenticated}`)
+  } else {
+    log('no session id found')
   }
   try {
     await next()

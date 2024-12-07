@@ -11,6 +11,12 @@ import { ulid } from 'ulid'
 // import { Users } from '../models/users.js'
 import { _log, _error } from '../utils/logging.js'
 // import { redis } from '../daos/impl/redis/redis-client.js'
+import {
+  addIpToSession,
+  // doTokensMatch,
+  // processFormData,
+  hasFlash,
+} from './middlewares.js'
 
 const walkLog = _log.extend('walk')
 const walkError = _error.extend('walk')
@@ -20,26 +26,14 @@ function sanitize(param) {
   return param
 }
 const router = new Router()
-async function hasFlash(ctx, next) {
-  const log = walkLog.extend('hasFlash')
-  const error = walkError.extend('hasFlash')
-  if (ctx.flash) {
-    log('ctx.flash is present: %o', ctx.flash)
-  } else {
-    error('ctx.flash is missing.')
-  }
-  await next()
-}
 
-router.get('index', '/', hasFlash, async (ctx) => {
+router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   const log = walkLog.extend('index')
-  // const error = walkError.extend('index')
+  const error = walkError.extend('index')
   log('inside walk router: /')
   ctx.status = 200
   const csrfToken = ulid()
   ctx.session.csrfToken = csrfToken
-  log('ctx.state.logEntry: ', ctx.state.logEntry)
-  ctx.session.ip = ctx.state.logEntry
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
   log('sessionUser: ', ctx.state?.sessionUser?.username)
   log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
