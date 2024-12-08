@@ -95,6 +95,7 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
       await db.collection('loginAttempts').insertOne(doc)
       log('successful user login')
       authUser.user.sessionId = sessionId
+      const csrfToken = ulid()
       let loggedInUser
       try {
         loggedInUser = await authUser.user.update()
@@ -104,8 +105,8 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
         ctx.session.id = loggedInUser.id
         ctx.session.jwts = loggedInUser.jwts
         ctx.session.username = loggedInUser.username
-        delete ctx.session.csrfToken
-        ctx.cookies.set('csrfToken')
+        ctx.session.csrfToken = csrfToken
+        ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
         ctx.cookies.set('csrfToken.sig')
         ctx.flash = {
           index: {
@@ -116,15 +117,15 @@ router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
           },
         }
         if (ctx.state.isAsyncRequest) {
-          // ctx.type = 'application/json; charset=utf-8'
-          ctx.body = { status: 'success', user: { first: loggedInUser.firstName, email: loggedInUser.email.primary } }
+          ctx.type = 'application/json; charset=utf-8'
+          ctx.body = { status: 'success', user: { first: loggedInUser.firstName, email: loggedInUser.email.primary, csrfToken } }
         } else {
           ctx.redirect('/')
         }
       } catch (e) {
         error(e)
         ctx.type = 'application/json; charset=utf-8'
-        ctx.body = { status: 'failed', cause: e }
+        ctx.body = { status: 'failed', cause: e, csrfToken }
       }
     }
   }

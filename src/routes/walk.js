@@ -23,13 +23,14 @@ const walkError = _error.extend('walk')
 /* eslint-disable-next-line no-unused-vars */
 function sanitize(param) {
   // fill in with some effective input scubbing logic
+  if (!param) walkError('missing param')
   return param
 }
 const router = new Router()
 
 router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   const log = walkLog.extend('index')
-  const error = walkError.extend('index')
+  // const error = walkError.extend('index')
   log('inside walk router: /')
   ctx.status = 200
   const csrfToken = ulid()

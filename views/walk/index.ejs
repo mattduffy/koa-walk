@@ -15,7 +15,7 @@
         <button id="cancelId" name="cancel">Cancel</button>
       </form>
       <div id="welcomeId">
-        <h2>Hi, <span data-first=""></span></h2>
+        <h2>Hi, <span data-first=""><%= sessionUser?.firstName %></span></h2>
         <a id="logout" href="/logout">Log out</a>
       </div>
     </div>
@@ -32,6 +32,7 @@
     data-initial-token=""
   ></script>
   <script nonce="<%= nonce %>" type="module">
+    window.csrfToken = '<%= csrfToken %>'
     const accuracy = 30 // meters
     const accuracyMargin = 5 // meters
     let lowAccuracy = false
@@ -216,6 +217,7 @@
          
       if (window.Worker) {
         console.log('Worker <=> Walker')
+        const logged = <%= isAuthenticated %>
         const loginForm = document.forms['login']
         const login = loginForm.elements.submit
         login.addEventListener('click', (e) => {
@@ -223,6 +225,11 @@
           e.stopPropagation()
           doLogin(document.forms['login'])
         })
+        const welcomeDiv = document.querySelector('div#welcomeId')
+        if (logged) {
+          welcomeDiv.style.display = 'block'
+          loginForm.style.display = 'none'
+        }
         const logout = document.querySelector('a#logout')
         logout.addEventListener('click', (e) => {
           e.preventDefault()
