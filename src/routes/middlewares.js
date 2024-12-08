@@ -10,13 +10,14 @@ import { _log, _error } from '../utils/logging.js'
 
 export async function addIpToSession(ctx, next) {
   const log = _log.extend('addIpToSession')
-  const err = _error('addIpToSession')
+  const err = _error.extend('addIpToSession')
   log('adding logEntry IP to session: ', ctx.state.logEntry)
   ctx.session.ip = ctx.state.logEntry
   try {
     await next()
   } catch (e) {
     err('failed after adding client ip to session.')
+    err(e)
   }
 }
 
