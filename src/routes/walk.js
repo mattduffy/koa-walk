@@ -38,13 +38,14 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
   log('sessionUser: ', ctx.state?.sessionUser?.username)
   log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
+  log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
   const locals = {
     csrfToken,
     sessionUser: ctx.state.sessionUser,
     body: ctx.body,
     flash: ctx.flash?.index ?? {},
     title: `${ctx.app.site}: Walk`,
-    isAuthenticated: ctx.state.isAuthenticated,
+    isAuthenticated: ctx.state.isAuthenticated ?? false,
   }
   await ctx.render('index', locals)
 })
