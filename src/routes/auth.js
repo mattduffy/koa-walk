@@ -89,6 +89,7 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
           error: authUser.error,
         }
       } else {
+        error('unsuccessful logoin attempt - not an async request.')
         ctx.redirect('/login')
       }
     } else if (authUser) {
@@ -120,6 +121,7 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
           ctx.type = 'application/json; charset=utf-8'
           ctx.body = { status: 'success', user: { first: loggedInUser.firstName, email: loggedInUser.email.primary, csrfToken } }
         } else {
+          error('successful login - not async request?')
           ctx.redirect('/')
         }
       } catch (e) {
@@ -128,6 +130,9 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
         ctx.body = { status: 'failed', cause: e, csrfToken }
       }
     }
+  } else {
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = { status: 'token mismatch', user: null, error: 'token mismatch' }
   }
 })
 
@@ -140,10 +145,11 @@ router.get('getLogout', '/logout', async (ctx) => {
     ctx.session = null
   }
   ctx.state.isAuthenticated = false
-  ctx.cookies.set('csrfToken')
+  const csrfToken = ulid()
+  ctx.cookies.set('csrfToken', csrfToken)
   ctx.cookies.set('csrfToken.sig')
   if (ctx.state.isAsyncRequest) {
-    ctx.body = { status: 'loggedOut' }
+    ctx.body = { status: 'loggedOut', user: { csrfToken } }
   } else {
     ctx.redirect('/')
   }
