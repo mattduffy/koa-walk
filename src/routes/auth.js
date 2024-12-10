@@ -50,7 +50,7 @@ router.get('getLogin', '/login', async (ctx, next) => {
   await ctx.render('login', locals)
 })
 
-router.post('postLogin', '/login', hasFlash, processFormData, async (ctx) => {
+router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, async (ctx) => {
   const log = authLog.extend('POST-login')
   const error = authError.extend('POST-login')
   log(ctx.request.body)
