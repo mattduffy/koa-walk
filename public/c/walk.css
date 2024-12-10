@@ -50,6 +50,7 @@ span.userpng {
   background-color: palegoldenrod;
   border-radius: .5em;
   flex-grow: 1;
+  cursor: pointer;
 }
 
 div#map {
