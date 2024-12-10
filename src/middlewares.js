@@ -302,8 +302,8 @@ export function httpMethodOverride(options = {}) {
 }
 
 export async function errors(ctx, next) {
-  const log = middlewareLog.extend('errorHandler')
-  const error = middlewareError.extend('errorHandler')
+  const log = middlewareLog.extend('errors')
+  const error = middlewareError.extend('errors')
   try {
     log('error-handler pre-next')
     await next()
@@ -380,24 +380,33 @@ export async function errors(ctx, next) {
   }
   error(`last chance check of ctx.status code: ${ctx.status}`)
   if (ctx.status >= 400) {
-    ctx.response.type = 'html'
-    const locals = {
-      title: ctx.response.status,
-      sessionUser: ctx.state?.sessionUser ?? {},
-      isAuthenticated: ctx.state.isAuthenticated,
-      errors: ctx.flash?.errors ?? {},
-      status: ctx.response.status,
-      message: ctx.response.message,
+    if (ctx.state.isAsyncRequest) {
+      const user = { status: 'login failed' }
+      log('async login request, failed')
+      log(user)
+      ctx.type = 'application/json; charset=utf-8'
+      ctx.status = ctx.response.status
+      ctx.body = { user, status: ctx.response.status, message: ctx.response.message }
+    } else {
+      const locals = {
+        title: ctx.response.status,
+        sessionUser: ctx.state?.sessionUser ?? {},
+        isAuthenticated: ctx.state.isAuthenticated,
+        errors: ctx.flash?.errors ?? {},
+        status: ctx.response.status,
+        message: ctx.response.message,
+      }
+      ctx.response.type = 'html'
+      ctx.status = ctx.response.status
+      await ctx.render('errors/error', locals)
     }
-    ctx.status = ctx.response.status
-    await ctx.render('errors/error', locals)
   }
   log('escaped error-handler with no trapped errors')
 }
 
 export async function errorHandlers(ctx, next) {
-  const log = middlewareLog.extend('errorHandler')
-  const error = middlewareError.extend('errorHandler')
+  const log = middlewareLog.extend('errorHandlers')
+  const error = middlewareError.extend('errorHandlers')
   log()
   try {
     await next()
