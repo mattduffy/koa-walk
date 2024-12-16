@@ -24,341 +24,350 @@
       <p></p>
     </div>
   </div>
-  <script nonce=<%= nonce %>
-    src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
-    crossorigin async
-    data-callback="initMapKit"
-    data-libraries="full-map"
-    data-initial-token=""
-  ></script>
-  <script nonce="<%= nonce %>" type="module">
-    window.csrfToken = '<%= csrfToken %>'
-    const accuracy = 30 // meters
-    const accuracyMargin = 5 // meters
-    let lowAccuracy = false
-    const origin = '<%= origin %>'
-    const jwtAccess = '<%= searchJwtAccess %>'
-    let map
-    const app = document.querySelector('div#app')
-    async function setupMapKitJs() {
-      const tokenOpts = {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${jwtAccess}`,
-        },
-      }
-      const request = new Request(`${origin}/mapkit/getToken`, tokenOpts)
-      const response = await fetch(request)
-      let tokenID
-      if (response.headers.get('content-type').includes("application/json")) {
-        const x = await response.json()
-        tokenID = x.tokenID
-        console.log(`mapkit token: ${tokenID}`)
-      } else {
-        console.info('failed to get mapkit token')
-        console.log(await response.text())
-      }
-      if (!window.mapkit || window.mapkit.loadedLibraries.length === 0) {
-        // mapkit.core.js of the libraries are not loaded yet.
-        // Set up the callback and wait for it to be called.
-        await new Promise(resolve => { window.initMapKit = resolve })
-        // Clean up
-        delete window.initMapKit
-      }
-      mapkit.init({
-        authorizationCallback: function(done) {
-          done(tokenID)
-        },
-      })
+</div>
+<script nonce="<%= nonce %>" type="module">
+  const dMap = document.querySelector('div#map')
+  const dHeader = document.querySelector('header')
+  let mapHeight = window.innerHeight - dHeader.clientHeight
+  dMap.style.height = `${mapHeight}px`
+  dMap.style.maxHeight = `${mapHeight}px`
+</script>
+<script nonce="<%= nonce %>"
+  src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
+  crossorigin async
+  data-callback="initMapKit"
+  data-libraries="full-map"
+  data-initial-token="">
+</script>
+<script nonce="<%= nonce %>" type="module">
+  window.csrfToken = '<%= csrfToken %>'
+  const accuracy = 30 // meters
+  const accuracyMargin = 5 // meters
+  let lowAccuracy = false
+  const origin = '<%= origin %>'
+  const jwtAccess = '<%= searchJwtAccess %>'
+  let map
+  const app = document.querySelector('div#app')
+  async function setupMapKitJs() {
+    const tokenOpts = {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${jwtAccess}`,
+      },
     }
-    async function main() {
-      await setupMapKitJs()
-      let lat = 39.833333 
-      let lon = -98.583333
-      let position
-      const opts = {
-        mapType: mapkit.Map.MapTypes.Hybrid,
-        loadPriority: mapkit.Map.LoadPriorities.PointsOfInterest,
-        visibleMapRect: new mapkit.MapRect(0, 0, 1, 1),
-        isZoomEnabled: true,
-        showsCompass: mapkit.FeatureVisibility.Visible,
-        showsScale: mapkit.FeatureVisibility.Visible,
-        showsZoomControl: true,
-        cameraDistance: 100,
-        showsPointsOfInterest: true,
-        isRotationEnabled: true,
-        isScrollEnabled: true,
-        showsMapTypeControl: false,
+    const request = new Request(`${origin}/mapkit/getToken`, tokenOpts)
+    const response = await fetch(request)
+    let tokenID
+    if (response.headers.get('content-type').includes("application/json")) {
+      const x = await response.json()
+      tokenID = x.tokenID
+      console.log(`mapkit token: ${tokenID}`)
+    } else {
+      console.info('failed to get mapkit token')
+      console.log(await response.text())
+    }
+    if (!window.mapkit || window.mapkit.loadedLibraries.length === 0) {
+      // mapkit.core.js of the libraries are not loaded yet.
+      // Set up the callback and wait for it to be called.
+      await new Promise(resolve => { window.initMapKit = resolve })
+      // Clean up
+      delete window.initMapKit
+    }
+    mapkit.init({
+      authorizationCallback: function(done) {
+        done(tokenID)
+      },
+    })
+  }
+  async function main() {
+    await setupMapKitJs()
+    let lat = 39.833333 
+    let lon = -98.583333
+    let position
+    const opts = {
+      mapType: mapkit.Map.MapTypes.Hybrid,
+      loadPriority: mapkit.Map.LoadPriorities.PointsOfInterest,
+      visibleMapRect: new mapkit.MapRect(0, 0, 1, 1),
+      isZoomEnabled: true,
+      showsCompass: mapkit.FeatureVisibility.Visible,
+      showsScale: mapkit.FeatureVisibility.Visible,
+      showsZoomControl: true,
+      cameraDistance: 100,
+      showsPointsOfInterest: true,
+      isRotationEnabled: true,
+      isScrollEnabled: true,
+      showsMapTypeControl: false,
+    }
+    if ("geolocation" in navigator) {
+      console.log('Can we get a location fix?') 
+      const geoOpts = {
+        enableHighAccuracy: true,
+        maximumAge: 1000 * 10 * 3,
       }
-      if ("geolocation" in navigator) {
-        console.log('Can we get a location fix?') 
-        const geoOpts = {
-          enableHighAccuracy: true,
-          maximumAge: 1000 * 10 * 3,
-        }
-        console.log('geo options: ', geoOpts)
-        try {
-          position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition((geo) => {
-                if (geo.coords.accuracy > accuracy) {
-                  console.info(`position.coords.accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
-                  lowAccuracy = true
-                }
-                lat = geo.coords.latitude
-                lon = geo.coords.longitude
-                resolve(geo)
-              },
-              (err) => {
-                console.log(err)
-                console.info(`code: ${err.code}, msg: ${err.message}`)
-                reject(err)
+      console.log('geo options: ', geoOpts)
+      try {
+        position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition((geo) => {
+              if (geo.coords.accuracy > accuracy) {
+                console.info(`position.coords.accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
+                lowAccuracy = true
               }
-              ,geoOpts
-            )
-          })
-          window.p = position
-        } catch (e) {
-          console.warn('failed to get geoLocation for some reason')
-          console.warn(e)
-          console.log('no geo position available')
-          console.log('using generic lat: ', lat, ' lon: ', lon, ' to initialize the map.')
-          await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
-          lowAccuracy = true
-        }
-      } else {
-        console.log('geolocation not available, no way of knowing.')
-        console.log(`using ${lat} ${lon} instead`)
-        console.log('geo error: ', position)
-        await noPositionCantWalk({ lat, lon })
-      }
-      console.log('geolocation: ', position)
-      console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
-      if (position && !lowAccuracy) {
-        console.log('show user location')
-        console.log(`position accuracy: ${position.coords.accuracy}`)
-        await goodAccuracyCanWalk(opts, position)
-      } else if (position.coords.accuracy > accuracy && position.coords.accuracy <= accuracy + accuracyMargin) {
-        console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
-        console.info('can\'t track movement accurately.')
-        console.info(opts)
-        await lowAccuracyPositionCantWalk(opts, position)
-      } else if (lowAccuracy && position) {
-        console.info(`really low geoLocation accuracy: ${position.coords.accuracy}`)
-        console.info('can\'t track movement accurately.')
-        console.log(opts)
-        await lowAccuracyPositionCantWalk(opts, position)
-      } else {
+              lat = geo.coords.latitude
+              lon = geo.coords.longitude
+              resolve(geo)
+            },
+            (err) => {
+              console.log(err)
+              console.info(`code: ${err.code}, msg: ${err.message}`)
+              reject(err)
+            }
+            ,geoOpts
+          )
+        })
+        window.p = position
+      } catch (e) {
+        console.warn('failed to get geoLocation for some reason')
+        console.warn(e)
         console.log('no geo position available')
-        console.log('using lat: ', lat, ' lon: ', lon)
+        console.log('using generic lat: ', lat, ' lon: ', lon, ' to initialize the map.')
         await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
         lowAccuracy = true
       }
-      async function goodAccuracyCanWalk(o, g) {
-        console.log(`good accuracy: ${g.coords.accuracy}`)
-        o.showsUserLocation = true
-        o.tracksUserLocation = true
-        o.showsUserLocationControl = true
-        window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
-        window.here = new mapkit.CoordinateRegion(
-          me,
-          new mapkit.CoordinateSpan(0.05, 0.05)
-        )
-        window.map = new mapkit.Map('map', o)
-        window.map.region = here
-        window.map.cameraDistance = 10
-        console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-        window.map.showsUserLocation = true 
-        window.map.setCenterAnimated(me, true)
-        app.style.display = 'block'
-        app.querySelector('h3').textContent = 'Your starting position looks good.'
-        app.querySelector('p').textContent = 'Tap the start button when you are ready.'
-
-      }
-      async function lowAccuracyPositionCantWalk(o, g) {
-        console.log(`low accuracy: ${g.coords.accuracy}`)
-        window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
-        window.here = new mapkit.CoordinateRegion(
-          me,
-          new mapkit.CoordinateSpan(0.05, 0.05)
-        )
-        window.map = new mapkit.Map('map', o)
-        window.map.region = here
-        if (Math.trunc(g.coords.accuracy) > 10 * (accuracy + accuracyMargin)) {
-          console.log('really low accuracy')
-          window.map.cameraDistance = Math.trunc(g.coords.accuracy)
-        } else {
-          window.map.cameraDistance = 10 
-        }
-        window.map.showsUserLocation = true 
-        console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-        window.map.setCenterAnimated(me, true)
-        app.style.display = 'block'
-        app.querySelector('h3').textContent = 'Can\'t get a very accurate GPS position.'
-        app.querySelector('p').textContent = 'Your walk may not be recorded very accurately.'
-      }
-      async function noPositionCantWalk(o, g) {
-        console.log(`no position available: ${g.code}`)
-        window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
-        window.here = new mapkit.CoordinateRegion(
-          me,
-          new mapkit.CoordinateSpan(0.05, 0.05)
-        )
-        window.map = new mapkit.Map('map', o)
-        window.map.region = here
-        window.map.cameraDistance = 2300000
-        console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-        window.map.showsUserLocation = true 
-        window.map.setCenterAnimated(me, true)
-        app.style.display = 'block'
-        app.querySelector('h3').textContent = 'You have no location.'
-        app.querySelector('p').textContent = 'Your walk will not be recorded.'
-      }
-         
-      if (window.Worker) {
-        console.log('Worker <=> Walker')
-        const logged = <%= isAuthenticated %>
-        const loginForm = document.forms['login']
-        const login = loginForm.elements.submit
-        login.addEventListener('click', (e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          doLogin(document.forms['login'])
-        })
-        const welcomeDiv = document.querySelector('div#welcomeId')
-        if (logged) {
-          welcomeDiv.style.display = 'block'
-          loginForm.style.display = 'none'
-        }
-        const logout = document.querySelector('a#logout')
-        logout.addEventListener('click', (e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          doLogout()
-        })
-        const walker = new Worker('<%= origin %>/j/worker.js', { name: 'walking_app' })
-        walker.onmessage = function(e) {
-          console.log(e.data)
-          switch (e.data.TASK) {
-            case 'LOGIN':
-              if (e.data.user.status === 'login failed') {
-                doLogin.failed(e.data.user)
-              } else {
-                doLogin.success(e.data.user)
-              }
-              break
-            case 'LOGOUT':
-              doLogout.finish(e.data)
-              break
-            default:
-              console.log(`${e.data}`)
-          }
-        }
-        walker.onerror = function(e) {
-          e.preventDefault()
-          console.warn('err msg: ', e.message)
-          console.warn('in: ', e.filename)
-          console.warn('at: ', e.lineno)
-        }
-        function doLogout() {
-          const form = document.forms['login']
-          form.elements.password.value = ''
-          form.elements.email.value = ''
-          walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
-          function finish(res) {
-            console.log('logout response: ', res)
-            const spans = document.querySelectorAll('span[data-first]')
-            spans.forEach((span) => {
-              console.log(span)
-              span.dataset.first = ''
-              span.innerText = ''
-            })
-            toggleTab('login')
-            form.style.display = 'block'
-            const welcome = document.querySelector('div#welcomeId')
-            welcome.style.display = 'none'
-          }
-          doLogout.finish = finish
-        }
-        function doLogin(form) {
-          const credentials = {}
-          credentials.url = `${origin}/login`
-          const csrfTokenHidden = form.elements['csrfToken']
-          if (csrfTokenHidden.value === '' || csrfTokenHidden.value === undefined) {
-            return isRequired(csrfTokenHidden)
-          }
-          credentials.csrfTokenHidden = csrfTokenHidden.value
-          const email = form.elements['email']
-          if (email.value === '' || email.value === undefined) {
-            return isRequired(email)
-          }
-          credentials.email = email.value
-          const password = form.elements['password']
-          if (password.value === '' || password.value === undefined) {
-            return isRequired(password)
-          }
-          credentials.password = password.value
-          credentials.jwtAccess = jwtAccess
-          credentials.TASK = 'LOGIN'
-          console.log('1', credentials)
-          function isRequired(el) {
-            console.log(el) 
-            el.style.border = '1px solid red'
-            el.addEventListener('change', (e) => {
-              e.target.style.border = ''
-              removeEventListener('change', e.target)
-            })
-            return false
-          }
-          function success(e) {
-            console.log('login success')
-            console.log(e)
-            const spans = document.querySelectorAll('span[data-first]')
-            spans.forEach((span) => {
-              console.log(span)
-              span.dataset.first = e.user.first
-              span.innerText = e.user.first
-            })
-            toggleTab('login')
-            form.style.display = 'none'
-            const welcome = document.querySelector('div#welcomeId')
-            welcome.style.display = 'block'
-          }
-          doLogin.success = success
-          function failed(e) {
-            if (e?.error?.match(/wrong password/i)) {
-              form.elements.password.style.border = '1px solid red'
-            }
-            if (e?.info?.match(/no user found with email/i)) {
-              form.elements.email.style.border = '1px solid red'
-            }
-            console.log('login failed')
-            console.log(e)
-          }
-          doLogin.failed = failed
-          walker.postMessage(credentials)
-        }
-        walker.postMessage('What should I do?')
-        const tasks = [
-          {TASK: 'START_WALK', msg: 'I am starting a walk'},
-          {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
-          {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
-          {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
-          {TASK: 'GET_WALK', msg: 'Get that previous walk.'},
-          {TASK: 'GET_A_LIFE', msg: 'you heard me'}
-        ]
-        try {
-          tasks.forEach(async (walk) => {
-            // walker.postMessage(walk)
-          })
-        } catch (e) {
-          console.warn(e)
-        }
-      } else {
-        console.log('Not compatible with walking.')
-      }   
+    } else {
+      console.log('geolocation not available, no way of knowing.')
+      console.log(`using ${lat} ${lon} instead`)
+      console.log('geo error: ', position)
+      await noPositionCantWalk({ lat, lon })
     }
-    await main()
-    
-  </script>
-</div>
+    console.log('geolocation: ', position)
+    console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
+    if (position && !lowAccuracy) {
+      console.log('show user location')
+      console.log(`position accuracy: ${position.coords.accuracy}`)
+      await goodAccuracyCanWalk(opts, position)
+    } else if (position.coords.accuracy > accuracy && position.coords.accuracy <= accuracy + accuracyMargin) {
+      console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
+      console.info('can\'t track movement accurately.')
+      console.info(opts)
+      await lowAccuracyPositionCantWalk(opts, position)
+    } else if (lowAccuracy && position) {
+      console.info(`really low geoLocation accuracy: ${position.coords.accuracy}`)
+      console.info('can\'t track movement accurately.')
+      console.log(opts)
+      await lowAccuracyPositionCantWalk(opts, position)
+    } else {
+      console.log('no geo position available')
+      console.log('using lat: ', lat, ' lon: ', lon)
+      await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
+      lowAccuracy = true
+    }
+    async function goodAccuracyCanWalk(o, g) {
+      console.log(`good accuracy: ${g.coords.accuracy}`)
+      o.showsUserLocation = true
+      o.tracksUserLocation = true
+      o.showsUserLocationControl = true
+      window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
+      window.here = new mapkit.CoordinateRegion(
+        me,
+        new mapkit.CoordinateSpan(0.05, 0.05)
+      )
+      window.map = new mapkit.Map('map', o)
+      window.map.region = here
+      window.map.cameraDistance = 10
+      console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+      window.map.showsUserLocation = true 
+      window.map.setCenterAnimated(me, true)
+      app.style.display = 'block'
+      app.querySelector('h3').textContent = 'Your starting position looks good.'
+      app.querySelector('p').textContent = 'Tap the start button when you are ready.'
+
+    }
+    async function lowAccuracyPositionCantWalk(o, g) {
+      console.log(`low accuracy: ${g.coords.accuracy}`)
+      window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
+      window.here = new mapkit.CoordinateRegion(
+        me,
+        new mapkit.CoordinateSpan(0.05, 0.05)
+      )
+      window.map = new mapkit.Map('map', o)
+      window.map.region = here
+      if (Math.trunc(g.coords.accuracy) > 10 * (accuracy + accuracyMargin)) {
+        console.log('really low accuracy')
+        window.map.cameraDistance = Math.trunc(g.coords.accuracy)
+      } else {
+        window.map.cameraDistance = 10 
+      }
+      window.map.showsUserLocation = true 
+      console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+      window.map.setCenterAnimated(me, true)
+      app.style.display = 'block'
+      app.querySelector('h3').textContent = 'Can\'t get a very accurate GPS position.'
+      app.querySelector('p').textContent = 'Your walk may not be recorded very accurately.'
+    }
+    async function noPositionCantWalk(o, g) {
+      console.log(`no position available: ${g.code}`)
+      window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
+      window.here = new mapkit.CoordinateRegion(
+        me,
+        new mapkit.CoordinateSpan(0.05, 0.05)
+      )
+      window.map = new mapkit.Map('map', o)
+      window.map.region = here
+      window.map.cameraDistance = 2300000
+      console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+      window.map.showsUserLocation = true 
+      window.map.setCenterAnimated(me, true)
+      app.style.display = 'block'
+      app.querySelector('h3').textContent = 'You have no location.'
+      app.querySelector('p').textContent = 'Your walk will not be recorded.'
+    }
+       
+    if (window.Worker) {
+      console.log('Worker <=> Walker')
+      const logged = <%= isAuthenticated %>
+      const loginForm = document.forms['login']
+      const login = loginForm.elements.submit
+      login.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        doLogin(document.forms['login'])
+      })
+      const welcomeDiv = document.querySelector('div#welcomeId')
+      if (logged) {
+        welcomeDiv.style.display = 'block'
+        loginForm.style.display = 'none'
+      }
+      const logout = document.querySelector('a#logout')
+      logout.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        doLogout()
+      })
+      const walker = new Worker('<%= origin %>/j/worker.js', { name: 'walking_app' })
+      walker.onmessage = function(e) {
+        console.log(e.data)
+        switch (e.data.TASK) {
+          case 'LOGIN':
+            if (e.data.user.status === 'login failed') {
+              doLogin.failed(e.data.user)
+            } else {
+              doLogin.success(e.data.user)
+            }
+            break
+          case 'LOGOUT':
+            doLogout.finish(e.data)
+            break
+          default:
+            console.log(`${e.data}`)
+        }
+      }
+      walker.onerror = function(e) {
+        e.preventDefault()
+        console.warn('err msg: ', e.message)
+        console.warn('in: ', e.filename)
+        console.warn('at: ', e.lineno)
+      }
+      function doLogout() {
+        const form = document.forms['login']
+        form.elements.password.value = ''
+        form.elements.email.value = ''
+        walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
+        function finish(res) {
+          console.log('logout response: ', res)
+          const spans = document.querySelectorAll('span[data-first]')
+          spans.forEach((span) => {
+            console.log(span)
+            span.dataset.first = ''
+            span.innerText = ''
+          })
+          toggleTab('login')
+          form.style.display = 'block'
+          const welcome = document.querySelector('div#welcomeId')
+          welcome.style.display = 'none'
+          window.csrfToken = res.response.user.csrfToken
+          form.elements.csrfToken.value = res.response.user.csrfToken
+        }
+        doLogout.finish = finish
+      }
+      function doLogin(form) {
+        const credentials = {}
+        credentials.url = `${origin}/login`
+        const csrfTokenHidden = form.elements['csrfToken']
+        if (csrfTokenHidden.value === '' || csrfTokenHidden.value === undefined) {
+          return isRequired(csrfTokenHidden)
+        }
+        credentials.csrfTokenHidden = csrfTokenHidden.value
+        const email = form.elements['email']
+        if (email.value === '' || email.value === undefined) {
+          return isRequired(email)
+        }
+        credentials.email = email.value
+        const password = form.elements['password']
+        if (password.value === '' || password.value === undefined) {
+          return isRequired(password)
+        }
+        credentials.password = password.value
+        credentials.jwtAccess = jwtAccess
+        credentials.TASK = 'LOGIN'
+        console.log('1', credentials)
+        function isRequired(el) {
+          console.log(el) 
+          el.style.border = '1px solid red'
+          el.addEventListener('change', (e) => {
+            e.target.style.border = ''
+            removeEventListener('change', e.target)
+          })
+          return false
+        }
+        function success(e) {
+          console.log('login success')
+          console.log(e)
+          const spans = document.querySelectorAll('span[data-first]')
+          spans.forEach((span) => {
+            console.log(span)
+            span.dataset.first = e.user.first
+            span.innerText = e.user.first
+          })
+          toggleTab('login')
+          form.style.display = 'none'
+          const welcome = document.querySelector('div#welcomeId')
+          welcome.style.display = 'block'
+        }
+        doLogin.success = success
+        function failed(e) {
+          if (e?.error?.match(/wrong password/i)) {
+            form.elements.password.style.border = '1px solid red'
+          }
+          if (e?.info?.match(/no user found with email/i)) {
+            form.elements.email.style.border = '1px solid red'
+          }
+          console.log('login failed')
+          console.log(e)
+        }
+        doLogin.failed = failed
+        walker.postMessage(credentials)
+      }
+      walker.postMessage('What should I do?')
+      const tasks = [
+        {TASK: 'START_WALK', msg: 'I am starting a walk'},
+        {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
+        {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
+        {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
+        {TASK: 'GET_WALK', msg: 'Get that previous walk.'},
+        {TASK: 'GET_A_LIFE', msg: 'you heard me'}
+      ]
+      try {
+        tasks.forEach(async (walk) => {
+          // walker.postMessage(walk)
+        })
+      } catch (e) {
+        console.warn(e)
+      }
+    } else {
+      console.log('Not compatible with walking.')
+    }   
+  }
+  await main()
+  
+</script>

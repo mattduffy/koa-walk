@@ -25,6 +25,7 @@ async function login(credentials) {
     response = await fetch(request)
     user = await response.json()
   } catch (e) {
+    console.log(e)
     return { TASK: 'LOGIN', login: 'failed', cause: e }
   }
   return { TASK: 'LOGIN', user }
@@ -59,17 +60,17 @@ onmessage = async (e) => {
       case 'LOGIN':
         try {
           const result = await login(e.data)
-          console.log(result)
+          console.log('worker: ', result)
           postMessage(result)
         } catch (err) {
-          console.log('login failed: ', err)
+          console.log('worker: login failed: ', err)
           postMessage({ err: 'login failed', cause: err })
         }
         break
       case 'LOGOUT':
         try {
           const result = await logout(e.data)
-          console.log(result)
+          console.log('worker: ', result)
           postMessage(result)
         } catch (err) {
           console.log('logout failed: ', err)
