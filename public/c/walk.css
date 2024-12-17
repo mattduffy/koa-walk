@@ -52,6 +52,36 @@ nav#nav > div {
   justify-content: center;
 }
 
+span.hikingpng {
+  content: url('/i/hiking.png');
+  max-width: 1.5em;
+  padding: 10px 10px 10px 10px;
+  background-color: palegoldenrod;
+  border-radius: .5em;
+  flex-grow: 1;
+  cursor: pointer;
+}
+
+span.listpng {
+  content: url('/i/list.png');
+  max-width: 1.5em;
+  padding: 10px 10px 10px 10px;
+  background-color: palegoldenrod;
+  border-radius: .5em;
+  flex-grow: 1;
+  cursor: pointer;
+}
+
+span.mapspng {
+  content: url('/i/maps.png');
+  max-width: 1.5em;
+  padding: 10px 10px 10px 10px;
+  background-color: palegoldenrod;
+  border-radius: .5em;
+  flex-grow: 1;
+  cursor: pointer;
+}
+
 span.userpng {
   content: url('/i/user.png');
   max-width: 1.5em;
