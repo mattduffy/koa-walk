@@ -123,6 +123,23 @@ div#login > div#welcomeId {
   display: none;
 }
 
+div#list {
+  display: none;
+  width: auto;
+  background-color: white;
+  border-radius: .5em;
+  padding: .25em;
+}
+
+div#list > h3 {
+  margin: 0px;
+  font-size: 1em;
+}
+
+div#list > p, ul {
+  font-size: .75em;
+}
+
 div#app {
   display: none;
   width: auto;
