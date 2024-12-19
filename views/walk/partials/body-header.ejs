@@ -33,7 +33,7 @@
       })
       function toggleButtons(b) {
         document.querySelectorAll(`span[data-action]`).forEach((button) => {
-          console.log(button)
+          // console.log(button)
           if (button.dataset.action === b) {
             button.classList.toggle('outline')
             button.classList.toggle('hilite')
@@ -44,10 +44,7 @@
         })
       }
       function showLogin(o) {
-        console.log(o)
-        // const button = document.querySelector('span[data-action="showLogin"]')
-        // button.classList.toggle('outline')
-        // button.classList.toggle('hilite')
+        // console.log(o)
         toggleButtons(o)
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
@@ -65,10 +62,7 @@
         })
       }
       function showList(o) {
-        console.log(o)
-        // const button = document.querySelector('span[data-action="showList"]')
-        // button.classList.toggle('outline')
-        // button.classList.toggle('hilite')
+        // console.log(o)
         toggleButtons(o)
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
@@ -76,10 +70,7 @@
         toggleTab(list.dataset.tab)
       }
       function showNew(o) {
-        console.log(o)
-        // const button = document.querySelector('span[data-action="showNew"]')
-        // button.classList.toggle('outline')
-        // button.classList.toggle('hilite')
+        // console.log(o)
         toggleButtons(o)
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
@@ -87,10 +78,7 @@
         toggleTab(newTab.dataset.tab)
       }
       function showMaps(o) {
-        console.log(o)
-        // const button = document.querySelector('span[data-action="showMaps"]')
-        // button.classList.toggle('outline')
-        // button.classList.toggle('hilite')
+        // console.log(o)
         toggleButtons(o)
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
@@ -114,8 +102,8 @@
       function toggleTab(t) {
         const app = document.querySelector('div#app')
         const tab = document.querySelector(`div[data-tab="${t}"]`)
-        console.log(tab) 
-        console.log('t: ', t, 'style: ', tab.style.display)
+        // console.log(tab) 
+        // console.log('t: ', t, 'style: ', tab.style.display)
         switch(t) {
           case 'login':
             if (displayed(tab)) {
@@ -145,12 +133,12 @@
             }
             break
           case 'maps':
-            if (displayed(tab)) {
+            if (displayed(app)) {
               reset()
-              show(app)
+              // show(app)
             } else {
               reset()
-              show(tab)
+              show(app)
             }
             break
           default:
