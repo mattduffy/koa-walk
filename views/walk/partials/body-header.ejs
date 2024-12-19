@@ -3,16 +3,16 @@
   <div id="header">
     <nav id="nav" aria-label="Main">
       <div>
-        <span data-action="showLogin" class="userpng"></span>
+        <span data-action="showLogin" class="userpng outline"></span>
         <span data-first="" style="margin-left: 5px;">
           <% if (isAuthenticated) { %>
           <%= sessionUser?.firstName %>
           <% } %>
         </span>
       </div>
-      <div><span data-action="showList" class="listpng"></span></div>
-      <div><span data-action="showNew" class="hikingpng"></span></div>
-      <div><span data-action="showMaps" class="mapspng"></span></div>
+      <div><span data-action="showList" class="listpng outline"></span></div>
+      <div><span data-action="showNew" class="hikingpng outline"></span></div>
+      <div><span data-action="showMaps" class="mapspng outline"></span></div>
     </nav>
     <script nonce="<%= nonce %>">
       document.addEventListener("DOMContentLoaded", (event) => {
@@ -31,12 +31,26 @@
           }
         })
       })
-
+      function toggleButtons(b) {
+        document.querySelectorAll(`span[data-action]`).forEach((button) => {
+          console.log(button)
+          if (button.dataset.action === b) {
+            button.classList.toggle('outline')
+            button.classList.toggle('hilite')
+          } else {
+            button.classList.remove('hilite') 
+            button.classList.add('outline')
+          }
+        })
+      }
       function showLogin(o) {
         console.log(o)
+        // const button = document.querySelector('span[data-action="showLogin"]')
+        // button.classList.toggle('outline')
+        // button.classList.toggle('hilite')
+        toggleButtons(o)
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
-        if (app.style.display !== 'none') app.style.display = 'none'
         const login = container.querySelector('div#login')
         toggleTab(login.dataset.tab)
         const form = login.children[0]
@@ -52,6 +66,10 @@
       }
       function showList(o) {
         console.log(o)
+        // const button = document.querySelector('span[data-action="showList"]')
+        // button.classList.toggle('outline')
+        // button.classList.toggle('hilite')
+        toggleButtons(o)
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
         const list = container.querySelector('div#list')
@@ -59,6 +77,10 @@
       }
       function showNew(o) {
         console.log(o)
+        // const button = document.querySelector('span[data-action="showNew"]')
+        // button.classList.toggle('outline')
+        // button.classList.toggle('hilite')
+        toggleButtons(o)
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
         const newTab = container.querySelector('div#new')
@@ -66,6 +88,10 @@
       }
       function showMaps(o) {
         console.log(o)
+        // const button = document.querySelector('span[data-action="showMaps"]')
+        // button.classList.toggle('outline')
+        // button.classList.toggle('hilite')
+        toggleButtons(o)
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
         const newTab = container.querySelector('div#maps')
