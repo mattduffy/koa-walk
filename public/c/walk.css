@@ -103,7 +103,7 @@ div#map {
 
 div#container {
   position: absolute;
-  top: 10vh;
+  top: 13vh;
   left: 4.5vw;
   z-index: 100;
   width: 90vw;
@@ -137,6 +137,40 @@ div#list > h3 {
 }
 
 div#list > p, ul {
+  font-size: .75em;
+}
+
+div#new {
+  display: none;
+  width: auto;
+  background-color: white;
+  border-radius: .5em;
+  padding: .25em;
+}
+
+div#new > h3 {
+  margin: 0px;
+  font-size: 1em;
+}
+
+div#new > p, ul {
+  font-size: .75em;
+}
+
+div#maps {
+  display: none;
+  width: auto;
+  background-color: white;
+  border-radius: .5em;
+  padding: .25em;
+}
+
+div#maps > h3 {
+  margin: 0px;
+  font-size: 1em;
+}
+
+div#new > p, ul {
   font-size: .75em;
 }
 
