@@ -31,18 +31,6 @@
           }
         })
       })
-      function toggleButtons(b) {
-        document.querySelectorAll(`span[data-action]`).forEach((button) => {
-          // console.log(button)
-          if (button.dataset.action === b) {
-            button.classList.toggle('outline')
-            button.classList.toggle('hilite')
-          } else {
-            button.classList.remove('hilite') 
-            button.classList.add('outline')
-          }
-        })
-      }
       function showLogin(o) {
         // console.log(o)
         toggleButtons(o)
@@ -79,11 +67,10 @@
       }
       function showMaps(o) {
         // console.log(o)
+        const app = document.querySelector('div#app')
+        const maps  = document.querySelector('div#maps')
         toggleButtons(o)
-        const container = document.querySelector('div#container')
-        const app = container.querySelector('div#app')
-        const newTab = container.querySelector('div#maps')
-        toggleTab(newTab.dataset.tab)
+        toggleTab(maps.dataset.tab)
       }
       function hide(t) {
         t.style.display = 'none'
@@ -96,7 +83,32 @@
       }
       function reset(t) {
         document.querySelectorAll('[data-tab]').forEach((tab) => {
-          tab.style.display = 'none'
+          if (tab.dataset.tab === t) {
+            console.log(t)
+          } else {
+            hide(tab)
+          }
+        })
+      }
+      function toggleButtons(b) {
+        if (b === 'showMaps') {
+          const button = document.querySelector(`span[data-action=${b}]`)
+          console.log(`__showMaps__ ${(button.classList.contains('hilite')) ? 'hilite' : 'outline'}`)
+          button.classList.toggle('hilite')
+          button.classList.toggle('outline')
+        }
+        document.querySelectorAll(`span[data-action]`).forEach((button) => {
+          if (button.dataset.action !== 'showMaps') {
+            if (button.dataset.action === b) {
+              console.log(b, button)
+              button.classList.toggle('outline')
+              button.classList.toggle('hilite')
+            } else {
+              console.log(button, b)
+              button.classList.remove('hilite') 
+              button.classList.add('outline')
+            }
+          }
         })
       }
       function toggleTab(t) {
@@ -133,7 +145,10 @@
             }
             break
           case 'maps':
-            if (displayed(app)) {
+            if (displayed(app) ||
+                displayed(document.querySelector('div#login')) ||
+                displayed(document.querySelector('div#list')) ||
+                displayed(document.querySelector('div#new'))) {
               reset()
               // show(app)
             } else {
