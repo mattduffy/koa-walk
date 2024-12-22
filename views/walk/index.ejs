@@ -39,9 +39,17 @@
 <script nonce="<%= nonce %>" type="module">
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
-  let mapHeight = window.innerHeight - dHeader.clientHeight
-  dMap.style.height = `${mapHeight}px`
-  dMap.style.maxHeight = `${mapHeight}px`
+  function fitMap() {
+    let mapHeight = window.innerHeight - dHeader.clientHeight
+    dMap.style.height = `${mapHeight}px`
+    dMap.style.maxHeight = `${mapHeight}px`
+  }
+  window.addEventListener('resize', (e) => {
+    const h = window.innerHeight
+    const w = window.innerWidth
+    fitMap()
+  })
+  fitMap()
 </script>
 <script nonce="<%= nonce %>"
   src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
