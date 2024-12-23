@@ -277,6 +277,9 @@
           case 'LOGOUT':
             doLogout.finish(e.data)
             break
+          case 'GET_TASK':
+            getList,finish(e.data)
+            break
           default:
             console.log(`${e.data}`)
         }
@@ -287,27 +290,19 @@
         console.warn('in: ', e.filename)
         console.warn('at: ', e.lineno)
       }
-      function doLogout() {
-        const form = document.forms['login']
-        form.elements.password.value = ''
-        form.elements.email.value = ''
-        walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
-        function finish(res) {
-          console.log('logout response: ', res)
-          const spans = document.querySelectorAll('span[data-first]')
-          spans.forEach((span) => {
-            console.log(span)
-            span.dataset.first = ''
-            span.innerText = ''
-          })
-          toggleTab('login')
-          form.style.display = 'block'
-          const welcome = document.querySelector('div#welcomeId')
-          welcome.style.display = 'none'
-          window.csrfToken = res.response.user.csrfToken
-          form.elements.csrfToken.value = res.response.user.csrfToken
+      async function getList() {
+        const credentials = {}
+        credentials.url = `${origin}/getList`
+        credentials.csrfTokenHidden = window.csrfToken
+        credntials.jwtAccess = jwtAccess
+        credentials.TASK = 'GET_LIST'
+        console.log(credentials)
+        function finish(e) {
+          console.log('getList.finish')
+          console.log(e)
         }
-        doLogout.finish = finish
+        getList.finish = finish
+        walker.postMessage(credentials)
       }
       function doLogin(form) {
         const credentials = {}
@@ -366,6 +361,28 @@
         }
         doLogin.failed = failed
         walker.postMessage(credentials)
+      }
+      function doLogout() {
+        const form = document.forms['login']
+        form.elements.password.value = ''
+        form.elements.email.value = ''
+        walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
+        function finish(res) {
+          console.log('logout response: ', res)
+          const spans = document.querySelectorAll('span[data-first]')
+          spans.forEach((span) => {
+            console.log(span)
+            span.dataset.first = ''
+            span.innerText = ''
+          })
+          toggleTab('login')
+          form.style.display = 'block'
+          const welcome = document.querySelector('div#welcomeId')
+          welcome.style.display = 'none'
+          window.csrfToken = res.response.user.csrfToken
+          form.elements.csrfToken.value = res.response.user.csrfToken
+        }
+        doLogout.finish = finish
       }
       walker.postMessage('What should I do?')
       const tasks = [

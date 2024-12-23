@@ -2,6 +2,46 @@
  * file: public/j/worker.js
  */
 /* eslint-env worker */
+let isLoggedIn = false
+let user = null
+async function getList(credentials) {
+  let response
+  let list = { TASK: 'GET_LIST', list: null, auth: null }
+  let auth
+  if (!self.isLoggedIn) {
+    auth = 'no'
+    list = { ...list, list: [], auth }
+    return list
+  }
+  const formData = new FormData()
+  formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
+  formData.append('userId', user.userId)
+  const opts = {
+    method: 'POST',
+    headeers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${credentials.jwtAccess}`,
+      'X-ASYNCREQUEST': true,
+    },
+    body: formData,
+  }
+  const request = new Request(credentials.url, opts)
+  auth = 'yes'
+  try {
+    response = await fetch(request)
+    const json = await response.json()
+    list = { ...list, list: json.list, auth }
+  } catch (e) {
+    console.error(e)
+    list = {
+      ...list,
+      list: [],
+      auth,
+      error: e,
+    }
+  }
+  return list
+}
 async function login(credentials) {
   // console.log('creds: ', credentials)
   const formData = new FormData()
@@ -20,15 +60,18 @@ async function login(credentials) {
   }
   const request = new Request(credentials.url, opts)
   let response
-  let user
+  let _user
   try {
     response = await fetch(request)
     user = await response.json()
+    console.log(user)
   } catch (e) {
-    console.log(e)
+    console.error(e)
     return { TASK: 'LOGIN', login: 'failed', cause: e }
   }
-  return { TASK: 'LOGIN', user }
+  self.isLoggedIn = true
+  self.user = _user
+  return { TASK: 'LOGIN', user: _user }
 }
 
 async function logout(data) {
@@ -49,6 +92,8 @@ async function logout(data) {
   } catch (e) {
     return { TASK: 'LOGOUT', logout: 'failed', cause: e }
   }
+  self.isLoggedIn = false
+  self.user = null
   return { TASK: 'LOGOUT', response: json }
 }
 
@@ -75,6 +120,16 @@ onmessage = async (e) => {
         } catch (err) {
           console.log('logout failed: ', err)
           postMessage({ err: 'logout failed', cause: err })
+        }
+        break
+      case 'GET_LIST':
+        console.log(e.data.TASK, e.data.msg)
+        try {
+          const list = await getList(e.data)
+          postMessage(list)
+        } catch (err) {
+          console.error(`${e.data.TASK} failed.`, err)
+          postMessage({ err: 'getList failed', cause: err })
         }
         break
       case 'START_WALK':
