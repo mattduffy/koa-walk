@@ -15,7 +15,7 @@
         <button id="cancelId" name="cancel">Cancel</button>
       </form>
       <div id="welcomeId">
-        <h2>Hi, <span data-first=""><%= sessionUser?.firstName %></span></h2>
+        <h3>Hi, <span data-first=""><%= sessionUser?.firstName %></span></h3>
         <a id="logout" href="/logout">Log out</a>
       </div>
     </div>
@@ -36,6 +36,13 @@
     </div>
   </div>
 </div>
+<script nonce="<%= nonce %>"
+  src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
+  crossorigin async
+  data-callback="initMapKit"
+  data-libraries="full-map"
+  data-initial-token="">
+</script>
 <script nonce="<%= nonce %>" type="module">
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
@@ -50,15 +57,7 @@
     fitMap()
   })
   fitMap()
-</script>
-<script nonce="<%= nonce %>"
-  src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
-  crossorigin async
-  data-callback="initMapKit"
-  data-libraries="full-map"
-  data-initial-token="">
-</script>
-<script nonce="<%= nonce %>" type="module">
+  window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker' }) || null
   window.csrfToken = '<%= csrfToken %>'
   const accuracy = 30 // meters
   const accuracyMargin = 5 // meters
@@ -181,67 +180,7 @@
       await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
       lowAccuracy = true
     }
-    async function goodAccuracyCanWalk(o, g) {
-      console.log(`good accuracy: ${g.coords.accuracy}`)
-      o.showsUserLocation = true
-      o.tracksUserLocation = true
-      o.showsUserLocationControl = true
-      window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
-      window.here = new mapkit.CoordinateRegion(
-        me,
-        new mapkit.CoordinateSpan(0.05, 0.05)
-      )
-      window.map = new mapkit.Map('map', o)
-      window.map.region = here
-      window.map.cameraDistance = 10
-      console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-      window.map.showsUserLocation = true 
-      window.map.setCenterAnimated(me, true)
-      app.style.display = 'block'
-      app.querySelector('h3').textContent = 'Your starting position looks good.'
-      app.querySelector('p').textContent = 'Tap the start button when you are ready.'
-
-    }
-    async function lowAccuracyPositionCantWalk(o, g) {
-      console.log(`low accuracy: ${g.coords.accuracy}`)
-      window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
-      window.here = new mapkit.CoordinateRegion(
-        me,
-        new mapkit.CoordinateSpan(0.05, 0.05)
-      )
-      window.map = new mapkit.Map('map', o)
-      window.map.region = here
-      if (Math.trunc(g.coords.accuracy) > 10 * (accuracy + accuracyMargin)) {
-        console.log('really low accuracy')
-        window.map.cameraDistance = Math.trunc(g.coords.accuracy)
-      } else {
-        window.map.cameraDistance = 10 
-      }
-      window.map.showsUserLocation = true 
-      console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-      window.map.setCenterAnimated(me, true)
-      app.style.display = 'block'
-      app.querySelector('h3').textContent = 'Can\'t get a very accurate GPS position.'
-      app.querySelector('p').textContent = 'Your walk may not be recorded very accurately.'
-    }
-    async function noPositionCantWalk(o, g) {
-      console.log(`no position available: ${g.code}`)
-      window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
-      window.here = new mapkit.CoordinateRegion(
-        me,
-        new mapkit.CoordinateSpan(0.05, 0.05)
-      )
-      window.map = new mapkit.Map('map', o)
-      window.map.region = here
-      window.map.cameraDistance = 2300000
-      console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-      window.map.showsUserLocation = true 
-      window.map.setCenterAnimated(me, true)
-      app.style.display = 'block'
-      app.querySelector('h3').textContent = 'You have no location.'
-      app.querySelector('p').textContent = 'Your walk will not be recorded.'
-    }
-       
+      
     if (window.Worker) {
       console.log('Worker <=> Walker')
       const logged = <%= isAuthenticated %>
@@ -263,8 +202,7 @@
         e.stopPropagation()
         doLogout()
       })
-      const walker = new Worker('<%= origin %>/j/worker.js', { name: 'walking_app' })
-      walker.onmessage = function(e) {
+      window.walker.onmessage = function(e) {
         console.log(e.data)
         switch (e.data.TASK) {
           case 'LOGIN':
@@ -284,107 +222,15 @@
             console.log(`${e.data}`)
         }
       }
-      walker.onerror = function(e) {
+      window.walker.onerror = function(e) {
         e.preventDefault()
         console.warn('err msg: ', e.message)
         console.warn('in: ', e.filename)
         console.warn('at: ', e.lineno)
       }
-      async function getList() {
-        const credentials = {}
-        credentials.url = `${origin}/getList`
-        credentials.csrfTokenHidden = window.csrfToken
-        credntials.jwtAccess = jwtAccess
-        credentials.TASK = 'GET_LIST'
-        console.log(credentials)
-        function finish(e) {
-          console.log('getList.finish')
-          console.log(e)
-        }
-        getList.finish = finish
-        walker.postMessage(credentials)
-      }
-      function doLogin(form) {
-        const credentials = {}
-        credentials.url = `${origin}/login`
-        const csrfTokenHidden = form.elements['csrfToken']
-        if (csrfTokenHidden.value === '' || csrfTokenHidden.value === undefined) {
-          return isRequired(csrfTokenHidden)
-        }
-        credentials.csrfTokenHidden = csrfTokenHidden.value
-        const email = form.elements['email']
-        if (email.value === '' || email.value === undefined) {
-          return isRequired(email)
-        }
-        credentials.email = email.value
-        const password = form.elements['password']
-        if (password.value === '' || password.value === undefined) {
-          return isRequired(password)
-        }
-        credentials.password = password.value
-        credentials.jwtAccess = jwtAccess
-        credentials.TASK = 'LOGIN'
-        console.log('1', credentials)
-        function isRequired(el) {
-          console.log(el) 
-          el.style.border = '1px solid red'
-          el.addEventListener('change', (e) => {
-            e.target.style.border = ''
-            removeEventListener('change', e.target)
-          })
-          return false
-        }
-        function success(e) {
-          console.log('login success')
-          console.log(e)
-          const spans = document.querySelectorAll('span[data-first]')
-          spans.forEach((span) => {
-            console.log(span)
-            span.dataset.first = e.user.first
-            span.innerText = e.user.first
-          })
-          toggleTab('login')
-          form.style.display = 'none'
-          const welcome = document.querySelector('div#welcomeId')
-          welcome.style.display = 'block'
-        }
-        doLogin.success = success
-        function failed(e) {
-          if (e?.error?.match(/wrong password/i)) {
-            form.elements.password.style.border = '1px solid red'
-          }
-          if (e?.info?.match(/no user found with email/i)) {
-            form.elements.email.style.border = '1px solid red'
-          }
-          console.log('login failed')
-          console.log(e)
-        }
-        doLogin.failed = failed
-        walker.postMessage(credentials)
-      }
-      function doLogout() {
-        const form = document.forms['login']
-        form.elements.password.value = ''
-        form.elements.email.value = ''
-        walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
-        function finish(res) {
-          console.log('logout response: ', res)
-          const spans = document.querySelectorAll('span[data-first]')
-          spans.forEach((span) => {
-            console.log(span)
-            span.dataset.first = ''
-            span.innerText = ''
-          })
-          toggleTab('login')
-          form.style.display = 'block'
-          const welcome = document.querySelector('div#welcomeId')
-          welcome.style.display = 'none'
-          window.csrfToken = res.response.user.csrfToken
-          form.elements.csrfToken.value = res.response.user.csrfToken
-        }
-        doLogout.finish = finish
-      }
-      walker.postMessage('What should I do?')
+      
+
+      window.walker.postMessage('What should I do?')
       const tasks = [
         {TASK: 'START_WALK', msg: 'I am starting a walk'},
         {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
@@ -395,7 +241,7 @@
       ]
       try {
         tasks.forEach(async (walk) => {
-          // walker.postMessage(walk)
+          // window.walker.postMessage(walk)
         })
       } catch (e) {
         console.warn(e)
@@ -404,6 +250,161 @@
       console.log('Not compatible with walking.')
     }   
   }
-  await main()
+  function doLogin(form) {
+    const credentials = {}
+    credentials.url = `${origin}/login`
+    const csrfTokenHidden = form.elements['csrfToken']
+    if (csrfTokenHidden.value === '' || csrfTokenHidden.value === undefined) {
+      return isRequired(csrfTokenHidden)
+    }
+    credentials.csrfTokenHidden = csrfTokenHidden.value
+    const email = form.elements['email']
+    if (email.value === '' || email.value === undefined) {
+      return isRequired(email)
+    }
+    credentials.email = email.value
+    const password = form.elements['password']
+    if (password.value === '' || password.value === undefined) {
+      return isRequired(password)
+    }
+    credentials.password = password.value
+    credentials.jwtAccess = jwtAccess
+    credentials.TASK = 'LOGIN'
+    console.log('1', credentials)
+    function isRequired(el) {
+      console.log(el) 
+      el.style.border = '1px solid red'
+      el.addEventListener('change', (e) => {
+        e.target.style.border = ''
+        removeEventListener('change', e.target)
+      })
+      return false
+    }
+    function success(e) {
+      console.log('login success')
+      console.log(e)
+      const spans = document.querySelectorAll('span[data-first]')
+      spans.forEach((span) => {
+        console.log(span)
+        span.dataset.first = e.user.first
+        span.innerText = e.user.first
+      })
+      toggleTab('login')
+      form.style.display = 'none'
+      const welcome = document.querySelector('div#welcomeId')
+      welcome.style.display = 'block'
+      toggleButtons('showLogin')
+    }
+    doLogin.success = success
+    function failed(e) {
+      if (e?.error?.match(/wrong password/i)) {
+        form.elements.password.style.border = '1px solid red'
+      }
+      if (e?.info?.match(/no user found with email/i)) {
+        form.elements.email.style.border = '1px solid red'
+      }
+      console.log('login failed')
+      console.log(e)
+    }
+    doLogin.failed = failed
+    window.walker.postMessage(credentials)
+  }
+  function doLogout() {
+    const form = document.forms['login']
+    form.elements.password.value = ''
+    form.elements.email.value = ''
+    window.walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
+    function finish(res) {
+      console.log('logout response: ', res)
+      const spans = document.querySelectorAll('span[data-first]')
+      spans.forEach((span) => {
+        console.log(span)
+        span.dataset.first = ''
+        span.innerText = ''
+      })
+      toggleTab('login')
+      form.style.display = 'block'
+      const welcome = document.querySelector('div#welcomeId')
+      welcome.style.display = 'none'
+      window.csrfToken = res.response.user.csrfToken
+      form.elements.csrfToken.value = res.response.user.csrfToken
+    }
+    doLogout.finish = finish
+  }
+  // async function window.getList() {
+  window.getList = async function() {
+    const credentials = {}
+    credentials.url = `${origin}/getList`
+    credentials.csrfTokenHidden = window.csrfToken
+    credntials.jwtAccess = jwtAccess
+    credentials.TASK = 'GET_LIST'
+    console.log(credentials)
+    function finish(e) {
+      console.log('getList.finish')
+      console.log(e)
+    }
+    getList.finish = finish
+    window.walker.postMessage(credentials)
+  }
+  async function noPositionCantWalk(o, g) {
+    console.log(`no position available: ${g.code}`)
+    window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
+    window.here = new mapkit.CoordinateRegion(
+      me,
+      new mapkit.CoordinateSpan(0.05, 0.05)
+    )
+    window.map = new mapkit.Map('map', o)
+    window.map.region = here
+    window.map.cameraDistance = 2300000
+    console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+    window.map.showsUserLocation = true 
+    window.map.setCenterAnimated(me, true)
+    app.style.display = 'block'
+    app.querySelector('h3').textContent = 'You have no location.'
+    app.querySelector('p').textContent = 'Your walk will not be recorded.'
+  }  
+  async function lowAccuracyPositionCantWalk(o, g) {
+    console.log(`low accuracy: ${g.coords.accuracy}`)
+    window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
+    window.here = new mapkit.CoordinateRegion(
+      me,
+      new mapkit.CoordinateSpan(0.05, 0.05)
+    )
+    window.map = new mapkit.Map('map', o)
+    window.map.region = here
+    if (Math.trunc(g.coords.accuracy) > 10 * (accuracy + accuracyMargin)) {
+      console.log('really low accuracy')
+      window.map.cameraDistance = Math.trunc(g.coords.accuracy)
+    } else {
+      window.map.cameraDistance = 10 
+    }
+    window.map.showsUserLocation = true 
+    console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+    window.map.setCenterAnimated(me, true)
+    app.style.display = 'block'
+    app.querySelector('h3').textContent = 'Can\'t get a very accurate GPS position.'
+    app.querySelector('p').textContent = 'Your walk may not be recorded very accurately.'
+  }
+  async function goodAccuracyCanWalk(o, g) {
+    console.log(`good accuracy: ${g.coords.accuracy}`)
+    o.showsUserLocation = true
+    o.tracksUserLocation = true
+    o.showsUserLocationControl = true
+    window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
+    window.here = new mapkit.CoordinateRegion(
+      me,
+      new mapkit.CoordinateSpan(0.05, 0.05)
+    )
+    window.map = new mapkit.Map('map', o)
+    window.map.region = here
+    window.map.cameraDistance = 10
+    console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
+    window.map.showsUserLocation = true 
+    window.map.setCenterAnimated(me, true)
+    app.style.display = 'block'
+    app.querySelector('h3').textContent = 'Your starting position looks good.'
+    app.querySelector('p').textContent = 'Tap the start button when you are ready.'
+  }
   
+  await main()
 </script>
