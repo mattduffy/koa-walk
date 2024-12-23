@@ -63,7 +63,7 @@ async function login(credentials) {
   let _user
   try {
     response = await fetch(request)
-    user = await response.json()
+    _user = await response.json()
     console.log(user)
   } catch (e) {
     console.error(e)
