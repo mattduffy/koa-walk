@@ -16,6 +16,10 @@
     </nav>
     <script nonce="<%= nonce %>">
       document.addEventListener("DOMContentLoaded", (event) => {
+        window.isAuthenticated = <%= (isAuthenticated) ? true : false %>
+        if (window.isAuthenticated && window.walker) {
+          window.walker.postMessage({ TASK: 'SETUP', isAuth: true, url: `${origin}/refresh`, jwtAccess: '<%= searchJwtAccess %>' })
+        }
         const buttons = Array.from(document.querySelector('nav#nav').children)
         buttons.forEach((b) => {
           if (b.firstElementChild.dataset) {
@@ -55,8 +59,12 @@
         const container = document.querySelector('div#container')
         const app = container.querySelector('div#app')
         const list = container.querySelector('div#list')
+        if (displayed(list)) {
+          console.log('list tab currently displayed, turn it off...')
+        } else {
+          window.getList()
+        }
         toggleTab(list.dataset.tab)
-        window.getList()
       }
       function showNew(o) {
         // console.log(o)

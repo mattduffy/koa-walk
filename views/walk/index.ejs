@@ -205,6 +205,9 @@
       window.walker.onmessage = function(e) {
         console.log(e.data)
         switch (e.data.TASK) {
+          case 'SETUP':
+
+            break
           case 'LOGIN':
             if (e.data.user.status === 'login failed') {
               doLogin.failed(e.data.user)
@@ -216,7 +219,7 @@
             doLogout.finish(e.data)
             break
           case 'GET_LIST':
-            getList.finish(e.data)
+            window.getList.finish(e.data)
             break
           default:
             console.log(e.data)
@@ -357,9 +360,14 @@
         if (noAuth) {
           noAuth.style.display = 'none'
         }
-        const noWalks = document.createElement('p')
-        noWalks.textContent = 'No saved walks.'
-        div.appendChild(noWalks)
+        if (div.children.namedItem('noWalks')) {
+          console.log('already displayed no walks')
+        } else {
+          const noWalks = document.createElement('p')
+          noWalks.textContent = 'No saved walks.'
+          noWalks.id = 'noWalks'
+          div.appendChild(noWalks)
+        }
       } else {
         console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
         const walks = div.children.namedItem('walks')
@@ -382,7 +390,9 @@
         }
       }
     }
-    getList.finish = finish
+    // window.getList.finish = finish
+    // window.getList.finish = finish
+    this.getList.finish = finish
     window.walker.postMessage(credentials)
   }
   async function noPositionCantWalk(o, g) {
