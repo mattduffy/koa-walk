@@ -4,10 +4,7 @@
 /* eslint-env worker */
 let isLoggedIn = false
 let user = null
-let counter = 0
 async function getList(credentials) {
-  console.log(`worker::getList()::counter = ${counter}`)
-  counter += 1
   let response
   let list = { TASK: 'GET_LIST', list: null, auth: null }
   let auth
@@ -48,6 +45,33 @@ async function getList(credentials) {
     }
   }
   return list
+}
+async function refresh(o) {
+  const formData = new FormData()
+  formData.append('jwtAccess', o.jwtAccess)
+  const opts = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${o.jwtAccess}`,
+      'X-ASYNCREQUEST': true,
+    },
+    body: formData,
+  }
+  const request = new Request(o.url, opts)
+  let response
+  let _user
+  try {
+    response = await fetch(request)
+    _user = await response.json()
+  } catch (e) {
+    console.error('failed to refresh user.')
+    console.error(e)
+  }
+  isLoggedIn = true
+  user = _user
+  console.log('refreshed isLoggedIn: ', isLoggedIn)
+  console.log('refreshed user: %o', user)
 }
 async function login(credentials) {
   // console.log('creds: ', credentials)
@@ -107,10 +131,16 @@ async function logout(data) {
 }
 
 onmessage = async (e) => {
-  console.log(self.name)
+  // console.log(self.name)
   console.log('2', e.data)
   if (e.data?.TASK) {
     switch (e.data.TASK) {
+      case 'SETUP':
+        if (e.data.isAuth) {
+          // isLoggedIn = true
+          refresh(e.data)
+        }
+        break
       case 'LOGIN':
         try {
           const result = await login(e.data)
