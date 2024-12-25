@@ -50,7 +50,22 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   await ctx.render('index', locals)
 })
 
-router.post('getList', '/getList', addIpToSession, hasFlash, processFormData, async (ctx) => {
+router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) => {
+  const log = walkLog.extend('refresh')
+  // const error = walkError.extend('refresh')
+  log('inside walk router: /refresh')
+  let body
+  if (ctx.state?.sessionUser) {
+    body = { status: 'success', user: { first: ctx.state.sessionUser.firstName, email: ctx.state.sessionUser.email.primary } }
+    log(`refreshing user: ${body}`)
+  } else {
+    body = { status: 'failed', user: {} }
+  }
+  ctx.status = 200
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = body
+})
+router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) => {
   const log = walkLog.extend('getList')
   const error = walkError.extend('getList')
   log('inside walk router: /getList')
