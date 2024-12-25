@@ -215,11 +215,11 @@
           case 'LOGOUT':
             doLogout.finish(e.data)
             break
-          case 'GET_TASK':
-            getList,finish(e.data)
+          case 'GET_LIST':
+            getList.finish(e.data)
             break
           default:
-            console.log(`${e.data}`)
+            console.log(e.data)
         }
       }
       window.walker.onerror = function(e) {
@@ -331,17 +331,56 @@
     }
     doLogout.finish = finish
   }
-  // async function window.getList() {
   window.getList = async function() {
     const credentials = {}
     credentials.url = `${origin}/getList`
     credentials.csrfTokenHidden = window.csrfToken
-    credntials.jwtAccess = jwtAccess
+    credentials.jwtAccess = jwtAccess
     credentials.TASK = 'GET_LIST'
     console.log(credentials)
+    const div = document.querySelector('div#list')
     function finish(e) {
-      console.log('getList.finish')
-      console.log(e)
+      console.log('getList.finish', e)
+      const noAuth = div.children.namedItem('noAuth') ?? null
+      if (e.auth === 'no' && !noAuth) { 
+        console.log(`e.auth: ${e.auth}`)
+        console.log(`noAuth: ${noAuth}`)
+        const noAuthP = document.createElement('p')
+        noAuthP.id = 'noAuth'
+        noAuthP.textContent = 'Login to see saved walks.'
+        div.appendChild(noAuthP)
+      } else if (div.children.namedItem('noAuth')) {
+        console.log('show noAuth')
+        noAuth.style.display = 'block' 
+      } else if (e.list.length === 0) {
+        console.log(`e.list.length = ${e.list.length}`)
+        if (noAuth) {
+          noAuth.style.display = 'none'
+        }
+        const noWalks = document.createElement('p')
+        noWalks.textContent = 'No saved walks.'
+        div.appendChild(noWalks)
+      } else {
+        console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
+        const walks = div.children.namedItem('walks')
+        if (!walks) {
+          const ul = document.createElement('ul')
+          ul.id = 'walks'
+          e.list.forEach((w) => {
+            const li = document.createElement('li')
+            li.innerHTML = `${w}`
+            ul.appendChild(li)
+          })
+          div.appendChild(ul)
+        } else {
+          console.log(`e.auth = ${e.auth}`)
+          e.list.forEach((w) => {
+            const li = document.createElement('li')
+            li.textContent = `${w}`
+            ul.appendChild(li)
+          })
+        }
+      }
     }
     getList.finish = finish
     window.walker.postMessage(credentials)

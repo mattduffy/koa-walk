@@ -13,8 +13,8 @@ import { _log, _error } from '../utils/logging.js'
 // import { redis } from '../daos/impl/redis/redis-client.js'
 import {
   addIpToSession,
-  // doTokensMatch,
-  // processFormData,
+  doTokensMatch,
+  processFormData,
   hasFlash,
 } from './middlewares.js'
 
@@ -48,6 +48,36 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
     isAuthenticated: ctx.state.isAuthenticated ?? false,
   }
   await ctx.render('index', locals)
+})
+
+router.post('getList', '/getList', addIpToSession, hasFlash, processFormData, async (ctx) => {
+  const log = walkLog.extend('getList')
+  const error = walkError.extend('getList')
+  log('inside walk router: /getList')
+  const csrfToken = ulid()
+  ctx.session.csrfToken = csrfToken
+  ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+  const list = []
+  if (doTokensMatch(ctx)) {
+    if (!ctx.state?.isAuthenticated) {
+      error('user is not autheenticated, no list available')
+      list.push({ date: new Date(), coords: [], waypoints: [] })
+    }
+    log('sessionUser: ', ctx.state?.sessionUser?.username)
+    log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
+    log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
+    const body = {
+      csrfToken,
+      // sessionUser: ctx.state.sessionUser,
+      list,
+    }
+    ctx.status = 200
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = body
+  } else {
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = { status: 'token mismatch', user: null, error: 'token mismatch' }
+  }
 })
 
 export { router as walk }

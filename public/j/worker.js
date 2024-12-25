@@ -4,11 +4,16 @@
 /* eslint-env worker */
 let isLoggedIn = false
 let user = null
+let counter = 0
 async function getList(credentials) {
+  console.log(`worker::getList()::counter = ${counter}`)
+  counter += 1
   let response
   let list = { TASK: 'GET_LIST', list: null, auth: null }
   let auth
-  if (!self.isLoggedIn) {
+  console.log('is logged in: ', isLoggedIn)
+  console.log('user: ', user)
+  if (!isLoggedIn) {
     auth = 'no'
     list = { ...list, list: [], auth }
     return list
@@ -29,7 +34,9 @@ async function getList(credentials) {
   auth = 'yes'
   try {
     response = await fetch(request)
+    console.log(response)
     const json = await response.json()
+    console.log('getList response: ', json)
     list = { ...list, list: json.list, auth }
   } catch (e) {
     console.error(e)
@@ -64,13 +71,15 @@ async function login(credentials) {
   try {
     response = await fetch(request)
     _user = await response.json()
-    console.log(user)
+    console.log(_user)
   } catch (e) {
     console.error(e)
     return { TASK: 'LOGIN', login: 'failed', cause: e }
   }
-  self.isLoggedIn = true
-  self.user = _user
+  isLoggedIn = true
+  user = _user
+  console.log('is logged in: ', isLoggedIn)
+  console.log('user: ', user)
   return { TASK: 'LOGIN', user: _user }
 }
 
@@ -92,8 +101,8 @@ async function logout(data) {
   } catch (e) {
     return { TASK: 'LOGOUT', logout: 'failed', cause: e }
   }
-  self.isLoggedIn = false
-  self.user = null
+  isLoggedIn = false
+  user = null
   return { TASK: 'LOGOUT', response: json }
 }
 
@@ -123,7 +132,7 @@ onmessage = async (e) => {
         }
         break
       case 'GET_LIST':
-        console.log(e.data.TASK, e.data.msg)
+        console.log(e.data.TASK)
         try {
           const list = await getList(e.data)
           postMessage(list)
