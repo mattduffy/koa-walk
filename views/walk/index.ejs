@@ -44,6 +44,7 @@
   data-initial-token="">
 </script>
 <script nonce="<%= nonce %>" type="module">
+  window.geoWatch = null
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   function fitMap() {
@@ -103,7 +104,8 @@
     let lat = 39.833333 
     let lon = -98.583333
     let position
-    const opts = {
+    let watchPosId
+    const mapOpts = {
       mapType: mapkit.Map.MapTypes.Hybrid,
       loadPriority: mapkit.Map.LoadPriorities.PointsOfInterest,
       visibleMapRect: new mapkit.MapRect(0, 0, 1, 1),
@@ -119,9 +121,32 @@
     }
     if ("geolocation" in navigator) {
       console.log('Can we get a location fix?') 
+      const _opts = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
+      }
+      // watchPosId = navigator.geolocation.watchPosition(geoSuccess, geoFail, _opts)
+      async function geoSuccess(g) {
+        console.log('geoSuccess')
+        console.info(g)
+        updatePosition(g)
+        window.p = g
+        position = g
+        try {
+          await setPosition(position)
+        } catch (e) {
+          console.warn(e)
+        }
+      }
+      function geoFail(g) {
+        console.info('geoFail')
+        console.info(g)
+      }
       const geoOpts = {
         enableHighAccuracy: true,
-        maximumAge: 1000 * 10 * 3,
+        // maximumAge: 1000 * 10 * 3,
+        maximumAge: 1000 * 3,
       }
       console.log('geo options: ', geoOpts)
       try {
@@ -144,6 +169,7 @@
           )
         })
         window.p = position
+        await setPosition(position)
       } catch (e) {
         console.warn('failed to get geoLocation for some reason')
         console.warn(e)
@@ -152,33 +178,71 @@
         await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
         lowAccuracy = true
       }
+      function updatePosition(g) {
+        console.log('updating position')
+        lat = g.coords.latitude
+        lon = g.coords.longitude
+        if (g.coords.accuracy > accuracy) {
+          console.info(`position.coords.accuracy (${g.coords.accuracy}) is greater than ${accuracy}m`)
+          lowAccuracy = true
+        }
+        const app = document.querySelector('div#app')
+        let pos = app.children.namedItem('pos')
+        let _lat
+        let _lon
+        let _acc
+        console.log('updatePosition: pos = ', pos)
+        if (!pos) {
+          pos = document.createElement('div')
+          pos.id = 'pos'
+          _lat = document.createElement('p')
+          _lat.id = 'lat'
+          pos.appendChild(_lat)
+          _lon = document.createElement('p')
+          _lon.id = 'lon'
+          pos.appendChild(_lon)
+          _acc = document.createElement('p')
+          _acc.id = 'acc'
+          pos.appendChild(_acc)
+          app.appendChild(pos)
+        } else {
+          _lat = pos.children.namedItem('lat')
+          _lon = pos.children.namedItem('lon')
+          _acc = pos.children.namedItem('acc')
+        }
+        _lat.textContent = `latitude: ${g.coords.latitude.toFixed(4)}`
+        _lon.textContent = `longitude: ${g.coords.longitude.toFixed(4)}`
+        _acc.textContent = `position accuracy: ${g.coords.accuracy.toFixed(1)}m`
+      }
     } else {
       console.log('geolocation not available, no way of knowing.')
       console.log(`using ${lat} ${lon} instead`)
       console.log('geo error: ', position)
       await noPositionCantWalk({ lat, lon })
     }
-    console.log('geolocation: ', position)
-    console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
-    if (position && !lowAccuracy) {
-      console.log('show user location')
-      console.log(`position accuracy: ${position.coords.accuracy}`)
-      await goodAccuracyCanWalk(opts, position)
-    } else if (position.coords.accuracy > accuracy && position.coords.accuracy <= accuracy + accuracyMargin) {
-      console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
-      console.info('can\'t track movement accurately.')
-      console.info(opts)
-      await lowAccuracyPositionCantWalk(opts, position)
-    } else if (lowAccuracy && position) {
-      console.info(`really low geoLocation accuracy: ${position.coords.accuracy}`)
-      console.info('can\'t track movement accurately.')
-      console.log(opts)
-      await lowAccuracyPositionCantWalk(opts, position)
-    } else {
-      console.log('no geo position available')
-      console.log('using lat: ', lat, ' lon: ', lon)
-      await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
-      lowAccuracy = true
+    async function setPosition(position) {
+      console.log('geolocation: ', position)
+      console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
+      if (position && !lowAccuracy) {
+        console.log('show user location')
+        console.log(`position accuracy: ${position.coords.accuracy}`)
+        await goodAccuracyCanWalk(mapOpts, position)
+      } else if (position.coords.accuracy > accuracy && position.coords.accuracy <= accuracy + accuracyMargin) {
+        console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
+        console.info('can\'t track movement accurately.')
+        console.info(mapOpts)
+        await lowAccuracyPositionCantWalk(mapOpts, position)
+      } else if (lowAccuracy && position) {
+        console.info(`really low geoLocation accuracy: ${position.coords.accuracy}`)
+        console.info('can\'t track movement accurately.')
+        console.log(mapOpts)
+        await lowAccuracyPositionCantWalk(mapOpts, position)
+      } else {
+        console.log('no geo position available')
+        console.log('using lat: ', lat, ' lon: ', lon)
+        await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
+        lowAccuracy = true
+      }
     }
       
     if (window.Worker) {
@@ -390,9 +454,7 @@
         }
       }
     }
-    // window.getList.finish = finish
-    // window.getList.finish = finish
-    this.getList.finish = finish
+    getList.finish = finish
     window.walker.postMessage(credentials)
   }
   async function noPositionCantWalk(o, g) {
@@ -402,12 +464,14 @@
       me,
       new mapkit.CoordinateSpan(0.05, 0.05)
     )
-    window.map = new mapkit.Map('map', o)
-    window.map.region = here
-    window.map.cameraDistance = 2300000
-    console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-    window.map.showsUserLocation = true 
-    window.map.setCenterAnimated(me, true)
+    if (!window._map) {
+      window._map = new mapkit.Map('map', o)
+    }
+    window._map.region = here
+    window._map.cameraDistance = 2300000
+    console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
+    window._map.showsUserLocation = true 
+    window._map.setCenterAnimated(me, true)
     app.style.display = 'block'
     app.querySelector('h3').textContent = 'You have no location.'
     app.querySelector('p').textContent = 'Your walk will not be recorded.'
@@ -419,17 +483,19 @@
       me,
       new mapkit.CoordinateSpan(0.05, 0.05)
     )
-    window.map = new mapkit.Map('map', o)
-    window.map.region = here
+    if (!window._map) {
+      window._map = new mapkit.Map('map', o)
+    }
+    window._map.region = here
     if (Math.trunc(g.coords.accuracy) > 10 * (accuracy + accuracyMargin)) {
       console.log('really low accuracy')
-      window.map.cameraDistance = Math.trunc(g.coords.accuracy)
+      window._map.cameraDistance = Math.trunc(g.coords.accuracy)
     } else {
-      window.map.cameraDistance = 10 
+      window._map.cameraDistance = 10 
     }
-    window.map.showsUserLocation = true 
-    console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-    window.map.setCenterAnimated(me, true)
+    window._map.showsUserLocation = true 
+    console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
+    window._map.setCenterAnimated(me, true)
     app.style.display = 'block'
     app.querySelector('h3').textContent = 'Can\'t get a very accurate GPS position.'
     app.querySelector('p').textContent = 'Your walk may not be recorded very accurately.'
@@ -444,12 +510,14 @@
       me,
       new mapkit.CoordinateSpan(0.05, 0.05)
     )
-    window.map = new mapkit.Map('map', o)
-    window.map.region = here
-    window.map.cameraDistance = 10
-    console.log(`map.showsUserLocation: ${window.map.showsUserLocation}`) 
-    window.map.showsUserLocation = true 
-    window.map.setCenterAnimated(me, true)
+    if (!window._map) {
+      window._map = new mapkit.Map('map', o)
+    }
+    window._map.region = here
+    window._map.cameraDistance = 10
+    console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
+    window._map.showsUserLocation = true 
+    window._map.setCenterAnimated(me, true)
     app.style.display = 'block'
     app.querySelector('h3').textContent = 'Your starting position looks good.'
     app.querySelector('p').textContent = 'Tap the start button when you are ready.'
