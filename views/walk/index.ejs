@@ -106,8 +106,10 @@
     let position
     let watchPosId
     const mapOpts = {
-      mapType: mapkit.Map.MapTypes.Hybrid,
+      // mapType: mapkit.Map.MapTypes.Hybrid,
+      mapType: mapkit.Map.MapTypes.Standard,
       loadPriority: mapkit.Map.LoadPriorities.PointsOfInterest,
+      selectableMapFeatures: [mapkit.MapFeatureType.PhysicalFeature, mapkit.MapFeatureType.PointOfInterest],
       visibleMapRect: new mapkit.MapRect(0, 0, 1, 1),
       isZoomEnabled: true,
       showsCompass: mapkit.FeatureVisibility.Visible,
@@ -117,7 +119,8 @@
       showsPointsOfInterest: true,
       isRotationEnabled: true,
       isScrollEnabled: true,
-      showsMapTypeControl: false,
+      // showsMapTypeControl: false,
+      showsMapTypeControl: true,
     }
     if ("geolocation" in navigator) {
       console.log('Can we get a location fix?') 
@@ -170,6 +173,7 @@
         })
         window.p = position
         await setPosition(position)
+        updatePosition(position)
       } catch (e) {
         console.warn('failed to get geoLocation for some reason')
         console.warn(e)
@@ -244,6 +248,9 @@
         lowAccuracy = true
       }
     }
+    window._map.addEventListener('single-tap', async (e) => {
+      console.log(e)
+    })
       
     if (window.Worker) {
       console.log('Worker <=> Walker')
