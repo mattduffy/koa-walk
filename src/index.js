@@ -230,7 +230,7 @@ async function csp(ctx, next) {
     + `style-src 'self' ${ctx.request.protocol}://${ctx.app.domain} 'unsafe-inline' 'nonce-${nonce}'; `
     + `style-src-attr 'self' ${ctx.request.protocol}://${ctx.app.domain} 'unsafe-inline'; `
     + `style-src-elem 'self' ${ctx.request.protocol}://${ctx.app.domain} 'unsafe-inline'; `
-    + `script-src 'self' ${ctx.request.protocol}://${ctx.app.domain} 'nonce-${nonce}'; `
+    + `script-src 'self' ${ctx.request.protocol}://${ctx.app.domain} *.apple-mapkit.com *.geo.apple.com *.geo.apple.com 'wasm-unsafe-eval' 'nonce-${nonce}'; `
     + `script-src-attr 'self' ${ctx.request.protocol}://${ctx.app.domain} 'nonce-${nonce}'; `
     + `script-src-elem 'self' ${ctx.request.protocol}://${ctx.app.domain} 'nonce-${nonce}'; `
     + `img-src 'self' data: blob: ${ctx.request.protocol}://${ctx.app.domain} *.apple-mapkit.com; `
