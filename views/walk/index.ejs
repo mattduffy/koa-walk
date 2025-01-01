@@ -251,6 +251,9 @@
     window._map.addEventListener('single-tap', async (e) => {
       console.log(e)
     })
+    window._map.addEventListener('user-location-change', async (e) => {
+      console.log('user-location-change event', e)
+    })
       
     if (window.Worker) {
       console.log('Worker <=> Walker')
@@ -485,6 +488,7 @@
   }  
   async function lowAccuracyPositionCantWalk(o, g) {
     console.log(`low accuracy: ${g.coords.accuracy}`)
+    o.showsUserLocationControl = true
     window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
     window.here = new mapkit.CoordinateRegion(
       me,
