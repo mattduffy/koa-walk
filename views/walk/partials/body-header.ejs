@@ -100,23 +100,31 @@
         })
       }
       function toggleButtons(b) {
+        console.log(`b = ${b}`)
+        const mapButton = document.querySelector(`span[data-action=showMaps]`)
         if (b === 'showMaps') {
-          const button = document.querySelector(`span[data-action=${b}]`)
-          console.log(`__showMaps__ ${(button.classList.contains('hilite')) ? 'hilite' : 'outline'}`)
-          button.classList.toggle('hilite')
-          button.classList.toggle('outline')
+          if (mapButton.classList.contains('hilite')) {
+            console.log(`__showMaps__ removing hilite (back to outline)`)
+            mapButton.classList.remove('hilite')
+            mapButton.classList.add('outline')
+          } else {
+            console.log(`__showMaps__ adding hilite (removing outline)`)
+            mapButton.classList.add('hilite')
+            mapButton.classList.remove('outline')
+          }
         }
         document.querySelectorAll(`span[data-action]`).forEach((button) => {
-          if (button.dataset.action !== 'showMaps') {
-            if (button.dataset.action === b) {
-              console.log(b, button)
-              button.classList.toggle('outline')
-              button.classList.toggle('hilite')
-            } else {
-              console.log(button, b)
-              button.classList.remove('hilite') 
-              button.classList.add('outline')
-            }
+          if (button.dataset.action === b && b !== 'showMaps') {
+            console.log(`${b} === ${button.dataset.action}`)
+            button.classList.toggle('outline')
+            button.classList.toggle('hilite')
+          } else if (button.dataset.action === b && b === 'showMaps') {
+            // mapButton.classList.add('outline')
+            // mapButton.classList.remove('hilite')
+          } else {
+            console.log(button, b)
+            button.classList.remove('hilite') 
+            button.classList.add('outline')
           }
         })
       }
