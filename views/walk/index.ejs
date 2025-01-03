@@ -179,8 +179,11 @@
         console.warn(e)
         console.log('no geo position available')
         console.log('using generic lat: ', lat, ' lon: ', lon, ' to initialize the map.')
-        await noPositionCantWalk(opts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
-        lowAccuracy = true
+        // const position = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
+        const position = null
+        lowAccuracy = null
+        console.log('Position: ', position)
+        await setPosition(position)
       }
       function updatePosition(g) {
         console.log('updating position')
@@ -222,16 +225,18 @@
       console.log('geolocation not available, no way of knowing.')
       console.log(`using ${lat} ${lon} instead`)
       console.log('geo error: ', position)
-      await noPositionCantWalk({ lat, lon })
+      await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
+      // await noPositionCantWalk({ lat, lon })
     }
-    async function setPosition(position) {
+    async function setPosition(position, noPosition) {
       console.log('geolocation: ', position)
-      console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
+      // console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
+      // console.log(`setPosition() position: ${position}, lowAccuracy: ${lowAccuracy}`)
       if (position && !lowAccuracy) {
         console.log('show user location')
         console.log(`position accuracy: ${position.coords.accuracy}`)
         await goodAccuracyCanWalk(mapOpts, position)
-      } else if (position.coords.accuracy > accuracy && position.coords.accuracy <= accuracy + accuracyMargin) {
+      } else if (position?.coords?.accuracy > accuracy && position?.coords?.accuracy <= accuracy + accuracyMargin) {
         console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
         console.info('can\'t track movement accurately.')
         console.info(mapOpts)
@@ -244,7 +249,7 @@
       } else {
         console.log('no geo position available')
         console.log('using lat: ', lat, ' lon: ', lon)
-        await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
+        await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 1000 } })
         lowAccuracy = true
       }
     }
@@ -468,7 +473,7 @@
     window.walker.postMessage(credentials)
   }
   async function noPositionCantWalk(o, g) {
-    console.log(`no position available: ${g.code}`)
+    console.log(`no position available: ${g}`)
     window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
     window.here = new mapkit.CoordinateRegion(
       me,
@@ -478,7 +483,7 @@
       window._map = new mapkit.Map('map', o)
     }
     window._map.region = here
-    window._map.cameraDistance = 2300000
+    window._map.cameraDistance = 2500000
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.showsUserLocation = true 
     window._map.setCenterAnimated(me, true)
@@ -502,7 +507,7 @@
       console.log('really low accuracy')
       window._map.cameraDistance = Math.trunc(g.coords.accuracy)
     } else {
-      window._map.cameraDistance = 10 
+      window._map.cameraDistance = 100
     }
     window._map.showsUserLocation = true 
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
