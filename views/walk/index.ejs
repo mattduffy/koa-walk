@@ -40,7 +40,7 @@
   src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
   crossorigin async
   data-callback="initMapKit"
-  data-libraries="full-map"
+  data-libraries="services,full-map"
   data-initial-token="">
 </script>
 <script nonce="<%= nonce %>" type="module">
@@ -198,8 +198,8 @@
         let _lat
         let _lon
         let _acc
-        console.log('updatePosition: pos = ', pos)
         if (!pos) {
+          console.log(`updatePosition: pos = ${pos ? pos : 'not set yet'}`)
           pos = document.createElement('div')
           pos.id = 'pos'
           _lat = document.createElement('p')
@@ -213,6 +213,7 @@
           pos.appendChild(_acc)
           app.appendChild(pos)
         } else {
+          console.log('updatePosition: pos = ', pos)
           _lat = pos.children.namedItem('lat')
           _lon = pos.children.namedItem('lon')
           _acc = pos.children.namedItem('acc')
@@ -512,6 +513,7 @@
     window._map.showsUserLocation = true 
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.setCenterAnimated(me, true)
+    myGeocoder(me)
     app.style.display = 'block'
     app.querySelector('h3').textContent = 'Can\'t get a very accurate GPS position.'
     app.querySelector('p').textContent = 'Your walk may not be recorded very accurately.'
@@ -534,9 +536,29 @@
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.showsUserLocation = true 
     window._map.setCenterAnimated(me, true)
+    myGeocoder(me) 
     app.style.display = 'block'
     app.querySelector('h3').textContent = 'Your starting position looks good.'
     app.querySelector('p').textContent = 'Tap the start button when you are ready.'
+  }
+  // Geocoder
+  function myGeocoder(coords) {
+    console.log('geocoder with: ', coords)
+    const opts = {
+      getsUserLocation: true,
+      language: 'en-US'
+    }
+    const geocoder = new mapkit.Geocoder(opts)
+    console.log(geocoder)
+    const reverseLookup = geocoder.reverseLookup(coords, function(error, data) {
+      console.log('reverseLookup callbback')
+      if (error) {
+        console.info(error)
+      }
+      if (data) {
+        console.log(data)
+      }
+    })
   }
   
   await main()
