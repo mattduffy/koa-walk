@@ -31,8 +31,9 @@
 
     </div>
     <div id="app" data-tab="app">
-      <h3></h3>
-      <p></p>
+      <h3 id="h3"></h3>
+      <p id="p1"></p>
+      <p id="p2"></p>
     </div>
   </div>
 </div>
@@ -185,43 +186,7 @@
         console.log('Position: ', position)
         await setPosition(position)
       }
-      function updatePosition(g) {
-        console.log('updating position')
-        lat = g.coords.latitude
-        lon = g.coords.longitude
-        if (g.coords.accuracy > accuracy) {
-          console.info(`position.coords.accuracy (${g.coords.accuracy}) is greater than ${accuracy}m`)
-          lowAccuracy = true
-        }
-        const app = document.querySelector('div#app')
-        let pos = app.children.namedItem('pos')
-        let _lat
-        let _lon
-        let _acc
-        if (!pos) {
-          console.log(`updatePosition: pos = ${pos ? pos : 'not set yet'}`)
-          pos = document.createElement('div')
-          pos.id = 'pos'
-          _lat = document.createElement('p')
-          _lat.id = 'lat'
-          pos.appendChild(_lat)
-          _lon = document.createElement('p')
-          _lon.id = 'lon'
-          pos.appendChild(_lon)
-          _acc = document.createElement('p')
-          _acc.id = 'acc'
-          pos.appendChild(_acc)
-          app.appendChild(pos)
-        } else {
-          console.log('updatePosition: pos = ', pos)
-          _lat = pos.children.namedItem('lat')
-          _lon = pos.children.namedItem('lon')
-          _acc = pos.children.namedItem('acc')
-        }
-        _lat.textContent = `latitude: ${g.coords.latitude.toFixed(4)}`
-        _lon.textContent = `longitude: ${g.coords.longitude.toFixed(4)}`
-        _acc.textContent = `position accuracy: ${g.coords.accuracy.toFixed(1)}m`
-      }
+    
     } else {
       console.log('geolocation not available, no way of knowing.')
       console.log(`using ${lat} ${lon} instead`)
@@ -229,7 +194,18 @@
       await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
       // await noPositionCantWalk({ lat, lon })
     }
-    async function setPosition(position, noPosition) {
+    function updatePosition(g) {
+      console.log('updating position')
+      lat = g.coords.latitude
+      lon = g.coords.longitude
+      if (g.coords.accuracy > accuracy) {
+        console.info(`position.coords.accuracy (${g.coords.accuracy}) is greater than ${accuracy}m`)
+        lowAccuracy = true
+      }
+      const coords = { lat, lon, acc: g.coords.accuracy }
+      populateApp(null, coords)
+    }
+    async function setPosition(position) {
       console.log('geolocation: ', position)
       // console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
       // console.log(`setPosition() position: ${position}, lowAccuracy: ${lowAccuracy}`)
@@ -259,6 +235,7 @@
     })
     window._map.addEventListener('user-location-change', async (e) => {
       console.log('user-location-change event', e)
+      updatePosition(e.coordinate)
     })
       
     if (window.Worker) {
@@ -488,9 +465,13 @@
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.showsUserLocation = true 
     window._map.setCenterAnimated(me, true)
+    const strings = {
+      h3: 'You have no location.',
+      p1: 'Your walk will not be recorded.',
+      p2: ''
+    }
+    populateApp(strings)
     app.style.display = 'block'
-    app.querySelector('h3').textContent = 'You have no location.'
-    app.querySelector('p').textContent = 'Your walk will not be recorded.'
   }  
   async function lowAccuracyPositionCantWalk(o, g) {
     console.log(`low accuracy: ${g.coords.accuracy}`)
@@ -514,9 +495,14 @@
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.setCenterAnimated(me, true)
     myGeocoder(me)
+    const strings = {
+      h3: `Can't get a very accurate GPS position.`,
+      p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`
+        + `GPS accuracy is <span id="acc" class="coords">${g.coords.accuracy.toFixed(1)}</span>m.`,
+      p2: `Your walk may not be recorded very accurately.`,
+    }
+    populateApp(strings)
     app.style.display = 'block'
-    app.querySelector('h3').textContent = 'Can\'t get a very accurate GPS position.'
-    app.querySelector('p').textContent = 'Your walk may not be recorded very accurately.'
   }
   async function goodAccuracyCanWalk(o, g) {
     console.log(`good accuracy: ${g.coords.accuracy}`)
@@ -537,9 +523,14 @@
     window._map.showsUserLocation = true 
     window._map.setCenterAnimated(me, true)
     myGeocoder(me) 
+    const strings = {
+      h3: 'Your starting position looks good.',
+      p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`
+        + `GPS accuracy is <span id="acc" class="coords">${g.coords.accuracy.toFixed(4)}</span>m.`,
+      p2: 'Tap the start button when you are ready.',
+    }
+    populateApp(strings)
     app.style.display = 'block'
-    app.querySelector('h3').textContent = 'Your starting position looks good.'
-    app.querySelector('p').textContent = 'Tap the start button when you are ready.'
   }
   // Geocoder
   function myGeocoder(coords) {
@@ -555,11 +546,26 @@
       if (error) {
         console.info(error)
       }
-      if (data) {
+      if (data && data.results.length > 0) {
         console.log(data)
+
       }
     })
   }
-  
+  function populateApp(strings, coords = null) {
+    const a = window.app || document.querySelector('div#app')    
+    console.log(a)
+    if (strings && !coords) {
+      a.children.namedItem('h3').innerHTML = strings.h3
+      a.children.namedItem('p1').innerHTML = strings.p1
+      a.children.namedItem('p2').innerHTML = strings.p2
+    }
+    if (coords) {
+      console.log('updating just the coordinates')
+      if (coords.lat) a.querySelector('p > span#lat').innerHTML = coords.lat.toFixed(4)
+      if (coords.lon) a.querySelector('p > span#lon').innerHTML = coords.lon.toFixed(4)
+      if (coords.acc) a.querySelector('p > span#acc').innerHTML = coords.acc.toFixed(1)
+    }
+  }
   await main()
 </script>
