@@ -34,6 +34,7 @@
       <h3 id="h3"></h3>
       <p id="p1"></p>
       <p id="p2"></p>
+      <p id="p3"></p>
     </div>
   </div>
 </div>
@@ -195,7 +196,7 @@
       // await noPositionCantWalk({ lat, lon })
     }
     function updatePosition(g) {
-      console.log('updating position')
+      console.log('updating position', g)
       lat = g.coords.latitude
       lon = g.coords.longitude
       if (g.coords.accuracy > accuracy) {
@@ -235,7 +236,9 @@
     })
     window._map.addEventListener('user-location-change', async (e) => {
       console.log('user-location-change event', e)
-      updatePosition(e.coordinate)
+      console.log('accuracy: ', window.p.coords.accuracy)
+      const coords = { coords: { latitude: e.coordinate.latitude, longitude: e.coordinate.longitude, accuracy: window.p.coords.accuracy } }
+      updatePosition(coords)
     })
       
     if (window.Worker) {
@@ -467,8 +470,9 @@
     window._map.setCenterAnimated(me, true)
     const strings = {
       h3: 'You have no location.',
-      p1: 'Your walk will not be recorded.',
-      p2: ''
+      p1: 'Your walk can not be recorded.',
+      p2: '',
+      p3: '',
     }
     populateApp(strings)
     app.style.display = 'block'
@@ -497,9 +501,10 @@
     myGeocoder(me)
     const strings = {
       h3: `Can't get a very accurate GPS position.`,
-      p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`
-        + `GPS accuracy is <span id="acc" class="coords">${g.coords.accuracy.toFixed(1)}</span>m.`,
-      p2: `Your walk may not be recorded very accurately.`,
+      p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
+      p2: ``,
+      p3: `GPS accuracy is low, <span id="acc" class="coords">${g.coords.accuracy.toFixed(1)}</span>m.`
+        + `  Your walk may not be recorded very accurately.`,
     }
     populateApp(strings)
     app.style.display = 'block'
@@ -525,9 +530,10 @@
     myGeocoder(me) 
     const strings = {
       h3: 'Your starting position looks good.',
-      p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`
-        + `GPS accuracy is <span id="acc" class="coords">${g.coords.accuracy.toFixed(4)}</span>m.`,
-      p2: 'Tap the start button when you are ready.',
+      p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
+      p2: '',
+      p3: `GPS accuracy is good, <span id="acc" class="coords">${g.coords.accuracy.toFixed(4)}</span>m.`
+        + '  Tap the start button when you are ready.',
     }
     populateApp(strings)
     app.style.display = 'block'
@@ -547,24 +553,39 @@
         console.info(error)
       }
       if (data && data.results.length > 0) {
-        console.log(data)
-
+        console.log(data.results[0])
+        populateApp(null, null, data.results[0])
       }
     })
   }
-  function populateApp(strings, coords = null) {
+  function populateApp(strings, coords = null, locality = null) {
     const a = window.app || document.querySelector('div#app')    
     console.log(a)
     if (strings && !coords) {
       a.children.namedItem('h3').innerHTML = strings.h3
       a.children.namedItem('p1').innerHTML = strings.p1
       a.children.namedItem('p2').innerHTML = strings.p2
+      a.children.namedItem('p3').innerHTML = strings.p3
+    }
+    if (locality) {
+      const l = `${(locality?.subLocality) ? '<span id="subLocality">' + locality.subLocality + '</span><br>' : ''}`
+        + `${(locality?.name) ? '<span id="name">' + locality.name + '</span><br>' : ''}` 
+        + `${(locality?.locality) ? '<span id="locality">' + locality.locality + '</span>, ' : ''}`
+        + `${(locality?.administrativeAreaCode) ? '<span id="administrativeAC">' + locality.administrativeAreaCode + '</span>' : ''}`
+        + '<br>'
+        a.children.namedItem('p2').innerHTML += l
     }
     if (coords) {
       console.log('updating just the coordinates')
-      if (coords.lat) a.querySelector('p > span#lat').innerHTML = coords.lat.toFixed(4)
-      if (coords.lon) a.querySelector('p > span#lon').innerHTML = coords.lon.toFixed(4)
-      if (coords.acc) a.querySelector('p > span#acc').innerHTML = coords.acc.toFixed(1)
+      if (coords.lat || coords.latitude) {
+        a.querySelector('p > span#lat').innerHTML = coords.lat.toFixed(4) || coords.latitude.toFixed(4)
+      }
+      if (coords.lon || coords.longitude) {
+        a.querySelector('p > span#lon').innerHTML = coords.lon.toFixed(4) || coords.longitude.toFixed(4)
+      }
+      if (coords.acc || coords.accuracy) {
+        a.querySelector('p > span#acc').innerHTML = coords.acc.toFixed(1) || coords.accuracy.toFiex(1)
+      }
     }
   }
   await main()
