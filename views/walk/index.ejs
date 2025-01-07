@@ -154,39 +154,40 @@
         maximumAge: 1000 * 3,
       }
       console.log('geo options: ', geoOpts)
-      try {
-        position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition((geo) => {
-              if (geo.coords.accuracy > accuracy) {
-                console.info(`position.coords.accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
-                lowAccuracy = true
-              }
-              lat = geo.coords.latitude
-              lon = geo.coords.longitude
-              resolve(geo)
-            },
-            (err) => {
-              console.log(err)
-              console.info(`code: ${err.code}, msg: ${err.message}`)
-              reject(err)
-            }
-            ,geoOpts
-          )
-        })
-        window.p = position
-        await setPosition(position)
-        updatePosition(position)
-      } catch (e) {
-        console.warn('failed to get geoLocation for some reason')
-        console.warn(e)
-        console.log('no geo position available')
-        console.log('using generic lat: ', lat, ' lon: ', lon, ' to initialize the map.')
-        // const position = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
-        const position = null
-        lowAccuracy = null
-        console.log('Position: ', position)
-        await setPosition(position)
-      }
+      await myGetCurrentPosition(geoOpts)
+      // try {
+      //   position = await new Promise((resolve, reject) => {
+      //     navigator.geolocation.getCurrentPosition((geo) => {
+      //         if (geo.coords.accuracy > accuracy) {
+      //           console.info(`position.coords.accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
+      //           lowAccuracy = true
+      //         }
+      //         lat = geo.coords.latitude
+      //         lon = geo.coords.longitude
+      //         resolve(geo)
+      //       },
+      //       (err) => {
+      //         console.log(err)
+      //         console.info(`code: ${err.code}, msg: ${err.message}`)
+      //         reject(err)
+      //       }
+      //       ,geoOpts
+      //     )
+      //   })
+      //   window.p = position
+      //   await setPosition(position)
+      //   updatePosition(position)
+      // } catch (e) {
+      //   console.warn('failed to get geoLocation for some reason')
+      //   console.warn(e)
+      //   console.log('no geo position available')
+      //   console.log('using generic lat: ', lat, ' lon: ', lon, ' to initialize the map.')
+      //   // const position = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
+      //   const position = null
+      //   lowAccuracy = null
+      //   console.log('Position: ', position)
+      //   await setPosition(position)
+      // }
     
     } else {
       console.log('geolocation not available, no way of knowing.')
@@ -231,14 +232,80 @@
         lowAccuracy = true
       }
     }
+    async function myGetCurrentPosition(geoOpts) {
+      let position
+      try {
+        position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (geo) => {
+              if (geo.coords.accuracy > accuracy) {
+                console.info(`current position accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
+                lowAccuracy = true
+              }
+              lat = geo.coords.latitude
+              lon = geo.coords.longitude
+              resolve(geo)
+            },
+            (err) => {
+              console.log(err)
+              console.info(`code: ${err.code}, msg: ${err.message}`)
+              reject(err)
+            },
+            geoOpts
+          )
+        })
+        console.log('myGetCurrentPosition:: ', position)
+        window.p = position
+        await setPosition(position)
+        updatePosition(position)
+      } catch (e) {
+        console.warn('failed to acquire geoLocation for some reason.')
+        console.warn(e)
+        console.log(`Failing back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
+        window.p = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
+        position = null
+        lowAccuracy = null
+        await setPosition(position)
+      }
+      return position
+    }
+    window.myGetCurrentPosition = myGetCurrentPosition
     window._map.addEventListener('single-tap', async (e) => {
       console.log(e)
     })
     window._map.addEventListener('user-location-change', async (e) => {
       console.log('user-location-change event', e)
-      console.log('accuracy: ', window.p.coords.accuracy)
+      console.log('accuracy: ', window?.p?.coords?.accuracy)
       const coords = { coords: { latitude: e.coordinate.latitude, longitude: e.coordinate.longitude, accuracy: window.p.coords.accuracy } }
+      const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
+      console.log(x)
+      window._map.setCenterAnimated(x, true)
       updatePosition(coords)
+      window.dispatchEvent(
+        new CustomEvent('localityChanged', {
+          bubbles: false,
+          cancelable: true,
+          detail: { coords: coords.coords },
+        })
+      )
+    })
+    window.addEventListener('localityChanged', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const a = window.app || document.querySelector('div#app')
+      let ul = a.querySelector('ul#change')
+      if (!ul) {
+        ul = document.createElement('ul')
+        ul.id = 'change'
+        a.appendChild(ul)
+      }
+      if (e.detail.coords) {
+        console.log(e.detail)
+        let li = document.createElement('li')
+        li.textContent = `lat/lon: (${e.detail.coords.latitude.toFixed(4)}, ${e.detail.coords.longitude.toFixed(4)}), acc: ${e.detail.coords.accuracy.toFixed(1)}`
+        ul.appendChild(li)
+      }
+
     })
       
     if (window.Worker) {
@@ -480,6 +547,7 @@
   async function lowAccuracyPositionCantWalk(o, g) {
     console.log(`low accuracy: ${g.coords.accuracy}`)
     o.showsUserLocationControl = true
+    o.tracksUserLocation = true
     window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
     window.here = new mapkit.CoordinateRegion(
       me,
@@ -503,7 +571,7 @@
       h3: `Can't get a very accurate GPS position.`,
       p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
       p2: ``,
-      p3: `GPS accuracy is low, <span id="acc" class="coords">${g.coords.accuracy.toFixed(1)}</span>m.`
+      p3: `GPS accuracy is low, <span id="acc" class="coords">${g.coords.accuracy.toFixed(1)}</span>m.<br>`
         + `  Your walk may not be recorded very accurately.`,
     }
     populateApp(strings)
@@ -532,7 +600,7 @@
       h3: 'Your starting position looks good.',
       p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
       p2: '',
-      p3: `GPS accuracy is good, <span id="acc" class="coords">${g.coords.accuracy.toFixed(4)}</span>m.`
+      p3: `GPS accuracy is good, <span id="acc" class="coords">${g.coords.accuracy.toFixed(4)}</span>m.<br>`
         + '  Tap the start button when you are ready.',
     }
     populateApp(strings)
