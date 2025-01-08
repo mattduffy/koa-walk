@@ -302,7 +302,7 @@
       if (e.detail.coords) {
         console.log(e.detail)
         let li = document.createElement('li')
-        li.textContent = `lat/lon: (${e.detail.coords.latitude.toFixed(4)}, ${e.detail.coords.longitude.toFixed(4)}), acc: ${e.detail.coords.accuracy.toFixed(1)}`
+        li.textContent = `lat/lon: (${e.detail.coords.latitude.toFixed(4)}, ${e.detail.coords.longitude.toFixed(4)}), acc: ${mToF(e.detail.coords.accuracy.toFixed(1))}`
         ul.appendChild(li)
       }
 
@@ -531,7 +531,7 @@
       window._map = new mapkit.Map('map', o)
     }
     window._map.region = here
-    window._map.cameraDistance = 2500000
+    window._map.cameraDistance = 250000
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.showsUserLocation = true 
     window._map.setCenterAnimated(me, true)
@@ -571,7 +571,7 @@
       h3: `Can't get a very accurate GPS position.`,
       p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
       p2: ``,
-      p3: `GPS accuracy is low, <span id="acc" class="coords">${g.coords.accuracy.toFixed(1)}</span>m.<br>`
+      p3: `GPS accuracy is low, <span id="acc" class="coords">${mToF(g.coords.accuracy.toFixed(1))}</span>.<br>`
         + `  Your walk may not be recorded very accurately.`,
     }
     populateApp(strings)
@@ -591,7 +591,7 @@
       window._map = new mapkit.Map('map', o)
     }
     window._map.region = here
-    window._map.cameraDistance = 10
+    window._map.cameraDistance = 100
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.showsUserLocation = true 
     window._map.setCenterAnimated(me, true)
@@ -600,7 +600,7 @@
       h3: 'Your starting position looks good.',
       p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
       p2: '',
-      p3: `GPS accuracy is good, <span id="acc" class="coords">${g.coords.accuracy.toFixed(4)}</span>m.<br>`
+      p3: `GPS accuracy is good, <span id="acc" class="coords">${mToF(g.coords.accuracy.toFixed(4))}</span>.<br>`
         + '  Tap the start button when you are ready.',
     }
     populateApp(strings)
@@ -626,6 +626,9 @@
       }
     })
   }
+  function mToF(x) {
+    return `${( parseFloat(x) * 3.3 ).toFixed(1)} ft`
+  }
   function populateApp(strings, coords = null, locality = null) {
     const a = window.app || document.querySelector('div#app')    
     console.log(a)
@@ -645,14 +648,17 @@
     }
     if (coords) {
       console.log('updating just the coordinates')
-      if (coords.lat || coords.latitude) {
+      const _lat = a.querySelector('p > span#lat')
+      if ((coords.lat || coords.latitude) && _lat) {
         a.querySelector('p > span#lat').innerHTML = coords.lat.toFixed(4) || coords.latitude.toFixed(4)
       }
-      if (coords.lon || coords.longitude) {
+      const _lon = a.querySelector('p > span#lon')
+      if ((coords.lon || coords.longitude) && _lon) {
         a.querySelector('p > span#lon').innerHTML = coords.lon.toFixed(4) || coords.longitude.toFixed(4)
       }
-      if (coords.acc || coords.accuracy) {
-        a.querySelector('p > span#acc').innerHTML = coords.acc.toFixed(1) || coords.accuracy.toFiex(1)
+      const _acc = a.querySelector('p > span#acc')
+      if ((coords.acc || coords.accuracy) && _acc) {
+        a.querySelector('p > span#acc').innerHTML = mToF(coords.acc.toFixed(1)) || mToF(coords.accuracy.toFiex(1))
       }
     }
   }
