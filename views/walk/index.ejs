@@ -60,7 +60,7 @@
     fitMap()
   })
   fitMap()
-  window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker' }) || null
+  window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
   window.csrfToken = '<%= csrfToken %>'
   const accuracy = 30 // meters
   const accuracyMargin = 5 // meters
@@ -293,9 +293,9 @@
       e.preventDefault()
       e.stopPropagation()
       const a = window.app || document.querySelector('div#app')
-      let ul = a.querySelector('ul#change')
+      let ul = a.querySelector('ol#change')
       if (!ul) {
-        ul = document.createElement('ul')
+        ul = document.createElement('ol')
         ul.id = 'change'
         a.appendChild(ul)
       }
