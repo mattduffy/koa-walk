@@ -2,8 +2,15 @@
  * file: public/j/worker.js
  */
 /* eslint-env worker */
+import Observer from './Observer.js'
+import State from './State.js'
+
+const walkState = new State()
+console.log(walkState)
+
 let isLoggedIn = false
 let user = null
+
 async function getList(credentials) {
   let response
   let list = { TASK: 'GET_LIST', list: null, auth: null }
