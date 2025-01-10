@@ -4,6 +4,7 @@
 /* eslint-env worker */
 import Observer from './Observer.js'
 import State from './State.js'
+import { heading, pointDistance } from './Heading.js'
 
 const walkState = new State()
 console.log(walkState)
@@ -177,6 +178,10 @@ onmessage = async (e) => {
           console.error(`${e.data.TASK} failed.`, err)
           postMessage({ err: 'getList failed', cause: err })
         }
+        break
+      case 'GET_HEADING':
+        heading(e.data.p1, e.data.p2)
+        pointDistance(e.data.p1, e.data.p2)
         break
       case 'START_WALK':
         console.log(e.data.TASK, e.data.msg)
