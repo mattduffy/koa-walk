@@ -35,6 +35,9 @@
       <p id="p1"></p>
       <p id="p2"></p>
       <p id="p3"></p>
+      <div>
+        <button name="showStartNew">Start a walk!</button>
+      </div>
     </div>
   </div>
 </div>
@@ -46,7 +49,9 @@
   data-initial-token="">
 </script>
 <script nonce="<%= nonce %>" type="module">
+  import State from '/j/State.js'
   window.geoWatch = null
+  window.walking = window.walking || new State()
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   function fitMap() {
@@ -276,18 +281,20 @@
     window._map.addEventListener('user-location-change', async (e) => {
       console.log('user-location-change event', e)
       console.log('accuracy: ', window?.p?.coords?.accuracy)
-      const coords = { coords: { latitude: e.coordinate.latitude, longitude: e.coordinate.longitude, accuracy: window.p.coords.accuracy } }
-      const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
-      console.log(x)
-      window._map.setCenterAnimated(x, true)
-      updatePosition(coords)
-      window.dispatchEvent(
-        new CustomEvent('localityChanged', {
-          bubbles: false,
-          cancelable: true,
-          detail: { coords: coords.coords },
-        })
-      )
+      if (!window.walking.state?.active) {
+        const coords = { coords: { latitude: e.coordinate.latitude, longitude: e.coordinate.longitude, accuracy: window.p.coords.accuracy } }
+        const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
+        console.log(x)
+        window._map.setCenterAnimated(x, true)
+        updatePosition(coords)
+        window.dispatchEvent(
+          new CustomEvent('localityChanged', {
+            bubbles: false,
+            cancelable: true,
+            detail: { coords: coords.coords },
+          })
+        )
+      }
     })
     window.addEventListener('localityChanged', (e) => {
       e.preventDefault()
@@ -302,7 +309,7 @@
       if (e.detail.coords) {
         console.log(e.detail)
         let li = document.createElement('li')
-        li.textContent = `lat/lon: (${e.detail.coords.latitude.toFixed(4)}, ${e.detail.coords.longitude.toFixed(4)}), acc: ${mToF(e.detail.coords.accuracy.toFixed(1))}`
+        li.textContent = `lat/lon: (${e.detail.coords.latitude.toFixed(4)}, ${e.detail.coords.longitude.toFixed(4)}), acc: ${displayUnits(e.detail.coords.accuracy, 'f', 1)}`
         ul.appendChild(li)
       }
 
@@ -571,7 +578,7 @@
       h3: `Can't get a very accurate GPS position.`,
       p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
       p2: ``,
-      p3: `GPS accuracy is low, <span id="acc" class="coords">${mToF(g.coords.accuracy.toFixed(1))}</span>.<br>`
+      p3: `GPS accuracy is low, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, 'f', 1)}</span>.<br>`
         + `  Your walk may not be recorded very accurately.`,
     }
     populateApp(strings)
@@ -600,7 +607,7 @@
       h3: 'Your starting position looks good.',
       p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
       p2: '',
-      p3: `GPS accuracy is good, <span id="acc" class="coords">${mToF(g.coords.accuracy.toFixed(4))}</span>.<br>`
+      p3: `GPS accuracy is good, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, 'f', 1)}</span>.<br>`
         + '  Tap the start button when you are ready.',
     }
     populateApp(strings)
@@ -626,8 +633,20 @@
       }
     })
   }
-  function mToF(x) {
-    return `${( parseFloat(x) * 3.3 ).toFixed(1)} ft`
+  function displayUnits(x, u = 'm', n = null) {
+    if (!x) {
+      return null
+    }
+    const _n = n ?? 1
+    if (u === 'm') {
+      return `${x.toFixed(_n)} m`
+    }
+    if (u === 'f') {
+      return `${( parseFloat(x) * 3.3 ).toFixed(_n)} ft`
+    }
+    if (u === 'mi') {
+      return `${( parseFloat(x) * 3.3 / 5280 ).toFixed(_n)} mi`
+    }
   }
   function populateApp(strings, coords = null, locality = null) {
     const a = window.app || document.querySelector('div#app')    
@@ -650,15 +669,15 @@
       console.log('updating just the coordinates')
       const _lat = a.querySelector('p > span#lat')
       if ((coords.lat || coords.latitude) && _lat) {
-        a.querySelector('p > span#lat').innerHTML = coords.lat.toFixed(4) || coords.latitude.toFixed(4)
+        a.querySelector('p > span#lat').innerHTML = coords.lat.toFixed(4) ?? coords.latitude.toFixed(4)
       }
       const _lon = a.querySelector('p > span#lon')
       if ((coords.lon || coords.longitude) && _lon) {
-        a.querySelector('p > span#lon').innerHTML = coords.lon.toFixed(4) || coords.longitude.toFixed(4)
+        a.querySelector('p > span#lon').innerHTML = coords.lon.toFixed(4) ?? coords.longitude.toFixed(4)
       }
       const _acc = a.querySelector('p > span#acc')
       if ((coords.acc || coords.accuracy) && _acc) {
-        a.querySelector('p > span#acc').innerHTML = mToF(coords.acc.toFixed(1)) || mToF(coords.accuracy.toFiex(1))
+        a.querySelector('p > span#acc').innerHTML = displayUnits(coords.acc, 'f', 1) ?? displayUnits(coords.accuracy, 'f', 1)
       }
     }
   }

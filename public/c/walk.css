@@ -198,6 +198,14 @@ div#app p {
   font-size: .75em;
 }
 
+div#app > ol#change {
+  font-size: .7em;
+}
+
+button[name="showStartNew"] {
+  color: blue;
+}
+
 @media screen and (max-width: 400px) {
   form {
     margin: 0 auto .5em auto

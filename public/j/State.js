@@ -8,7 +8,15 @@ class State extends Subject {
 
   update(data = {}) {
     this.state = Object.assign(this.state, data)
+    // this.state = { ...this.state, ...data }
     this.notify(this.state)
+  }
+
+  addPoint(point) {
+    if (!this.state?.wayPoints) {
+      this.state.wayPoints = []
+    }
+    this.state.wayPoints.push(point)
   }
 
   get() {
