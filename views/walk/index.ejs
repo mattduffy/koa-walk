@@ -24,6 +24,14 @@
     </div>
     <div id="new" data-tab="new">
       <h3>Start A New Walk</h3>
+      <label for="name">Give your walk a name</label>
+      <input type="text" id="name" size=45 value="">
+      <label for="lat">Latitude</label>
+      <input type="text" id="lat" size=45 readonly value="">
+      <label for="lon">Longitude</label>
+      <input type="text" id="lon" size=45 readonly value="">
+      <br>
+      <button id="start">Start</button>
 
     </div>
     <div id="maps" data-tab="maps">
@@ -35,9 +43,7 @@
       <p id="p1"></p>
       <p id="p2"></p>
       <p id="p3"></p>
-      <div>
-        <button name="showStartNew">Start a walk!</button>
-      </div>
+      
     </div>
   </div>
 </div>
@@ -314,6 +320,12 @@
       }
 
     })
+    document.querySelector('button[name="showStartNew"]').addEventListener('click', (e) => {
+      console.log(e)
+      e.preventDefault()
+      e.stopPropagation()
+      document.querySelector('span[data-action="showNew"]').click()
+    })
       
     if (window.Worker) {
       console.log('Worker <=> Walker')
@@ -580,6 +592,7 @@
       p2: ``,
       p3: `GPS accuracy is low, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, 'f', 1)}</span>.<br>`
         + `  Your walk may not be recorded very accurately.`,
+      b1: '<button name="showStartNew">Start a walk!</button>',
     }
     populateApp(strings)
     app.style.display = 'block'
@@ -609,6 +622,7 @@
       p2: '',
       p3: `GPS accuracy is good, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, 'f', 1)}</span>.<br>`
         + '  Tap the start button when you are ready.',
+      b1: '<button name="showStartNew">Start a walk!</button>',
     }
     populateApp(strings)
     app.style.display = 'block'
@@ -651,19 +665,28 @@
   function populateApp(strings, coords = null, locality = null) {
     const a = window.app || document.querySelector('div#app')    
     console.log(a)
-    if (strings && !coords) {
+    // if (strings && !coords) {
+    if (strings) {
       a.children.namedItem('h3').innerHTML = strings.h3
       a.children.namedItem('p1').innerHTML = strings.p1
       a.children.namedItem('p2').innerHTML = strings.p2
       a.children.namedItem('p3').innerHTML = strings.p3
+      if (strings?.b1) {
+        const b1div = document.createElement('div')
+        b1div.innerHTML = strings.b1
+        a.appendChild(b1div)
+      }
     }
     if (locality) {
+      // app div content
       const l = `${(locality?.subLocality) ? '<span id="subLocality">' + locality.subLocality + '</span><br>' : ''}`
         + `${(locality?.name) ? '<span id="name">' + locality.name + '</span><br>' : ''}` 
         + `${(locality?.locality) ? '<span id="locality">' + locality.locality + '</span>, ' : ''}`
         + `${(locality?.administrativeAreaCode) ? '<span id="administrativeAC">' + locality.administrativeAreaCode + '</span>' : ''}`
         + '<br>'
         a.children.namedItem('p2').innerHTML += l
+      // new walk div content
+      document.querySelector('input[id="name"]').value = (locality?.subLocality) ? locality.subLocality : locality.name
     }
     if (coords) {
       console.log('updating just the coordinates')
@@ -679,6 +702,11 @@
       if ((coords.acc || coords.accuracy) && _acc) {
         a.querySelector('p > span#acc').innerHTML = displayUnits(coords.acc, 'f', 1) ?? displayUnits(coords.accuracy, 'f', 1)
       }
+      // new walk div content
+      console.log(document.querySelector('input[id="lat"]'))
+      console.log(coords?.lat ?? coords?.latitude)
+      document.querySelector('input[id="lat"]').value = coords?.lat ?? coords?.latitude ?? ''
+      document.querySelector('input[id="lon"]').value = coords?.lon ?? coords?.longitude ?? ''
     }
   }
   await main()
