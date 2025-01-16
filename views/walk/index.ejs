@@ -166,46 +166,11 @@
       }
       console.log('geo options: ', geoOpts)
       await myGetCurrentPosition(geoOpts)
-      // try {
-      //   position = await new Promise((resolve, reject) => {
-      //     navigator.geolocation.getCurrentPosition((geo) => {
-      //         if (geo.coords.accuracy > accuracy) {
-      //           console.info(`position.coords.accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
-      //           lowAccuracy = true
-      //         }
-      //         lat = geo.coords.latitude
-      //         lon = geo.coords.longitude
-      //         resolve(geo)
-      //       },
-      //       (err) => {
-      //         console.log(err)
-      //         console.info(`code: ${err.code}, msg: ${err.message}`)
-      //         reject(err)
-      //       }
-      //       ,geoOpts
-      //     )
-      //   })
-      //   window.p = position
-      //   await setPosition(position)
-      //   updatePosition(position)
-      // } catch (e) {
-      //   console.warn('failed to get geoLocation for some reason')
-      //   console.warn(e)
-      //   console.log('no geo position available')
-      //   console.log('using generic lat: ', lat, ' lon: ', lon, ' to initialize the map.')
-      //   // const position = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
-      //   const position = null
-      //   lowAccuracy = null
-      //   console.log('Position: ', position)
-      //   await setPosition(position)
-      // }
-    
     } else {
       console.log('geolocation not available, no way of knowing.')
       console.log(`using ${lat} ${lon} instead`)
       console.log('geo error: ', position)
       await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
-      // await noPositionCantWalk({ lat, lon })
     }
     function updatePosition(g) {
       console.log('updating position', g)
@@ -281,10 +246,12 @@
       return position
     }
     window.myGetCurrentPosition = myGetCurrentPosition
-    window._map.addEventListener('single-tap', async (e) => {
+    window._map.addEventListener('single-tap', mapSingleTap)
+    async function mapSingleTap(e) {
       console.log(e)
-    })
-    window._map.addEventListener('user-location-change', async (e) => {
+    }
+    window._map.addEventListener('user-location-change', userLocationChange)
+    async function userLocationChange(e) {
       console.log('user-location-change event', e)
       console.log('accuracy: ', window?.p?.coords?.accuracy)
       if (!window.walking.state?.active) {
@@ -294,15 +261,16 @@
         window._map.setCenterAnimated(x, true)
         updatePosition(coords)
         window.dispatchEvent(
-          new CustomEvent('localityChanged', {
+          new CustomEvent('locality-changed', {
             bubbles: false,
             cancelable: true,
             detail: { coords: coords.coords },
           })
         )
       }
-    })
-    window.addEventListener('localityChanged', (e) => {
+    }
+    window.addEventListener('locality-changed', localityChanged)
+    function localityChanged(e) {
       e.preventDefault()
       e.stopPropagation()
       const a = window.app || document.querySelector('div#app')
@@ -319,13 +287,14 @@
         ul.appendChild(li)
       }
 
-    })
-    document.querySelector('button[name="showStartNew"]').addEventListener('click', (e) => {
+    }
+    document.querySelector('button[name="showStartNew"]').addEventListener('click', clickStartNew)
+    function clickStartNew(e) {
       console.log(e)
       e.preventDefault()
       e.stopPropagation()
       document.querySelector('span[data-action="showNew"]').click()
-    })
+    }
       
     if (window.Worker) {
       console.log('Worker <=> Walker')
@@ -338,6 +307,7 @@
         doLogin(document.forms['login'])
       })
       const welcomeDiv = document.querySelector('div#welcomeId')
+      console.log(`logged = ${logged}`)
       if (logged) {
         welcomeDiv.style.display = 'block'
         loginForm.style.display = 'none'
@@ -472,6 +442,7 @@
         span.innerText = ''
       })
       toggleTab('login')
+      toggleButtons('showLogin')
       form.style.display = 'block'
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'none'

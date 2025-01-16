@@ -51,6 +51,7 @@
           e.stopPropagation()
           // console.log(app.dataset.tab)
           toggleTab(app.dataset.tab)
+          toggleButtons('showLogin')
         })
       }
       function showList(o) {
@@ -100,29 +101,27 @@
         })
       }
       function toggleButtons(b) {
-        console.log(`b = ${b}`)
+        // console.log(`b = ${b}`)
         const mapButton = document.querySelector(`span[data-action=showMaps]`)
         if (b === 'showMaps') {
           if (mapButton.classList.contains('hilite')) {
-            console.log(`__showMaps__ removing hilite (back to outline)`)
+            // console.log(`__showMaps__ removing hilite (back to outline)`)
             mapButton.classList.remove('hilite')
             mapButton.classList.add('outline')
           } else {
-            console.log(`__showMaps__ adding hilite (removing outline)`)
+            // console.log(`__showMaps__ adding hilite (removing outline)`)
             mapButton.classList.add('hilite')
             mapButton.classList.remove('outline')
           }
         }
         document.querySelectorAll(`span[data-action]`).forEach((button) => {
           if (button.dataset.action === b && b !== 'showMaps') {
-            console.log(`${b} === ${button.dataset.action}`)
+            // console.log(`${b} === ${button.dataset.action}`)
             button.classList.toggle('outline')
             button.classList.toggle('hilite')
           } else if (button.dataset.action === b && b === 'showMaps') {
-            // mapButton.classList.add('outline')
-            // mapButton.classList.remove('hilite')
           } else {
-            console.log(button, b)
+            // console.log(button, b)
             button.classList.remove('hilite') 
             button.classList.add('outline')
           }
