@@ -206,6 +206,10 @@ button[name="showStartNew"] {
   color: blue;
 }
 
+button#stop {
+  display: inline-block;
+}
+
 @media screen and (max-width: 400px) {
   form {
     margin: 0 auto .5em auto

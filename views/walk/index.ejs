@@ -32,6 +32,7 @@
       <input type="text" id="lon" size=45 readonly value="">
       <br>
       <button id="start">Start</button>
+      <button id="stop" disabled>Stop</button>
 
     </div>
     <div id="maps" data-tab="maps">
@@ -294,6 +295,32 @@
       e.preventDefault()
       e.stopPropagation()
       document.querySelector('span[data-action="showNew"]').click()
+    }
+    document.querySelector('button#start').addEventListener('click', startWalk)
+    async function startWalk(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      if (!window.Worker) {
+        console.warn('No web worker, can\'t save walk.')
+        return false
+      }
+      if (!"geolocation" in navigator) {
+        console.warn('You don\'t have a location, can\'t start walk.')
+        return false
+      }
+      const startButton = document.querySelector('button#start')
+      startButton.disabled = true
+      const stopButton = document.querySelector('button#stop')
+      stopButton.disabled = false
+    }
+    document.querySelector('button#stop').addEventListener('click', stopWalk)
+    async function stopWalk(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      const start = document.querySelector('button#start')
+      const stop = document.querySelector('button#stop')
+      start.disabled = false
+      stop.disabled = true
     }
       
     if (window.Worker) {
