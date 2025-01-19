@@ -24,15 +24,19 @@
     </div>
     <div id="new" data-tab="new">
       <h3>Start A New Walk</h3>
-      <label for="name">Give your walk a name</label>
-      <input type="text" id="name" size=45 value="">
-      <label for="lat">Latitude</label>
-      <input type="text" id="lat" size=45 readonly value="">
-      <label for="lon">Longitude</label>
-      <input type="text" id="lon" size=45 readonly value="">
+      <form id="startWalkForm" action="<%= origin %>/walk/start" method="POST">
+        <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
+        <label for="name">Give your walk a name</label>
+        <input type="text" id="name" size=45 value="">
+        <label for="lat">Latitude</label>
+        <input type="text" id="lat" size=45 readonly value="">
+        <label for="lon">Longitude</label>
+        <input type="text" id="lon" size=45 readonly value="">
+      </form>
       <br>
       <button id="start">Start</button>
       <button id="stop" disabled>Stop</button>
+      <span id="timer"></span>
 
     </div>
     <div id="maps" data-tab="maps">
@@ -312,6 +316,15 @@
       startButton.disabled = true
       const stopButton = document.querySelector('button#stop')
       stopButton.disabled = false
+      window._map.removeEventListener('user-location-change', userLocationChange)
+      const startWalkForm = document.forms.namedItem('startWalkForm')
+      startWalkForm.style.display = 'none'
+      function go(e) {
+        console.log('startWalk.go(): ', e)
+      }
+      startWalk.go = go
+      const w = { startTime: Math.floor(new Date().getTime() / 1000), TASK: 'START_WALK' }
+      window.walker.postMessage(w)
     }
     document.querySelector('button#stop').addEventListener('click', stopWalk)
     async function stopWalk(e) {
@@ -321,6 +334,9 @@
       const stop = document.querySelector('button#stop')
       start.disabled = false
       stop.disabled = true
+      window._map.addEventListener('user-location-change', userLocationChange)
+      const startWalkForm = document.forms.namedItem('startWalkForm')
+      startWalkForm.style.display = 'block'
     }
       
     if (window.Worker) {
@@ -363,6 +379,9 @@
             break
           case 'GET_LIST':
             window.getList.finish(e.data)
+            break
+          case 'START':
+            startWalk.go(e.data)
             break
           default:
             console.log(e.data)

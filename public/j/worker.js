@@ -2,7 +2,7 @@
  * file: public/j/worker.js
  */
 /* eslint-env worker */
-import Observer from './Observer.js'
+// import Observer from './Observer.js'
 import State from './State.js'
 import { heading, pointDistance } from './Heading.js'
 
@@ -184,7 +184,7 @@ onmessage = async (e) => {
         pointDistance(e.data.p1, e.data.p2)
         break
       case 'START_WALK':
-        console.log(e.data.TASK, e.data.msg)
+        console.log(e.data.TASK, e.data.startTime)
         break
       case 'STOP_WALK':
         console.log(e.data.TASK, e.data.msg)
