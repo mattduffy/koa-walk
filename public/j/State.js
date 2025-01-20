@@ -3,7 +3,7 @@ import Subject from './Subject.js'
 class State extends Subject {
   constructor() {
     super()
-    this.state = {}
+    this.state = { active: false }
   }
 
   update(data = {}) {
@@ -17,6 +17,10 @@ class State extends Subject {
       this.state.wayPoints = []
     }
     this.state.wayPoints.push(point)
+  }
+
+  printPoints() {
+    console.log(this.state.wapPoints)
   }
 
   get() {
