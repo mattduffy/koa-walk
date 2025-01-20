@@ -6,7 +6,10 @@
 import State from './State.js'
 import { heading, pointDistance } from './Heading.js'
 
-const walkState = new State()
+let walkState
+if (walkState === undefined) {
+  walkState = new State()
+}
 console.log(walkState)
 
 let isLoggedIn = false
@@ -138,6 +141,11 @@ async function logout(data) {
   return { TASK: 'LOGOUT', response: json }
 }
 
+function setWayPoint(w) {
+  walkState.addPoint(w)
+  walkState.printPoints()
+}
+
 onmessage = async (e) => {
   // console.log(self.name)
   console.log('2', e.data)
@@ -190,7 +198,8 @@ onmessage = async (e) => {
         console.log(e.data.TASK, e.data.msg)
         break
       case 'SET_WAYPOINT':
-        console.log(e.data.TASK, e.data.msg)
+        console.log(e.data.TASK, e.data.wp)
+        setWayPoint(e.data.wp)
         break
       case 'SAVE_WALK':
         console.log(e.data.TASK, e.data.msg)
