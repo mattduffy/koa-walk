@@ -62,7 +62,7 @@
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
   window.geoWatch = null
-  window.walking = window.walking || new State()
+  window.walking = window.walking ?? new State()
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   function fitMap() {
@@ -272,6 +272,8 @@
             detail: { coords: coords.coords },
           })
         )
+      } else {
+        // do walking stuff here
       }
     }
     window.addEventListener('locality-changed', localityChanged)
@@ -316,7 +318,8 @@
       startButton.disabled = true
       const stopButton = document.querySelector('button#stop')
       stopButton.disabled = false
-      window._map.removeEventListener('user-location-change', userLocationChange)
+      window.walking.state.active = true
+      // window._map.removeEventListener('user-location-change', userLocationChange)
       const startWalkForm = document.forms.namedItem('startWalkForm')
       startWalkForm.style.display = 'none'
       function go(e) {
@@ -334,7 +337,8 @@
       const stop = document.querySelector('button#stop')
       start.disabled = false
       stop.disabled = true
-      window._map.addEventListener('user-location-change', userLocationChange)
+      window.walking.state.active = false
+      // window._map.addEventListener('user-location-change', userLocationChange)
       const startWalkForm = document.forms.namedItem('startWalkForm')
       startWalkForm.style.display = 'block'
     }
@@ -399,7 +403,7 @@
       const tasks = [
         {TASK: 'START_WALK', msg: 'I am starting a walk'},
         {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
-        {TASK: 'SET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
+        // {TASK: 'ET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
         {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
         {TASK: 'GET_WALK', msg: 'Get that previous walk.'},
         {TASK: 'GET_A_LIFE', msg: 'you heard me'}
