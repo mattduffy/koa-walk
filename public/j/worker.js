@@ -10,7 +10,7 @@ let walkState
 if (walkState === undefined) {
   walkState = new State()
 }
-console.log(walkState)
+console.log('worker state: ', walkState)
 
 let isLoggedIn = false
 let user = null
