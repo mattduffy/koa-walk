@@ -152,8 +152,16 @@
       async function geoSuccess(g) {
         console.log('geoSuccess')
         console.info(g)
+        if (window.walking) {
+          window.walking.setCurrentPosition({
+            latitude: g.coords.latitude,
+            longitude: g.coords.longitude,
+            accuracy: g.coords.accuracy,
+            timestamp: g.timestamp.valueOf(),
+          })
+        }
         updatePosition(g)
-        window.p = g
+        // window.p = g
         position = g
         try {
           await setPosition(position)
@@ -167,7 +175,6 @@
       }
       const geoOpts = {
         enableHighAccuracy: true,
-        // maximumAge: 1000 * 10 * 3,
         maximumAge: 1000 * 3,
       }
       console.log('geo options: ', geoOpts)
@@ -180,21 +187,19 @@
     }
     function updatePosition(g) {
       console.log('updating position', g)
-      lat = g.coords.latitude
-      lon = g.coords.longitude
-      if (g.coords.accuracy > accuracy) {
-        console.info(`position.coords.accuracy (${g.coords.accuracy}) is greater than ${accuracy}m`)
+      lat = g?.coords?.latitude ?? g.latitude
+      lon = g?.coords?.longitude ?? g.longitude
+      const _acc = g?.coords?.accuracy ?? g.accuracy
+      if (_acc > accuracy) {
+        console.info(`position.accuracy (${_acc}) is greater than ${accuracy}m`)
         lowAccuracy = true
       }
-      const coords = { lat, lon, acc: g.coords.accuracy }
+      const coords = { latitude: lat, longitude: lon, accuracy: _acc}
       populateApp(null, coords)
     }
     async function setPosition(position) {
       console.log('geolocation: ', position)
-      // console.log(`Low accuracy ceiling: ${accuracy} + ${accuracyMargin} = ${accuracy + accuracyMargin} (actual accuracy: ${Math.trunc(position.coords.accuracy)})`)
-      // console.log(`setPosition() position: ${position}, lowAccuracy: ${lowAccuracy}`)
       if (position && !lowAccuracy) {
-        // console.log(`position accuracy: ${position.coords.accuracy}`)
         await goodAccuracyCanWalk(mapOpts, position)
       } else if (position?.coords?.accuracy > accuracy && position?.coords?.accuracy <= accuracy + accuracyMargin) {
         console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
@@ -236,14 +241,16 @@
           )
         })
         console.log('myGetCurrentPosition:: ', position)
-        window.p = position
+        // window.p = position
+        window.walking.setCurrentPosition(position)
         await setPosition(position)
         updatePosition(position)
       } catch (e) {
         console.warn('failed to acquire geoLocation for some reason.')
         console.warn(e)
         console.log(`Failing back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
-        window.p = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
+        // window.p = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
+        window.walking.setCurrentPosition({ latitude: lat, longitude: lon, accuracy: 1000, timestamp: new Date().valueOf() })
         position = null
         lowAccuracy = null
         await setPosition(position)
@@ -257,10 +264,12 @@
     }
     window._map.addEventListener('user-location-change', userLocationChange)
     async function userLocationChange(e) {
-      console.log(`user-location-change event: ${e.coordinate}`)
-      // console.log('accuracy: ', window?.p?.coords?.accuracy)
+      console.log('user-location-change event: ', e)
+      const coords = { latitude: e.coordinate.latitude, longitude: e.coordinate.longitude, accuracy: window.walking.state.currentPosition.accuracy, timestamp: e.timestamp.valueOf() }
+      console.log(window.walking.state)
+      console.log(coords)
+      window.walking.setCurrentPosition(coords)
       if (!window.walking.state?.active) {
-        const coords = { coords: { latitude: e.coordinate.latitude, longitude: e.coordinate.longitude, accuracy: window.p.coords.accuracy } }
         const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
         console.log(x)
         window._map.setCenterAnimated(x, true)
@@ -269,7 +278,8 @@
           new CustomEvent('locality-changed', {
             bubbles: false,
             cancelable: true,
-            detail: { coords: coords.coords },
+            // detail: { coords: coords.coords },
+            detail: { coords },
           })
         )
       } else {
@@ -686,7 +696,7 @@
     }
   }
   function populateApp(strings, coords = null, locality = null) {
-    const a = window.app || document.querySelector('div#app')    
+    const a = window.app ?? document.querySelector('div#app')    
     // console.log(a)
     if (strings) {
       a.children.namedItem('h3').innerHTML = strings.h3
@@ -711,22 +721,23 @@
       document.querySelector('input[id="name"]').value = (locality?.subLocality) ? locality.subLocality : locality.name
     }
     if (coords) {
-      console.log(`updating user's coordinates: (${coords.lat.toFixed(4) ?? coords.latitude.toFixed(4)}, ${coords.lon.toFixed(4) ?? coords.longitude.toFixed(4)})`)
+      console.log('populateApp coords: ', coords)
+      console.log(`updating user's coordinates: (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`)
       const _lat = a.querySelector('p > span#lat')
-      if ((coords.lat || coords.latitude) && _lat) {
-        a.querySelector('p > span#lat').innerHTML = coords.lat.toFixed(4) ?? coords.latitude.toFixed(4)
+      if (coords.latitude && _lat) {
+        a.querySelector('p > span#lat').innerHTML = coords.latitude.toFixed(4)
       }
       const _lon = a.querySelector('p > span#lon')
-      if ((coords.lon || coords.longitude) && _lon) {
-        a.querySelector('p > span#lon').innerHTML = coords.lon.toFixed(4) ?? coords.longitude.toFixed(4)
+      if (coords.longitude && _lon) {
+        a.querySelector('p > span#lon').innerHTML = coords.longitude.toFixed(4)
       }
       const _acc = a.querySelector('p > span#acc')
-      if ((coords.acc || coords.accuracy) && _acc) {
-        a.querySelector('p > span#acc').innerHTML = displayUnits(coords.acc, 'f', 1) ?? displayUnits(coords.accuracy, 'f', 1)
+      if (coords.accuracy && _acc) {
+        a.querySelector('p > span#acc').innerHTML = displayUnits(coords.accuracy, 'f', 1)
       }
       // new walk div content
-      document.querySelector('input[id="lat"]').value = coords?.lat ?? coords?.latitude ?? ''
-      document.querySelector('input[id="lon"]').value = coords?.lon ?? coords?.longitude ?? ''
+      document.querySelector('input[id="lat"]').value = coords.latitude ?? ''
+      document.querySelector('input[id="lon"]').value = coords.longitude ?? ''
     }
   }
   await main()
