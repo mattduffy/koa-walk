@@ -62,23 +62,13 @@
 </script>
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
-  window.geoWatch = null
+  
+  window.csrfToken = '<%= csrfToken %>'
   window.walking = window.walking ?? new State()
+  window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
-  function fitMap() {
-    let mapHeight = window.innerHeight - dHeader.clientHeight
-    dMap.style.height = `${mapHeight}px`
-    dMap.style.maxHeight = `${mapHeight}px`
-  }
-  window.addEventListener('resize', (e) => {
-    const h = window.innerHeight
-    const w = window.innerWidth
-    fitMap()
-  })
-  fitMap()
-  window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
-  window.csrfToken = '<%= csrfToken %>'
+  
   const accuracy = 30 // meters
   const accuracyMargin = 5 // meters
   let lowAccuracy = false
@@ -86,6 +76,14 @@
   const jwtAccess = '<%= searchJwtAccess %>'
   let map
   const app = document.querySelector('div#app')
+  function fitMap(e = {}) {
+    console.log('fitMap(e)', e)
+    let mapHeight = window.innerHeight - dHeader.clientHeight
+    dMap.style.height = `${mapHeight}px`
+    dMap.style.maxHeight = `${mapHeight}px`
+  }
+  window.addEventListener('resize', fitMap)
+  fitMap()
   async function setupMapKitJs() {
     const tokenOpts = {
       method: 'GET',
@@ -123,7 +121,6 @@
     let lat = 39.833333 
     let lon = -98.583333
     let position
-    let watchPosId
     const mapOpts = {
       // mapType: mapkit.Map.MapTypes.Hybrid,
       mapType: mapkit.Map.MapTypes.Standard,
@@ -148,7 +145,6 @@
         timeout: 5000,
         maximumAge: 0,
       }
-      // watchPosId = navigator.geolocation.watchPosition(geoSuccess, geoFail, _opts)
       async function geoSuccess(g) {
         console.log('geoSuccess')
         console.info(g)
@@ -161,7 +157,6 @@
           })
         }
         updatePosition(g)
-        // window.p = g
         position = g
         try {
           await setPosition(position)
@@ -186,7 +181,7 @@
       await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
     }
     function updatePosition(g) {
-      console.log('updating position', g)
+      console.log('updatePosition()', g)
       lat = g?.coords?.latitude ?? g.latitude
       lon = g?.coords?.longitude ?? g.longitude
       const _acc = g?.coords?.accuracy ?? g.accuracy
@@ -198,18 +193,16 @@
       populateApp(null, coords)
     }
     async function setPosition(position) {
-      console.log('geolocation: ', position)
+      console.log('setPosition()', position)
       if (position && !lowAccuracy) {
         await goodAccuracyCanWalk(mapOpts, position)
       } else if (position?.coords?.accuracy > accuracy && position?.coords?.accuracy <= accuracy + accuracyMargin) {
         console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
-        console.info('can\'t track movement accurately.')
-        console.info(mapOpts)
+        console.info('can\'t track movement very accurately.')
         await lowAccuracyPositionCantWalk(mapOpts, position)
       } else if (lowAccuracy && position) {
         console.info(`really low geoLocation accuracy: ${position.coords.accuracy}`)
         console.info('can\'t track movement accurately.')
-        console.log(mapOpts)
         await lowAccuracyPositionCantWalk(mapOpts, position)
       } else {
         console.log('no geo position available')
@@ -241,7 +234,6 @@
           )
         })
         console.log('myGetCurrentPosition:: ', position)
-        // window.p = position
         window.walking.setCurrentPosition(position)
         await setPosition(position)
         updatePosition(position)
@@ -249,7 +241,6 @@
         console.warn('failed to acquire geoLocation for some reason.')
         console.warn(e)
         console.log(`Failing back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
-        // window.p = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
         window.walking.setCurrentPosition({ latitude: lat, longitude: lon, accuracy: 1000, timestamp: new Date().valueOf() })
         position = null
         lowAccuracy = null
@@ -266,12 +257,12 @@
     async function userLocationChange(e) {
       console.log('user-location-change event: ', e)
       const coords = { latitude: e.coordinate.latitude, longitude: e.coordinate.longitude, accuracy: window.walking.state.currentPosition.accuracy, timestamp: e.timestamp.valueOf() }
-      console.log(window.walking.state)
-      console.log(coords)
+      // console.log('walker state: ', window.walking.state)
+      // console.log(coords)
       window.walking.setCurrentPosition(coords)
       if (!window.walking.state?.active) {
         const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
-        console.log(x)
+        // console.log(x)
         window._map.setCenterAnimated(x, true)
         updatePosition(coords)
         window.dispatchEvent(
@@ -288,6 +279,7 @@
     }
     window.addEventListener('locality-changed', localityChanged)
     function localityChanged(e) {
+      console.log('localityChanged(e)', e)
       e.preventDefault()
       e.stopPropagation()
       const a = window.app || document.querySelector('div#app')
@@ -298,7 +290,6 @@
         a.appendChild(ul)
       }
       if (e.detail.coords) {
-        console.log(e.detail)
         let li = document.createElement('li')
         li.textContent = `lat/lon: (${e.detail.coords.latitude.toFixed(4)}, ${e.detail.coords.longitude.toFixed(4)}), acc: ${displayUnits(e.detail.coords.accuracy, 'f', 1)}`
         ul.appendChild(li)
