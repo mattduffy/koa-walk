@@ -256,25 +256,29 @@
     window._map.addEventListener('user-location-change', userLocationChange)
     async function userLocationChange(e) {
       console.log('user-location-change event: ', e)
-      const coords = { latitude: e.coordinate.latitude, longitude: e.coordinate.longitude, accuracy: window.walking.state.currentPosition.accuracy, timestamp: e.timestamp.valueOf() }
-      // console.log('walker state: ', window.walking.state)
-      // console.log(coords)
+      const coords = {
+        latitude: e.coordinate.latitude,
+        longitude: e.coordinate.longitude,
+        accuracy: window.walking.state.currentPosition.accuracy,
+        timestamp: e.timestamp.valueOf()
+      }
       window.walking.setCurrentPosition(coords)
       if (!window.walking.state?.active) {
         const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
-        // console.log(x)
         window._map.setCenterAnimated(x, true)
         updatePosition(coords)
         window.dispatchEvent(
           new CustomEvent('locality-changed', {
             bubbles: false,
             cancelable: true,
-            // detail: { coords: coords.coords },
             detail: { coords },
           })
         )
       } else {
         // do walking stuff here
+        window.walker.postMessage({
+          TASK: 'SET_WAYPOINT',
+        })
       }
     }
     window.addEventListener('locality-changed', localityChanged)
@@ -320,17 +324,22 @@
       const stopButton = document.querySelector('button#stop')
       stopButton.disabled = false
       window.walking.state.active = true
-      // window._map.removeEventListener('user-location-change', userLocationChange)
       const startWalkForm = document.forms.namedItem('startWalkForm')
       startWalkForm.style.display = 'none'
+      const name = startWalkForm.children.namedItem('name').value
       const h3 = document.querySelector('h3#walkName')
-      h3.textContent = startWalkForm.children.namedItem('name').value
+      h3.textContent = name
       h3.style.display = 'block'
       function go(e) {
         console.log('startWalk.go(): ', e)
       }
       startWalk.go = go
-      const w = { startTime: Math.floor(new Date().getTime() / 1000), TASK: 'START_WALK' }
+      const w = {
+        TASK: 'START_WALK',
+        date: new Date().valueOf(),
+        name: name,
+        startPosition: window.walking.currentPosition
+      }
       window.walker.postMessage(w)
     }
     document.querySelector('button#stop').addEventListener('click', stopWalk)
@@ -342,7 +351,6 @@
       start.disabled = false
       stop.disabled = true
       window.walking.state.active = false
-      // window._map.addEventListener('user-location-change', userLocationChange)
       const startWalkForm = document.forms.namedItem('startWalkForm')
       startWalkForm.style.display = 'block'
     }

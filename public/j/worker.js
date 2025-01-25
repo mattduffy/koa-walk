@@ -146,6 +146,12 @@ function setWayPoint(w) {
   walkState.printPoints()
 }
 
+function startWalk(c) {
+  walkState.name = c.name
+  walkState.date = c.date
+  walkState.startPosition = c.startPosition
+}
+
 onmessage = async (e) => {
   // console.log(self.name)
   console.log('2', e.data)
@@ -192,7 +198,7 @@ onmessage = async (e) => {
         pointDistance(e.data.p1, e.data.p2)
         break
       case 'START_WALK':
-        console.log(e.data.TASK, e.data.startTime)
+        startWalk(e.data)
         break
       case 'STOP_WALK':
         console.log(e.data.TASK, e.data.msg)
