@@ -77,7 +77,7 @@
   let map
   const app = document.querySelector('div#app')
   function fitMap(e = {}) {
-    console.log('fitMap(e)', e)
+    // console.log('fitMap(e)', e)
     let mapHeight = window.innerHeight - dHeader.clientHeight
     dMap.style.height = `${mapHeight}px`
     dMap.style.maxHeight = `${mapHeight}px`
@@ -148,14 +148,6 @@
       async function geoSuccess(g) {
         console.log('geoSuccess')
         console.info(g)
-        if (window.walking) {
-          window.walking.setCurrentPosition({
-            latitude: g.coords.latitude,
-            longitude: g.coords.longitude,
-            accuracy: g.coords.accuracy,
-            timestamp: g.timestamp.valueOf(),
-          })
-        }
         updatePosition(g)
         position = g
         try {
@@ -191,9 +183,15 @@
       }
       const coords = { latitude: lat, longitude: lon, accuracy: _acc}
       populateApp(null, coords)
+      if (window.walking) {
+        window.walking.currentPosition = coords
+      }
     }
     async function setPosition(position) {
       console.log('setPosition()', position)
+      if (window.walking) {
+        window.walking.currentPosition = position
+      }
       if (position && !lowAccuracy) {
         await goodAccuracyCanWalk(mapOpts, position)
       } else if (position?.coords?.accuracy > accuracy && position?.coords?.accuracy <= accuracy + accuracyMargin) {
@@ -233,16 +231,14 @@
             geoOpts
           )
         })
-        console.log('myGetCurrentPosition:: ', position)
-        window.walking.setCurrentPosition(position)
+        console.log('myGetCurrentPosition() ', position)
         await setPosition(position)
         updatePosition(position)
       } catch (e) {
         console.warn('failed to acquire geoLocation for some reason.')
         console.warn(e)
         console.log(`Failing back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
-        window.walking.setCurrentPosition({ latitude: lat, longitude: lon, accuracy: 1000, timestamp: new Date().valueOf() })
-        position = null
+        position = { latitude: lat, longitude: lon, accuracy: 1000, timestamp: new Date().valueOf() }
         lowAccuracy = null
         await setPosition(position)
       }
@@ -262,8 +258,7 @@
         accuracy: window.walking.state.currentPosition.accuracy,
         timestamp: e.timestamp.valueOf()
       }
-      window.walking.setCurrentPosition(coords)
-      if (!window.walking.state?.active) {
+      if (!window.walking.active) {
         const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
         window._map.setCenterAnimated(x, true)
         updatePosition(coords)
@@ -378,7 +373,7 @@
         doLogout()
       })
       window.walker.onmessage = function(e) {
-        console.log(e.data)
+        console.log('walker.onmessage: ', e.data)
         switch (e.data.TASK) {
           case 'SETUP':
 
@@ -411,22 +406,22 @@
       }
       
 
-      window.walker.postMessage('What should I do?')
-      const tasks = [
-        // {TASK: 'START_WALK', msg: 'I am starting a walk'},
-        // {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
-        // {TASK: 'ET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
-        {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
-        {TASK: 'GET_WALK', msg: 'Get that previous walk.'},
-        {TASK: 'GET_A_LIFE', msg: 'you heard me'}
-      ]
-      try {
-        tasks.forEach(async (walk) => {
-          // window.walker.postMessage(walk)
-        })
-      } catch (e) {
-        console.warn(e)
-      }
+      // window.walker.postMessage('What should I do?')
+      // const tasks = [
+      //   // {TASK: 'START_WALK', msg: 'I am starting a walk'},
+      //   // {TASK: 'STOP_WALK', msg: 'I am done with my walk'},
+      //   // {TASK: 'ET_WAYPOINT', msg: `I am at position (${lat} lat, ${lon} lon).`},
+      //   {TASK: 'SAVE_WALK', msg: 'Save this walk.'},
+      //   {TASK: 'GET_WALK', msg: 'Get that previous walk.'},
+      //   {TASK: 'GET_A_LIFE', msg: 'you heard me'}
+      // ]
+      // try {
+      //   tasks.forEach(async (walk) => {
+      //     // window.walker.postMessage(walk)
+      //   })
+      // } catch (e) {
+      //   console.warn(e)
+      // }
     } else {
       console.log('Not compatible with walking.')
     }   
