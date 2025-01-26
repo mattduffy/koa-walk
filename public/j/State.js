@@ -1,5 +1,18 @@
 import Subject from './Subject.js'
 
+function normalizePosition(c) {
+  console.log('normalizePosition(c): ', c)
+  if (c.constructor.name === 'GeolocationPosition') {
+    console.log('normalizing GeoLocationPosition into smaller obj.')
+    return {
+      latitude: c.coords.latitude,
+      longitude: c.coords.longitude,
+      accuracy: c.coords.accuracy,
+      timestamp: c.timestamp,
+    }
+  }
+  return c
+}
 class State extends Subject {
   constructor() {
     super()
@@ -35,8 +48,16 @@ class State extends Subject {
     return this.state.name
   }
 
-  set startPosition(c) {
-    this.state.startPosition = c
+  set active(s) {
+    this.state.active = s
+  }
+
+  get active() {
+    return this.state.active
+  }
+
+  set startPosition(c = {}) {
+    this.state.startPosition = normalizePosition(c)
   }
 
   get startPosition() {
@@ -44,7 +65,9 @@ class State extends Subject {
   }
 
   set currentPosition(c) {
-    this.state.currentPosition = c
+    console.log('setCurrentPosition(c): ', c)
+    this.state.currentPosition = normalizePosition(c)
+    console.log('current position is now: ', this.state.currentPosition)
   }
 
   get currentPosition() {
@@ -52,31 +75,11 @@ class State extends Subject {
   }
 
   set endPosition(c) {
-    this.state.endPosition = c
+    this.state.endPosition = normalizePosition(c)
   }
 
   get endPosition() {
     return this.state.endPosition
-  }
-
-  getCurrentPosition() {
-    return this.state.currentPosition
-  }
-
-  setCurrentPosition(c = {}) {
-    console.log('setCurrentPosition(c): ', c)
-    if (c.constructor.name === 'GeolocationPosition') {
-      console.log('normalizing GeoLocationPosition into smaller obj.')
-      this.state.currentPosition = {
-        latitude: c.coords.latitude,
-        longitude: c.coords.longitude,
-        accuracy: c.coords.accuracy,
-        timestamp: c.timestamp,
-      }
-    } else {
-      this.state.currentPosition = c
-    }
-    console.log('current position is now: ', this.state.currentPosition)
   }
 
   addPoint(point) {
