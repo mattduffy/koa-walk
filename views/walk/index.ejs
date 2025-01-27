@@ -258,10 +258,10 @@
         accuracy: window.walking.state.currentPosition.accuracy,
         timestamp: e.timestamp.valueOf()
       }
+      updatePosition(coords)
       if (!window.walking.active) {
         const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
         window._map.setCenterAnimated(x, true)
-        updatePosition(coords)
         window.dispatchEvent(
           new CustomEvent('locality-changed', {
             bubbles: false,
@@ -271,9 +271,9 @@
         )
       } else {
         // do walking stuff here
-        window.walker.postMessage({
-          TASK: 'SET_WAYPOINT',
-        })
+        window.walking.addPoint(coords)
+        markWalkPointOnMap()
+        await recordWalk(coords)
       }
     }
     window.addEventListener('locality-changed', localityChanged)
@@ -318,7 +318,6 @@
       startButton.disabled = true
       const stopButton = document.querySelector('button#stop')
       stopButton.disabled = false
-      window.walking.state.active = true
       const startWalkForm = document.forms.namedItem('startWalkForm')
       startWalkForm.style.display = 'none'
       const name = startWalkForm.children.namedItem('name').value
@@ -329,14 +328,23 @@
         console.log('startWalk.go(): ', e)
       }
       startWalk.go = go
+      const _d = new Date().valueOf()
+      window.walking.active = true
+      window.walking.startPosition = window.walking.currentPosition
+      window.walking.startTime = _d
+      window.walking.name = name
+      window.walking.date = _d
       const w = {
         TASK: 'START_WALK',
-        date: new Date().valueOf(),
+        date: _d,
         name: name,
-        startPosition: window.walking.currentPosition
+        startPosition: window.walking.currentPosition,
+        startTime: _d,
       }
+      window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d })
       window.walker.postMessage(w)
     }
+    
     document.querySelector('button#stop').addEventListener('click', stopWalk)
     async function stopWalk(e) {
       e.preventDefault()
@@ -345,11 +353,50 @@
       const stop = document.querySelector('button#stop')
       start.disabled = false
       stop.disabled = true
-      window.walking.state.active = false
       const startWalkForm = document.forms.namedItem('startWalkForm')
       startWalkForm.style.display = 'block'
+      const coords = {
+        latitude: window.walking.currentPosition.latitude,
+        longitude: window.walking.currentPosition.longitude,
+        accuracy: window.walking.currentPosition.accuracy,
+        timestamp: new Date().valueOf()
+      }
+      await endWalk(coords)
     }
-      
+    async function recordWalk(wp) {
+      const step = {
+        TASK: 'SET_WAYPOINT',
+        wp,
+      }
+      // markWalkPointOnMap()
+      window.walker.postMessage(step)
+    }
+    async function endWalk(end) {
+      window.walking.state.active = false
+      window.walking.endPosition = end
+      window.walking.endTime = end.timestamp
+      const finalStep = {
+        TASK: 'STOP_WALK',
+        end,
+      }
+      window.walking.addPoint(end)
+      window.walker.postMessage(end)
+    }
+    function markWalkPointOnMap() {
+      console.log('Mark point on map: ')
+      const style = new mapkit.Style({
+        lineWidth: 2,
+        lineJoin: "round",
+        lineDash: [8, 4],
+        strokeColor: "#F0F"
+      })
+      const points = window.walking.points.map((p) => {
+        return new mapkit.Coordinate(p.latitude, p.longitude)
+      })
+      const polyline = new mapkit.PolylineOverlay( points, { style: style })
+      window._map.addOverlay(polyline)
+      window._map.showItems(polyline)
+    }
     if (window.Worker) {
       console.log('Worker <=> Walker')
       const logged = <%= isAuthenticated %>
