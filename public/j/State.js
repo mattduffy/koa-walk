@@ -20,9 +20,11 @@ class State extends Subject {
       active: false,
       date: new Date().valueOf(),
       name: null,
+      startTime: null,
       startPosition: null,
       currentPosition: null,
       endPosition: null,
+      endTime: null,
       wayPoints: [],
     }
   }
@@ -56,6 +58,22 @@ class State extends Subject {
     return this.state.active
   }
 
+  set startTime(t) {
+    this.state.startTime = t
+  }
+
+  get startTime() {
+    return this.state.startTime
+  }
+
+  set endTime(t) {
+    this.state.endTime = t
+  }
+
+  get endTime() {
+    return this.state.endTime
+  }
+
   set startPosition(c = {}) {
     this.state.startPosition = normalizePosition(c)
   }
@@ -80,6 +98,10 @@ class State extends Subject {
 
   get endPosition() {
     return this.state.endPosition
+  }
+
+  get points() {
+    return this.state.wayPoints
   }
 
   addPoint(point) {
