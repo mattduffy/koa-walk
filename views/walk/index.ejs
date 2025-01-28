@@ -259,9 +259,9 @@
         timestamp: e.timestamp.valueOf()
       }
       updatePosition(coords)
+      const c = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
       if (!window.walking.active) {
-        const x = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
-        window._map.setCenterAnimated(x, true)
+        window._map.setCenterAnimated(c, true)
         window.dispatchEvent(
           new CustomEvent('locality-changed', {
             bubbles: false,
@@ -271,9 +271,9 @@
         )
       } else {
         // do walking stuff here
-        window.walking.addPoint(coords)
+        await recordWalk(coords, c)
         markWalkPointOnMap()
-        await recordWalk(coords)
+        window._map.setCenterAnimated(c, false)
       }
     }
     window.addEventListener('locality-changed', localityChanged)
@@ -334,14 +334,17 @@
       window.walking.startTime = _d
       window.walking.name = name
       window.walking.date = _d
+      const c = new mapkit.Coordinate(window.walking.currentPosition.latitude, window.walking.currentPosition.longitude)
       const w = {
         TASK: 'START_WALK',
         date: _d,
         name: name,
         startPosition: window.walking.currentPosition,
         startTime: _d,
+        c, 
       }
       window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d })
+      window.walking.c = c
       window.walker.postMessage(w)
     }
     
@@ -363,32 +366,38 @@
       }
       await endWalk(coords)
     }
-    async function recordWalk(wp) {
+    async function recordWalk(wp, c) {
       const step = {
         TASK: 'SET_WAYPOINT',
         wp,
+        c,
       }
       // markWalkPointOnMap()
+      window.walking.c = c
+      window.walking.addPoint(wp)
       window.walker.postMessage(step)
     }
     async function endWalk(end) {
       window.walking.state.active = false
       window.walking.endPosition = end
       window.walking.endTime = end.timestamp
+      const c = new mapkit.Coordinate(end.latitude, end.longitude)
       const finalStep = {
         TASK: 'STOP_WALK',
         end,
+        c,
       }
       window.walking.addPoint(end)
+      window.walking.c = c
       window.walker.postMessage(end)
     }
     function markWalkPointOnMap() {
       console.log('Mark point on map: ')
       const style = new mapkit.Style({
-        lineWidth: 2,
+        lineWidth: 10,
         lineJoin: "round",
-        lineDash: [8, 4],
-        strokeColor: "#F0F"
+        lineDash: [],
+        strokeColor: "royalblue"
       })
       const points = window.walking.points.map((p) => {
         return new mapkit.Coordinate(p.latitude, p.longitude)
