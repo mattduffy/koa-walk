@@ -147,10 +147,12 @@ function startWalk(c) {
   walkState.startTime = c.startTime
   walkState.startPosition = c.startPosition
   walkState.addPoint({ ...c.startPosition, timestamp: walkState.startTime })
+  walkState.c = c.c
 }
 
 function setWayPoint(w) {
-  walkState.addPoint(w)
+  walkState.addPoint(w.wp)
+  walkState.c = w.c
   walkState.printPoints()
 }
 
@@ -158,6 +160,7 @@ function endWalk(c) {
   walkState.endPosition = c.endPosition
   walkState.endTime = c.endTime
   walkState.addPoint(c)
+  walkState.c = c.c
 }
 
 onmessage = async (e) => {
@@ -209,7 +212,8 @@ onmessage = async (e) => {
         break
       case 'SET_WAYPOINT':
         console.log(e.data.TASK, e.data.wp)
-        setWayPoint(e.data.wp)
+        // setWayPoint(e.data.wp)
+        setWayPoint(e.data)
         break
       case 'STOP_WALK':
         console.log(e.data.TASK, e.data)
