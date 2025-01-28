@@ -26,6 +26,7 @@ class State extends Subject {
       endPosition: null,
       endTime: null,
       wayPoints: [],
+      c: [],
     }
   }
 
@@ -102,6 +103,14 @@ class State extends Subject {
 
   get points() {
     return this.state.wayPoints
+  }
+
+  get c() {
+    return this.state.c
+  }
+
+  set c(p) {
+    this.state.c.push(p)
   }
 
   addPoint(point) {
