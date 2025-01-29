@@ -27,12 +27,23 @@ class State extends Subject {
       endTime: null,
       wayPoints: [],
       c: [],
+      duration: null,
     }
   }
 
   update(data = {}) {
     this.state = Object.assign(this.state, data)
     this.notify(this.state)
+  }
+
+  get duration() {
+    return this.state.duration
+  }
+
+  set duration(d) {
+    if (d) {
+      this.state.duration = this.state.endTime - this.state.startTime
+    }
   }
 
   set date(d) {

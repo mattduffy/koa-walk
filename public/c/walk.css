@@ -210,8 +210,44 @@ h3#walkName {
   display: none;
 }
 
+div#stats {
+
+}
+
+div#stats span#duration {
+  float: right;
+}
+
+div#stats span#numWaypoints {
+  float: right;
+}
+
+div#stats span#distance {
+  float: right;
+}
+
+button#start {
+  display: inline-block;
+  float: left;
+  margin-left: 1.5em;
+}
+
 button#stop {
   display: inline-block;
+  float: right;
+  margin-right: 1.5em;
+}
+
+button#saveWalk {
+  display: inline-block;
+  float: left;
+  margin-left: 1.5em;
+}
+
+button#clearWalk {
+  display: inline-block;
+  float: right;
+  margin-right: 1.5em;
 }
 
 @media screen and (max-width: 400px) {
