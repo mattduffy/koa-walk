@@ -65,6 +65,22 @@ router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) 
   ctx.type = 'application/json; charset=utf-8'
   ctx.body = body
 })
+
+router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) => {
+  const log = walkLog.extend('save')
+  // const error = walkError.extend('save')
+  log('inside walk router: /save')
+  let body
+  if (ctx.state?.sessionUser) {
+    body = { status: 'save' }
+  } else {
+    body = { status: 'failed', msg: 'Must be logged in to permanently save a walk.' }
+  }
+  ctx.status = 200
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = body
+})
+
 router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) => {
   const log = walkLog.extend('getList')
   const error = walkError.extend('getList')
