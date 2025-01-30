@@ -256,10 +256,12 @@ button#clearWalk {
   }
   input[type=text] {
     width: auto;
+    max-width: 95%;
   }
 
   input[type=password] {
     width: auto;
+    max-width: 95%;
   }
 
   textarea {

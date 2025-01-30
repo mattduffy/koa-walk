@@ -28,10 +28,10 @@
         <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
         <label for="name">Give your walk a name</label>
         <input type="text" id="name" size=45 value="">
-        <label for="lat">Latitude</label>
-        <input type="text" id="lat" size=45 readonly value="">
-        <label for="lon">Longitude</label>
-        <input type="text" id="lon" size=45 readonly value="">
+        <label for="location">Location</label>
+        <input type="text" id="location" size=45 value="">
+        <label for="lat">Starting Coordinates</label>
+        <input type="text" id="coords" size=45 readonly value="">
       </form>
       <br>
       <h3 id="walkName"></h3>
@@ -767,15 +767,26 @@
       }
     }
     if (locality) {
-      console.log(`updating new locality: ${(locality?.subLocality) ? locality.subLocality + ',' : ''} ${locality?.name}`) 
-      const l = `${(locality?.subLocality) ? '<span id="subLocality">' + locality.subLocality + '</span><br>' : ''}`
-        + `${(locality?.name) ? '<span id="name">' + locality.name + '</span><br>' : ''}` 
-        + `${(locality?.locality) ? '<span id="locality">' + locality.locality + '</span>, ' : ''}`
-        + `${(locality?.administrativeAreaCode) ? '<span id="administrativeAC">' + locality.administrativeAreaCode + '</span>' : ''}`
+      const {
+        subLocality,
+        name,
+        administrativeArea,
+        administrativeAreaCode,
+      } = locality ?? null
+      // const name = locality.name ?? null
+      // const adminAreacode = locality.administrativeAreaCode ?? null
+      console.log(`updating new locality: ${(subLocality) ? subLocality + ',' : ''} ${name}`)
+      const l = `${(subLocality) ? '<span id="subLocality">' + subLocality + '</span><br>' : ''}`
+        + `${(name) ? '<span id="name">' + name + '</span><br>' : ''}` 
+        + `${(administrativeArea) ? '<span id="administrativeArea">' + administrativeArea + '</span>, ' : ''}`
+        + `${(administrativeAreaCode) ? '<span id="administrativeAC">' + administrativeAreaCode + '</span>' : ''}`
         + '<br>'
         a.children.namedItem('p2').innerHTML += l
       // new walk div content
-      document.querySelector('input[id="name"]').value = (locality?.subLocality) ? locality.subLocality : locality.name
+      document.querySelector('input[id="name"]').value = (subLocality) ? subLocality : name
+      document.querySelector('input[id="location"]').value = `${(name) ? name : ''}`
+        + `${(administrativeArea) ? ', ' + administrativeArea : ''}`
+        + `${(administrativeAreaCode) ? ', ' + administrativeAreaCode : ''}`
     }
     if (coords) {
       console.log('populateApp coords: ', coords)
@@ -793,8 +804,9 @@
         a.querySelector('p > span#acc').innerHTML = displayUnits(coords.accuracy, 'f', 1)
       }
       // new walk div content
-      document.querySelector('input[id="lat"]').value = coords.latitude ?? ''
-      document.querySelector('input[id="lon"]').value = coords.longitude ?? ''
+      document.querySelector('input[id="coords"]').value = `${coords.latitude}, ${coords.longitude}`
+      // document.querySelector('input[id="lat"]').value = coords.latitude ?? ''
+      // document.querySelector('input[id="lon"]').value = coords.longitude ?? ''
     }
   }
   await main()
