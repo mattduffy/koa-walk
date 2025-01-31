@@ -38,9 +38,9 @@
       <button id="start">Start</button>
       <button id="stop" disabled>Stop</button><br>
       <div id="stats">
-        Walk duration: <span id="duration">01:23:43</span><br>
-        Waypoints recorded: <span id="numWaypoints">1045</span><br>
-        Distance walked: <span id="distance">1.1 miles</span><br> 
+        Walk duration: <span id="duration">00:00:00</span><br>
+        Waypoints recorded: <span id="numWaypoints">0</span><br>
+        Distance walked: <span id="distance">0</span><br> 
       </div>
       <br>
       <button id="saveWalk">Save Walk</button>
@@ -245,7 +245,7 @@
         console.warn('failed to acquire geoLocation for some reason.')
         console.warn(e)
         console.log(`Failing back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
-        position = { latitude: lat, longitude: lon, accuracy: 1000, timestamp: new Date().valueOf() }
+        position = { latitude: lat, longitude: lon, accuracy: 1000, timestamp: Date.now() }
         lowAccuracy = null
         await setPosition(position)
       }
@@ -335,7 +335,7 @@
         console.log('startWalk.go(): ', e)
       }
       startWalk.go = go
-      const _d = new Date().valueOf()
+      const _d = Date.now()
       window.walking.active = true
       window.walking.startPosition = window.walking.currentPosition
       window.walking.startTime = _d
@@ -353,8 +353,14 @@
       window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d })
       window.walking.c = c
       window.walker.postMessage(w)
+      window.walking.state.intervalId = setInterval(() => {
+        const _p = document.querySelector('span#numWaypoints')
+        _p.textContent = window.walking.points.length
+        const _d = document.querySelector('span#duration')
+        const _n = Date.now() - window.walking.startTime
+        _d.textContent = new Date((_n)).toISOString().slice(11, 19)
+      }, 1000)
     }
-    
     document.querySelector('button#stop').addEventListener('click', stopWalk)
     async function stopWalk(e) {
       e.preventDefault()
@@ -369,9 +375,10 @@
         latitude: window.walking.currentPosition.latitude,
         longitude: window.walking.currentPosition.longitude,
         accuracy: window.walking.currentPosition.accuracy,
-        timestamp: new Date().valueOf()
+        timestamp: Date.now()
       }
       await endWalk(coords)
+      clearInterval(window.walking.state.intervalId)
     }
     async function recordWalk(wp, c) {
       const step = {

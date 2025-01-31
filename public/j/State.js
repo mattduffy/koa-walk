@@ -18,7 +18,7 @@ class State extends Subject {
     super()
     this.state = {
       active: false,
-      date: new Date().valueOf(),
+      date: null,
       name: null,
       startTime: null,
       startPosition: null,
