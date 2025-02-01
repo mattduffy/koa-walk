@@ -36,6 +36,20 @@ class State extends Subject {
     this.notify(this.state)
   }
 
+  clear() {
+    this.state.active = false
+    this.state.date = null
+    this.state.namee = null
+    this.state.startTime = null
+    this.state.startPosition = null
+    this.state.currentPosition = null
+    this.state.endPosition = null
+    this.state.endTime = null
+    this.state.wapPoints = []
+    this.state.c = []
+    this.state.duration = null
+  }
+
   get duration() {
     return this.state.duration
   }

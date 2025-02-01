@@ -222,6 +222,11 @@ onmessage = async (e) => {
       case 'SAVE_WALK':
         console.log(e.data.TASK, e.data.msg)
         break
+      case 'CLEAR_WALK':
+        console.log(e.data.TASK)
+        walkState.clear()
+        // console.log('walk state is clear: ', walkState.get())
+        break
       case 'GET_WALK':
         console.log(e.data.TASK, e.data.msg)
         break
