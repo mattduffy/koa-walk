@@ -73,6 +73,7 @@
   window.csrfToken = '<%= csrfToken %>'
   window.walking = window.walking ?? new State()
   window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
+  const identifier = 'my_walk'
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   
@@ -279,7 +280,7 @@
       } else {
         // do walking stuff here
         await recordWalk(coords, c)
-        markWalkPointOnMap()
+        // markWalkPointOnMap()
         window._map.setCenterAnimated(c, false)
       }
     }
@@ -353,6 +354,7 @@
       window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d })
       window.walking.c = c
       window.walker.postMessage(w)
+      markWalkPointOnMap()
       window.walking.state.intervalId = setInterval(() => {
         const _p = document.querySelector('span#numWaypoints')
         _p.textContent = window.walking.points.length
@@ -386,10 +388,10 @@
         wp,
         c,
       }
-      // markWalkPointOnMap()
       window.walking.c = c
       window.walking.addPoint(wp)
       window.walker.postMessage(step)
+      markWalkPointOnMap()
     }
     async function endWalk(end) {
       window.walking.state.active = false
@@ -405,6 +407,17 @@
       window.walking.c = c
       window.walker.postMessage(end)
     }
+    function clearWalk(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      document.querySelector('span#numWaypoints').textContent = '0'
+      document.querySelector('span#duration').textContent = '00:00:00'
+      document.querySelector('span#distance').textContent = '0'
+      window.walking.clear()
+      window.walker.postMessage({ TASK: 'CLEAR_WALK' })
+      window._map.removeOverlay(window._map.overlays.find((o) => o.data.name === identifier))
+    }
+    document.querySelector('button#clearWalk').addEventListener('click', clearWalk)
     function markWalkPointOnMap() {
       console.log('Mark point on map: ')
       const style = new mapkit.Style({
@@ -416,7 +429,19 @@
       const points = window.walking.points.map((p) => {
         return new mapkit.Coordinate(p.latitude, p.longitude)
       })
-      const polyline = new mapkit.PolylineOverlay( points, { style: style })
+      let polyline
+      if (window._map.overlays.length > 0) {
+        console.log(`${window._map.overlays.length} overlays present in map`)
+        polyline = window._map.overlays.find(o => o.data.name === identifier)
+        console.log('found previously created polyline: ', polyline)
+        window._map.removeOverlay(polyline)
+      // } else {
+      }
+      console.log(`no previous polyline overlay with data.name: ${identifier} found`)
+      polyline = new mapkit.PolylineOverlay( points, { style: style })
+      polyline.data = { name: identifier }
+      console.log('creating new polyline overlay: ', polyline)
+      // }
       window._map.addOverlay(polyline)
       window._map.showItems(polyline)
     }
@@ -790,10 +815,12 @@
         + '<br>'
         a.children.namedItem('p2').innerHTML += l
       // new walk div content
-      document.querySelector('input[id="name"]').value = (subLocality) ? subLocality : name
-      document.querySelector('input[id="location"]').value = `${(name) ? name : ''}`
-        + `${(administrativeArea) ? ', ' + administrativeArea : ''}`
-        + `${(administrativeAreaCode) ? ', ' + administrativeAreaCode : ''}`
+      if (!window.walking.active) {
+        document.querySelector('input[id="name"]').value = (subLocality) ? subLocality : name
+        document.querySelector('input[id="location"]').value = `${(name) ? name : ''}`
+          + `${(administrativeArea) ? ', ' + administrativeArea : ''}`
+          + `${(administrativeAreaCode) ? ', ' + administrativeAreaCode : ''}`
+      }
     }
     if (coords) {
       console.log('populateApp coords: ', coords)
@@ -811,9 +838,10 @@
         a.querySelector('p > span#acc').innerHTML = displayUnits(coords.accuracy, 'f', 1)
       }
       // new walk div content
-      document.querySelector('input[id="coords"]').value = `${coords.latitude}, ${coords.longitude}`
-      // document.querySelector('input[id="lat"]').value = coords.latitude ?? ''
-      // document.querySelector('input[id="lon"]').value = coords.longitude ?? ''
+      if (!window.walking.active) {
+        document.querySelector('input[id="coords"]').value = `${coords.latitude}, `
+          + `${coords.longitude}`
+      }
     }
   }
   await main()
