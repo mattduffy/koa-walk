@@ -39,13 +39,13 @@ class State extends Subject {
   clear() {
     this.state.active = false
     this.state.date = null
-    this.state.namee = null
+    this.state.name = null
     this.state.startTime = null
     this.state.startPosition = null
-    this.state.currentPosition = null
+    // this.state.currentPosition = null
     this.state.endPosition = null
     this.state.endTime = null
-    this.state.wapPoints = []
+    this.state.wayPoints = []
     this.state.c = []
     this.state.duration = null
   }
