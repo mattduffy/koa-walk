@@ -1,4 +1,5 @@
 import Subject from './Subject.js'
+import { pointDistance } from './Heading.js'
 
 function normalizePosition(c) {
   console.log('normalizePosition(c): ', c)
@@ -9,6 +10,7 @@ function normalizePosition(c) {
       longitude: c.coords.longitude,
       accuracy: c.coords.accuracy,
       timestamp: c.timestamp,
+      distance: c.distance ?? 0,
     }
   }
   return c
@@ -48,6 +50,19 @@ class State extends Subject {
     this.state.wayPoints = []
     this.state.c = []
     this.state.duration = null
+  }
+
+  get totalDistance() {
+    const x = this.state.wayPoints.reduce(
+      (a, c) => {
+        console.log(`accumulator: ${a}`)
+        console.log('currentValue: ', c)
+        return a + c.distance
+      },
+      0,
+    )
+    console.log('State::totalDistance() = ', x)
+    return x || 0
   }
 
   get duration() {
@@ -138,8 +153,16 @@ class State extends Subject {
     this.state.c.push(p)
   }
 
-  addPoint(point) {
-    console.log('addPoint(p): ', point)
+  addPoint(p, u = 'metric') {
+    console.log('addPoint(p, u): ', p, u)
+    const point = p
+    let prev
+    if (this.state.wayPoints.length > 0) {
+      prev = this.state.wayPoints[this.state.wayPoints.length - 1]
+      point.distance = pointDistance(prev, point, u)
+    } else {
+      point.distance = 0
+    }
     this.state.wayPoints.push(point)
   }
 
