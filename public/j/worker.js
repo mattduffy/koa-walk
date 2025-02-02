@@ -141,26 +141,26 @@ async function logout(data) {
   return { TASK: 'LOGOUT', response: json }
 }
 
-function startWalk(c) {
-  walkState.name = c.name
-  walkState.date = c.date
-  walkState.startTime = c.startTime
-  walkState.startPosition = c.startPosition
-  walkState.addPoint({ ...c.startPosition, timestamp: walkState.startTime })
-  walkState.c = c.c
+function startWalk(s) {
+  walkState.name = s.name
+  walkState.date = s.date
+  walkState.startTime = s.startTime
+  walkState.startPosition = s.startPosition
+  walkState.addPoint({ ...s.startPosition, timestamp: walkState.startTime, distance: 0 })
+  walkState.c = s.c
 }
 
 function setWayPoint(w) {
-  walkState.addPoint(w.wp)
+  walkState.addPoint(w.wp, w.u)
   walkState.c = w.c
   walkState.printPoints()
 }
 
-function endWalk(c) {
-  walkState.endPosition = c.endPosition
-  walkState.endTime = c.endTime
-  walkState.addPoint(c)
-  walkState.c = c.c
+function endWalk(e, u) {
+  walkState.endPosition = e.endPosition
+  walkState.endTime = e.endTime
+  walkState.addPoint(e, u)
+  walkState.c = e.c
 }
 
 onmessage = async (e) => {
@@ -212,7 +212,6 @@ onmessage = async (e) => {
         break
       case 'SET_WAYPOINT':
         console.log(e.data.TASK, e.data.wp)
-        // setWayPoint(e.data.wp)
         setWayPoint(e.data)
         break
       case 'STOP_WALK':

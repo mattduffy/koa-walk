@@ -74,6 +74,7 @@
   window.walking = window.walking ?? new State()
   window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
   const identifier = 'my_walk'
+  let DISPLAY_UNITS = <%= units %> || 'Metric'
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   
@@ -145,6 +146,7 @@
       isScrollEnabled: true,
       // showsMapTypeControl: false,
       showsMapTypeControl: true,
+      distances: mapkit.Map.Distances[DISPLAY_UNITS],
     }
     if ("geolocation" in navigator) {
       console.log('Can we get a location fix?') 
@@ -260,16 +262,17 @@
     window._map.addEventListener('user-location-change', userLocationChange)
     async function userLocationChange(e) {
       console.log('user-location-change event: ', e)
+      const evtCoords = e.coordinate
       const coords = {
-        latitude: e.coordinate.latitude,
-        longitude: e.coordinate.longitude,
+        latitude: evtCoords.latitude,
+        longitude: evtCoords.longitude,
         accuracy: window.walking.state.currentPosition.accuracy,
         timestamp: e.timestamp.valueOf()
       }
       updatePosition(coords)
-      const c = new mapkit.Coordinate(e.coordinate.latitude, e.coordinate.longitude)
+      const mapkitCoordinate = new mapkit.Coordinate(evtCoords.latitude, evtCoords.longitude)
       if (!window.walking.active) {
-        window._map.setCenterAnimated(c, true)
+        window._map.setCenterAnimated(mapkitCoordinate, true)
         window.dispatchEvent(
           new CustomEvent('locality-changed', {
             bubbles: false,
@@ -279,9 +282,9 @@
         )
       } else {
         // do walking stuff here
-        await recordWalk(coords, c)
+        await recordWalk(coords, mapkitCoordinate)
         // markWalkPointOnMap()
-        window._map.setCenterAnimated(c, false)
+        window._map.setCenterAnimated(mapkitCoordinate, false)
       }
     }
     window.addEventListener('locality-changed', localityChanged)
@@ -289,6 +292,7 @@
       console.log('localityChanged(e)', e)
       e.preventDefault()
       e.stopPropagation()
+      const evtCoords = e.detail.coords
       const a = window.app || document.querySelector('div#app')
       let ul = a.querySelector('ol#change')
       if (!ul) {
@@ -298,10 +302,11 @@
       }
       if (e.detail.coords) {
         let li = document.createElement('li')
-        li.textContent = `lat/lon: (${e.detail.coords.latitude.toFixed(4)}, ${e.detail.coords.longitude.toFixed(4)}), acc: ${displayUnits(e.detail.coords.accuracy, 'f', 1)}`
+        li.textContent = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
+          + `${evtCoords.longitude.toFixed(4)}), `
+          + `acc: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS, 1)}`
         ul.appendChild(li)
       }
-
     }
     document.querySelector('button[name="showStartNew"]').addEventListener('click', clickStartNew)
     function clickStartNew(e) {
@@ -358,9 +363,14 @@
       window.walking.state.intervalId = setInterval(() => {
         const _p = document.querySelector('span#numWaypoints')
         _p.textContent = window.walking.points.length
-        const _d = document.querySelector('span#duration')
+        const _dur = document.querySelector('span#duration')
         const _n = Date.now() - window.walking.startTime
-        _d.textContent = new Date((_n)).toISOString().slice(11, 19)
+        _dur.textContent = new Date((_n)).toISOString().slice(11, 19)
+        const _dis = document.querySelector('span#distance')
+        const reducedDistance = window.walking.totalDistance
+        console.log('reducing distances: ', reducedDistance)
+        console.log('display formated redcuced: ', displayUnits(reducedDistance, DISPLAY_UNITS, 1))
+        _dis.textContent = `${displayUnits(reducedDistance, DISPLAY_UNITS, 1)}`
       }, 1000)
     }
     document.querySelector('button#stop').addEventListener('click', stopWalk)
@@ -383,11 +393,7 @@
       clearInterval(window.walking.state.intervalId)
     }
     async function recordWalk(wp, c) {
-      const step = {
-        TASK: 'SET_WAYPOINT',
-        wp,
-        c,
-      }
+      const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS }
       window.walking.c = c
       window.walking.addPoint(wp)
       window.walker.postMessage(step)
@@ -398,11 +404,7 @@
       window.walking.endPosition = end
       window.walking.endTime = end.timestamp
       const c = new mapkit.Coordinate(end.latitude, end.longitude)
-      const finalStep = {
-        TASK: 'STOP_WALK',
-        end,
-        c,
-      }
+      const finalStep = { TASK: 'STOP_WALK', end, c }
       window.walking.addPoint(end)
       window.walking.c = c
       window.walker.postMessage(end)
@@ -713,7 +715,7 @@
       h3: `Can't get a very accurate GPS position.`,
       p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
       p2: ``,
-      p3: `GPS accuracy is low, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, 'f', 1)}</span>.<br>`
+      p3: `GPS accuracy is low, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}</span>.<br>`
         + `  Your walk may not be recorded very accurately.`,
       b1: '<button name="showStartNew">Start a walk!</button>',
     }
@@ -742,7 +744,7 @@
       h3: 'Your starting position looks good.',
       p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
       p2: '',
-      p3: `GPS accuracy is good, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, 'f', 1)}</span>.<br>`
+      p3: `GPS accuracy is good, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}</span>.<br>`
         + '  Tap the start button when you are ready.',
       b1: '<button name="showStartNew">Start a walk!</button>',
     }
@@ -769,19 +771,25 @@
       }
     })
   }
-  function displayUnits(x, u = 'm', n = null) {
-    if (!x) {
-      return null
+  function displayUnits(x, u = 'm', n = 1) {
+    const _u = u.toLowerCase()
+    console.log('displayUnits(): ', x, u, n)
+    if (x === null || x === undefined) {
+      console.log('displayUnits() missing x: ', x)
+      // return null
+      return 0 
     }
-    const _n = n ?? 1
-    if (u === 'm') {
-      return `${x.toFixed(_n)} m`
+    if (_u === 'metric' || _u === 'm') {
+      return `${x.toFixed(n)} m`
     }
-    if (u === 'f') {
-      return `${( parseFloat(x) * 3.3 ).toFixed(_n)} ft`
+    if (_u === 'km') {
+      return `${( parseFloat(x) / 1000 ).toFixed(n)} km`
     }
-    if (u === 'mi') {
-      return `${( parseFloat(x) * 3.3 / 5280 ).toFixed(_n)} mi`
+    if (_u === 'f' || _u === 'ft' || _u === 'feet') {
+      return `${( parseFloat(x) * 3.3 ).toFixed(n)} ft`
+    }
+    if (_u === 'imperial' || _u === 'mi' || _u === 'mile') {
+      return `${( parseFloat(x) * 3.3 / 5280 ).toFixed(n)} mi`
     }
   }
   function populateApp(strings, coords = null, locality = null) {
@@ -835,7 +843,7 @@
       }
       const _acc = a.querySelector('p > span#acc')
       if (coords.accuracy && _acc) {
-        a.querySelector('p > span#acc').innerHTML = displayUnits(coords.accuracy, 'f', 1)
+        a.querySelector('p > span#acc').innerHTML = displayUnits(coords.accuracy, DISPLAY_UNITS, 1)
       }
       // new walk div content
       if (!window.walking.active) {
