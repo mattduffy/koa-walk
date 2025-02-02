@@ -250,6 +250,7 @@
         console.log(`Failing back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
         position = { latitude: lat, longitude: lon, accuracy: 1000, timestamp: Date.now() }
         lowAccuracy = null
+        console.log('failback position: ', position)
         await setPosition(position)
       }
       return position
@@ -304,7 +305,7 @@
         let li = document.createElement('li')
         li.textContent = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
           + `${evtCoords.longitude.toFixed(4)}), `
-          + `acc: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS, 1)}`
+          + `acc: ${displayUnits(evtCoords.accuracy, 'imperial', 1)}`
         ul.appendChild(li)
       }
     }
@@ -773,23 +774,25 @@
   }
   function displayUnits(x, u = 'm', n = 1) {
     const _u = u.toLowerCase()
-    console.log('displayUnits(): ', x, u, n)
+    console.log('displayUnits(): ', x, _u, n)
     if (x === null || x === undefined) {
       console.log('displayUnits() missing x: ', x)
       // return null
       return 0 
     }
-    if (_u === 'metric' || _u === 'm') {
-      return `${x.toFixed(n)} m`
-    }
-    if (_u === 'km') {
-      return `${( parseFloat(x) / 1000 ).toFixed(n)} km`
-    }
-    if (_u === 'f' || _u === 'ft' || _u === 'feet') {
-      return `${( parseFloat(x) * 3.3 ).toFixed(n)} ft`
-    }
-    if (_u === 'imperial' || _u === 'mi' || _u === 'mile') {
-      return `${( parseFloat(x) * 3.3 / 5280 ).toFixed(n)} mi`
+    if (/(metric)|(km)|(m$)/i.test(_u)) {
+      if (x < 750) {
+        return `${x.toFixed(n)} m`
+      } else {
+        return `${( parseFloat(x) / 1000 ).toFixed(n)} km`
+      }
+    } else if (/(imperial)|(mile)|(mi)|(feet)|(ft)|(f)/i.test(_u)) {
+      let _x = parseFloat(x) * 3.3
+      if (_x < (5280 / 2)) {
+        return `${_x.toFixed(n)} ft`
+      } else {
+        return `${( _x / 5280 ).toFixed(n)} mi`
+      }
     }
   }
   function populateApp(strings, coords = null, locality = null) {
