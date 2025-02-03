@@ -62,8 +62,9 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
     const collection = db.collection('users')
     const users = new Users(collection, ctx)
     const authUser = await users.authenticateAndGetUser(username, password)
+    log('authentication result: %O', authUser)
     log('authentication result: %O', authUser.email)
-    log('authentication result: %O', authUser.user._username)
+    log('authentication result: %O', authUser.user?._username)
     const doc = { attemptedAt: new Date(), username }
     if (ctx.state?.logEntry) {
       doc.from = { ip: ctx.state.logEntry.ip, geo: ctx.state.logEntry.geo }
@@ -86,7 +87,7 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
         ctx.body = {
           status: 'login failed',
           info: authUser.info,
-          messagee: authUser.message,
+          message: authUser.message,
           error: authUser.error,
         }
       } else {
