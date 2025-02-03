@@ -121,7 +121,7 @@ div#login {
   width: auto;
   background-color: white;
   border-radius: .5em;
-  padding: .5em 0em .5em .75em;
+  padding: .5em 0em .5em .25em;
 }
 
 div#login > div#welcomeId {
@@ -252,8 +252,17 @@ button#clearWalk {
 
 @media screen and (max-width: 400px) {
   form {
-    margin: 0 auto .5em auto
+    margin: 0 .25em .5em auto
   }
+
+  fieldset {
+    border-radius: .5em;
+  }
+
+  input[type=radio] {
+    float: right;
+  }
+
   input[type=text] {
     width: auto;
     max-width: 95%;

@@ -15,6 +15,34 @@ console.log('worker state: ', walkState)
 let isLoggedIn = false
 let user = null
 
+async function setPref(credentials) {
+  console.log('setPref(credentials): ', user)
+  let response
+  let json
+  const formData = new FormData()
+  formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
+  formData.append('units', credentials.units)
+  // formData.append('userId', user.userId)
+  const opts = {
+    method: 'POST',
+    headeers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${credentials.jwtAccess}`,
+      'X-ASYNCREQUEST': true,
+    },
+    body: formData,
+  }
+  const request = new Request(credentials.url, opts)
+  try {
+    response = await fetch(request)
+    console.log(response)
+    json = await response.json()
+    console.log('setPref response: ', json)
+  } catch (e) {
+    console.error(e)
+  }
+  return json
+}
 async function getList(credentials) {
   let response
   let list = { TASK: 'GET_LIST', list: null, auth: null }
@@ -107,11 +135,13 @@ async function login(credentials) {
     response = await fetch(request)
     _user = await response.json()
     console.log(_user)
+    if (!/failed/i.test(_user.status)) {
+      isLoggedIn = true
+    }
   } catch (e) {
     console.error(e)
     return { TASK: 'LOGIN', login: 'failed', cause: e }
   }
-  isLoggedIn = true
   user = _user
   console.log('is logged in: ', isLoggedIn)
   console.log('user: ', user)
@@ -201,6 +231,11 @@ onmessage = async (e) => {
           console.error(`${e.data.TASK} failed.`, err)
           postMessage({ err: 'getList failed', cause: err })
         }
+        break
+      case 'SET_PREF':
+        console.log(e.data.TASK, e.data)
+        postMessage({ TASK: 'SET_PREF', ...await setPref(e.data) })
+        // postMessage(await setPref(e.data))
         break
       case 'GET_HEADING':
         heading(e.data.p1, e.data.p2)
