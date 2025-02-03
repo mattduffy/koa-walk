@@ -37,6 +37,7 @@ async function setPref(credentials) {
     response = await fetch(request)
     console.log(response)
     json = await response.json()
+    json.newUnits = credentials.units
     console.log('setPref response: ', json)
   } catch (e) {
     console.error(e)
@@ -235,7 +236,6 @@ onmessage = async (e) => {
       case 'SET_PREF':
         console.log(e.data.TASK, e.data)
         postMessage({ TASK: 'SET_PREF', ...await setPref(e.data) })
-        // postMessage(await setPref(e.data))
         break
       case 'GET_HEADING':
         heading(e.data.p1, e.data.p2)

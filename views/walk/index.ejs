@@ -20,9 +20,9 @@
             <legend>Preferences</legend>
             Distance Units:
             <br>
-            <label>Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" tabindex="0"></label>
+            <label>Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (units === 'Metric') ? 'checked' : '' %> tabindex="0"></label>
             <br>
-            <label>Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" tabindex="0"></label>
+            <label>Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (units === 'Imperial') ? 'checked' : '' %> tabindex="0"></label>
             <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>" required>
           </fieldset>
         </form>
@@ -148,8 +148,13 @@
     console.log(credentials)
     function finish(e) {
       console.log(e)
-      DISPLAY_UNITS = newUnits
-      window._map.distances = mapkit.Map.Distances[DISPLAY_UNITS]
+      if (e.TASK === 'SET_PREF' && e.status === 'ok') {
+        DISPLAY_UNITS = e.newUnits
+        window._map.distances = mapkit.Map.Distances[DISPLAY_UNITS]
+      }
+      if (e?.csrfToken) {
+        window.csrfToken = e.csrfToken
+      }
     }
     updatePreferences.finish = finish
     window.walker.postMessage(credentials)
@@ -520,6 +525,9 @@
             break
           case 'GET_LIST':
             window.getList.finish(e.data)
+            break
+          case 'SET_PREF':
+            window.updatePreferences.finish(e.data)
             break
           case 'START':
             startWalk.go(e.data)
