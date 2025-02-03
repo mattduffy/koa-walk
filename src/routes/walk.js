@@ -46,7 +46,7 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
     flash: ctx.flash?.index ?? {},
     title: `${ctx.app.site}: Walk`,
     isAuthenticated: ctx.state.isAuthenticated ?? false,
-    units: ctx.state.sessionUser?.units ?? false,
+    units: ctx.state.sessionUser?.preferences?.units ?? false,
   }
   await ctx.render('index', locals)
 })
@@ -80,6 +80,48 @@ router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) =>
   ctx.status = 200
   ctx.type = 'application/json; charset=utf-8'
   ctx.body = body
+})
+
+router.post('setPref', '/user/preferences/update', addIpToSession, processFormData, async (ctx) => {
+  const log = walkLog.extend('setPref')
+  const error = walkError.extend('setPref')
+  const newCsrfToken = ulid()
+  const body = {}
+  body.csrfToken = newCsrfToken
+  ctx.status = 200
+  ctx.type = 'application/json; charset=utf-8'
+  log('inside walk router: /user/preferences/update')
+  if (doTokensMatch(ctx)) {
+    if (!ctx.state?.isAuthenticated) {
+      const msg = 'user is not authenticated, no access to saved preferences.'
+      error(msg)
+      body.message = msg
+      body.status = 'failed'
+    } else {
+      log('sessionUser: ', ctx.state?.sessionUser?.username)
+      log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
+      log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
+      const [units] = ctx.request.body.units
+      log(units)
+      ctx.state.sessionUser.preferences = { units }
+      try {
+        const temp = await ctx.state.sessionUser.update()
+        log('did user.save() work to update preferences?')
+        log(temp._preferences)
+        body.status = 'ok'
+        body.message = 'Preferences updated.'
+      } catch (e) {
+        error('failed to save update to user preferences.')
+        error(e)
+      }
+      ctx.session.csrfToken = newCsrfToken
+      ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+      ctx.body = body
+    }
+  } else {
+    ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+    ctx.body = { status: 'fail', message: 'user is not authenticated', csrfToken: newCsrfToken }
+  }
 })
 
 router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) => {
