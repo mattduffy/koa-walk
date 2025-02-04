@@ -86,15 +86,9 @@
   const origin = '<%= origin %>'
   const jwtAccess = '<%= searchJwtAccess %>'
   window.csrfToken = '<%= csrfToken %>'
+  console.log('csrfToken on load: ', window.csrfToken)
   window.walking = window.walking ?? new State()
   window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
-  console.log('DOMContentLoaded: checking if refresh is necessary...')
-  window.isAuthenticated = <%= (isAuthenticated) ? true : false %>
-  console.log('isAuthenticated? ', isAuthenticated)
-  console.log('window.walker: ', window.walker)
-  if (window.isAuthenticated && window.walker) {
-    window.walker.postMessage({ TASK: 'SETUP', isAuth: true, url: `${origin}/refresh`, jwtAccess: '<%= searchJwtAccess %>' })
-  }
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   const accuracy = 30 // meters
@@ -124,6 +118,7 @@
     if (response.headers.get('content-type').includes("application/json")) {
       const x = await response.json()
       tokenID = x.tokenID
+      window.csrfToken = x.newCsrfToken
     } else {
       console.info('failed to get mapkit token')
       console.log(await response.text())
@@ -158,8 +153,8 @@
         DISPLAY_UNITS = e.newUnits
         window._map.distances = mapkit.Map.Distances[DISPLAY_UNITS]
       }
-      if (e?.csrfToken) {
-        window.csrfToken = e.csrfToken
+      if (e?.newCsrfToken) {
+        window.csrfToken = e.newCsrfToken
       }
     }
     updatePreferences.finish = finish
@@ -320,7 +315,6 @@
           })
         )
       } else {
-        // do walking stuff here
         await recordWalk(coords, mapkitCoordinate)
         // markWalkPointOnMap()
         window._map.setCenterAnimated(mapkitCoordinate, false)
@@ -501,13 +495,11 @@
         polyline = window._map.overlays.find(o => o.data.name === identifier)
         console.log('found previously created polyline: ', polyline)
         window._map.removeOverlay(polyline)
-      // } else {
       }
       console.log(`no previous polyline overlay with data.name: ${identifier} found`)
       polyline = new mapkit.PolylineOverlay( points, { style: style })
       polyline.data = { name: identifier }
       console.log('creating new polyline overlay: ', polyline)
-      // }
       window._map.addOverlay(polyline)
       window._map.showItems(polyline)
     }
@@ -526,7 +518,6 @@
       if (logged) {
         welcomeDiv.style.display = 'block'
         loginForm.style.display = 'none'
-        // enable the user preference form elements after login
         document.forms['preferences'].elements['units'].forEach((r) => {
           r.addEventListener('change', updatePreferences)
         })
@@ -541,29 +532,46 @@
         console.log('walker.onmessage: ', e.data)
         switch (e.data.TASK) {
           case 'SETUP':
-
+            console.log('csrfToken before SETUP: ', window.csrfToken)
+            console.log(e.data)
+            if (e.data?.newCsrfToken) {
+              window.csrfToken = e.data.newCsrfToken
+            }
+            console.log('csrfToken after SETUP: ', window.csrfToken)
             break
           case 'LOGIN':
-            if (e.data.user.status === 'login failed') {
+            console.log('csrfToken before LOGIN: ', window.csrfToken)
+            if (/failed/i.test(e.data.user.status)) {
               doLogin.failed(e.data.user)
             } else {
               doLogin.success(e.data.user)
             }
+            console.log('csrfToken after LOGIN: ', window.csrfToken)
             break
           case 'LOGOUT':
+            console.log('csrfToken before LOGOUT: ', window.csrfToken)
             doLogout.finish(e.data)
+            console.log('csrfToken after LOGOUT: ', window.csrfToken)
             break
           case 'GET_LIST':
+            console.log('csrfToken before GET_LIST: ', window.csrfToken)
             window.getList.finish(e.data)
+            console.log('csrfToken after GET_LIST: ', window.csrfToken)
             break
           case 'SET_PREF':
+            console.log('csrfToken before SET_PREF: ', window.csrfToken)
             window.updatePreferences.finish(e.data)
+            console.log('csrfToken after SET_PREF: ', window.csrfToken)
             break
           case 'START':
+            console.log('csrfToken before START_WALK: ', window.csrfToken)
             startWalk.go(e.data)
+            console.log('csrfToken after START_WALK: ', window.csrfToken)
             break
           case 'SAVE':
+            console.log('csrfToken before SAVE: ', window.csrfToken)
             window.saveWalk.finish(e.data)
+            console.log('csrfToken after SAVE: ', window.csrfToken)
             break
           default:
             console.log(e.data)
@@ -574,6 +582,14 @@
         console.warn('err msg: ', e.message)
         console.warn('in: ', e.filename)
         console.warn('at: ', e.lineno)
+      }
+      console.log('DOMContentLoaded: checking if refresh is necessary...')
+      window.isAuthenticated = <%= (isAuthenticated) ? true : false %>
+      console.log('isAuthenticated? ', isAuthenticated)
+      console.log('window.walker: ', window.walker)
+      if (window.isAuthenticated && window.walker) {
+        console.log('refreshing user...')
+        window.walker.postMessage({ TASK: 'SETUP', isAuth: true, url: `${origin}/refresh`, jwtAccess: '<%= searchJwtAccess %>', csrfTokenHidden: window.csrfToken })
       }
     } else {
       console.log('Not compatible with walking.')
@@ -625,7 +641,7 @@
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'block'
       toggleButtons('showLogin')
-      
+      window.csrfToken = e.user.newCsrfToken  
     }
     doLogin.success = success
     function failed(e) {
@@ -637,6 +653,7 @@
       }
       console.log('login failed')
       console.log(e)
+      window.csrfToken = e.user.newCsrfToken  
     }
     doLogin.failed = failed
     window.walker.postMessage(credentials)
@@ -648,6 +665,7 @@
     window.walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
     function finish(res) {
       console.log('logout response: ', res)
+      window.csrfToken = res.response.user.newCsrfToken
       const spans = document.querySelectorAll('span[data-first]')
       spans.forEach((span) => {
         console.log(span)
@@ -659,7 +677,6 @@
       form.style.display = 'block'
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'none'
-      window.csrfToken = res.response.user.csrfToken
       form.elements.csrfToken.value = res.response.user.csrfToken
     }
     doLogout.finish = finish
@@ -674,6 +691,7 @@
     const div = document.querySelector('div#list')
     function finish(e) {
       console.log('getList.finish', e)
+      window.csrfToken = e.newCsrfToken
       const noAuth = div.children.namedItem('noAuth') ?? null
       if (e.auth === 'no' && !noAuth) { 
         console.log(`e.auth: ${e.auth}`)
@@ -835,7 +853,6 @@
     console.log('displayUnits(): ', x, _u, n)
     if (x === null || x === undefined) {
       console.log('displayUnits() missing x: ', x)
-      // return null
       return 0 
     }
     if (/(metric)|(km)|(m$)/i.test(_u)) {
