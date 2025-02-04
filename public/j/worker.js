@@ -44,7 +44,46 @@ async function setPref(credentials) {
   }
   return json
 }
+async function saveWalk(credentials) {
+  let response
+  let json
+  const saved = { TASK: 'SAVE', status: null, msg: null }
+  console.log('worker::savWalk attempting to save')
+  if (!isLoggedIn) {
+    saved.status = 'failed'
+    saved.msg = 'Must be logged in to save a walk.'
+  } else {
+    const formData = new FormData()
+    formData.append('crsfTokenHidden', credentials.csrfTokenHidden)
+    formData.append('walk')
+    const opts = {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer: ${credentials.jwtAccess}`,
+        'X-ASYNCREQUEST': true,
+      },
+      body: formData,
+    }
+    const request = new Request(credentials.url, opts)
+    try {
+      response = await fetch(request)
+      console.log(response)
+      json = await response.json()
+      console.log(json)
+      saved.status = 'ok'
+      saved.msg = 'Saved walk.'
+      saved.res = json
+    } catch (e) {
+      console.log(e)
+      saved.status = 'failed'
+      saved.msg = 'Failed to save walk to database for some reason.'
+    }
+  }
+  return saved
+}
 async function getList(credentials) {
+  console.log('woker::getList')
   let response
   let list = { TASK: 'GET_LIST', list: null, auth: null }
   let auth
@@ -60,7 +99,7 @@ async function getList(credentials) {
   formData.append('userId', user.userId)
   const opts = {
     method: 'POST',
-    headeers: {
+    headers: {
       Accept: 'application/json',
       Authorization: `Bearer ${credentials.jwtAccess}`,
       'X-ASYNCREQUEST': true,
@@ -87,6 +126,7 @@ async function getList(credentials) {
   return list
 }
 async function refresh(o) {
+  console.log('worker::refresh')
   const formData = new FormData()
   formData.append('jwtAccess', o.jwtAccess)
   const opts = {
@@ -103,7 +143,9 @@ async function refresh(o) {
   let _user
   try {
     response = await fetch(request)
+    console.log('refresh response: ', response)
     _user = await response.json()
+    console.log('refreshed user: ', _user)
   } catch (e) {
     console.error('failed to refresh user.')
     console.error(e)
@@ -254,7 +296,8 @@ onmessage = async (e) => {
         endWalk(e.data)
         break
       case 'SAVE_WALK':
-        console.log(e.data.TASK, e.data.msg)
+        console.log(e.data.TASK)
+        postMessage({ TASK: 'SAVE', ...await saveWalk(e.data) })
         break
       case 'CLEAR_WALK':
         console.log(e.data.TASK)
