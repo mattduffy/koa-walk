@@ -36,6 +36,7 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   const csrfToken = ulid()
   ctx.session.csrfToken = csrfToken
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+  ctx.cookies.set('csrfToken.sig')
   log('sessionUser: ', ctx.state?.sessionUser?.username)
   log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
   log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
@@ -56,15 +57,31 @@ router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) 
   // const error = walkError.extend('refresh')
   log('inside walk router: /refresh')
   let body
-  if (ctx.state?.sessionUser) {
-    body = { status: 'success', user: { first: ctx.state.sessionUser.firstName, email: ctx.state.sessionUser.email.primary } }
-    log(`refreshing user: ${body}`)
+  const [csrfTokenHidden] = ctx.request.body.csrfTokenHidden
+  log(`csrfTokenHidden: ${csrfTokenHidden}`)
+  const newCsrfToken = ulid()
+  if (doTokensMatch(ctx)) {
+    if (ctx.state?.sessionUser) {
+      body = {
+        status: 'success',
+        user: {
+          first: ctx.state.sessionUser.firstName,
+          email: ctx.state.sessionUser.email.primary,
+        },
+        newCsrfToken,
+      }
+      log(`refreshing user: ${body}`)
+    } else {
+      body = { status: 'failed', user: {}, newCsrfToken }
+    }
+    ctx.status = 200
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = body
   } else {
-    body = { status: 'failed', user: {} }
+    ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+    ctx.cookies.set('csrfToken.sig')
+    ctx.body = { status: 'fail', message: 'csrf token mismatch', csrfToken: newCsrfToken }
   }
-  ctx.status = 200
-  ctx.type = 'application/json; charset=utf-8'
-  ctx.body = body
 })
 
 router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) => {
@@ -116,10 +133,12 @@ router.post('setPref', '/user/preferences/update', addIpToSession, processFormDa
       }
       ctx.session.csrfToken = newCsrfToken
       ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+      ctx.cookies.set('csrfToken.sig')
       ctx.body = body
     }
   } else {
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+    ctx.cookies.set('csrfToken.sig')
     ctx.body = { status: 'fail', message: 'user is not authenticated', csrfToken: newCsrfToken }
   }
 })
@@ -128,10 +147,9 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
   const log = walkLog.extend('getList')
   const error = walkError.extend('getList')
   log('inside walk router: /getList')
-  const csrfToken = ulid()
-  ctx.session.csrfToken = csrfToken
-  ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+  const newCsrfToken = ulid()
   const list = []
+  list.push({ name: 'My first big boy walk.', date: Date.now(), locality: '2130 Mountain' })
   if (doTokensMatch(ctx)) {
     if (!ctx.state?.isAuthenticated) {
       error('user is not autheenticated, no list available')
@@ -140,8 +158,11 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
     log('sessionUser: ', ctx.state?.sessionUser?.username)
     log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
     log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
+    ctx.session.csrfToken = newCsrfToken
+    ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+    ctx.cookies.set('csrfToken.sig')
     const body = {
-      csrfToken,
+      newCsrfToken,
       // sessionUser: ctx.state.sessionUser,
       list,
     }
@@ -150,7 +171,12 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
     ctx.body = body
   } else {
     ctx.type = 'application/json; charset=utf-8'
-    ctx.body = { status: 'token mismatch', user: null, error: 'token mismatch' }
+    ctx.body = {
+      status: 'token mismatch',
+      user: null,
+      error: 'token mismatch',
+      newCsrfToken,
+    }
   }
 })
 

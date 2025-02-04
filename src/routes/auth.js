@@ -57,6 +57,7 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
   const sessionId = ctx.cookies.get('session')
   const [username] = ctx.request.body.username
   const [password] = ctx.request.body.password
+  const newCsrfToken = ulid()
   if (doTokensMatch(ctx)) {
     const db = ctx.state.mongodb.client.db()
     const collection = db.collection('users')
@@ -98,7 +99,6 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
       await db.collection('loginAttempts').insertOne(doc)
       log('successful user login')
       authUser.user.sessionId = sessionId
-      const csrfToken = ulid()
       let loggedInUser
       try {
         loggedInUser = await authUser.user.update()
@@ -108,8 +108,8 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
         ctx.session.id = loggedInUser.id
         ctx.session.jwts = loggedInUser.jwts
         ctx.session.username = loggedInUser.username
-        ctx.session.csrfToken = csrfToken
-        ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+        ctx.session.csrfToken = newCsrfToken
+        ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
         ctx.cookies.set('csrfToken.sig')
         ctx.flash = {
           index: {
@@ -121,7 +121,7 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
         }
         if (ctx.state.isAsyncRequest) {
           ctx.type = 'application/json; charset=utf-8'
-          ctx.body = { status: 'success', user: { first: loggedInUser.firstName, email: loggedInUser.email.primary, csrfToken } }
+          ctx.body = { status: 'success', user: { first: loggedInUser.firstName, email: loggedInUser.email.primary, newCsrfToken } }
         } else {
           error('successful login - not async request?')
           ctx.redirect('/')
@@ -129,12 +129,17 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
       } catch (e) {
         error(e)
         ctx.type = 'application/json; charset=utf-8'
-        ctx.body = { status: 'failed', cause: e, csrfToken }
+        ctx.body = { status: 'failed', cause: e, newCsrfToken }
       }
     }
   } else {
     ctx.type = 'application/json; charset=utf-8'
-    ctx.body = { status: 'token mismatch', user: null, error: 'token mismatch' }
+    ctx.body = {
+      status: 'token mismatch',
+      user: null,
+      error: 'token mismatch',
+      newCsrfToken,
+    }
   }
 })
 
@@ -147,11 +152,11 @@ router.get('getLogout', '/logout', async (ctx) => {
     ctx.session = null
   }
   ctx.state.isAuthenticated = false
-  const csrfToken = ulid()
-  ctx.cookies.set('csrfToken', csrfToken)
+  const newCsrfToken = ulid()
+  ctx.cookies.set('csrfToken', newCsrfToken)
   ctx.cookies.set('csrfToken.sig')
   if (ctx.state.isAsyncRequest) {
-    ctx.body = { status: 'loggedOut', user: { csrfToken } }
+    ctx.body = { status: 'loggedOut', user: { newCsrfToken } }
   } else {
     ctx.redirect('/')
   }

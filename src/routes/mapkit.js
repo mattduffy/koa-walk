@@ -8,7 +8,7 @@
 import path from 'node:path'
 import { readFile } from 'node:fs/promises'
 import Router from '@koa/router'
-// import { ulid } from 'ulid'
+import { ulid } from 'ulid'
 import {
   _log,
   _info,
@@ -521,6 +521,7 @@ router.get('mapkitGetToken', '/mapkit/getToken', async (ctx) => {
   let mapKitAccessToken
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
+  const newCsrfToken = ulid()
   info(`csrfTokenCookie:  ${csrfTokenCookie}`)
   info(`csrfTokenSession: ${csrfTokenSession}`)
   if (csrfTokenCookie === csrfTokenSession) info('cookie === session')
@@ -531,7 +532,7 @@ router.get('mapkitGetToken', '/mapkit/getToken', async (ctx) => {
     ctx.status = 301
     ctx.response.message = 'Session token is missing, redirect back to home page.'
     ctx.response.redirect('/')
-    ctx.body = { error: 'csrf token mismatch' }
+    ctx.body = { error: 'csrf token mismatch', newCsrfToken }
   } else {
     try {
       const mapKitTokenPath = path.resolve(ctx.app.dirs.keys, 'mapkit', 'mapkit.jwt')
@@ -542,11 +543,11 @@ router.get('mapkitGetToken', '/mapkit/getToken', async (ctx) => {
       error('Failed to get mapkit token from file.')
       ctx.type = 'application/json; charset=utf-8'
       ctx.status = 401
-      ctx.body = { error: 'Failed to get mapkit token from file.' }
+      ctx.body = { error: 'Failed to get mapkit token from file.', newCsrfToken }
     }
     ctx.type = 'application/json; charset=utf-8'
     ctx.status = 200
-    ctx.body = { tokenID: mapKitAccessToken }
+    ctx.body = { tokenID: mapKitAccessToken, newCsrfToken }
   }
 })
 
