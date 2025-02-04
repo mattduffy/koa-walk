@@ -10,6 +10,7 @@
         <br>
         <input type="password" id="passwordId" name="password" size="40" value="" required>
         <br>
+        <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>" required>
         <input type="submit" id="submitId" name="submit" value="Login">
         <button id="cancelId" name="cancel">Cancel</button>
       </form>
@@ -80,19 +81,25 @@
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
   
+  let DISPLAY_UNITS = <%- (units !== false) ? `\'${units}\'` : false %> || 'Metric'
+  const identifier = 'my_walk'
+  const origin = '<%= origin %>'
+  const jwtAccess = '<%= searchJwtAccess %>'
   window.csrfToken = '<%= csrfToken %>'
   window.walking = window.walking ?? new State()
   window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
-  const identifier = 'my_walk'
-  let DISPLAY_UNITS = '<%= units %>' || 'Metric'
+  console.log('DOMContentLoaded: checking if refresh is necessary...')
+  window.isAuthenticated = <%= (isAuthenticated) ? true : false %>
+  console.log('isAuthenticated? ', isAuthenticated)
+  console.log('window.walker: ', window.walker)
+  if (window.isAuthenticated && window.walker) {
+    window.walker.postMessage({ TASK: 'SETUP', isAuth: true, url: `${origin}/refresh`, jwtAccess: '<%= searchJwtAccess %>' })
+  }
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
-  
   const accuracy = 30 // meters
   const accuracyMargin = 5 // meters
   let lowAccuracy = false
-  const origin = '<%= origin %>'
-  const jwtAccess = '<%= searchJwtAccess %>'
   let map
   const app = document.querySelector('div#app')
   function fitMap(e = {}) {
@@ -117,7 +124,6 @@
     if (response.headers.get('content-type').includes("application/json")) {
       const x = await response.json()
       tokenID = x.tokenID
-      console.log(`mapkit token: ${tokenID}`)
     } else {
       console.info('failed to get mapkit token')
       console.log(await response.text())
@@ -442,6 +448,31 @@
       window.walking.c = c
       window.walker.postMessage(end)
     }
+    window.saveWalk = async function(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      if (window.walking.c.length === 0) {
+        // No telemetry data, nothing to save.
+        // Show some kind of message.
+        console.log('nothing to save')
+        return false
+      }
+      if (window.walking.active) {
+        document.querySelector('button#stop').click()
+      }
+      const credentials = {
+        TASK: 'SAVE_WALK',
+        url: `${origin}/save`,
+        csrfTokenHidden: csrfToken,
+        jwtAccess: jwtAccess,
+      }
+      window.walker.postMessage(credentials)
+      function finish(e) {
+        console.log('finish saving walk: ', e)
+      }
+      saveWalk.finish = finish
+    }
+    document.querySelector('button#saveWalk').addEventListener('click', saveWalk)
     function clearWalk(e) {
       e.preventDefault()
       e.stopPropagation()
@@ -497,7 +528,6 @@
         loginForm.style.display = 'none'
         // enable the user preference form elements after login
         document.forms['preferences'].elements['units'].forEach((r) => {
-          console.log(r) 
           r.addEventListener('change', updatePreferences)
         })
       }
@@ -531,6 +561,9 @@
             break
           case 'START':
             startWalk.go(e.data)
+            break
+          case 'SAVE':
+            window.saveWalk.finish(e.data)
             break
           default:
             console.log(e.data)
