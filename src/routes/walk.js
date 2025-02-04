@@ -61,6 +61,9 @@ router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) 
   log(`csrfTokenHidden: ${csrfTokenHidden}`)
   const newCsrfToken = ulid()
   if (doTokensMatch(ctx)) {
+    ctx.session.csrfToken = newCsrfToken
+    ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+    ctx.cookies.set('csrfToken.sig')
     if (ctx.state?.sessionUser) {
       body = {
         status: 'success',
@@ -78,6 +81,7 @@ router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) 
     ctx.type = 'application/json; charset=utf-8'
     ctx.body = body
   } else {
+    ctx.session.csrfToken = newCsrfToken
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
     ctx.cookies.set('csrfToken.sig')
     ctx.body = { status: 'fail', message: 'csrf token mismatch', csrfToken: newCsrfToken }
@@ -104,7 +108,7 @@ router.post('setPref', '/user/preferences/update', addIpToSession, processFormDa
   const error = walkError.extend('setPref')
   const newCsrfToken = ulid()
   const body = {}
-  body.csrfToken = newCsrfToken
+  body.newCsrfToken = newCsrfToken
   ctx.status = 200
   ctx.type = 'application/json; charset=utf-8'
   log('inside walk router: /user/preferences/update')
@@ -123,7 +127,7 @@ router.post('setPref', '/user/preferences/update', addIpToSession, processFormDa
       ctx.state.sessionUser.preferences = { units }
       try {
         const temp = await ctx.state.sessionUser.update()
-        log('did user.save() work to update preferences?')
+        log('did user.update() work to update preferences?')
         log(temp._preferences)
         body.status = 'ok'
         body.message = 'Preferences updated.'
