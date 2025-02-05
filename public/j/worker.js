@@ -45,17 +45,17 @@ async function setPref(credentials) {
   return json
 }
 async function saveWalk(credentials) {
+  console.log('worker::saveWalk(credentials)', credentials)
   let response
   let json
   const saved = { TASK: 'SAVE', status: null, msg: null }
-  console.log('worker::savWalk attempting to save')
   if (!isLoggedIn) {
     saved.status = 'failed'
     saved.msg = 'Must be logged in to save a walk.'
   } else {
     const formData = new FormData()
     formData.append('crsfTokenHidden', credentials.csrfTokenHidden)
-    formData.append('walk')
+    formData.append('walk', walkState.get())
     const opts = {
       method: 'POST',
       headers: {
@@ -68,18 +68,20 @@ async function saveWalk(credentials) {
     const request = new Request(credentials.url, opts)
     try {
       response = await fetch(request)
-      console.log(response)
       json = await response.json()
       console.log(json)
       saved.status = 'ok'
       saved.msg = 'Saved walk.'
       saved.res = json
     } catch (e) {
+      console.log('worker::save::fetch failed')
       console.log(e)
       saved.status = 'failed'
       saved.msg = 'Failed to save walk to database for some reason.'
+      return saved
     }
   }
+  console.log('what happened to saved?', saved)
   return saved
 }
 async function getList(credentials) {
@@ -96,7 +98,7 @@ async function getList(credentials) {
   }
   const formData = new FormData()
   formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
-  formData.append('userId', user.userId)
+  formData.append('userEmail', user.email)
   const opts = {
     method: 'POST',
     headers: {
@@ -113,7 +115,12 @@ async function getList(credentials) {
     console.log(response)
     const json = await response.json()
     console.log('getList response: ', json)
-    list = { ...list, list: json.list, auth }
+    list = {
+      ...list,
+      list: json.list,
+      auth,
+      newCsrfToken: json.newCsrfToken,
+    }
   } catch (e) {
     console.error(e)
     list = {
@@ -126,9 +133,10 @@ async function getList(credentials) {
   return list
 }
 async function refresh(o) {
-  console.log('worker::refresh')
+  console.log('worker::refresh(o) ', o)
   const formData = new FormData()
   formData.append('jwtAccess', o.jwtAccess)
+  formData.append('csrfTokenHidden', o.csrfTokenHidden)
   const opts = {
     method: 'POST',
     headers: {
@@ -143,9 +151,7 @@ async function refresh(o) {
   let _user
   try {
     response = await fetch(request)
-    console.log('refresh response: ', response)
     _user = await response.json()
-    console.log('refreshed user: ', _user)
   } catch (e) {
     console.error('failed to refresh user.')
     console.error(e)
@@ -154,9 +160,10 @@ async function refresh(o) {
   user = _user
   console.log('refreshed isLoggedIn: ', isLoggedIn)
   console.log('refreshed user: %o', user)
+  return user
 }
 async function login(credentials) {
-  // console.log('creds: ', credentials)
+  console.log('worker::login(credentials): ', credentials)
   const formData = new FormData()
   formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
   formData.append('username', credentials.email)
@@ -180,6 +187,10 @@ async function login(credentials) {
     console.log(_user)
     if (!/failed/i.test(_user.status)) {
       isLoggedIn = true
+      console.log('worker::login - success: ', _user)
+    } else {
+      console.log('worker::login - failed : ', _user)
+      return { TASK: 'LOGIN', login: 'failed', cause: _user }
     }
   } catch (e) {
     console.error(e)
@@ -241,8 +252,7 @@ onmessage = async (e) => {
     switch (e.data.TASK) {
       case 'SETUP':
         if (e.data.isAuth) {
-          // isLoggedIn = true
-          refresh(e.data)
+          postMessage({ TASK: 'SETUP', ...await refresh(e.data) })
         }
         break
       case 'LOGIN':
@@ -272,7 +282,7 @@ onmessage = async (e) => {
           postMessage(list)
         } catch (err) {
           console.error(`${e.data.TASK} failed.`, err)
-          postMessage({ err: 'getList failed', cause: err })
+          postMessage({ TASK: 'GET_LIST', err: 'getList failed', cause: err })
         }
         break
       case 'SET_PREF':
@@ -296,7 +306,7 @@ onmessage = async (e) => {
         endWalk(e.data)
         break
       case 'SAVE_WALK':
-        console.log(e.data.TASK)
+        console.log(e.data.TASK, e.data)
         postMessage({ TASK: 'SAVE', ...await saveWalk(e.data) })
         break
       case 'CLEAR_WALK':
