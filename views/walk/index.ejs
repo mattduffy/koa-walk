@@ -668,7 +668,6 @@
       window.csrfToken = res.response.user.newCsrfToken
       const spans = document.querySelectorAll('span[data-first]')
       spans.forEach((span) => {
-        console.log(span)
         span.dataset.first = ''
         span.innerText = ''
       })
@@ -723,8 +722,9 @@
           const ul = document.createElement('ul')
           ul.id = 'walks'
           e.list.forEach((w) => {
+            console.log(w)
             const li = document.createElement('li')
-            li.innerHTML = `${w}`
+            li.innerHTML = `${w.name} (${new Date(w.date).toLocaleString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})})`
             ul.appendChild(li)
           })
           div.appendChild(ul)
