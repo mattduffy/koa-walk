@@ -4,7 +4,7 @@
     <nav id="nav" aria-label="Main">
       <div>
         <span data-action="showLogin" class="userpng outline"></span>
-        <span data-first="" style="margin-left: 5px;">
+        <span data-name-initials="" style="margin-left: 5px;">
           <% if (isAuthenticated) { %>
           <%= sessionUser?.firstName %>
           <% } %>
@@ -16,13 +16,6 @@
     </nav>
     <script nonce="<%= nonce %>">
       document.addEventListener("DOMContentLoaded", (event) => {
-        // console.log('DOMContentLoaded: checking if refresh is necessary...')
-        // window.isAuthenticated = <%= (isAuthenticated) ? true : false %>
-        // console.log('isAuthenticated? ', isAuthenticated)
-        // console.log('window.walker: ', window.walker)
-        // if (window.isAuthenticated && window.walker) {
-        //   window.walker.postMessage({ TASK: 'SETUP', isAuth: true, url: `${origin}/refresh`, jwtAccess: '<%= searchJwtAccess %>' })
-        // }
         const buttons = Array.from(document.querySelector('nav#nav').children)
         buttons.forEach((b) => {
           if (b.firstElementChild.dataset) {

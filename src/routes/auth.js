@@ -121,7 +121,15 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
         }
         if (ctx.state.isAsyncRequest) {
           ctx.type = 'application/json; charset=utf-8'
-          ctx.body = { status: 'success', user: { first: loggedInUser.firstName, email: loggedInUser.email.primary, newCsrfToken } }
+          ctx.body = {
+            status: 'success',
+            user: {
+              first: loggedInUser.firstName,
+              last: loggedInUser.lastName,
+              email: loggedInUser.email.primary,
+              newCsrfToken,
+            },
+          }
         } else {
           error('successful login - not async request?')
           ctx.redirect('/')

@@ -15,7 +15,7 @@
         <button id="cancelId" name="cancel">Cancel</button>
       </form>
       <div id="welcomeId">
-        <h3>Hi, <span data-first=""><%= sessionUser?.firstName %></span></h3>
+        <h3>Hi, <span data-name-first=""><%= sessionUser?.firstName %></span></h3>
         <form id="preferencesId" name="preferences">
           <fieldset id="set1Id" name="set1" form="preferencesId" title="User Preferences" tabindex="0">
             <legend>Preferences</legend>
@@ -630,12 +630,19 @@
     function success(e) {
       console.log('login success')
       console.log(e)
-      const spans = document.querySelectorAll('span[data-first]')
-      spans.forEach((span) => {
-        console.log(span)
-        span.dataset.first = e.user.first
-        span.innerText = e.user.first
-      })
+      const initials = document.querySelector('span[data-name-initials]')
+      const i = `${e.user.first.slice(0, 1)}${e.user.last.slice(0, 1)}`
+      initials.dataset.nameInitials = i
+      initials.textContent = i
+      const first = document.querySelector('span[data-name-first]')
+      first.dataset.first = e.user.first
+      first.textContent = e.user.first
+      // const spans = document.querySelectorAll('span[data-first]')
+      // spans.forEach((span) => {
+      //   console.log(span)
+      //   span.dataset.first = e.user.first
+      //   span.innerText = e.user.first
+      // })
       toggleTab('login')
       form.style.display = 'none'
       const welcome = document.querySelector('div#welcomeId')
@@ -666,11 +673,17 @@
     function finish(res) {
       console.log('logout response: ', res)
       window.csrfToken = res.response.user.newCsrfToken
-      const spans = document.querySelectorAll('span[data-first]')
-      spans.forEach((span) => {
-        span.dataset.first = ''
-        span.innerText = ''
-      })
+      const initials = document.querySelector('span[data-name-initials]')
+      initials.dataset.nameInitials = ''
+      initials.textContent = ''
+      const first = document.querySelector('span[data-name-first]')
+      first.dataset.nameFirst = ''
+      first.textContent = ''
+      // const spans = document.querySelectorAll('span[data-first]')
+      // spans.forEach((span) => {
+      //   span.dataset.first = ''
+      //   span.innerText = ''
+      // })
       toggleTab('login')
       toggleButtons('showLogin')
       form.style.display = 'block'
