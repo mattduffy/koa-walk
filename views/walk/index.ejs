@@ -91,10 +91,12 @@
   window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
+  const UPDATE_INTERVAL = 1000
+  const ACCURACY_INTERVAL = 10000
   const accuracy = 30 // meters
   const accuracyMargin = 5 // meters
   let lowAccuracy = false
-  let map
+  // let map
   const app = document.querySelector('div#app')
   function fitMap(e = {}) {
     // console.log('fitMap(e)', e)
@@ -118,7 +120,9 @@
     if (response.headers.get('content-type').includes("application/json")) {
       const x = await response.json()
       tokenID = x.tokenID
+      console.log('csrfToken before getToken: ', window.csrfToken)
       window.csrfToken = x.newCsrfToken
+      console.log('csrfToken before getToken: ', window.csrfToken)
     } else {
       console.info('failed to get mapkit token')
       console.log(await response.text())
@@ -252,10 +256,28 @@
         lowAccuracy = true
       }
     }
+    async function accuracyUpdater() {
+      try {
+        const _acc = await new Promise((res, rej) => {
+          navigator.geolocation.getCurrentPosition(
+            (g) => res(g.coords.accuracy),
+            (e) => rej(e),
+            { enableHighAccuracy: true }
+          )
+        })
+        console.log(`updating walking state with new accuracy: ${_acc}`)
+        if (typeof parseFloat(_acc) === 'number') {
+          window.walking.currentPosition.accuracy = parseFloat(_acc)
+        }
+      } catch (e) {
+        console.log('geolocation returned an error: ', e)
+      } 
+    }
+    window.walking.state.accuracyUpdateInterval = setInterval(accuracyUpdater, ACCURACY_INTERVAL)
     async function myGetCurrentPosition(geoOpts) {
       let position
       try {
-        position = await new Promise((resolve, reject) => {
+        position = await new Promise((res, rej) => {
           navigator.geolocation.getCurrentPosition(
             (geo) => {
               if (geo.coords.accuracy > accuracy) {
@@ -264,12 +286,12 @@
               }
               lat = geo.coords.latitude
               lon = geo.coords.longitude
-              resolve(geo)
+              res(geo)
             },
             (err) => {
               console.log(err)
               console.info(`code: ${err.code}, msg: ${err.message}`)
-              reject(err)
+              rej(err)
             },
             geoOpts
           )
@@ -404,7 +426,7 @@
         console.log('reducing distances: ', reducedDistance)
         console.log('display formated redcuced: ', displayUnits(reducedDistance, DISPLAY_UNITS, 1))
         _dis.textContent = `${displayUnits(reducedDistance, DISPLAY_UNITS, 1)}`
-      }, 1000)
+      }, UPDATE_INTERVAL)
     }
     document.querySelector('button#stop').addEventListener('click', stopWalk)
     async function stopWalk(e) {
@@ -630,6 +652,7 @@
     function success(e) {
       console.log('login success')
       console.log(e)
+      window.csrfToken = e.user.newCsrfToken
       const initials = document.querySelector('span[data-name-initials]')
       const i = `${e.user.first.slice(0, 1)}${e.user.last.slice(0, 1)}`
       initials.dataset.nameInitials = i
@@ -637,18 +660,11 @@
       const first = document.querySelector('span[data-name-first]')
       first.dataset.first = e.user.first
       first.textContent = e.user.first
-      // const spans = document.querySelectorAll('span[data-first]')
-      // spans.forEach((span) => {
-      //   console.log(span)
-      //   span.dataset.first = e.user.first
-      //   span.innerText = e.user.first
-      // })
       toggleTab('login')
       form.style.display = 'none'
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'block'
       toggleButtons('showLogin')
-      window.csrfToken = e.user.newCsrfToken  
     }
     doLogin.success = success
     function failed(e) {
@@ -670,26 +686,22 @@
     form.elements.password.value = ''
     form.elements.email.value = ''
     window.walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
-    function finish(res) {
-      console.log('logout response: ', res)
-      window.csrfToken = res.response.user.newCsrfToken
+    function finish(e) {
+      console.log('logout response: ', e)
+      window.csrfToken = e.response.user.newCsrfToken
       const initials = document.querySelector('span[data-name-initials]')
       initials.dataset.nameInitials = ''
       initials.textContent = ''
       const first = document.querySelector('span[data-name-first]')
       first.dataset.nameFirst = ''
       first.textContent = ''
-      // const spans = document.querySelectorAll('span[data-first]')
-      // spans.forEach((span) => {
-      //   span.dataset.first = ''
-      //   span.innerText = ''
-      // })
       toggleTab('login')
       toggleButtons('showLogin')
       form.style.display = 'block'
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'none'
-      form.elements.csrfToken.value = res.response.user.csrfToken
+      // form.elements.csrfToken.value = e.response.user.csrfToken
+      window.csrfToken = e.response.user.csrfToken
     }
     doLogout.finish = finish
   }
@@ -792,8 +804,8 @@
     }
     window._map.region = here
     if (Math.trunc(g.coords.accuracy) > 10 * (accuracy + accuracyMargin)) {
-      console.log('really low accuracy')
-      window._map.cameraDistance = Math.trunc(g.coords.accuracy)
+      console.log('really low accuracy', Math.trunc(g.coords.accuracy))
+      window._map.cameraDistance = Math.trunc(g.coords.accuracy) * 10
     } else {
       window._map.cameraDistance = 100
     }
@@ -934,7 +946,7 @@
       }
       const _acc = a.querySelector('p > span#acc')
       if (coords.accuracy && _acc) {
-        a.querySelector('p > span#acc').innerHTML = displayUnits(coords.accuracy, DISPLAY_UNITS, 1)
+        _acc.innerHTML = displayUnits(coords.accuracy, DISPLAY_UNITS, 1)
       }
       // new walk div content
       if (!window.walking.active) {
