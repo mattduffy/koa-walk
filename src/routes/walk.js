@@ -69,6 +69,7 @@ router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) 
         status: 'success',
         user: {
           first: ctx.state.sessionUser.firstName,
+          last: ctx.state.sessionUser.lastName,
           email: ctx.state.sessionUser.email.primary,
         },
         newCsrfToken,
