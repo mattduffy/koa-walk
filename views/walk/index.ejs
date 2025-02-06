@@ -713,6 +713,14 @@
     credentials.TASK = 'GET_LIST'
     console.log(credentials)
     const div = document.querySelector('div#list')
+    if (!window.walking.state.listCache) {
+      window.walker.postMessage(credentials)
+    } else {
+      fromCache(window.walking.state.listCache)
+    }
+    function fromCache(l) {
+      console.log(l)
+    }
     function finish(e) {
       console.log('getList.finish', e)
       window.csrfToken = e.newCsrfToken
@@ -742,6 +750,7 @@
         }
       } else {
         console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
+        window.walking.state.listCache = e.list
         const walks = div.children.namedItem('walks')
         if (!walks) {
           const ul = document.createElement('ul')
@@ -758,13 +767,12 @@
           e.list.forEach((w) => {
             const li = document.createElement('li')
             li.textContent = `${w}`
-            ul.appendChild(li)
+            walks.appendChild(li)
           })
         }
       }
     }
     getList.finish = finish
-    window.walker.postMessage(credentials)
   }
   async function noPositionCantWalk(o, g) {
     console.log(`no position available: ${g}`)
