@@ -6,7 +6,7 @@
         <span data-action="showLogin" class="userpng outline"></span>
         <span data-name-initials="" style="margin-left: 5px;">
           <% if (isAuthenticated) { %>
-          <%= sessionUser?.firstName %>
+            <%= `${sessionUser?.firstName.slice(0, 1)}${sessionUser?.lastName.slice(0, 1)}` %>
           <% } %>
         </span>
       </div>
