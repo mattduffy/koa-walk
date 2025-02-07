@@ -256,22 +256,30 @@
         lowAccuracy = true
       }
     }
+    let errCount = 0
     async function accuracyUpdater() {
-      try {
-        const _acc = await new Promise((res, rej) => {
-          navigator.geolocation.getCurrentPosition(
-            (g) => res(g.coords.accuracy),
-            (e) => rej(e),
-            { enableHighAccuracy: true }
-          )
-        })
-        console.log(`updating walking state with new accuracy: ${_acc}`)
-        if (typeof parseFloat(_acc) === 'number') {
-          window.walking.currentPosition.accuracy = parseFloat(_acc)
-        }
-      } catch (e) {
-        console.log('geolocation returned an error: ', e)
-      } 
+    console.log(`accuracyUpdater() error counter: ${errCount}`)
+    if (errCount >= 10) {
+      clearInterval(window.walking.state.accuracyUpdateInterval)
+      console.log('should be undefined? ', window.walking.state.accuracyUpdateInterval)
+    } else {
+        try {
+          const _acc = await new Promise((res, rej) => {
+            navigator.geolocation.getCurrentPosition(
+              (g) => res(g.coords.accuracy),
+              (e) => rej(e),
+              { enableHighAccuracy: true }
+            )
+          })
+          console.log(`updating walking state with new accuracy: ${_acc}`)
+          if (typeof parseFloat(_acc) === 'number') {
+            window.walking.currentPosition.accuracy = parseFloat(_acc)
+          }
+        } catch (e) {
+          console.log('geolocation returned an error: ', e)
+          errCount += 1
+        } 
+      }
     }
     window.walking.state.accuracyUpdateInterval = setInterval(accuracyUpdater, ACCURACY_INTERVAL)
     async function myGetCurrentPosition(geoOpts) {
@@ -315,7 +323,6 @@
     async function mapSingleTap(e) {
       console.log(e)
     }
-    window._map.addEventListener('user-location-change', userLocationChange)
     async function userLocationChange(e) {
       console.log('user-location-change event: ', e)
       const evtCoords = e.coordinate
@@ -338,11 +345,10 @@
         )
       } else {
         await recordWalk(coords, mapkitCoordinate)
-        // markWalkPointOnMap()
         window._map.setCenterAnimated(mapkitCoordinate, false)
       }
     }
-    window.addEventListener('locality-changed', localityChanged)
+    window._map.addEventListener('user-location-change', userLocationChange)
     function localityChanged(e) {
       console.log('localityChanged(e)', e)
       e.preventDefault()
@@ -363,6 +369,7 @@
         ul.appendChild(li)
       }
     }
+    window.addEventListener('locality-changed', localityChanged)
     document.querySelector('button[name="showStartNew"]').addEventListener('click', clickStartNew)
     function clickStartNew(e) {
       console.log(e)
