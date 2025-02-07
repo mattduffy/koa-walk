@@ -54,8 +54,8 @@ async function saveWalk(credentials) {
     saved.msg = 'Must be logged in to save a walk.'
   } else {
     const formData = new FormData()
-    formData.append('crsfTokenHidden', credentials.csrfTokenHidden)
-    formData.append('walk', walkState.get())
+    formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
+    formData.append('walk', JSON.stringify(walkState.get()))
     const opts = {
       method: 'POST',
       headers: {
