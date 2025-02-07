@@ -89,19 +89,55 @@ router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) 
   }
 })
 
+router.get('saveWalkRedirect', '/save', addIpToSession, async (ctx) => {
+  ctx.redirect('/')
+})
+
 router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) => {
   const log = walkLog.extend('save')
-  // const error = walkError.extend('save')
+  const error = walkError.extend('save')
   log('inside walk router: /save')
-  let body
-  if (ctx.state?.sessionUser) {
-    body = { status: 'save' }
-  } else {
-    body = { status: 'failed', msg: 'Must be logged in to permanently save a walk.' }
-  }
+  const body = {}
+  const newCsrfToken = ulid()
+  body.newCrsfToken = newCsrfToken
   ctx.status = 200
   ctx.type = 'application/json; charset=utf-8'
-  ctx.body = body
+  if (doTokensMatch(ctx)) {
+    if (!ctx.state?.isAuthenticated) {
+      const msg = 'user is not authenticated, not able to save walk.'
+      error(msg)
+      body.message = msg
+      body.status = 401
+    } else {
+      log('sessionUser: ', ctx.state?.sessionUser?.username)
+      log('isAuthenticated: ', ctx.state.isAuthenticated)
+      log('saving walk')
+      const walk = JSON.parse(ctx.request.body.walk[0])
+      walk.userId = ctx.state.sessionUser.id
+      log(walk)
+      try {
+        const db = ctx.state.mongodb.client.db()
+        const collection = db.collection('walks')
+        const saved = await collection.insertOne(walk)
+        log(saved)
+        body.saved = saved
+        body.msg = 'saved a walk.'
+      } catch (e) {
+        error('failed to save walk to db')
+        error(e)
+        ctx.status = 500
+        ctx.msg = 'failed to savee walk to db'
+        ctx.e = e
+      }
+      ctx.session.csrfToken = newCsrfToken
+      ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+      ctx.cookies.set('csrfToken.sig')
+    }
+  } else {
+    ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+    ctx.cookies.set('csrfToken.sig')
+    ctx.body = body
+  }
 })
 
 router.post('setPref', '/user/preferences/update', addIpToSession, processFormData, async (ctx) => {
@@ -118,7 +154,7 @@ router.post('setPref', '/user/preferences/update', addIpToSession, processFormDa
       const msg = 'user is not authenticated, no access to saved preferences.'
       error(msg)
       body.message = msg
-      body.status = 'failed'
+      body.status = 401
     } else {
       log('sessionUser: ', ctx.state?.sessionUser?.username)
       log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
