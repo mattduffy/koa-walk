@@ -87,7 +87,8 @@ async function saveWalk(credentials) {
 async function getList(credentials) {
   console.log('woker::getList')
   let response
-  let list = { TASK: 'GET_LIST', list: null, auth: null }
+  // let list = { TASK: 'GET_LIST', list: null, auth: null }
+  let list = { list: null, auth: null }
   let auth
   console.log('is logged in: ', isLoggedIn)
   console.log('user: ', user)
@@ -279,7 +280,7 @@ onmessage = async (e) => {
         console.log(e.data.TASK)
         try {
           const list = await getList(e.data)
-          postMessage(list)
+          postMessage({ TASK: e.data.TASK, ...list })
         } catch (err) {
           console.error(`${e.data.TASK} failed.`, err)
           postMessage({ TASK: 'GET_LIST', err: 'getList failed', cause: err })

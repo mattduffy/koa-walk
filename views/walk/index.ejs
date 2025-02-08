@@ -235,24 +235,27 @@
       }
     }
     async function setPosition(position) {
-      console.log('setPosition()', position)
+      console.log('setPosition(position)', position, lowAccuracy)
       if (window.walking) {
         window.walking.currentPosition = position
       }
-      if (position && !lowAccuracy) {
+      if (position && lowAccuracy !== undefined) {
         await goodAccuracyCanWalk(mapOpts, position)
-      } else if (position?.coords?.accuracy > accuracy && position?.coords?.accuracy <= accuracy + accuracyMargin) {
+      } else if ((position?.coords?.accuracy > accuracy) &&
+        (position?.coords?.accuracy <= accuracy + accuracyMargin)) {
         console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
         console.info('can\'t track movement very accurately.')
         await lowAccuracyPositionCantWalk(mapOpts, position)
-      } else if (lowAccuracy && position) {
-        console.info(`really low geoLocation accuracy: ${position.coords.accuracy}`)
-        console.info('can\'t track movement accurately.')
+      } else if (position && lowAccuracy) {
+        console.info('really low geoLocation accuracy:', position)
+        console.info('cannot track movement accurately.')
+        console.log(mapOtps)
         await lowAccuracyPositionCantWalk(mapOpts, position)
       } else {
         console.log('no geo position available')
         console.log('using lat: ', lat, ' lon: ', lon)
-        await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 1000 } })
+        const x = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
+        await noPositionCantWalk(mapOpts, x)
         lowAccuracy = true
       }
     }
@@ -308,13 +311,13 @@
         await setPosition(position)
         updatePosition(position)
       } catch (e) {
-        console.warn('failed to acquire geoLocation for some reason.')
+        console.warn('Failed to acquire geoLocation for some reason.')
         console.warn(e)
-        console.log(`Failing back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
+        console.log(`Falling back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
         position = { latitude: lat, longitude: lon, accuracy: 1000, timestamp: Date.now() }
-        lowAccuracy = null
-        console.log('failback position: ', position)
+        lowAccuracy = undefined
         await setPosition(position)
+        updatePosition(position)
       }
       return position
     }
@@ -696,12 +699,15 @@
     function finish(e) {
       console.log('logout response: ', e)
       window.csrfToken = e.response.user.newCsrfToken
+      delete window.walking.state.listCache
       const initials = document.querySelector('span[data-name-initials]')
       initials.dataset.nameInitials = ''
       initials.textContent = ''
       const first = document.querySelector('span[data-name-first]')
       first.dataset.nameFirst = ''
       first.textContent = ''
+      const walkList = document.querySelector('ul#walks')
+      walkList.remove()
       toggleTab('login')
       toggleButtons('showLogin')
       form.style.display = 'block'
@@ -728,6 +734,11 @@
     function fromCache(l) {
       console.log(l)
     }
+    getList.fromCache = fromCache
+    function clearCache() {
+      delete window.walking.state.listCache
+    }
+    getList.clearCache = clearCache
     function finish(e) {
       console.log('getList.finish', e)
       window.csrfToken = e.newCsrfToken
@@ -739,7 +750,7 @@
         noAuthP.id = 'noAuth'
         noAuthP.textContent = 'Login to see saved walks.'
         div.appendChild(noAuthP)
-      } else if (div.children.namedItem('noAuth')) {
+      } else if (e.auth === 'no' && div.children.namedItem('noAuth')) {
         console.log('show noAuth')
         noAuth.style.display = 'block' 
       } else if (e.list.length === 0) {
@@ -792,7 +803,7 @@
       window._map = new mapkit.Map('map', o)
     }
     window._map.region = here
-    window._map.cameraDistance = 250000
+    window._map.cameraDistance = 2500000
     console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.showsUserLocation = true 
     window._map.setCenterAnimated(me, true)
