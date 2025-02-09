@@ -259,13 +259,14 @@
         lowAccuracy = true
       }
     }
-    let errCount = 0
+    window.errCount = 0
     async function accuracyUpdater() {
-    console.log(`accuracyUpdater() error counter: ${errCount}`)
-    if (errCount >= 10) {
-      clearInterval(window.walking.state.accuracyUpdateInterval)
-      console.log('should be undefined? ', window.walking.state.accuracyUpdateInterval)
-    } else {
+      console.log(`accuracyUpdater() error counter: ${window.errCount}`)
+      if (window.errCount >= 10) {
+        clearInterval(window.walking.state.accuracyUpdateInterval)
+        delete window.walking.state.accuracyUpdateInterval
+        console.log('should be undefined? ', window.walking.state?.accuracyUpdateInterval)
+      } else {
         try {
           const _acc = await new Promise((res, rej) => {
             navigator.geolocation.getCurrentPosition(
@@ -280,7 +281,7 @@
           }
         } catch (e) {
           console.log('geolocation returned an error: ', e)
-          errCount += 1
+          window.errCount += 1
         } 
       }
     }
@@ -504,7 +505,9 @@
       function finish(e) {
         console.log('finish saving walk: ', e)
         const savedWalk = { _id: e.res.saved.insertedId, name: _name, date: _date }
-        if (window.walking.state.listCache) {
+        if (!window.walking.state?.listCache) {
+          window.walking.state.listCache = [ savedWalk ]
+        } else {
           window.walking.state.listCache.push(savedWalk)
         }
       }
@@ -737,11 +740,12 @@
     credentials.jwtAccess = jwtAccess
     credentials.TASK = 'GET_LIST'
     console.log(credentials)
-    const div = document.querySelector('div#list')
+    const DIV = document.querySelector('div#list')
     if (!window.walking.state.listCache) {
       window.walker.postMessage(credentials)
     } else {
-      fromCache(window.walking.state.listCache)
+      // fromCache(window.walking.state.listCache)
+      renderList()
     }
     function fromCache(l) {
       console.log(l)
@@ -751,18 +755,40 @@
       delete window.walking.state.listCache
     }
     getList.clearCache = clearCache
+    function renderList(n = null) {
+      const list = window.walking.state.listCache
+      const walks = DIV.children.namedItem('walks') || (() => {
+        const ul = document.createElement('ul')
+        ul.id = 'walks'
+        DIV.appendChild(ul)
+        console.log(ul)
+        return DIV.children.namedItem('walks')
+      })()
+      if (walks.children.length < list.length) {
+        const replaceLis = []
+        list.forEach((w) => {
+          console.log(w)
+          const li = document.createElement('li')
+          const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+          li.textContent = `${w.name} (${new Date(w.date).toLocaleString('en-US', fmt)})`
+          replaceLis.push(li)
+        })
+        walks.replaceChildren(...replaceLis)
+      }
+    }
+    window.getList.renderList = renderList
     function finish(e) {
       console.log('getList.finish', e)
       window.csrfToken = e.newCsrfToken
-      const noAuth = div.children.namedItem('noAuth') ?? null
+      const noAuth = DIV.children.namedItem('noAuth') ?? null
       if (e.auth === 'no' && !noAuth) { 
         console.log(`e.auth: ${e.auth}`)
         console.log(`noAuth: ${noAuth}`)
         const noAuthP = document.createElement('p')
         noAuthP.id = 'noAuth'
         noAuthP.textContent = 'Login to see saved walks.'
-        div.appendChild(noAuthP)
-      } else if (e.auth === 'no' && div.children.namedItem('noAuth')) {
+        DIV.appendChild(noAuthP)
+      } else if (e.auth === 'no' && DIV.children.namedItem('noAuth')) {
         console.log('show noAuth')
         noAuth.style.display = 'block' 
       } else if (e.list.length === 0) {
@@ -770,39 +796,21 @@
         if (noAuth) {
           noAuth.style.display = 'none'
         }
-        if (div.children.namedItem('noWalks')) {
+        if (DIV.children.namedItem('noWalks')) {
           console.log('already displayed no walks')
         } else {
           const noWalks = document.createElement('p')
           noWalks.textContent = 'No saved walks.'
           noWalks.id = 'noWalks'
-          div.appendChild(noWalks)
+          DIV.appendChild(noWalks)
         }
       } else {
+        // authenticated user and non-zero length list of walks
         console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
         window.walking.state.listCache = e.list.map((w) => {
           return { id: w._id, name: w.name, date: w.date }
         })
-        const walks = div.children.namedItem('walks')
-        if (!walks) {
-          const ul = document.createElement('ul')
-          ul.id = 'walks'
-          e.list.forEach((w) => {
-            console.log(w)
-            const li = document.createElement('li')
-            const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
-            li.innerHTML = `${w.name} (${new Date(w.date).toLocaleString('en-US', fmt)})`
-            ul.appendChild(li)
-          })
-          div.appendChild(ul)
-        } else {
-          console.log(`e.auth = ${e.auth}`)
-          e.list.forEach((w) => {
-            const li = document.createElement('li')
-            li.textContent = `${w}`
-            walks.appendChild(li)
-          })
-        }
+        renderList() 
       }
     }
     getList.finish = finish
