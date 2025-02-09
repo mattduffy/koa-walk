@@ -22,6 +22,7 @@ class State extends Subject {
       active: false,
       date: null,
       name: null,
+      location: null,
       startTime: null,
       startPosition: null,
       currentPosition: null,
@@ -89,6 +90,14 @@ class State extends Subject {
 
   get name() {
     return this.state.name
+  }
+
+  set location(location = '') {
+    this.state.location = location
+  }
+
+  get location() {
+    return this.state.location
   }
 
   set active(s) {
