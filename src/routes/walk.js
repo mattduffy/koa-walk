@@ -7,7 +7,7 @@
 
 import Router from '@koa/router'
 import { ulid } from 'ulid'
-// import { ObjectId } from 'mongodb'
+import { ObjectId } from 'mongodb'
 // import { Users } from '../models/users.js'
 import { _log, _error } from '../utils/logging.js'
 // import { redis } from '../daos/impl/redis/redis-client.js'
@@ -126,7 +126,7 @@ router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) =>
         error('failed to save walk to db')
         error(e)
         ctx.status = 500
-        ctx.msg = 'failed to savee walk to db'
+        ctx.msg = 'failed to save walk to db'
         ctx.e = e
       }
       ctx.session.csrfToken = newCsrfToken
@@ -136,8 +136,8 @@ router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) =>
   } else {
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
     ctx.cookies.set('csrfToken.sig')
-    ctx.body = body
   }
+  ctx.body = body
 })
 
 router.post('setPref', '/user/preferences/update', addIpToSession, processFormData, async (ctx) => {
@@ -190,48 +190,55 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
   log('inside walk router: /getList')
   const newCsrfToken = ulid()
   const list = []
-  list.push({
-    active: false,
-    date: 1738710829525,
-    name: 'My first big boy walk',
-    startTime: 1738710829525,
-    startPosition: { latitude: 37.82445236440165, longitude: -122.20887165222129, accuracy: 37 },
-    currentPosition: { latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37 },
-    endPosition: { latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738711024460, distance: 0 },
-    endTime: 1738711024460,
-    wayPoints: [
-      {latitude: 37.82445236440165, longitude: -122.20887165222129, accuracy: 37, timestamp: 1738710829525, distance: 0},
-      {latitude: 37.82433204932095, longitude: -122.20883165088334, accuracy: 37, timestamp: 1738710904469, distance: 13.83207568454471},
-      {latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738710974192, distance: 0.0006440597739965577},
-      {latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738710974192, distance: 0.0006440597739965577},
-    ],
-    c: [
-      {latitude: 37.82445236440165, longitude: -122.20887165222129},
-      {latitude: 37.82433204932095, longitude: -122.20883165088334},
-      {latitude: 37.82433204932095, longitude: -122.20883165088334},
-      {latitude: 37.824332043711095, longitude: -122.20883164905806},
-    ],
-    duration: null,
-  })
+  // const mockWalk = {
+  //   active: false,
+  //   date: 1738710829525,
+  //   name: 'My first big boy walk',
+  //   startTime: 1738710829525,
+  //   startPosition: { latitude: 37.82445236440165, longitude: -122.20887165222129, accuracy: 37 },
+  //   currentPosition: { latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37 },
+  //   endPosition: { latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738711024460, distance: 0 },
+  //   endTime: 1738711024460,
+  //   wayPoints: [
+  //     {latitude: 37.82445236440165, longitude: -122.20887165222129, accuracy: 37, timestamp: 1738710829525, distance: 0},
+  //     {latitude: 37.82433204932095, longitude: -122.20883165088334, accuracy: 37, timestamp: 1738710904469, distance: 13.83207568454471},
+  //     {latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738710974192, distance: 0.0006440597739965577},
+  //     {latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738710974192, distance: 0.0006440597739965577},
+  //   ],
+  //   c: [
+  //     {latitude: 37.82445236440165, longitude: -122.20887165222129},
+  //     {latitude: 37.82433204932095, longitude: -122.20883165088334},
+  //     {latitude: 37.82433204932095, longitude: -122.20883165088334},
+  //     {latitude: 37.824332043711095, longitude: -122.20883164905806},
+  //   ],
+  //   duration: null,
+  // }
+  // list.push(mockWalk)
   if (doTokensMatch(ctx)) {
     if (!ctx.state?.isAuthenticated) {
       error('user is not autheenticated, no list available')
       list.push({ date: new Date(), coords: [], waypoints: [] })
+    } else {
+      log('sessionUser: ', ctx.state?.sessionUser.username)
+      log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
+      log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
+      const db = ctx.state.mongodb.client.db()
+      const collection = db.collection('walks')
+      const filter = { userId: new ObjectId(ctx.state.sessionUser.id) }
+      const options = { sort: { date: -1 } }
+      const walks = await collection.find(filter, options).toArray()
+      log(walks)
+      ctx.session.csrfToken = newCsrfToken
+      ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+      ctx.cookies.set('csrfToken.sig')
+      const body = {
+        newCsrfToken,
+        list: [...list, ...walks],
+      }
+      ctx.status = 200
+      ctx.type = 'application/json; charset=utf-8'
+      ctx.body = body
     }
-    log('sessionUser: ', ctx.state?.sessionUser?.username)
-    log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
-    log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
-    ctx.session.csrfToken = newCsrfToken
-    ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.cookies.set('csrfToken.sig')
-    const body = {
-      newCsrfToken,
-      // sessionUser: ctx.state.sessionUser,
-      list,
-    }
-    ctx.status = 200
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = body
   } else {
     ctx.type = 'application/json; charset=utf-8'
     ctx.body = {
