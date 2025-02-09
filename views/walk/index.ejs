@@ -399,6 +399,7 @@
       const startWalkForm = document.forms.namedItem('startWalkForm')
       startWalkForm.style.display = 'none'
       const name = startWalkForm.children.namedItem('name').value
+      const location = startWalkForm.children.namedItem('location').value
       const h3 = document.querySelector('h3#walkName')
       h3.textContent = name
       h3.style.display = 'block'
@@ -410,13 +411,18 @@
       window.walking.active = true
       window.walking.startPosition = window.walking.currentPosition
       window.walking.startTime = _d
-      window.walking.name = name
       window.walking.date = _d
-      const c = new mapkit.Coordinate(window.walking.currentPosition.latitude, window.walking.currentPosition.longitude)
+      window.walking.name = name
+      window.walking.location = location
+      const c = new mapkit.Coordinate(
+        window.walking.currentPosition.latitude,
+        window.walking.currentPosition.longitude
+      )
       const w = {
         TASK: 'START_WALK',
         date: _d,
-        name: name,
+        name,
+        location,
         startPosition: window.walking.currentPosition,
         startTime: _d,
         c, 
@@ -486,6 +492,8 @@
       if (window.walking.active) {
         document.querySelector('button#stop').click()
       }
+      const _name = window.walking.name
+      const _date = window.walking.date
       const credentials = {
         TASK: 'SAVE_WALK',
         url: `${origin}/save`,
@@ -495,6 +503,10 @@
       window.walker.postMessage(credentials)
       function finish(e) {
         console.log('finish saving walk: ', e)
+        const savedWalk = { _id: e.res.saved.insertedId, name: _name, date: _date }
+        if (window.walking.state.listCache) {
+          window.walking.state.listCache.push(savedWalk)
+        }
       }
       saveWalk.finish = finish
     }
@@ -768,7 +780,9 @@
         }
       } else {
         console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
-        window.walking.state.listCache = e.list
+        window.walking.state.listCache = e.list.map((w) => {
+          return { id: w._id, name: w.name, date: w.date }
+        })
         const walks = div.children.namedItem('walks')
         if (!walks) {
           const ul = document.createElement('ul')
@@ -776,7 +790,8 @@
           e.list.forEach((w) => {
             console.log(w)
             const li = document.createElement('li')
-            li.innerHTML = `${w.name} (${new Date(w.date).toLocaleString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})})`
+            const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+            li.innerHTML = `${w.name} (${new Date(w.date).toLocaleString('en-US', fmt)})`
             ul.appendChild(li)
           })
           div.appendChild(ul)
@@ -921,7 +936,7 @@
       }
     }
   }
-  function populateApp(strings, coords = null, locality = null) {
+  function populateApp(strings, coords = null, theLocality = null) {
     const a = window.app ?? document.querySelector('div#app')    
     // console.log(a)
     if (strings) {
@@ -935,19 +950,18 @@
         a.appendChild(b1div)
       }
     }
-    if (locality) {
+    if (theLocality) {
       const {
         subLocality,
         name,
+        locality,
         administrativeArea,
         administrativeAreaCode,
-      } = locality ?? null
-      // const name = locality.name ?? null
-      // const adminAreacode = locality.administrativeAreaCode ?? null
+      } = theLocality ?? null
       console.log(`updating new locality: ${(subLocality) ? subLocality + ',' : ''} ${name}`)
       const l = `${(subLocality) ? '<span id="subLocality">' + subLocality + '</span><br>' : ''}`
         + `${(name) ? '<span id="name">' + name + '</span><br>' : ''}` 
-        + `${(administrativeArea) ? '<span id="administrativeArea">' + administrativeArea + '</span>, ' : ''}`
+        + `${(locality) ? '<span id="locality">' + locality + '</span>, ' : ''}`
         + `${(administrativeAreaCode) ? '<span id="administrativeAC">' + administrativeAreaCode + '</span>' : ''}`
         + '<br>'
         a.children.namedItem('p2').innerHTML += l
@@ -955,7 +969,7 @@
       if (!window.walking.active) {
         document.querySelector('input[id="name"]').value = (subLocality) ? subLocality : name
         document.querySelector('input[id="location"]').value = `${(name) ? name : ''}`
-          + `${(administrativeArea) ? ', ' + administrativeArea : ''}`
+          + `${(locality) ? ', ' + locality : ''}`
           + `${(administrativeAreaCode) ? ', ' + administrativeAreaCode : ''}`
       }
     }
