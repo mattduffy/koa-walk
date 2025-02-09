@@ -70,6 +70,9 @@ async function saveWalk(credentials) {
       response = await fetch(request)
       json = await response.json()
       console.log(json)
+      if (json.saved.acknowledged === true && json.saved.insertedId) {
+        console.log('new walk _id:', json.saved.insertedId)
+      }
       saved.status = 'ok'
       saved.msg = 'Saved walk.'
       saved.res = json
@@ -78,7 +81,6 @@ async function saveWalk(credentials) {
       console.log(e)
       saved.status = 'failed'
       saved.msg = 'Failed to save walk to database for some reason.'
-      return saved
     }
   }
   console.log('what happened to saved?', saved)
