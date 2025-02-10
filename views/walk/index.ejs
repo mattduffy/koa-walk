@@ -620,6 +620,11 @@
             window.saveWalk.finish(e.data)
             console.log('csrfToken after SAVE: ', window.csrfToken)
             break
+          case 'DELETE':
+            console.log('csrfToken before DELETE_WALK: ', window.csrfToken)
+            window.deleteWalk.finish(e.data) 
+            console.log('csrfToken after DELETE_WALK: ', window.csrfToken)
+            break
           default:
             console.log(e.data)
         }
@@ -755,26 +760,32 @@
       delete window.walking.state.listCache
     }
     getList.clearCache = clearCache
-    function renderList(n = null) {
+    function renderList() {
       const list = window.walking.state.listCache
       const walks = DIV.children.namedItem('walks') || (() => {
         const ul = document.createElement('ul')
         ul.id = 'walks'
         DIV.appendChild(ul)
-        console.log(ul)
+        // console.log(ul)
         return DIV.children.namedItem('walks')
       })()
-      if (walks.children.length < list.length) {
+      if (walks.children.length !== list.length) {
         const replaceLis = []
         list.forEach((w) => {
-          console.log(w)
+          // console.log(w)
           const li = document.createElement('li')
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
-          li.textContent = `${w.name} (${new Date(w.date).toLocaleString('en-US', fmt)})`
+          // li.textContent = `${w.name} (${new Date(w.date).toLocaleString('en-US', fmt)})`
+          li.innerHTML = `<span data-show-id="${w.id}" class="pointer">${w.name}</span> `
+            + `(${new Date(w.date).toLocaleString('en-US', fmt)}) `
+            + `<span data-delete-id=${w.id} class="pointer delete tiny"></span>`
           replaceLis.push(li)
         })
         walks.replaceChildren(...replaceLis)
       }
+      document.querySelectorAll('span[data-delete-id]').forEach((s) => {
+        s.addEventListener('click', deleteWalk)
+      })
     }
     window.getList.renderList = renderList
     function finish(e) {
@@ -814,6 +825,30 @@
       }
     }
     getList.finish = finish
+  }
+  window.deleteWalk = async function(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log(e.target.dataset)
+    const credentials = {
+      TASK: 'DELETE_WALK',
+      url: `${origin}/delete`,
+      jwtAccess,
+      id: e.target.dataset.deleteId,
+      csrfTokenHidden: window.csrfToken,
+    }
+    window.walker.postMessage(credentials)
+    function finish(e) {
+      console.log(e)
+      window._temp = window.walking.state.listCache.filter((w) => {
+        return w.id !== e.id
+      })
+      console.log(window._temp)
+      window.walking.state.listCache = window._temp
+      delete window._temp
+      window.getList.renderList()
+    }
+    window.deleteWalk.finish = finish
   }
   async function noPositionCantWalk(o, g) {
     console.log(`no position available: ${g}`)
