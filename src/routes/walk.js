@@ -104,10 +104,10 @@ router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) =>
   ctx.type = 'application/json; charset=utf-8'
   if (doTokensMatch(ctx)) {
     if (!ctx.state?.isAuthenticated) {
-      const msg = 'user is not authenticated, not able to save walk.'
+      const msg = 'User is not authenticated, not able to save walk.'
       error(msg)
       body.message = msg
-      body.status = 401
+      ctx.status = 401
     } else {
       log('sessionUser: ', ctx.state?.sessionUser?.username)
       log('isAuthenticated: ', ctx.state.isAuthenticated)
@@ -126,8 +126,8 @@ router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) =>
         error('failed to save walk to db')
         error(e)
         ctx.status = 500
-        ctx.msg = 'failed to save walk to db'
-        ctx.e = e
+        body.msg = 'failed to save walk to db'
+        body.e = e
       }
       ctx.session.csrfToken = newCsrfToken
       ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
@@ -138,6 +138,60 @@ router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) =>
     ctx.cookies.set('csrfToken.sig')
   }
   ctx.body = body
+})
+
+router.post('deleteWalk', '/delete', addIpToSession, processFormData, async (ctx) => {
+  const log = walkLog.extend('delete')
+  const error = walkError.extend('delete')
+  log('inside walk router: /delete')
+  const newCsrfToken = ulid()
+  const body = {}
+  body.newCsrfToken = newCsrfToken
+  ctx.status = 200
+  ctx.type = 'application/json; charset=utf-8'
+  if (doTokensMatch(ctx)) {
+    if (!ctx.state.isAuthenticated) {
+      const msg = 'User is not authenticated, unable to delete walk.'
+      error(msg)
+      body.msg = msg
+      ctx.status = 401
+    } else {
+      log('sessionUser: ', ctx.state?.sessionUser?.username)
+      log('isAuthenticated: ', ctx.state.isAuthenticated)
+      log('deleting walk')
+      const [walkId] = ctx.request.body.toBeDeleted
+      try {
+        const db = ctx.state.mongodb.client.db()
+        const collection = db.collection('walks')
+        const query = { _id: new ObjectId(walkId) }
+        const deleted = await collection.deleteOne(query)
+        log(deleted)
+        body.deleted = deleted
+        if (deleted.deletedCount === 1) {
+          body.msg = `deleted walk (id: ${walkId}).`
+        } else {
+          body.msg = `failed to delete walk ${walkId} for some reason.`
+        }
+      } catch (e) {
+        error(e)
+        error(`failed to delete walk ${walkId} from db`)
+        ctx.status = 500
+        body.msg = 'failed to delete walk from db'
+        body.e = e
+      }
+      ctx.session.csrfToken = newCsrfToken
+      ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+      ctx.cookies.set('csrfToken.sig')
+    }
+  } else {
+    ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+    ctx.cookies.set('csrfToken.sig')
+  }
+  ctx.body = body
+})
+
+router.get('getDeleteWalk', '/delete', addIpToSession, async (ctx) => {
+  ctx.redirect('/')
 })
 
 router.post('setPref', '/user/preferences/update', addIpToSession, processFormData, async (ctx) => {
