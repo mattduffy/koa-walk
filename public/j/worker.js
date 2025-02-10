@@ -44,6 +44,45 @@ async function setPref(credentials) {
   }
   return json
 }
+async function deleteWalk(credentials) {
+  console.log('worker::deleteWalk(credentials)', credentials)
+  let response
+  let json
+  const deleted = { status: null, msg: null }
+  if (!isLoggedIn) {
+    deleted.status = 'failed'
+    deleted.msg = 'Must be logged in to delete a walk.'
+  } else {
+    const formData = new FormData()
+    formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
+    formData.append('toBeDeleted', credentials.id)
+    const opts = {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer: ${credentials.jwtAccess}`,
+        'X-ASYNCREQUEST': true,
+      },
+      body: formData,
+    }
+    const request = new Request(credentials.url, opts)
+    try {
+      response = await fetch(request)
+      json = await response.json()
+      console.log(json)
+      deleted.status = 'ok'
+      deleted.msg = `walk id ${credentials.id} deleted from the database.`
+      deleted.res = json
+      deleted.id = credentials.id
+    } catch (e) {
+      console.log(e)
+      deleted.status = 'failed'
+      deleted.msg = 'Failed to delete walk from the database for some reason.'
+    }
+  }
+  console.log(deleted)
+  return deleted
+}
 async function saveWalk(credentials) {
   console.log('worker::saveWalk(credentials)', credentials)
   let response
@@ -316,6 +355,10 @@ onmessage = async (e) => {
         console.log(e.data.TASK)
         walkState.clear()
         // console.log('walk state is clear: ', walkState.get())
+        break
+      case 'DELETE_WALK':
+        console.log('worker', e.data.TASK)
+        postMessage({ TASK: 'DELETE', ...await deleteWalk(e.data) })
         break
       case 'GET_WALK':
         console.log(e.data.TASK, e.data.msg)
