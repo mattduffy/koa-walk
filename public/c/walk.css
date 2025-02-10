@@ -61,6 +61,24 @@ nav#nav > div {
   background-color: palegoldenrod;
 }
 
+.pointer {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.tiny {
+  font-size: .5em;
+  padding: .75em 0em;
+}
+
+span.delete {
+  content: url('/i/delete.svg');
+  width: 2.5em;
+  margin-left: 10px;
+  vertical-align: text-bottom;
+  position: relative;
+  top: .5em;
+}
 span.hikingpng {
   content: url('/i/hiking.png');
   max-width: 1.5em;
