@@ -363,6 +363,7 @@
       if (!ul) {
         ul = document.createElement('ol')
         ul.id = 'change'
+        ul.setAttribute('reversed', '')
         a.appendChild(ul)
       }
       if (e.detail.coords) {
@@ -370,7 +371,8 @@
         li.textContent = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
           + `${evtCoords.longitude.toFixed(4)}), `
           + `acc: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}`
-        ul.appendChild(li)
+        // ul.appendChild(li)
+        ul.insertBefore(li, ul.firstChild)
       }
     }
     window.addEventListener('locality-changed', localityChanged)
@@ -727,7 +729,9 @@
       first.dataset.nameFirst = ''
       first.textContent = ''
       const walkList = document.querySelector('ul#walks')
-      walkList.remove()
+      if (walkList) {
+        walkList.remove()
+      }
       toggleTab('login')
       toggleButtons('showLogin')
       form.style.display = 'block'
