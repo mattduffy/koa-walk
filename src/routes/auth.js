@@ -92,7 +92,7 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
           error: authUser.error,
         }
       } else {
-        error('unsuccessful logoin attempt - not an async request.')
+        error('unsuccessful login attempt - not an async request.')
         ctx.redirect('/login')
       }
     } else if (authUser) {
@@ -110,7 +110,6 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
         ctx.session.username = loggedInUser.username
         ctx.session.csrfToken = newCsrfToken
         ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-        ctx.cookies.set('csrfToken.sig')
         ctx.flash = {
           index: {
             username: loggedInUser.username,
@@ -162,7 +161,6 @@ router.get('getLogout', '/logout', async (ctx) => {
   ctx.state.isAuthenticated = false
   const newCsrfToken = ulid()
   ctx.cookies.set('csrfToken', newCsrfToken)
-  ctx.cookies.set('csrfToken.sig')
   if (ctx.state.isAsyncRequest) {
     ctx.body = { status: 'loggedOut', user: { newCsrfToken } }
   } else {

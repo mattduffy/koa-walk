@@ -36,7 +36,7 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   const csrfToken = ulid()
   ctx.session.csrfToken = csrfToken
   ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-  ctx.cookies.set('csrfToken.sig')
+  // ctx.cookies.set('csrfToken.sig')
   log('sessionUser: ', ctx.state?.sessionUser?.username)
   log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
   log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
@@ -63,7 +63,7 @@ router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) 
   if (doTokensMatch(ctx)) {
     ctx.session.csrfToken = newCsrfToken
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.cookies.set('csrfToken.sig')
+    // ctx.cookies.set('csrfToken.sig')
     if (ctx.state?.sessionUser) {
       body = {
         status: 'success',
@@ -84,7 +84,7 @@ router.post('refresh', '/refresh', addIpToSession, processFormData, async (ctx) 
   } else {
     ctx.session.csrfToken = newCsrfToken
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.cookies.set('csrfToken.sig')
+    // ctx.cookies.set('csrfToken.sig')
     ctx.body = { status: 'fail', message: 'csrf token mismatch', csrfToken: newCsrfToken }
   }
 })
@@ -131,11 +131,11 @@ router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) =>
       }
       ctx.session.csrfToken = newCsrfToken
       ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-      ctx.cookies.set('csrfToken.sig')
+      // ctx.cookies.set('csrfToken.sig')
     }
   } else {
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.cookies.set('csrfToken.sig')
+    // ctx.cookies.set('csrfToken.sig')
   }
   ctx.body = body
 })
@@ -181,11 +181,11 @@ router.post('deleteWalk', '/delete', addIpToSession, processFormData, async (ctx
       }
       ctx.session.csrfToken = newCsrfToken
       ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-      ctx.cookies.set('csrfToken.sig')
+      // ctx.cookies.set('csrfToken.sig')
     }
   } else {
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.cookies.set('csrfToken.sig')
+    // ctx.cookies.set('csrfToken.sig')
   }
   ctx.body = body
 })
@@ -228,12 +228,12 @@ router.post('setPref', '/user/preferences/update', addIpToSession, processFormDa
       }
       ctx.session.csrfToken = newCsrfToken
       ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-      ctx.cookies.set('csrfToken.sig')
+      // ctx.cookies.set('csrfToken.sig')
       ctx.body = body
     }
   } else {
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.cookies.set('csrfToken.sig')
+    // ctx.cookies.set('csrfToken.sig')
     ctx.body = { status: 'fail', message: 'user is not authenticated', csrfToken: newCsrfToken }
   }
 })
@@ -284,7 +284,7 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
       log(walks)
       ctx.session.csrfToken = newCsrfToken
       ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-      ctx.cookies.set('csrfToken.sig')
+      // ctx.cookies.set('csrfToken.sig')
       const body = {
         newCsrfToken,
         list: [...list, ...walks],
