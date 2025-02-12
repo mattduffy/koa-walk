@@ -125,6 +125,39 @@ async function saveWalk(credentials) {
   console.log('what happened to saved?', saved)
   return saved
 }
+async function showWalk(credentials) {
+  console.log('woker::showWalk(credentials)', credentials)
+  let response
+  let walk
+  if (!isLoggedIn) {
+    walk = { status: 'failed', msg: 'login to see saved walks' }
+    return walk
+  }
+  const formData = new FormData()
+  formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
+  formData.append('walkId', credentials.id)
+  const opts = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${credentials.jwtAccess}`,
+      'X-ASYNCREQUEST': true,
+    },
+    body: formData,
+  }
+  const request = new Request(credentials.url, opts)
+  try {
+    response = await fetch(request)
+    const json = await response.json()
+    console.log('showWalk response:', json)
+    walk = json
+    walk.newCsrfToken = json.newCsrfToken
+  } catch (e) {
+    console.error(e)
+    walk = { status: 'failed', msg: 'failed to retrieve walk from db', e }
+  }
+  return walk
+}
 async function getList(credentials) {
   console.log('woker::getList')
   let response
@@ -361,7 +394,8 @@ onmessage = async (e) => {
         postMessage({ TASK: 'DELETE', ...await deleteWalk(e.data) })
         break
       case 'GET_WALK':
-        console.log(e.data.TASK, e.data.msg)
+        console.log('worker', e.data.TASK)
+        postMessage({ TASK: e.data.TASK, ...await showWalk(e.data) })
         break
       default:
         console.info(e)
