@@ -607,6 +607,11 @@
             window.getList.finish(e.data)
             console.log('csrfToken after GET_LIST: ', window.csrfToken)
             break
+          case 'GET_WALK':
+            console.log('csrfToken before GET_WALK: ', window.csrfToken)
+            window.showWalk.finish(e.data)
+            console.log('csrfToken after GET_WALK: ', window.csrfToken)
+            break
           case 'SET_PREF':
             console.log('csrfToken before SET_PREF: ', window.csrfToken)
             window.updatePreferences.finish(e.data)
@@ -643,7 +648,14 @@
       console.log('window.walker: ', window.walker)
       if (window.isAuthenticated && window.walker) {
         console.log('refreshing user...')
-        window.walker.postMessage({ TASK: 'SETUP', isAuth: true, url: `${origin}/refresh`, jwtAccess: '<%= searchJwtAccess %>', csrfTokenHidden: window.csrfToken })
+        const msg = {
+          TASK: 'SETUP',
+          isAuth: true,
+          url: `${origin}/user/refresh`,
+          jwtAccess: '<%= searchJwtAccess %>',
+          csrfTokenHidden: window.csrfToken,
+        }
+        window.walker.postMessage(msg)
       }
     } else {
       console.log('Not compatible with walking.')
@@ -790,6 +802,9 @@
       document.querySelectorAll('span[data-delete-id]').forEach((s) => {
         s.addEventListener('click', deleteWalk)
       })
+      document.querySelectorAll('span[data-show-id]').forEach((s) => {
+        s.addEventListener('click', showWalk)
+      })
     }
     window.getList.renderList = renderList
     function finish(e) {
@@ -829,6 +844,23 @@
       }
     }
     getList.finish = finish
+  }
+  window.showWalk = async function(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log(e.target.dataset)
+    const credentials = {
+      TASK: 'GET_WALK',
+      url: `${origin}/showWalk`,
+      jwtAccess,
+      id: e.target.dataset.showId,
+      csrfTokenHidden: window.csrfToken,
+    }
+    window.walker.postMessage(credentials)
+    function finish(e) {
+      console.log(e)
+    }
+    window.showWalk.finish = finish
   }
   window.deleteWalk = async function(e) {
     e.preventDefault()
