@@ -179,6 +179,32 @@ class State extends Subject {
     console.log(this.state.wayPoints)
   }
 
+  get geojson() {
+    return {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: {
+            id: null,
+            name: this.state.name,
+            location: this.state.location,
+            startTime: this.state.startTime,
+            startPosition: this.state.startPosition,
+            endTime: this.state.endTime,
+            endPosition: this.state.endPosition,
+            duration: this.state.endTime - this.state.startTime,
+            distance: this.state.wayPoints.reduce((a, c) => a + c.distance, 0),
+          },
+          geometry: {
+            type: 'LineString',
+            coordinates: this.state.wayPoints.map((w) => [w.longitude, w.latitude]),
+          },
+        },
+      ],
+    }
+  }
+
   get() {
     return this.state
   }
