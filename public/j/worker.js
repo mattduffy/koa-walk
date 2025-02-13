@@ -94,7 +94,8 @@ async function saveWalk(credentials) {
   } else {
     const formData = new FormData()
     formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
-    formData.append('walk', JSON.stringify(walkState.get()))
+    // formData.append('walk', JSON.stringify(walkState.get()))
+    formData.append('walk', JSON.stringify(walkState.geojson))
     const opts = {
       method: 'POST',
       headers: {
