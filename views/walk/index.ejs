@@ -333,7 +333,9 @@
       const coords = {
         latitude: evtCoords.latitude,
         longitude: evtCoords.longitude,
-        accuracy: window.walking.state.currentPosition.accuracy,
+        accuracy: (evtCoords?.accuracy)
+          ? evtCoords.accuracy
+          : window.walking.state.currentPosition.accuracy,
         timestamp: e.timestamp.valueOf()
       }
       updatePosition(coords)
@@ -423,13 +425,15 @@
       )
       const w = {
         TASK: 'START_WALK',
-        date: _d,
+        c, 
         name,
         location,
-        startPosition: window.walking.currentPosition,
+        date: _d,
         startTime: _d,
-        c, 
+        u: DISPLAY_UNITS,
+        startPosition: window.walking.currentPosition,
       }
+      console.log('starting walk data:', w)
       window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d })
       window.walking.c = c
       window.walker.postMessage(w)
@@ -466,22 +470,22 @@
       await endWalk(coords)
       clearInterval(window.walking.state.intervalId)
     }
+    async function endWalk(end) {
+      window.walking.state.active = false
+      window.walking.endPosition = end
+      window.walking.endTime = end.timestamp
+      const c = new mapkit.Coordinate(end.latitude, end.longitude)
+      const finalStep = { TASK: 'STOP_WALK', endPosition: end, c }
+      window.walking.addPoint(end)
+      window.walking.c = c
+      window.walker.postMessage(finalStep)
+    }
     async function recordWalk(wp, c) {
       const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS }
       window.walking.c = c
       window.walking.addPoint(wp)
       window.walker.postMessage(step)
       markWalkPointOnMap()
-    }
-    async function endWalk(end) {
-      window.walking.state.active = false
-      window.walking.endPosition = end
-      window.walking.endTime = end.timestamp
-      const c = new mapkit.Coordinate(end.latitude, end.longitude)
-      const finalStep = { TASK: 'STOP_WALK', end, c }
-      window.walking.addPoint(end)
-      window.walking.c = c
-      window.walker.postMessage(end)
     }
     window.saveWalk = async function(e) {
       e.preventDefault()
@@ -838,7 +842,11 @@
         // authenticated user and non-zero length list of walks
         console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
         window.walking.state.listCache = e.list.map((w) => {
-          return { id: w._id, name: w.name, date: w.date }
+          return {
+            id: w._id,
+            name: w.features[0].properties.name,
+            date: w.features[0].properties.date,
+          }
         })
         renderList() 
       }
