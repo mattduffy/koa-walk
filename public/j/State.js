@@ -31,6 +31,7 @@ class State extends Subject {
       wayPoints: [],
       c: [],
       duration: null,
+      distance: null,
     }
   }
 
@@ -51,28 +52,35 @@ class State extends Subject {
     this.state.wayPoints = []
     this.state.c = []
     this.state.duration = null
+    this.state.distance = null
   }
 
   get totalDistance() {
-    const x = this.state.wayPoints.reduce(
-      (a, c) => {
-        console.log(`accumulator: ${a}`)
-        console.log('currentValue: ', c)
-        return a + c.distance
-      },
-      0,
-    )
-    console.log('State::totalDistance() = ', x)
-    return x || 0
+    if (!this.state.distance) {
+      const x = this.state.wayPoints.reduce(
+        (a, c) => {
+          console.log(`accumulator: ${a}`)
+          console.log('currentValue: ', c)
+          return a + c.distance
+        },
+        0,
+      )
+      console.log('State::totalDistance() = ', x)
+      return x || 0
+    }
+    console.log('State::totalDistance() = ', this.state.distance)
+    return this.state.distance
   }
 
   get duration() {
     return this.state.duration
   }
 
-  set duration(d) {
-    if (d) {
+  set duration(d = null) {
+    if (!d) {
       this.state.duration = this.state.endTime - this.state.startTime
+    } else {
+      this.state.duration = d
     }
   }
 
@@ -163,7 +171,7 @@ class State extends Subject {
   }
 
   addPoint(p, u = 'metric') {
-    console.log('addPoint(p, u): ', p, u)
+    console.log('State::addPoint(p, u): ', p, u)
     const point = p
     let prev
     if (this.state.wayPoints.length > 0) {
@@ -172,6 +180,13 @@ class State extends Subject {
     } else {
       point.distance = 0
     }
+    console.log('point distance:', point.distance)
+    if (!this.state.distance) {
+      this.state.distance = point.distance
+    } else {
+      this.state.distance += point.distance
+    }
+    console.log('total distance:', this.state.distance)
     this.state.wayPoints.push(point)
   }
 
@@ -187,14 +202,15 @@ class State extends Subject {
           type: 'Feature',
           properties: {
             id: null,
+            date: this.state.date,
             name: this.state.name,
             location: this.state.location,
             startTime: this.state.startTime,
-            startPosition: this.state.startPosition,
             endTime: this.state.endTime,
-            endPosition: this.state.endPosition,
             duration: this.state.endTime - this.state.startTime,
-            distance: this.state.wayPoints.reduce((a, c) => a + c.distance, 0),
+            startPosition: this.state.startPosition,
+            endPosition: this.state.endPosition,
+            distance: this.state.distance,
           },
           geometry: {
             type: 'LineString',
