@@ -280,30 +280,6 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
   log('inside walk router: /getList')
   const newCsrfToken = ulid()
   const list = []
-  // const mockWalk = {
-  //   active: false,
-  //   date: 1738710829525,
-  //   name: 'My first big boy walk',
-  //   startTime: 1738710829525,
-  //   startPosition: { latitude: 37.82445236440165, longitude: -122.20887165222129, accuracy: 37 },
-  //   currentPosition: { latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37 },
-  //   endPosition: { latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738711024460, distance: 0 },
-  //   endTime: 1738711024460,
-  //   wayPoints: [
-  //     {latitude: 37.82445236440165, longitude: -122.20887165222129, accuracy: 37, timestamp: 1738710829525, distance: 0},
-  //     {latitude: 37.82433204932095, longitude: -122.20883165088334, accuracy: 37, timestamp: 1738710904469, distance: 13.83207568454471},
-  //     {latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738710974192, distance: 0.0006440597739965577},
-  //     {latitude: 37.824332043711095, longitude: -122.20883164905806, accuracy: 37, timestamp: 1738710974192, distance: 0.0006440597739965577},
-  //   ],
-  //   c: [
-  //     {latitude: 37.82445236440165, longitude: -122.20887165222129},
-  //     {latitude: 37.82433204932095, longitude: -122.20883165088334},
-  //     {latitude: 37.82433204932095, longitude: -122.20883165088334},
-  //     {latitude: 37.824332043711095, longitude: -122.20883164905806},
-  //   ],
-  //   duration: null,
-  // }
-  // list.push(mockWalk)
   if (doTokensMatch(ctx)) {
     if (!ctx.state?.isAuthenticated) {
       error('user is not autheenticated, no list available')
@@ -315,7 +291,7 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
       const db = ctx.state.mongodb.client.db()
       const collection = db.collection('walks')
       const filter = { userId: new ObjectId(ctx.state.sessionUser.id) }
-      const options = { sort: { date: -1 } }
+      const options = { sort: { 'features.properties.date': -1 } }
       const walks = await collection.find(filter, options).toArray()
       log(walks)
       ctx.session.csrfToken = newCsrfToken
