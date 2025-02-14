@@ -302,11 +302,13 @@ async function logout(data) {
 }
 
 function startWalk(s) {
+  console.log('worker::startWalk(s)', s)
   walkState.name = s.name
+  walkState.location = s.location
   walkState.date = s.date
   walkState.startTime = s.startTime
   walkState.startPosition = s.startPosition
-  walkState.addPoint({ ...s.startPosition, timestamp: walkState.startTime, distance: 0 })
+  walkState.addPoint({ ...s.startPosition, timestamp: walkState.startTime, distance: 0 }, s.u)
   walkState.c = s.c
 }
 
@@ -316,10 +318,11 @@ function setWayPoint(w) {
   walkState.printPoints()
 }
 
-function endWalk(e, u) {
+function endWalk(e) {
+  console.log('worker::endWalk(e)', e)
+  walkState.endTime = e.endPosition.timestamp
   walkState.endPosition = e.endPosition
-  walkState.endTime = e.endTime
-  walkState.addPoint(e, u)
+  walkState.addPoint(e.endPosition, e.u)
   walkState.c = e.c
 }
 
