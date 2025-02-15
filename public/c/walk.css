@@ -68,7 +68,7 @@ nav#nav > div {
 
 .tiny {
   font-size: .5em;
-  padding: .75em 0em;
+  padding: .0em 0em;
 }
 
 span.delete {
@@ -77,7 +77,7 @@ span.delete {
   margin-left: 10px;
   vertical-align: text-bottom;
   position: relative;
-  top: .5em;
+  top: 0em;
 }
 span.hikingpng {
   content: url('/i/hiking.png');
