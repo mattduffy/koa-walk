@@ -514,7 +514,8 @@
         if (!window.walking.state?.listCache) {
           window.walking.state.listCache = [ savedWalk ]
         } else {
-          window.walking.state.listCache.push(savedWalk)
+          window.walking.state.listCache.unshift(savedWalk)
+          console.log(window.walking.state.listCache)
         }
       }
       saveWalk.finish = finish
@@ -794,8 +795,9 @@
         list.forEach((w) => {
           // console.log(w)
           const li = document.createElement('li')
+          li.style.marginLeft = '-1em'
+          li.style.padding = '5px 0px'
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
-          // li.textContent = `${w.name} (${new Date(w.date).toLocaleString('en-US', fmt)})`
           li.innerHTML = `<span data-show-id="${w.id}" class="pointer">${w.name}</span> `
             + `(${new Date(w.date).toLocaleString('en-US', fmt)}) `
             + `<span data-delete-id=${w.id} class="pointer delete tiny"></span>`
@@ -859,7 +861,8 @@
     console.log(e.target.dataset)
     const credentials = {
       TASK: 'GET_WALK',
-      url: `${origin}/showWalk`,
+      // url: `${origin}/showWalk`,
+      url: `${origin}/getWalk`,
       jwtAccess,
       id: e.target.dataset.showId,
       csrfTokenHidden: window.csrfToken,
