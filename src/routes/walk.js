@@ -282,7 +282,7 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
   const list = []
   if (doTokensMatch(ctx)) {
     if (!ctx.state?.isAuthenticated) {
-      error('user is not autheenticated, no list available')
+      error('user is not authenticated, no list available')
       list.push({ date: new Date(), coords: [], waypoints: [] })
     } else {
       log('sessionUser: ', ctx.state?.sessionUser.username)
@@ -291,8 +291,9 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
       const db = ctx.state.mongodb.client.db()
       const collection = db.collection('walks')
       const filter = { userId: new ObjectId(ctx.state.sessionUser.id) }
+      const project = { 'features.properties.name': 1, 'features.properties.date': 1 }
       const options = { sort: { 'features.properties.date': -1 } }
-      const walks = await collection.find(filter, options).toArray()
+      const walks = await collection.find(filter, options).project(project).toArray()
       log(walks)
       ctx.session.csrfToken = newCsrfToken
       ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
@@ -315,4 +316,52 @@ router.post('getList', '/getList', addIpToSession, processFormData, async (ctx) 
   }
 })
 
+router.post('getWalk', '/getWalk', addIpToSession, processFormData, async (ctx) => {
+  const log = walkLog.extend('getWalk')
+  const error = walkError.extend('getWalk')
+  log('inside walk router: /getWalk')
+  const newCsrfToken = ulid()
+  let walk
+  if (doTokensMatch(ctx)) {
+    if (!ctx.state?.isAuthenticated) {
+      error('user is not authenticated, no saved walks available')
+      ctx.status = 401
+      ctx.type = 'application/json; charset=utf-8'
+      ctx.body = {
+        status: 'not authenticated',
+        walk: null,
+        error: 'forbidden',
+        newCsrfToken,
+      }
+    } else {
+      log('sessionUser: ', ctx.state?.sessionUser.username)
+      log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
+      log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
+      const walkId = ctx.request.body.walkId[0]
+      const db = ctx.state.mongodb.client.db()
+      const collection = db.collection('walks')
+      const query = { _id: new ObjectId(walkId), userId: new ObjectId(ctx.state.sessionUser.id) }
+      walk = await collection.findOne(query)
+      log(walk)
+      ctx.status = 200
+      ctx.type = 'application/json; charset=utf-8'
+      ctx.body = {
+        newCsrfToken,
+        walk,
+      }
+    }
+  } else {
+    ctx.type = 'application/json; charset=utf-8'
+    ctx.body = {
+      status: 'token mismatch',
+      walk: null,
+      error: 'token mismatch',
+      newCsrfToken,
+    }
+  }
+})
+
+router.get('/getGetWalk', '/getWalk', addIpToSession, async (ctx) => {
+  ctx.redirect('/')
+})
 export { router as walk }
