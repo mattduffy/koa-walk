@@ -75,7 +75,7 @@
   src="https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js"
   crossorigin async
   data-callback="initMapKit"
-  data-libraries="services,full-map"
+  data-libraries="services,full-map,geojson,overlays"
   data-initial-token="">
 </script>
 <script nonce="<%= nonce %>" type="module">
@@ -328,7 +328,7 @@
       console.log(e)
     }
     async function userLocationChange(e) {
-      console.log('user-location-change event: ', e)
+      console.log('userLocationChange(e)', e)
       const evtCoords = e.coordinate
       const coords = {
         latitude: evtCoords.latitude,
@@ -338,9 +338,15 @@
           : window.walking.state.currentPosition.accuracy,
         timestamp: e.timestamp.valueOf()
       }
-      updatePosition(coords)
       const mapkitCoordinate = new mapkit.Coordinate(evtCoords.latitude, evtCoords.longitude)
-      if (!window.walking.active) {
+      if (window.walking.active) {
+        await recordWalk(coords, mapkitCoordinate)
+        window._map.setCenterAnimated(mapkitCoordinate, false)
+      } else if (window.walking.state.showing) {
+        console.log('showing old (saved) walk')
+
+        return
+      } else {
         window._map.setCenterAnimated(mapkitCoordinate, true)
         window.dispatchEvent(
           new CustomEvent('locality-changed', {
@@ -349,10 +355,8 @@
             detail: { coords },
           })
         )
-      } else {
-        await recordWalk(coords, mapkitCoordinate)
-        window._map.setCenterAnimated(mapkitCoordinate, false)
       }
+      updatePosition(coords)
     }
     window._map.addEventListener('user-location-change', userLocationChange)
     function localityChanged(e) {
@@ -858,7 +862,8 @@
   window.showWalk = async function(e) {
     e.preventDefault()
     e.stopPropagation()
-    console.log(e.target.dataset)
+    console.log('showWalk(e)', e.target.dataset)
+    const _id = e.target.dataset.showId
     const credentials = {
       TASK: 'GET_WALK',
       // url: `${origin}/showWalk`,
@@ -869,9 +874,37 @@
     }
     window.walker.postMessage(credentials)
     function finish(e) {
-      console.log(e)
+      console.log(e.walk)
+      window.walking.active = false 
+      window.walking.state.showing = true
+      window._map.showsUserLocation = false
+      window.mapkit.importGeoJSON(e.walk, {
+        itemForFeature: (overlay, geo) => {
+          console.log(geo)
+          overlay.data = {
+            name: geo.properties.name,
+            id: _id,
+          }
+          overlay.style = new window.mapkit.Style({
+            lineWidth: 10,
+            lineJoin: "round",
+            lineDash: [],
+            strokeColor: "royalblue"
+          })
+          return overlay
+        },
+        geoJSONDidComplete: (overlays) => {
+          window._map.showItems(overlays)
+        },
+      })
     }
     window.showWalk.finish = finish
+    function reset() {
+      window.walking.active = false 
+      window.walking.state.showing = null
+      window._map.showsUserLocation = true
+    }
+    window.showWalk.reset = reset
   }
   window.deleteWalk = async function(e) {
     e.preventDefault()

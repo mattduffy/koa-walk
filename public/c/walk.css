@@ -152,6 +152,8 @@ div#list {
   background-color: white;
   border-radius: .5em;
   padding: .25em;
+  max-height: 250px;
+  overflow: scroll;
 }
 
 div#list > h3 {
