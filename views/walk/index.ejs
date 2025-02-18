@@ -32,7 +32,15 @@
       </div>
     </div>
     <div id="list" data-tab="list">
-      <h3>Saved Walks</h3>
+      <div id="list-div">
+        <h3>Saved Walks</h3>
+      </div>
+      <div id="walk-div" data-tab="walk">
+        <h3 id="walkName123"></h3>
+        <span id="close">X</span>
+        Distance: <span id="walkDistance"></span><br>
+        Duration: <span id="walkDuration"></span>
+      </div>
     </div>
     <div id="new" data-tab="new">
       <h3>Start A New Walk</h3>
@@ -58,12 +66,6 @@
       <button id="saveWalk">Save Walk</button>
       <button id="clearWalk">Clear Walk</button>
       <br>
-    </div>
-    <div id="walk" data-tab="walk">
-      <h3 id="walkName123"></h3>
-      <span id="close">X</span>
-      Distance: <span id="walkDistance"></span><br>
-      Duration: <span id="walkDuration"></span>
     </div>
     <div id="maps" data-tab="maps">
       <h3>Show Maps</h3>
@@ -776,18 +778,28 @@
     doLogout.finish = finish
   }
   window.getList = async function() {
+    const DIV = document.querySelector('div#list')
+    const LISTDIV = DIV.querySelector('div#list-div')
     const credentials = {}
     credentials.url = `${origin}/getList`
     credentials.csrfTokenHidden = window.csrfToken
     credentials.jwtAccess = jwtAccess
     credentials.TASK = 'GET_LIST'
     console.log(credentials)
-    const DIV = document.querySelector('div#list')
-    if (!window.walking.state.listCache) {
-      window.walker.postMessage(credentials)
+    if (window.walking.state.showing) {
+      console.log('go back to showing walk instead of list.')
+      const WALKDIV = document.querySelector('div#walk-div')
+      WALKDIV.style.display = 'block'
+      console.log(WALKDIV)
+      LISTDIV.style.display = 'none'
+      console.log(LISTDIV)
     } else {
-      // fromCache(window.walking.state.listCache)
-      renderList()
+      if (!window.walking.state.listCache) {
+        window.walker.postMessage(credentials)
+      } else {
+        // fromCache(window.walking.state.listCache)
+        renderList()
+      }
     }
     function fromCache(l) {
       console.log(l)
@@ -799,12 +811,12 @@
     getList.clearCache = clearCache
     function renderList() {
       const list = window.walking.state.listCache
-      const walks = DIV.children.namedItem('walks') || (() => {
+      const walks = LISTDIV.children.namedItem('walks') || (() => {
         const ul = document.createElement('ul')
         ul.id = 'walks'
-        DIV.appendChild(ul)
+        LISTDIV.appendChild(ul)
         // console.log(ul)
-        return DIV.children.namedItem('walks')
+        return LISTDIV.children.namedItem('walks')
       })()
       if (walks.children.length !== list.length) {
         const replaceLis = []
@@ -832,15 +844,15 @@
     function finish(e) {
       console.log('getList.finish', e)
       window.csrfToken = e.newCsrfToken
-      const noAuth = DIV.children.namedItem('noAuth') ?? null
+      const noAuth = LISTDIV.children.namedItem('noAuth') ?? null
       if (e.auth === 'no' && !noAuth) { 
         console.log(`e.auth: ${e.auth}`)
         console.log(`noAuth: ${noAuth}`)
         const noAuthP = document.createElement('p')
         noAuthP.id = 'noAuth'
         noAuthP.textContent = 'Login to see saved walks.'
-        DIV.appendChild(noAuthP)
-      } else if (e.auth === 'no' && DIV.children.namedItem('noAuth')) {
+        LISTDIV.appendChild(noAuthP)
+      } else if (e.auth === 'no' && LISTDIV.children.namedItem('noAuth')) {
         console.log('show noAuth')
         noAuth.style.display = 'block' 
       } else if (e.list.length === 0) {
@@ -848,13 +860,13 @@
         if (noAuth) {
           noAuth.style.display = 'none'
         }
-        if (DIV.children.namedItem('noWalks')) {
+        if (LISTDIV.children.namedItem('noWalks')) {
           console.log('already displayed no walks')
         } else {
           const noWalks = document.createElement('p')
           noWalks.textContent = 'No saved walks.'
           noWalks.id = 'noWalks'
-          DIV.appendChild(noWalks)
+          LISTDIV.appendChild(noWalks)
         }
       } else {
         console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
@@ -874,8 +886,8 @@
     e.preventDefault()
     e.stopPropagation()
     console.log('showWalk(e)', e.target.dataset)
-    const divList = document.querySelector('div#list')
-    const divWalk = document.querySelector('div#walk')
+    const divList = document.querySelector('div#list-div')
+    const divWalk = document.querySelector('div#walk-div')
     const _id = e.target.dataset.showId
     const credentials = {
       TASK: 'GET_WALK',
@@ -925,6 +937,7 @@
     }
     window.showWalk.finish = finish
     function reset() {
+      console.log('clearing walk')
       divList.style.display = 'block'
       divWalk.style.display = 'none'
       window.walking.active = false 
