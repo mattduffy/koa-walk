@@ -4,7 +4,9 @@
       <form id="loginId" name="login">
         <label for="emailId">Email: </label>
         <br>
-        <input type="email" id="emailId" name="email" size="40" value="<%= sessionUser?.email?.primary %>" placeholder="user@example.com" required>
+        <input type="email" id="emailId" name="email" size="40" value="<%=
+  sessionUser?.email?.primary %>" placeholder="user@example.com" required
+  autocomplete="email">
         <br>
         <label for="passwordId">Password: </label>
         <br>
@@ -24,7 +26,6 @@
             <label>Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (units === 'Metric') ? 'checked' : '' %> tabindex="0"></label>
             <br>
             <label>Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (units === 'Imperial') ? 'checked' : '' %> tabindex="0"></label>
-            <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>" required>
           </fieldset>
         </form>
         <a id="logout" href="/logout">Log out</a>
@@ -38,10 +39,10 @@
       <form id="startWalkForm" action="<%= origin %>/walk/start" method="POST">
         <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
         <label for="name">Give your walk a name</label>
-        <input type="text" id="name" size=45 value="">
+        <input type="text" id="name" size=45 value="" autocomplete="off">
         <label for="location">Location</label>
         <input type="text" id="location" size=45 value="">
-        <label for="lat">Starting Coordinates</label>
+        <label for="coords">Starting Coordinates</label>
         <input type="text" id="coords" size=45 readonly value="">
       </form>
       <br>
@@ -57,6 +58,12 @@
       <button id="saveWalk">Save Walk</button>
       <button id="clearWalk">Clear Walk</button>
       <br>
+    </div>
+    <div id="walk" data-tab="walk">
+      <h3 id="walkName123"></h3>
+      <span id="close">X</span>
+      Distance: <span id="walkDistance"></span><br>
+      Duration: <span id="walkDuration"></span>
     </div>
     <div id="maps" data-tab="maps">
       <h3>Show Maps</h3>
@@ -80,7 +87,7 @@
 </script>
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
-  
+  let HEADING = 0
   let DISPLAY_UNITS = <%- (units !== false) ? `\'${units}\'` : false %> || 'Metric'
   const identifier = 'my_walk'
   const origin = '<%= origin %>'
@@ -224,7 +231,7 @@
       lat = g?.coords?.latitude ?? g.latitude
       lon = g?.coords?.longitude ?? g.longitude
       const _acc = g?.coords?.accuracy ?? g.accuracy
-      if (_acc > accuracy) {
+      if (_acc >= accuracy) {
         console.info(`position.accuracy (${_acc}) is greater than ${accuracy}m`)
         lowAccuracy = true
       }
@@ -239,9 +246,11 @@
       if (window.walking) {
         window.walking.currentPosition = position
       }
-      if (position && lowAccuracy !== undefined) {
+      if (position && (!lowAccuracy && lowAccuracy !== undefined)) {
         await goodAccuracyCanWalk(mapOpts, position)
-      } else if ((position?.coords?.accuracy > accuracy) &&
+      } else if (
+        (lowAccuracy === undefined) &&
+        (position?.coords?.accuracy > accuracy) &&
         (position?.coords?.accuracy <= accuracy + accuracyMargin)) {
         console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
         console.info('can\'t track movement very accurately.')
@@ -249,7 +258,7 @@
       } else if (position && lowAccuracy) {
         console.info('really low geoLocation accuracy:', position)
         console.info('cannot track movement accurately.')
-        console.log(mapOtps)
+        console.log(mapOpts)
         await lowAccuracyPositionCantWalk(mapOpts, position)
       } else {
         console.log('no geo position available')
@@ -261,28 +270,30 @@
     }
     window.errCount = 0
     async function accuracyUpdater() {
-      console.log(`accuracyUpdater() error counter: ${window.errCount}`)
-      if (window.errCount >= 10) {
-        clearInterval(window.walking.state.accuracyUpdateInterval)
-        delete window.walking.state.accuracyUpdateInterval
-        console.log('should be undefined? ', window.walking.state?.accuracyUpdateInterval)
-      } else {
-        try {
-          const _acc = await new Promise((res, rej) => {
-            navigator.geolocation.getCurrentPosition(
-              (g) => res(g.coords.accuracy),
-              (e) => rej(e),
-              { enableHighAccuracy: true }
-            )
-          })
-          console.log(`updating walking state with new accuracy: ${_acc}`)
-          if (typeof parseFloat(_acc) === 'number') {
-            window.walking.currentPosition.accuracy = parseFloat(_acc)
-          }
-        } catch (e) {
-          console.log('geolocation returned an error: ', e)
-          window.errCount += 1
-        } 
+      if (window.walking.active) {
+        console.log(`accuracyUpdater() error counter: ${window.errCount}`)
+        if (window.errCount >= 10) {
+          clearInterval(window.walking.state.accuracyUpdateInterval)
+          delete window.walking.state.accuracyUpdateInterval
+          console.log('should be undefined? ', window.walking.state?.accuracyUpdateInterval)
+        } else {
+          try {
+            const _acc = await new Promise((res, rej) => {
+              navigator.geolocation.getCurrentPosition(
+                (g) => res(g.coords.accuracy),
+                (e) => rej(e),
+                { enableHighAccuracy: true }
+              )
+            })
+            console.log(`updating walking state with new accuracy: ${_acc}`)
+            if (typeof parseFloat(_acc) === 'number') {
+              window.walking.currentPosition.accuracy = parseFloat(_acc)
+            }
+          } catch (e) {
+            console.log('geolocation returned an error: ', e)
+            window.errCount += 1
+          } 
+        }
       }
     }
     window.walking.state.accuracyUpdateInterval = setInterval(accuracyUpdater, ACCURACY_INTERVAL)
@@ -577,6 +588,7 @@
         welcomeDiv.style.display = 'block'
         loginForm.style.display = 'none'
         document.forms['preferences'].elements['units'].forEach((r) => {
+          console.log(r)
           r.addEventListener('change', updatePreferences)
         })
       }
@@ -845,7 +857,6 @@
           DIV.appendChild(noWalks)
         }
       } else {
-        // authenticated user and non-zero length list of walks
         console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
         window.walking.state.listCache = e.list.map((w) => {
           return {
@@ -863,10 +874,11 @@
     e.preventDefault()
     e.stopPropagation()
     console.log('showWalk(e)', e.target.dataset)
+    const divList = document.querySelector('div#list')
+    const divWalk = document.querySelector('div#walk')
     const _id = e.target.dataset.showId
     const credentials = {
       TASK: 'GET_WALK',
-      // url: `${origin}/showWalk`,
       url: `${origin}/getWalk`,
       jwtAccess,
       id: e.target.dataset.showId,
@@ -875,6 +887,18 @@
     window.walker.postMessage(credentials)
     function finish(e) {
       console.log(e.walk)
+      document.querySelector('h3#walkName123').textContent = e.walk.features[0].properties.name
+      document.querySelector('span#walkDistance').textContent = `${displayUnits(
+        e.walk.features[0].properties.distance,
+        DISPLAY_UNITS
+      )}`
+      document.querySelector('span#walkDuration').textContent = `${
+        new Date(e.walk.features[0].properties.duration)
+        .toISOString().slice(11, 19)
+      }`
+      
+      divList.style.display = 'none'
+      divWalk.style.display = 'block'
       window.walking.active = false 
       window.walking.state.showing = true
       window._map.showsUserLocation = false
@@ -882,6 +906,7 @@
         itemForFeature: (overlay, geo) => {
           console.log(geo)
           overlay.data = {
+            type: 'walk',
             name: geo.properties.name,
             id: _id,
           }
@@ -900,11 +925,17 @@
     }
     window.showWalk.finish = finish
     function reset() {
+      divList.style.display = 'block'
+      divWalk.style.display = 'none'
       window.walking.active = false 
       window.walking.state.showing = null
       window._map.showsUserLocation = true
+      window._map.removeOverlays(window._map.overlays.filter((o) => o.data.type === 'walk'))
     }
     window.showWalk.reset = reset
+    document.querySelector('span#close').addEventListener('click', (e) => {
+      reset()
+    })
   }
   window.deleteWalk = async function(e) {
     e.preventDefault()
@@ -967,7 +998,7 @@
       window._map = new mapkit.Map('map', o)
     }
     window._map.region = here
-    if (Math.trunc(g.coords.accuracy) > 10 * (accuracy + accuracyMargin)) {
+    if (10 * (accuracy + accuracyMargin) <= (Math.trunc(g.coords.accuracy))) {
       console.log('really low accuracy', Math.trunc(g.coords.accuracy))
       window._map.cameraDistance = Math.trunc(g.coords.accuracy) * 10
     } else {

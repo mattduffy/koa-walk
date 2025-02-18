@@ -195,10 +195,6 @@ div#maps > h3 {
   font-size: 1em;
 }
 
-div#new > p, ul {
-  font-size: .75em;
-}
-
 div#app {
   display: none;
   width: auto;
@@ -222,12 +218,37 @@ div#app > ol#change {
   font-size: .7em;
 }
 
-button[name="showStartNew"] {
-  color: blue;
+div#walk {
+  display: none;
+  width: auto;
+  max-height: 100px;
+  overflow: scroll;
+  background-color: white;
+  border-radius: .5em;
+  padding: .25em;
+}
+
+span#close {
+  cursor: pointer;
+  position: relative;
+  top: -1.75em;
+  float: right;
+  width: 20px;
+  height: 20px;
+  border: 1px solid black;
+  border-radius: 50%;
+  text-align: center;
+  vertical-align: bottom;
+  padding: 0px;
+  margin: 0px;
+  font-size: .89em; 
 }
 
 h3#walkName {
-  display: none;
+}
+
+button[name="showStartNew"] {
+  color: blue;
 }
 
 div#stats {
