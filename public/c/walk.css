@@ -165,6 +165,14 @@ div#list > p, ul {
   font-size: .75em;
 }
 
+.startFlag {
+  content: '🚩';
+}
+
+.finishFlag {
+  content: '🏁';
+}
+
 div#walk-div {
   display: none;
   width: auto;
