@@ -36,8 +36,9 @@
         <h3>Saved Walks</h3>
       </div>
       <div id="walk-div">
-        <h3 id="walkName123"></h3>
         <span id="close">X</span>
+        <h4 id="walkNameH4"></h4>
+        <h5 id="walkLocationH5"></h5>
         Distance: <span id="walkDistance"></span><br>
         Duration: <span id="walkDuration"></span>
       </div>
@@ -906,7 +907,10 @@
     }
     function finish(e) {
       console.log(e.walk)
-      document.querySelector('h3#walkName123').textContent = e.walk.features[0].properties.name
+      document.querySelector('h4#walkNameH4').textContent = 
+        e.walk.features[0].properties.name
+      document.querySelector('h5#walkLocationH5').textContent = 
+        e.walk.features[0].properties.location
       document.querySelector('span#walkDistance').textContent = `${displayUnits(
         e.walk.features[0].properties.distance,
         DISPLAY_UNITS
@@ -953,7 +957,7 @@
 
         }
       )
-      startAnnotation.animates = true
+      startAnnotation.animates = false 
       startAnnotation.data.type = 'walk'
       const finishAnnotation = new window.mapkit.MarkerAnnotation(
         new window.mapkit.Coordinate(
@@ -967,7 +971,7 @@
           color: '#FFFFFF',
         }
       )
-      finishAnnotation.animates = true
+      finishAnnotation.animates = false
       finishAnnotation.data.type = 'walk' 
       window._map.addAnnotations([ startAnnotation, finishAnnotation ])
     }
