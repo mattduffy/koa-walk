@@ -181,12 +181,17 @@ div#walk-div {
   background-color: white;
   border-radius: .5em;
   padding: .25em;
+  font-size: .85em;
+}
+
+div#walk-div > h3, h4, h5 {
+  margin: 0px;
 }
 
 span#close {
   cursor: pointer;
   position: relative;
-  top: -1.75em;
+  top: -.25em;
   float: right;
   width: 20px;
   height: 20px;
