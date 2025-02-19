@@ -35,7 +35,7 @@
       <div id="list-div">
         <h3>Saved Walks</h3>
       </div>
-      <div id="walk-div" data-tab="walk">
+      <div id="walk-div">
         <h3 id="walkName123"></h3>
         <span id="close">X</span>
         Distance: <span id="walkDistance"></span><br>
@@ -772,7 +772,6 @@
       form.style.display = 'block'
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'none'
-      // form.elements.csrfToken.value = e.response.user.csrfToken
       window.csrfToken = e.response.user.csrfToken
     }
     doLogout.finish = finish
@@ -797,7 +796,6 @@
       if (!window.walking.state.listCache) {
         window.walker.postMessage(credentials)
       } else {
-        // fromCache(window.walking.state.listCache)
         renderList()
       }
     }
@@ -885,18 +883,27 @@
   window.showWalk = async function(e) {
     e.preventDefault()
     e.stopPropagation()
+    const _id = e.target.dataset.showId
     console.log('showWalk(e)', e.target.dataset)
     const divList = document.querySelector('div#list-div')
     const divWalk = document.querySelector('div#walk-div')
-    const _id = e.target.dataset.showId
-    const credentials = {
-      TASK: 'GET_WALK',
-      url: `${origin}/getWalk`,
-      jwtAccess,
-      id: e.target.dataset.showId,
-      csrfTokenHidden: window.csrfToken,
+    if (window.walking.state.show) {
+      console.log('divList.style.display', divList.style.display)
+      divList.style.display = 'none'
+      console.log('divList.style.display', divList.style.display)
+      console.log('divWalk.style.display', divWalk.style.display)
+      divWalk.style.display = 'block'
+      console.log('divWalk.style.display', divWalk.style.display)
+    } else {
+      const credentials = {
+        TASK: 'GET_WALK',
+        url: `${origin}/getWalk`,
+        jwtAccess,
+        id: e.target.dataset.showId,
+        csrfTokenHidden: window.csrfToken,
+      }
+      window.walker.postMessage(credentials)
     }
-    window.walker.postMessage(credentials)
     function finish(e) {
       console.log(e.walk)
       document.querySelector('h3#walkName123').textContent = e.walk.features[0].properties.name
@@ -908,7 +915,6 @@
         new Date(e.walk.features[0].properties.duration)
         .toISOString().slice(11, 19)
       }`
-      
       divList.style.display = 'none'
       divWalk.style.display = 'block'
       window.walking.active = false 
@@ -934,6 +940,36 @@
           window._map.showItems(overlays)
         },
       })
+      const startAnnotation = new window.mapkit.MarkerAnnotation(
+        new window.mapkit.Coordinate(
+          e.walk.features[0].properties.startPosition.latitude,
+          e.walk.features[0].properties.startPosition.longitude,
+        ), {
+          // url: { 1: `${origin}/i/start-flag.png` },
+          glyphImage: { 1: `${origin}/i/start-flag-20x20.png` },
+          glyphText: 'Start',
+          glyphColor: 'green',
+          color: '#FFFFFF',
+
+        }
+      )
+      startAnnotation.animates = true
+      startAnnotation.data.type = 'walk'
+      const finishAnnotation = new window.mapkit.MarkerAnnotation(
+        new window.mapkit.Coordinate(
+          e.walk.features[0].properties.endPosition.latitude,
+          e.walk.features[0].properties.endPosition.longitude,
+        ), {
+          // url: { 1: `${origin}/i/finish-flag.png` },
+          glyphImage: { 1: `${origin}/i/finish-flag.png` },
+          glyphText: 'Finish',
+          glyphColor: 'black',
+          color: '#FFFFFF',
+        }
+      )
+      finishAnnotation.animates = true
+      finishAnnotation.data.type = 'walk' 
+      window._map.addAnnotations([ startAnnotation, finishAnnotation ])
     }
     window.showWalk.finish = finish
     function reset() {
@@ -944,6 +980,7 @@
       window.walking.state.showing = null
       window._map.showsUserLocation = true
       window._map.removeOverlays(window._map.overlays.filter((o) => o.data.type === 'walk'))
+      window._map.removeAnnotations(window._map.annotations.filter((o) => o.data.type === 'walk'))
     }
     window.showWalk.reset = reset
     document.querySelector('span#close').addEventListener('click', (e) => {
