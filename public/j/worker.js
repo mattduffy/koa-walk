@@ -179,6 +179,7 @@ async function getList(credentials) {
       remoteList: [],
       localList: [],
       auth,
+      newCsrfToken: credentials.csrfTokenHidden,
     }
     if (!isLoggedIn) {
       return list
