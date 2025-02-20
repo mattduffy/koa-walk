@@ -163,47 +163,58 @@ async function getList(credentials) {
   console.log('woker::getList')
   let response
   // let list = { TASK: 'GET_LIST', list: null, auth: null }
-  let list = { list: null, auth: null }
+  let list = { remoteList: null, localList: null, auth: null }
   let auth
   console.log('is logged in: ', isLoggedIn)
   console.log('user: ', user)
-  if (!isLoggedIn) {
+  if (credentials.scope === 'local' || credentials.scope === 'both') {
     auth = 'no'
-    list = { ...list, list: [], auth }
-    return list
-  }
-  const formData = new FormData()
-  formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
-  formData.append('userEmail', user.email)
-  const opts = {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${credentials.jwtAccess}`,
-      'X-ASYNCREQUEST': true,
-    },
-    body: formData,
-  }
-  const request = new Request(credentials.url, opts)
-  auth = 'yes'
-  try {
-    response = await fetch(request)
-    console.log(response)
-    const json = await response.json()
-    console.log('getList response: ', json)
+    // get the local storage version here
     list = {
       ...list,
-      list: json.list,
+      remoteList: [],
+      localList: [],
       auth,
-      newCsrfToken: json.newCsrfToken,
     }
-  } catch (e) {
-    console.error(e)
-    list = {
-      ...list,
-      list: [],
-      auth,
-      error: e,
+    if (!isLoggedIn) {
+      return list
+    }
+  }
+  if (credentials.scope !== 'local') {
+    const formData = new FormData()
+    formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
+    formData.append('userEmail', user.email)
+    const opts = {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${credentials.jwtAccess}`,
+        'X-ASYNCREQUEST': true,
+      },
+      body: formData,
+    }
+    const request = new Request(credentials.url, opts)
+    auth = 'yes'
+    try {
+      response = await fetch(request)
+      console.log(response)
+      const json = await response.json()
+      console.log('getList response: ', json)
+      list = {
+        ...list,
+        remoteList: json.list,
+        auth,
+        newCsrfToken: json.newCsrfToken,
+      }
+    } catch (e) {
+      console.error(e)
+      list = {
+        ...list,
+        remoteList: [],
+        localList: [],
+        auth,
+        error: e,
+      }
     }
   }
   return list
