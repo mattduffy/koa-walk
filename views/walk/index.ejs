@@ -834,7 +834,7 @@
     }
     getList.clearCache = clearCache
     function renderLists() {
-      const remoteList = window.walking.state?.remoteListCache
+      const remoteList = window.walking.state?.remoteListCache ?? []
       const remoteWalks = REMOTEDIV.children.namedItem('remote-walks') || (() => {
         const ul = document.createElement('ul')
         ul.id = 'remote-walks'
@@ -859,13 +859,17 @@
         })
         remoteWalks.replaceChildren(...replaceLis)
       }
-      const localList = window.walking.state?.localListCache
+      const localList = window.walking.state?.localListCache ?? []
+      console.log('localList', localList)
+      console.log('localList.length', localList.length)
       if (localList.length === 0) {
         const noLocalWalks = document.querySelector('p#noLocalWalks') ?? (() => {
-          const n =document.createElement('p')
-          n.textContent = 'No walks saved to this device.'
-          n.id = 'noLocalWalks'  
-          LISTDIV.children.namedItem('local').appendChild(n) 
+          const p = document.createElement('p')
+          p.textContent = 'No walks saved to this device.'
+          p.id = 'noLocalWalks'  
+          console.log('p', p)
+          LOCALDIV.appendChild(p) 
+          return LOCALDIV 
         })()
       } else {
         const localWalks = LOCALDIV.children.namedItem('local-walks') || (() => {
@@ -906,7 +910,7 @@
       console.log('getList.finish', e)
       window.csrfToken = e.newCsrfToken
       const noAuth = LISTDIV.children.namedItem('noAuth') ?? null
-      if (e.auth === 'no' && !noAuth) { 
+      if (e.auth === 'no' && !noAuth) {
         console.log(`e.auth: ${e.auth}`)
         console.log(`noAuth: ${noAuth}`)
         const noAuthP = document.createElement('p')
@@ -943,15 +947,17 @@
             date: w.features[0].properties.date,
           }
         })
-        window.walking.state.localListCache = e.localList.map((w) => {
-          return {
-            id: w._id,
-            name: w.features[0].properties.name,
-            date: w.features[0].properties.date,
-          }
-        })
-        renderLists() 
+        // renderLists() 
       }
+      window.walking.state.localListCache = e.localList.map((w) => {
+        return {
+          id: w._id,
+          name: w.features[0].properties.name,
+          date: w.features[0].properties.date,
+        }
+      })
+      console.log('localListCache', window.walking.state.localListCache)
+      renderLists() 
     }
     getList.finish = finish
   }
