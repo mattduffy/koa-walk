@@ -33,7 +33,13 @@
     </div>
     <div id="list" data-tab="list">
       <div id="list-div">
-        <h3>Saved Walks</h3>
+        <h4>Saved Walks</h4>
+        <div id="remote">
+          <h5>Saved In The Cloud</h5>
+        </div>
+        <div id="local">
+          <h5>Saved On This Device</h5>
+        </div>
       </div>
       <div id="walk-div">
         <span id="close">X</span>
@@ -90,6 +96,8 @@
 </script>
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
+  const DEBUG = new URLSearchParams(window.location.search).get('debug') || false
+  console.log(`DEBUG === ${DEBUG}`)
   let HEADING = 0
   let DISPLAY_UNITS = <%- (units !== false) ? `\'${units}\'` : false %> || 'Metric'
   const identifier = 'my_walk'
@@ -379,24 +387,29 @@
       e.stopPropagation()
       const evtCoords = e.detail.coords
       const a = window.app || document.querySelector('div#app')
-      let ul = a.querySelector('ol#change')
-      if (!ul) {
-        ul = document.createElement('ol')
-        ul.id = 'change'
-        ul.setAttribute('reversed', '')
-        a.appendChild(ul)
-      }
+      let ol = a.querySelector('ol#change') || (() => {
+        const ol = document.createElement('ol')
+        ol.id = 'change'
+        ol.setAttribute('reversed', '')
+        a.appendChild(ol)
+        return a.children.namedItem('change')
+      })()
       if (e.detail.coords) {
         let li = document.createElement('li')
         li.textContent = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
           + `${evtCoords.longitude.toFixed(4)}), `
           + `acc: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}`
-        // ul.appendChild(li)
-        ul.insertBefore(li, ul.firstChild)
+        // ol.appendChild(li)
+        ol.insertBefore(li, ol.firstChild)
       }
     }
-    window.addEventListener('locality-changed', localityChanged)
-    document.querySelector('button[name="showStartNew"]').addEventListener('click', clickStartNew)
+    if (DEBUG) {
+      window.addEventListener('locality-changed', localityChanged)
+    }
+    document.querySelector('button[name="showStartNew"]').addEventListener(
+      'click',
+      clickStartNew
+    )
     function clickStartNew(e) {
       console.log(e)
       e.preventDefault()
@@ -529,11 +542,11 @@
       function finish(e) {
         console.log('finish saving walk: ', e)
         const savedWalk = { _id: e.res.saved.insertedId, name: _name, date: _date }
-        if (!window.walking.state?.listCache) {
-          window.walking.state.listCache = [ savedWalk ]
+        if (!window.walking.state?.remoteListCache) {
+          window.walking.state.remoteListCache = [ savedWalk ]
         } else {
-          window.walking.state.listCache.unshift(savedWalk)
-          console.log(window.walking.state.listCache)
+          window.walking.state.remoteListCache.unshift(savedWalk)
+          console.log(window.walking.state.remoteListCache)
         }
       }
       saveWalk.finish = finish
@@ -757,7 +770,7 @@
     function finish(e) {
       console.log('logout response: ', e)
       window.csrfToken = e.response.user.newCsrfToken
-      delete window.walking.state.listCache
+      delete window.walking.state.remoteListCache
       const initials = document.querySelector('span[data-name-initials]')
       initials.dataset.nameInitials = ''
       initials.textContent = ''
@@ -780,11 +793,14 @@
   window.getList = async function() {
     const DIV = document.querySelector('div#list')
     const LISTDIV = DIV.querySelector('div#list-div')
+    const REMOTEDIV = LISTDIV.querySelector('div#remote')
+    const LOCALDIV = LISTDIV.querySelector('div#local')
     const credentials = {}
     credentials.url = `${origin}/getList`
     credentials.csrfTokenHidden = window.csrfToken
     credentials.jwtAccess = jwtAccess
     credentials.TASK = 'GET_LIST'
+    credentials.scope = (window.isAuthenticated) ? 'both' : 'local'
     console.log(credentials)
     if (window.walking.state.showing) {
       console.log('go back to showing walk instead of list.')
@@ -794,43 +810,79 @@
       LISTDIV.style.display = 'none'
       console.log(LISTDIV)
     } else {
-      if (!window.walking.state.listCache) {
+      if (
+        (!window.walking.state.remoteListCache && window.isAuthenticated) ||
+        !window.walking.state?.localListCache) {
         window.walker.postMessage(credentials)
       } else {
-        renderList()
+        renderLists()
       }
     }
-    function fromCache(l) {
-      console.log(l)
-    }
-    getList.fromCache = fromCache
     function clearCache() {
-      delete window.walking.state.listCache
+      delete window.walking.state?.remoteListCache
+      delete window.walking.state?.localListCache
     }
     getList.clearCache = clearCache
-    function renderList() {
-      const list = window.walking.state.listCache
-      const walks = LISTDIV.children.namedItem('walks') || (() => {
+    function renderLists() {
+      const remoteList = window.walking.state?.remoteListCache
+      const remoteWalks = REMOTEDIV.children.namedItem('remote-walks') || (() => {
         const ul = document.createElement('ul')
-        ul.id = 'walks'
-        LISTDIV.appendChild(ul)
+        ul.id = 'remote-walks'
+        REMOTEDIV.appendChild(ul)
         // console.log(ul)
-        return LISTDIV.children.namedItem('walks')
+        return REMOTEDIV.children.namedItem('remote-walks')
       })()
-      if (walks.children.length !== list.length) {
+      if (remoteWalks.children.length !== remoteList.length) {
         const replaceLis = []
-        list.forEach((w) => {
+        remoteList.forEach((w) => {
           // console.log(w)
           const li = document.createElement('li')
           li.style.marginLeft = '-1em'
           li.style.padding = '5px 0px'
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
-          li.innerHTML = `<span data-show-id="${w.id}" class="pointer">${w.name}</span> `
+          li.innerHTML = `<span data-show-id="${w.id}" data-scope="remote" class="pointer">`
+            + `${w.name}</span> `
             + `(${new Date(w.date).toLocaleString('en-US', fmt)}) `
-            + `<span data-delete-id=${w.id} class="pointer delete tiny"></span>`
+            + `<span data-delete-id=${w.id} data-scope="remote" class="pointer delete tiny">`
+            + `</span>`
           replaceLis.push(li)
         })
-        walks.replaceChildren(...replaceLis)
+        remoteWalks.replaceChildren(...replaceLis)
+      }
+      const localList = window.walking.state?.localListCache
+      if (localList.length === 0) {
+        const noLocalWalks = document.querySelector('p#noLocalWalks') ?? (() => {
+          const n =document.createElement('p')
+          n.textContent = 'No walks saved to this device.'
+          n.id = 'noLocalWalks'  
+          LISTDIV.children.namedItem('local').appendChild(n) 
+        })()
+      } else {
+        const localWalks = LOCALDIV.children.namedItem('local-walks') || (() => {
+          const ul = document.createElement('ul')
+          ul.id = 'local-walks'
+          LOCALDIV.appendChild(ul)
+          // console.log(ul)
+          return LOCALDIV.children.namedItem('local-walks')
+        })()
+        if (localWalks.children.length !== localList.length) {
+          const replaceLis = []
+          localList.forEach((w) => {
+            // console.log(w)
+            const li = document.createElement('li')
+            li.style.marginLeft = '-1em'
+            li.style.padding = '5px 0px'
+            const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+            li.innerHTML = `<span data-show-id="${w.id}" data-scope="local" class="pointer">`
+              + `${w.name}</span> `
+              + `(${new Date(w.date).toLocaleString('en-US', fmt)}) `
+              + `<span data-delete-id=${w.id} data-scope="local" class="pointer delete tiny">`
+              + `</span>`
+            replaceLis.push(li)
+          })
+          localWalks.replaceChildren(...replaceLis)
+        } 
+        
       }
       document.querySelectorAll('span[data-delete-id]').forEach((s) => {
         s.addEventListener('click', deleteWalk)
@@ -839,7 +891,7 @@
         s.addEventListener('click', showWalk)
       })
     }
-    window.getList.renderList = renderList
+    window.getList.renderLists = renderLists
     function finish(e) {
       console.log('getList.finish', e)
       window.csrfToken = e.newCsrfToken
@@ -849,13 +901,15 @@
         console.log(`noAuth: ${noAuth}`)
         const noAuthP = document.createElement('p')
         noAuthP.id = 'noAuth'
-        noAuthP.textContent = 'Login to see saved walks.'
-        LISTDIV.appendChild(noAuthP)
-      } else if (e.auth === 'no' && LISTDIV.children.namedItem('noAuth')) {
+        noAuthP.textContent = 'Login to see cloud saved walks.'
+        LISTDIV.children.namedItem('remote').appendChild(noAuthP)
+      } else if (
+        e.auth === 'no' &&
+        LISTDIV.children.namedItem('remote').children.namedItem('noAuth')) {
         console.log('show noAuth')
         noAuth.style.display = 'block' 
-      } else if (e.list.length === 0) {
-        console.log(`e.list.length = ${e.list.length}`)
+      } else if (e.remoteList.length === 0) {
+        console.log(`e.remoteList.length = ${e.remoteList.length}`)
         if (noAuth) {
           noAuth.style.display = 'none'
         }
@@ -865,18 +919,28 @@
           const noWalks = document.createElement('p')
           noWalks.textContent = 'No saved walks.'
           noWalks.id = 'noWalks'
-          LISTDIV.appendChild(noWalks)
+          LISTDIV.children.namedItem('remote').children.appendChild(noWalks)
         }
       } else {
-        console.log(`e.auth = ${e.auth} && e.list.length = ${e.list.length}`)
-        window.walking.state.listCache = e.list.map((w) => {
+        console.log(`e.auth = ${e.auth} && `
+          + `e.remoteList.length = ${e.remoteList.length} `
+          + `e.localList.length = ${e.localList.length}`
+        )
+        window.walking.state.remoteListCache = e.remoteList.map((w) => {
           return {
             id: w._id,
             name: w.features[0].properties.name,
             date: w.features[0].properties.date,
           }
         })
-        renderList() 
+        window.walking.state.localListCache = e.localList.map((w) => {
+          return {
+            id: w._id,
+            name: w.features[0].properties.name,
+            date: w.features[0].properties.date,
+          }
+        })
+        renderLists() 
       }
     }
     getList.finish = finish
@@ -1005,13 +1069,13 @@
     window.walker.postMessage(credentials)
     function finish(e) {
       console.log(e)
-      window._temp = window.walking.state.listCache.filter((w) => {
+      window._temp = window.walking.state.remoteListCache.filter((w) => {
         return w.id !== e.id
       })
       console.log(window._temp)
-      window.walking.state.listCache = window._temp
+      window.walking.state.remoteListCache = window._temp
       delete window._temp
-      window.getList.renderList()
+      window.getList.renderLists()
     }
     window.deleteWalk.finish = finish
   }
