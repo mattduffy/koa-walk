@@ -537,16 +537,26 @@
         url: `${origin}/save`,
         csrfTokenHidden: csrfToken,
         jwtAccess: jwtAccess,
+        scope: (window.isAuthenticated) ? 'remote' : 'local',
       }
       window.walker.postMessage(credentials)
       function finish(e) {
         console.log('finish saving walk: ', e)
         const savedWalk = { _id: e.res.saved.insertedId, name: _name, date: _date }
-        if (!window.walking.state?.remoteListCache) {
-          window.walking.state.remoteListCache = [ savedWalk ]
+        if (e.scope === 'remote') {
+          if (!window.walking.state?.remoteListCache) {
+            window.walking.state.remoteListCache = [ savedWalk ]
+          } else {
+            window.walking.state.remoteListCache.unshift(savedWalk)
+            console.log(window.walking.state.remoteListCache)
+          }
         } else {
-          window.walking.state.remoteListCache.unshift(savedWalk)
-          console.log(window.walking.state.remoteListCache)
+          if (!window.walking.state?.localListCache) {
+            window.walking.state.localListCache = [ savedWalk ]
+          } else {
+            window.walking.state.localListCache.unshift(savedWalk)
+            console.log(window.walking.state.localListCache)
+          }
         }
       }
       saveWalk.finish = finish
