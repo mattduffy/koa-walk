@@ -88,9 +88,11 @@ async function saveWalk(credentials) {
   let response
   let json
   const saved = { TASK: 'SAVE', status: null, msg: null }
-  if (!isLoggedIn) {
-    saved.status = 'failed'
-    saved.msg = 'Must be logged in to save a walk.'
+  // if (!isLoggedIn) {
+  if (credentials.scope === 'local') {
+    saved.status = 'ok'
+    saved.msg = 'Saved walk to device local storage.'
+    saved.scope = 'local'
   } else {
     const formData = new FormData()
     formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
@@ -116,6 +118,7 @@ async function saveWalk(credentials) {
       saved.status = 'ok'
       saved.msg = 'Saved walk.'
       saved.res = json
+      saved.scope = 'remote'
     } catch (e) {
       console.log('worker::save::fetch failed')
       console.log(e)
@@ -130,7 +133,8 @@ async function showWalk(credentials) {
   console.log('woker::showWalk(credentials)', credentials)
   let response
   let walk
-  if (!isLoggedIn) {
+  // if (!isLoggedIn) {
+  if (credentials.scope === 'local') {
     walk = { status: 'failed', msg: 'login to see saved walks' }
     return walk
   }
