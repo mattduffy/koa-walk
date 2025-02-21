@@ -2,10 +2,31 @@
  * file: public/j/worker.js
  */
 /* eslint-env worker */
+/* global self */
 // import Observer from './Observer.js'
 import State from './State.js'
 import { heading, pointDistance } from './Heading.js'
+import { ObjectId } from './lib/bson.mjs'
 
+const worker = self
+const IDB_OBJ_VER = 1
+function openDB() {
+  const DBOpenRequest = worker.indexedDB.open('walk', IDB_OBJ_VER)
+  DBOpenRequest.onsuccess = (e) => {
+    console.log('db', e.target.result)
+    return e.target.result
+  }
+  DBOpenRequest.onerror = (e) => {
+    console.info(e)
+  }
+  DBOpenRequest.onupgradeneeded = (e) => {
+    const db = e.target.result
+    const objectStore = db.createObjectStore('walk', { keyPath: '_id' })
+    objectStore.createIndex('date', 'date', { unique: false })
+    objectStore.createIndex('name', 'name', { unique: false })
+  }
+}
+const db = openDB()
 let walkState
 if (walkState === undefined) {
   walkState = new State()
@@ -90,8 +111,11 @@ async function saveWalk(credentials) {
   const saved = { TASK: 'SAVE', status: null, msg: null }
   // if (!isLoggedIn) {
   if (credentials.scope === 'local') {
+    const _id = new ObjectId().toString()
+    console.log('new ObjectId()', _id)
     saved.status = 'ok'
     saved.msg = 'Saved walk to device local storage.'
+    saved.res = { saved: { insertedId: _id } }
     saved.scope = 'local'
   } else {
     const formData = new FormData()
@@ -166,7 +190,6 @@ async function showWalk(credentials) {
 async function getList(credentials) {
   console.log('woker::getList')
   let response
-  // let list = { TASK: 'GET_LIST', list: null, auth: null }
   let list = { remoteList: null, localList: null, auth: null }
   let auth
   console.log('is logged in: ', isLoggedIn)

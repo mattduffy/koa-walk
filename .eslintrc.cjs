@@ -8,9 +8,16 @@ module.exports = {
   env: {
     es2021: true,
     node: true,
+    browser: true,
   },
   extends: 'airbnb-base',
   overrides: [
+    {
+      files: ["public/j/worker.js"],
+      rules: {
+        'no-restricted-globals': ['error', 'isFinite', 'isNaN'].concat(restrictedGlobals), 
+      },
+    },
   ],
   parserOptions: {
     ecmaVersion: 'latest',
