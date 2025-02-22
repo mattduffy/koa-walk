@@ -542,7 +542,7 @@
       window.walker.postMessage(credentials)
       function finish(e) {
         console.log('finish saving walk: ', e)
-        const savedWalk = { _id: e.res.saved.insertedId, name: _name, date: _date }
+        const savedWalk = { id: e.res.saved.insertedId, name: _name, date: _date }
         if (e.scope === 'remote') {
           if (!window.walking.state?.remoteListCache) {
             window.walking.state.remoteListCache = [ savedWalk ]
@@ -844,7 +844,7 @@
       if (remoteWalks.children.length !== remoteList.length) {
         const replaceLis = []
         remoteList.forEach((w) => {
-          // console.log(w)
+          console.log(w)
           const li = document.createElement('li')
           li.style.marginLeft = '-1em'
           li.style.padding = '5px 0px'
@@ -881,7 +881,7 @@
         if (localWalks.children.length !== localList.length) {
           const replaceLis = []
           localList.forEach((w) => {
-            // console.log(w)
+            console.log(w)
             const li = document.createElement('li')
             li.style.marginLeft = '-1em'
             li.style.padding = '5px 0px'
@@ -1081,15 +1081,24 @@
       jwtAccess,
       id: e.target.dataset.deleteId,
       csrfTokenHidden: window.csrfToken,
+      scope: e.target.dataset.scope,
     }
     window.walker.postMessage(credentials)
     function finish(e) {
       console.log(e)
-      window._temp = window.walking.state.remoteListCache.filter((w) => {
-        return w.id !== e.id
-      })
+      window.csrfToken = e.newCsrfToken
+      if (e.scope === 'remote') { 
+        window._temp = window.walking.state.remoteListCache.filter((w) => {
+          return w.id !== e.id
+        })
+        window.walking.state.remoteListCache = window._temp
+      } else {
+        window._temp = window.walking.state.localListCache.filter((w) => {
+          return w.id !== e.id
+        })
+        window.walking.state.localListCache = window._temp
+      }
       console.log(window._temp)
-      window.walking.state.remoteListCache = window._temp
       delete window._temp
       window.getList.renderLists()
     }
