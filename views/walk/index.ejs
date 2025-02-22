@@ -614,7 +614,6 @@
         welcomeDiv.style.display = 'block'
         loginForm.style.display = 'none'
         document.forms['preferences'].elements['units'].forEach((r) => {
-          console.log(r)
           r.addEventListener('change', updatePreferences)
         })
       }
@@ -1032,8 +1031,8 @@
           // url: { 1: `${origin}/i/start-flag.png` },
           glyphImage: { 1: `${origin}/i/start-flag-20x20.png` },
           glyphText: 'Start',
-          glyphColor: 'green',
-          color: '#FFFFFF',
+          glyphColor: 'white',
+          color: 'green',
 
         }
       )
@@ -1047,8 +1046,8 @@
           // url: { 1: `${origin}/i/finish-flag.png` },
           glyphImage: { 1: `${origin}/i/finish-flag.png` },
           glyphText: 'Finish',
-          glyphColor: 'black',
-          color: '#FFFFFF',
+          glyphColor: '#FFFFFF',
+          color: '#000000',
         }
       )
       finishAnnotation.animates = false
