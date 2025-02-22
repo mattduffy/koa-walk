@@ -10,23 +10,31 @@ import { ObjectId } from './lib/bson.mjs'
 
 const worker = self
 const IDB_OBJ_VER = 1
+const DBNAME = 'walks'
+const OBJSTORENAME = 'walk'
+let db
 function openDB() {
-  const DBOpenRequest = worker.indexedDB.open('walk', IDB_OBJ_VER)
+  let DBOpenRequest = worker.indexedDB.open(DBNAME, IDB_OBJ_VER)
+  DBOpenRequest.onupgradeneeded = (e) => {
+    const db = e.target.result
+    const objectStore = db.createObjectStore(OBJSTORENAME, { keyPath: '_id' })
+    objectStore.createIndex('dateIdx', 'date', { unique: false })
+    objectStore.createIndex('nameIdx', 'name', { unique: false })
+  }
   DBOpenRequest.onsuccess = (e) => {
-    console.log('db', e.target.result)
-    return e.target.result
+    console.log(e)
+    setTimeout(() => {
+      console.log('waiting 1 second')
+    }, 1000)
+    // db = e.target.result
+    db = DBOpenRequest.result
   }
   DBOpenRequest.onerror = (e) => {
     console.info(e)
   }
-  DBOpenRequest.onupgradeneeded = (e) => {
-    const db = e.target.result
-    const objectStore = db.createObjectStore('walk', { keyPath: '_id' })
-    objectStore.createIndex('date', 'date', { unique: false })
-    objectStore.createIndex('name', 'name', { unique: false })
-  }
+  return db
 }
-const db = openDB()
+openDB()
 let walkState
 if (walkState === undefined) {
   walkState = new State()
@@ -108,15 +116,44 @@ async function saveWalk(credentials) {
   console.log('worker::saveWalk(credentials)', credentials)
   let response
   let json
-  const saved = { TASK: 'SAVE', status: null, msg: null }
+  const saved = { status: null, msg: null }
   // if (!isLoggedIn) {
   if (credentials.scope === 'local') {
     const _id = new ObjectId().toString()
     console.log('new ObjectId()', _id)
-    saved.status = 'ok'
-    saved.msg = 'Saved walk to device local storage.'
-    saved.res = { saved: { insertedId: _id } }
-    saved.scope = 'local'
+    const walk = walkState.geojson
+    walk._id = _id
+    walk.date = walk.features[0].properties.date
+    walk.namee = walk.features[0].properties.name
+    console.log('db handle opened', db)
+    
+    return new Promise((resolve, reject) => {
+      console.log('before transaction', db)
+      const transaction = db.transaction(OBJSTORENAME, 'readwrite')
+      console.log('transaction', transaction)
+      const store = transaction.objectStore(OBJSTORENAME)
+      console.log('store', store)
+      let request = store.add(walk)
+      request.onerror = (e) => {
+        console.log('rejecting store.add request', e)
+        reject(e)
+      }
+      request.onsuccess = (e) => {
+        console.log('put result', request)
+        saved.status = 'ok'
+        saved.msg = 'Saved walk to device local storage.'
+        saved.res = { saved: { insertedId: _id } }
+        saved.scope = 'local'
+        saved.newCsrfToken = credentials.csrfTokenHidden
+        console.log('local idb saved', saved)
+        resolve(saved)
+      }
+      transaction.oncomplete = (e) => {
+        console.log('tranaction complete', e)
+        console.log(saved)
+        // db.close() 
+      }
+    })
   } else {
     const formData = new FormData()
     formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
@@ -143,24 +180,58 @@ async function saveWalk(credentials) {
       saved.msg = 'Saved walk.'
       saved.res = json
       saved.scope = 'remote'
+      console.log('what happened to saved?', saved)
+      return saved
     } catch (e) {
       console.log('worker::save::fetch failed')
       console.log(e)
       saved.status = 'failed'
       saved.msg = 'Failed to save walk to database for some reason.'
+      console.log('what happened to saved?', saved)
+      return saved
     }
   }
-  console.log('what happened to saved?', saved)
-  return saved
+  
 }
 async function showWalk(credentials) {
   console.log('woker::showWalk(credentials)', credentials)
   let response
   let walk
-  // if (!isLoggedIn) {
+  let auth
   if (credentials.scope === 'local') {
-    walk = { status: 'failed', msg: 'login to see saved walks' }
-    return walk
+    console.log(`getting local walk id ${credentials.id}`)
+    walk = {}
+    auth = 'no'
+    return await new Promise((resolve, reject) => {
+      console.log('db handle opened?', db)
+      const transaction = db.transaction(OBJSTORENAME, 'readonly')
+      const store = transaction.objectStore(OBJSTORENAME)
+      console.log('store', store)
+      let request = store.get(credentials.id)
+      request.onerror = (e) => {
+        console.log(`rejecting store.get(${credentials.id})`, e)
+        reject({ status: 'failed', msg: 'failed to get walk from idb' })
+      }
+      request.onsuccess = (e) => {
+        console.log(`store.get(${credentials.id})`, e.target)
+        console.log('request.result', e.target.result)
+        walk.walk = e.target.result ?? {}
+        walk.scope = credentials.scope
+        walk.msg = 'Walk retrieved fom local device.'
+        walk.status = 'ok'
+        walk.newCsrfToken = credentials.csrfTokenHidden
+        walk.auth = auth
+        walk.test = 'request.onsuccess'
+        console.log('about to resolve local walk', walk)
+        resolve(walk)
+      }
+      transaction.oncomplete = (e) => {
+        walk.test = 'transaction.oncomplete'
+        console.log('transaction complete', e)
+        console.log(walk)
+        // resolve(walk)
+      } 
+    })
   }
   const formData = new FormData()
   formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
@@ -194,17 +265,39 @@ async function getList(credentials) {
   let auth
   console.log('is logged in: ', isLoggedIn)
   console.log('user: ', user)
+  console.log('list request scope', credentials.scope)
   if (credentials.scope === 'local' || credentials.scope === 'both') {
     auth = 'no'
-    // get the local storage version here
-    list = {
-      ...list,
-      remoteList: [],
-      localList: [],
-      auth,
-      newCsrfToken: credentials.csrfTokenHidden,
-    }
+    await new Promise((resolve, reject) => {
+      console.log('db handle opened?', db)
+      const transaction = db.transaction(OBJSTORENAME, 'readonly')
+      const store = transaction.objectStore(OBJSTORENAME)
+      console.log('store', store)
+      let request = store.getAll()
+      request.onerror = (e) => {
+        console.log('rejecting store.getAll() result', e)
+        reject(e)
+      }
+      request.onsuccess = (e) => {
+        console.log('store.getAll()', e.target)
+        console.log('request.result', e.target.result)
+        list.localList = e.target.result ?? []
+        list.scope = credentials.scope
+        list.msg = 'All walks saved to local device.'
+        list.status = 'ok'
+        list.newCsrfToken = credentials.csrfTokenHidden
+        list.auth = auth
+        console.log('about to resolve local list', list)
+        resolve(list)
+      }
+      transaction.oncomplete = (e) => {
+        console.log('transaction complete', e)
+        console.log(list)
+        resolve(list)
+      }
+    })
     if (!isLoggedIn) {
+      console.log('getList not logged in, returning store.getAll().result')
       return list
     }
   }
@@ -228,23 +321,18 @@ async function getList(credentials) {
       console.log(response)
       const json = await response.json()
       console.log('getList response: ', json)
-      list = {
-        ...list,
-        remoteList: json.list,
-        auth,
-        newCsrfToken: json.newCsrfToken,
-      }
+      list.remoteList = json.list
+      list.auth = auth
+      list.newCsrfToken = json.newCsrfToken
     } catch (e) {
       console.error(e)
-      list = {
-        ...list,
-        remoteList: [],
-        localList: [],
-        auth,
-        error: e,
-      }
+      list.remoteList = []
+      list.localList = []
+      list.auth = auth
+      list.error = e
     }
   }
+  console.log('about to return final list', list)
   return list
 }
 async function refresh(o) {
@@ -396,8 +484,8 @@ onmessage = async (e) => {
       case 'GET_LIST':
         console.log(e.data.TASK)
         try {
-          const list = await getList(e.data)
-          postMessage({ TASK: e.data.TASK, ...list })
+          // const list = await getList(e.data)
+          postMessage({ TASK: 'GET_LIST', ...await getList(e.data) })
         } catch (err) {
           console.error(`${e.data.TASK} failed.`, err)
           postMessage({ TASK: 'GET_LIST', err: 'getList failed', cause: err })
@@ -438,7 +526,7 @@ onmessage = async (e) => {
         break
       case 'GET_WALK':
         console.log('worker', e.data.TASK)
-        postMessage({ TASK: e.data.TASK, ...await showWalk(e.data) })
+        postMessage({ TASK: 'GET_WALK', ...await showWalk(e.data) })
         break
       default:
         console.info(e)
