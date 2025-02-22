@@ -981,6 +981,7 @@
         jwtAccess,
         id: e.target.dataset.showId,
         csrfTokenHidden: window.csrfToken,
+        scope: e.target.dataset.scope,
       }
       window.walker.postMessage(credentials)
     }
