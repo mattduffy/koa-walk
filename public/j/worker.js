@@ -78,9 +78,42 @@ async function deleteWalk(credentials) {
   let response
   let json
   const deleted = { status: null, msg: null }
-  if (!isLoggedIn) {
-    deleted.status = 'failed'
-    deleted.msg = 'Must be logged in to delete a walk.'
+  // if (!isLoggedIn) {
+  if (credentials.scope === 'local') {
+    return await new Promise((resolve, reject) => {
+      console.log(`deleting local walk id ${credentials.id}`)
+      const transaction = db.transaction(OBJSTORENAME, 'readwrite')
+      const store = transaction.objectStore(OBJSTORENAME)
+      console.log('store', store)
+      let request = store.delete(credentials.id)
+      request.onerror = (e) => {
+        console.log(`rejecting store.delete(${credentials.id})`)
+        deleted.status = 'failed'
+        deleted.msg = `rejecting store.delete(${credentials.id})` 
+        deleted.error = e
+        reject(deleted)
+      }
+      request.onsuccess = (e) => {
+        deleted.status = 'ok'
+        deleted.msg = `walk id ${credentials.id} deleted from the database.`
+        deleted.res = json
+        deleted.id = credentials.id
+        deleted.newCsrfToken = credentials.csrfTokenHidden
+        deleted.scope = 'local'
+        if (e.target.result !== undefined) {
+          deleted.status = 'failed'
+          deleted.msg = `rejecting store.delete(${credentials.id})`
+          console.log(e.target)
+          reject()
+        } else {
+          resolve(deleted)
+        }
+      }
+      transaction.oncomplete = (e) => {
+        console.log('transaction complete', e)
+        console.log(deleted)
+      }
+    })
   } else {
     const formData = new FormData()
     formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
@@ -103,6 +136,8 @@ async function deleteWalk(credentials) {
       deleted.msg = `walk id ${credentials.id} deleted from the database.`
       deleted.res = json
       deleted.id = credentials.id
+      deleted.newCsrfToken = json.newCsrfToken
+      deleted.scope = 'remote'
     } catch (e) {
       console.log(e)
       deleted.status = 'failed'
@@ -124,7 +159,7 @@ async function saveWalk(credentials) {
     const walk = walkState.geojson
     walk._id = _id
     walk.date = walk.features[0].properties.date
-    walk.namee = walk.features[0].properties.name
+    walk.name = walk.features[0].properties.name
     console.log('db handle opened', db)
     
     return new Promise((resolve, reject) => {
