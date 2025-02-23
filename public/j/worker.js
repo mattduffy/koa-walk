@@ -307,8 +307,9 @@ async function getList(credentials) {
       console.log('db handle opened?', db)
       const transaction = db.transaction(OBJSTORENAME, 'readonly')
       const store = transaction.objectStore(OBJSTORENAME)
-      console.log('store', store)
-      let request = store.getAll()
+      let dateIdx = store.index('dateIdx')
+      console.log('dateIdx', dateIdx)
+      let request = dateIdx.getAll()
       request.onerror = (e) => {
         console.log('rejecting store.getAll() result', e)
         reject(e)
@@ -316,7 +317,7 @@ async function getList(credentials) {
       request.onsuccess = (e) => {
         console.log('store.getAll()', e.target)
         console.log('request.result', e.target.result)
-        list.localList = e.target.result ?? []
+        list.localList = e.target.result.reverse() ?? []
         list.scope = credentials.scope
         list.msg = 'All walks saved to local device.'
         list.status = 'ok'
