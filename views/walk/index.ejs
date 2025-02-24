@@ -1127,7 +1127,7 @@
     console.log('exportWalkAsKML(e)', e)
     const credentials = {
       TASK: 'EXPORT_WALK',
-      url: `${origin}/export`,
+      url: `${origin}/getWalk`,
       csrfTokenHidden: window.csrfToken,
       id: e.target.dataset.exportId,
       scope: e.target.dataset.scope,
