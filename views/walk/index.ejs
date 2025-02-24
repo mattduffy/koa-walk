@@ -658,6 +658,11 @@
             window.showWalk.finish(e.data)
             console.log('csrfToken after GET_WALK: ', window.csrfToken)
             break
+          case 'EXPORT_WALK':
+            console.log('csrfToken before EXPORT_WALK: ', window.csrfToken)
+            window.exportWalkAsKML.finish(e.data)
+            console.log('csrfToken after EXPORT_WALK: ', window.csrfToken)
+            break
           case 'SET_PREF':
             console.log('csrfToken before SET_PREF: ', window.csrfToken)
             window.updatePreferences.finish(e.data)
@@ -841,26 +846,34 @@
         // console.log(ul)
         return REMOTEDIV.children.namedItem('remote-walks')
       })()
-      if (remoteWalks.children.length !== remoteList.length) {
+      if (!window.isAuthenticated && !document.querySelector('p#noAuth')) {
+        REMOTEDIV.children.namedItem('remote-walks').remove()
+        const noAuthP = document.createElement('p')
+        noAuthP.id = 'noAuth'
+        noAuthP.textContent = 'Login to see cloud saved walks.' 
+        REMOTEDIV.appendChild(noAuthP)
+      } else if (remoteWalks.children.length !== remoteList.length) {
         const replaceLis = []
         remoteList.forEach((w) => {
-          console.log(w)
+          // console.log(w)
           const li = document.createElement('li')
-          li.style.marginLeft = '-1em'
+          li.style.marginLeft = '-1.5em'
           li.style.padding = '5px 0px'
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
           li.innerHTML = `<span data-show-id="${w.id}" data-scope="remote" class="pointer">`
             + `${w.name}</span> `
-            + `(${new Date(w.date).toLocaleString('en-US', fmt)}) `
+            + `(${new Date(w.date).toLocaleString('en-US', fmt)}) <br>`
+            + `<span data-export-id=${w.id} data-scope="remote" class="pointer export tiny">`
+            + `export KML</span> `
             + `<span data-delete-id=${w.id} data-scope="remote" class="pointer delete tiny">`
-            + `</span>`
+            + `delete</span>`
           replaceLis.push(li)
         })
         remoteWalks.replaceChildren(...replaceLis)
       }
       const localList = window.walking.state?.localListCache ?? []
-      console.log('localList', localList)
-      console.log('localList.length', localList.length)
+      // console.log('localList', localList)
+      // console.log('localList.length', localList.length)
       if (localList.length === 0) {
         const noLocalWalks = document.querySelector('p#noLocalWalks') ?? (() => {
           const p = document.createElement('p')
@@ -881,27 +894,31 @@
         if (localWalks.children.length !== localList.length) {
           const replaceLis = []
           localList.forEach((w) => {
-            console.log(w)
+            // console.log(w)
             const li = document.createElement('li')
-            li.style.marginLeft = '-1em'
+            li.style.marginLeft = '-1.5em'
             li.style.padding = '5px 0px'
             const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
             li.innerHTML = `<span data-show-id="${w.id}" data-scope="local" class="pointer">`
               + `${w.name}</span> `
-              + `(${new Date(w.date).toLocaleString('en-US', fmt)}) `
+              + `(${new Date(w.date).toLocaleString('en-US', fmt)}) <br>`
+              + `<span data-export-id=${w.id} data-scope="local" class="pointer export tiny">`
+              + `export KML</span> `
               + `<span data-delete-id=${w.id} data-scope="local" class="pointer delete tiny">`
-              + `</span>`
+              + `delete</span>`
             replaceLis.push(li)
           })
           localWalks.replaceChildren(...replaceLis)
         } 
-        
       }
       document.querySelectorAll('span[data-delete-id]').forEach((s) => {
         s.addEventListener('click', deleteWalk)
       })
       document.querySelectorAll('span[data-show-id]').forEach((s) => {
         s.addEventListener('click', showWalk)
+      })
+      document.querySelectorAll('span[data-export-id]').forEach((s) => {
+        s.addEventListener('click', exportWalkAsKML)
       })
     }
     window.getList.renderLists = renderLists
@@ -955,7 +972,7 @@
           date: w.features[0].properties.date,
         }
       })
-      console.log('localListCache', window.walking.state.localListCache)
+      // console.log('localListCache', window.walking.state.localListCache)
       renderLists() 
     }
     getList.finish = finish
@@ -1103,6 +1120,26 @@
       window.getList.renderLists()
     }
     window.deleteWalk.finish = finish
+  }
+  window.exportWalkAsKML = async function(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('exportWalkAsKML(e)', e)
+    const credentials = {
+      TASK: 'EXPORT_WALK',
+      url: `${origin}/export`,
+      csrfTokenHidden: window.csrfToken,
+      id: e.target.dataset.exportId,
+      scope: e.target.dataset.scope,
+      jwtAccess,
+    }
+    window.walker.postMessage(credentials)
+    function finish(e) {
+      console.log('exportWalkAsKML().finish(e)', e)
+      window.csrfToken = e.newCsrfToken
+      console.log('kml', e.kml) 
+    }
+    window.exportWalkAsKML.finish = finish
   }
   async function noPositionCantWalk(o, g) {
     console.log(`no position available: ${g}`)

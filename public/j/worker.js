@@ -152,7 +152,6 @@ async function saveWalk(credentials) {
   let response
   let json
   const saved = { status: null, msg: null }
-  // if (!isLoggedIn) {
   if (credentials.scope === 'local') {
     const _id = new ObjectId().toString()
     console.log('new ObjectId()', _id)
@@ -161,7 +160,6 @@ async function saveWalk(credentials) {
     walk.date = walk.features[0].properties.date
     walk.name = walk.features[0].properties.name
     console.log('db handle opened', db)
-    
     return new Promise((resolve, reject) => {
       console.log('before transaction', db)
       const transaction = db.transaction(OBJSTORENAME, 'readwrite')
@@ -186,13 +184,11 @@ async function saveWalk(credentials) {
       transaction.oncomplete = (e) => {
         console.log('tranaction complete', e)
         console.log(saved)
-        // db.close() 
       }
     })
   } else {
     const formData = new FormData()
     formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
-    // formData.append('walk', JSON.stringify(walkState.get()))
     formData.append('walk', JSON.stringify(walkState.geojson))
     const opts = {
       method: 'POST',
@@ -226,7 +222,50 @@ async function saveWalk(credentials) {
       return saved
     }
   }
-  
+}
+async function exportKML(credentials) {
+  let response
+  let kml
+  let walk
+  if (credentials.scope === 'local') {
+    console.log(`getting local walk id ${credentials.id}`)
+    walk = await new Promise((resolve, reject) => {
+      console.log('db handle opened?', db)
+      const transaction = db.transaction(OBJSTORENAME, 'readonly')
+      const store = transaction.objectStore(OBJSTORENAME)
+      console.log('store', store)
+      let request = store.get(credentials.id)
+      request.onerror = (e) => {
+        console.log(`rejecting store.get(${credentials.id})`, e)
+        reject({ status: 'failed', msg: 'failed to get walk from idb' })
+      }
+      request.onsuccess = (e) => {
+        console.log(`store.get(${credentials.id})`, e.target)
+        console.log('request.result', e.target.result)
+        const _walk = e.target.result ?? {}
+        _walk.scope = credentials.scope
+        _walk.msg = 'Walk retrieved fom local device.'
+        _walk.status = 'ok'
+        _walk.newCsrfToken = credentials.csrfTokenHidden
+        console.log('about to resolve local walk', _walk)
+        resolve(_walk)
+      }
+      transaction.oncomplete = (e) => {
+        console.log('transaction complete', e)
+        // console.log(walk)
+      } 
+    })
+
+  } else {
+
+  }
+  kml = '<?xml version="1.0" encoding="UTF-8"?>'
+    + '<kml xmlns="http://www.opengis.net/kml/2.2">'
+    + '\t<Document>'
+
+    + '\t</Document>'
+    + '</kml>'
+  return { kml, newCsrfToken: walk.newCsrfToken }
 }
 async function showWalk(credentials) {
   console.log('woker::showWalk(credentials)', credentials)
@@ -563,6 +602,10 @@ onmessage = async (e) => {
       case 'GET_WALK':
         console.log('worker', e.data.TASK)
         postMessage({ TASK: 'GET_WALK', ...await showWalk(e.data) })
+        break
+      case 'EXPORT_WALK':
+        console.log('worker', e.data.TASK)
+        postMessage({ TASK: 'EXPORT_WALK', ...await exportKML(e.data) })
         break
       default:
         console.info(e)
