@@ -67,18 +67,34 @@ nav#nav > div {
 }
 
 .tiny {
-  font-size: .5em;
+  font-size: .95em;
   padding: .0em 0em;
 }
 
-span.delete {
-  content: url('/i/delete.svg');
-  width: 2.5em;
-  margin-left: 10px;
-  vertical-align: text-bottom;
+span.export::after {
+  background-image: url('/i/export.png');
+  background-size: 20px 20px;
+  display: inline-block;
+  width: 20px; 
+  height: 20px;
+  content:"";
   position: relative;
-  top: 0em;
+  top: 5px;
+  margin: 0px 10px 0px 5px;
 }
+
+span.delete::after {
+  background-image: url('/i/delete.svg');
+  background-size: 20px 20px;
+  display: inline-block;
+  width: 20px; 
+  height: 20px;
+  content:"";
+  position: relative;
+  top: 5px;
+  margin: 0px 10px 0px 5px;
+}
+
 span.hikingpng {
   content: url('/i/hiking.png');
   max-width: 1.5em;
