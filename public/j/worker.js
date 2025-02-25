@@ -228,6 +228,7 @@ async function exportKML(credentials) {
   let response
   let kml
   let walk
+  let newCsrfToken
   if (credentials.scope === 'local') {
     console.log(`getting local walk id ${credentials.id}`)
     walk = await new Promise((resolve, reject) => {
@@ -275,13 +276,15 @@ async function exportKML(credentials) {
       const json = await response.json()
       console.log('showWalk response:', json)
       walk = json.walk
-      walk.newCsrfToken = json.newCsrfToken
+      newCsrfToken = json.newCsrfToken
     } catch (e) {
       console.error(e)
       walk = { status: 'failed', msg: 'failed to retrieve walk from db', e }
     }
   }
   const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+  const niceDate = new Date(walk.features[0].properties.date)
+    .toLocaleString('en-US', fmt)
   const last = walk.features[0].geometry.coordinates.length - 1
   kml = 
 `<?xml version="1.0" encoding="UTF-8"?>
@@ -322,8 +325,7 @@ async function exportKML(credentials) {
       <description><![CDATA[
         <h3>${walk.features[0].properties.name}</h3>
         <h4>${walk.features[0].properties.location}</h4>
-        <h4>${new Date(walk.features[0].properties.date)
-            .toLocaleString('en-US', fmt)}</h4>
+        <h4>${niceDate}</h4>
         <p>Duration ${new Date(walk.features[0].properties.duration)
             .toISOString().slice(11, 19)}</p> 
         <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>
@@ -389,7 +391,13 @@ async function exportKML(credentials) {
   </Document>
 </kml>
 `
-  return { kml, newCsrfToken: walk.newCsrfToken }
+  let _name = `${walk.features[0].properties.name} ${niceDate}`
+  console.log('filename', _name)
+  _name = _name.replace(/ /g, '-')
+  console.log('filename', _name)
+  _name = _name.replace(/,/g, '')
+  console.log('filename', _name)
+  return { kml, filename:`${_name}.kml`, newCsrfToken }
 }
 async function showWalk(credentials) {
   console.log('woker::showWalk(credentials)', credentials)

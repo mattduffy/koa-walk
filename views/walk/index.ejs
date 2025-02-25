@@ -1137,7 +1137,14 @@
     function finish(e) {
       console.log('exportWalkAsKML().finish(e)', e)
       window.csrfToken = e.newCsrfToken
-      console.log('kml', e.kml) 
+      console.log('kml', e) 
+      const blob = new Blob([e.kml], { type: 'application/vnd.google-earth.kml+xml' })
+      const a = document.createElement('a')
+      a.id = 'KML-download'
+      a.setAttribute('download', e.filename)
+      a.setAttribute('href', window.URL.createObjectURL(blob))
+      a.click()
+      a.remove()
     }
     window.exportWalkAsKML.finish = finish
   }
