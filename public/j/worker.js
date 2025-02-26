@@ -318,7 +318,8 @@ async function exportKML(credentials) {
           <scale>1.0</scale>
         </Icon>
       </IconStyle>
-    </Style><Placemark>
+    </Style>
+    <Placemark>
       <name>${walk.features[0].properties.name} walk</name>
       <styleUrl>#myWalkStyle</styleUrl> 
       <visibility>1</visibility>
@@ -356,16 +357,17 @@ async function exportKML(credentials) {
         ]]>
       </description>
       <Style id="grn-pushpin">
-      <IconStyle id="mygrnpushpin">
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
-          <scale>1.0</scale>
-        </Icon>
-      </IconStyle>
-    </Style><Point>
+        <IconStyle id="mygrnpushpin">
+          <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+            <scale>1.0</scale>
+          </Icon>
+        </IconStyle>
+      </Style>
+      <Point>
         <coordinates>
           ${walk.features[0].geometry.coordinates[0][0]},${walk.features[0].geometry.coordinates[0][1]},0
-          </coordinates>
+        </coordinates>
       </Point>
     </Placemark>
     <Placemark>
@@ -376,16 +378,17 @@ async function exportKML(credentials) {
         <p>Finish location: ${walk.features[0].geometry.coordinates[last][0]},${walk.features[0].geometry.coordinates[last][1]}</p>
         ]]></description>
       <Style id="ylw-pushpin">
-      <IconStyle id="myylwpushpin">
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
-          <scale>1.0</scale>
-        </Icon>
-      </IconStyle>
-    </Style><Point>
+        <IconStyle id="myylwpushpin">
+          <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+            <scale>1.0</scale>
+          </Icon>
+        </IconStyle>
+      </Style>
+      <Point>
         <coordinates>
           ${walk.features[0].geometry.coordinates[last][0]},${walk.features[0].geometry.coordinates[last][1]},0
-          </coordinates>
+        </coordinates>
       </Point>
     </Placemark>
   </Document>
