@@ -66,7 +66,8 @@ class State extends Subject {
         0,
       )
       console.log('State::totalDistance() = ', x)
-      return x || 0
+      this.state.distance = x ?? 0
+      // return x || 0
     }
     console.log('State::totalDistance() = ', this.state.distance)
     return this.state.distance
@@ -191,7 +192,7 @@ class State extends Subject {
   }
 
   printPoints() {
-    console.log(this.state.wayPoints)
+    console.dir(this.state.wayPoints)
   }
 
   get geojson() {
@@ -219,6 +220,121 @@ class State extends Subject {
         },
       ],
     }
+  }
+
+  get kmlLineString() {
+    const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+    const niceDate = new Date(walk.features[0].properties.date)
+      .toLocaleString('en-US', fmt)
+    const last = walk.features[0].geometry.coordinates.length - 1
+    kml = 
+`<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"
+  xmlns:atom="http://www.w3.org/2005/Atom">
+  <Document>
+    <atom:author>
+      <atom:name>Matthew Duffy</atom:name>
+    </atom:author>
+    <atom:link href="http://walk.genevalakepiers.com" />
+    <open>1</open>
+    <Style id="myWalkStyle">
+      <LineStyle id="walk">
+        <color>ffD94F32</color>
+        <colorMode>normal</colorMode>
+        <width>5.0</width>
+      </LineStyle>
+    </Style>
+    <Style id="grn-pushpin">
+      <IconStyle id="mygrnpushpin">
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+          <scale>1.0</scale>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Style id="ylw-pushpin">
+      <IconStyle id="myylwpushpin">
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+          <scale>1.0</scale>
+        </Icon>
+      </IconStyle>
+    </Style>
+    <Placemark>
+      <name>${walk.features[0].properties.name} walk</name>
+      <styleUrl>#myWalkStyle</styleUrl> 
+      <visibility>1</visibility>
+      <description><![CDATA[
+        <h3>${walk.features[0].properties.name}</h3>
+        <h4>${walk.features[0].properties.location}</h4>
+        <h4>${niceDate}</h4>
+        <p>Duration ${new Date(walk.features[0].properties.duration)
+            .toISOString().slice(11, 19)}</p> 
+        <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>
+      ]]></description>
+      <LookAt>
+        <longitude>${walk.features[0].geometry.coordinates[0][0]}</longitude>
+        <latitude>${walk.features[0].geometry.coordinates[0][1]}</latitude>
+        <altitude>100</altitude>
+        <heading>0</heading>
+        <tilt>0</tilt>
+        <range>1000.</range>
+      </LookAt>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          ${walk.features[0].geometry.coordinates.map((c) => {
+            return c[0] + ',' + c[1] + ',0'
+          }).join('\n')}
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Start</name>
+      <description><![CDATA[
+        <p>Start time: ${new Date(walk.features[0].properties.startTime)
+        .toISOString().slice(11, 19)}</p>
+        <p>Start location: ${walk.features[0].geometry.coordinates[0][0]},${walk.features[0].geometry.coordinates[0][1]}</p>
+        ]]>
+      </description>
+      <Style id="grn-pushpin">
+        <IconStyle id="mygrnpushpin">
+          <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+            <scale>1.0</scale>
+          </Icon>
+        </IconStyle>
+      </Style>
+      <Point>
+        <coordinates>
+          ${walk.features[0].geometry.coordinates[0][0]},${walk.features[0].geometry.coordinates[0][1]},0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Finish</name>
+      <description><![CDATA[
+        <p>Finish time: ${new Date(walk.features[0].properties.endTime)
+        .toISOString().slice(11, 19)}</p>
+        <p>Finish location: ${walk.features[0].geometry.coordinates[last][0]},${walk.features[0].geometry.coordinates[last][1]}</p>
+        ]]></description>
+      <Style id="ylw-pushpin">
+        <IconStyle id="myylwpushpin">
+          <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+            <scale>1.0</scale>
+          </Icon>
+        </IconStyle>
+      </Style>
+      <Point>
+        <coordinates>
+          ${walk.features[0].geometry.coordinates[last][0]},${walk.features[0].geometry.coordinates[last][1]},0
+        </coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>
+`
   }
 
   get() {
