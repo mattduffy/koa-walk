@@ -299,7 +299,6 @@ async function exportKML(credentials) {
     <Style id="myWalkStyle">
       <LineStyle id="walk">
         <color>ffD94F32</color>
-        <colorMode>normal</colorMode>
         <width>5.0</width>
       </LineStyle>
     </Style>
@@ -353,7 +352,11 @@ async function exportKML(credentials) {
       <description><![CDATA[
         <p>Start time: ${new Date(walk.features[0].properties.startTime)
         .toISOString().slice(11, 19)}</p>
-        <p>Start location: ${walk.features[0].geometry.coordinates[0][0]},${walk.features[0].geometry.coordinates[0][1]}</p>
+        <p>
+          Start location:<br>
+          longitude ${walk.features[0].geometry.coordinates[0][0]}<br>
+          latitude  ${walk.features[0].geometry.coordinates[0][1]}
+        </p>
         ]]>
       </description>
       <Style id="grn-pushpin">
@@ -375,7 +378,11 @@ async function exportKML(credentials) {
       <description><![CDATA[
         <p>Finish time: ${new Date(walk.features[0].properties.endTime)
         .toISOString().slice(11, 19)}</p>
-        <p>Finish location: ${walk.features[0].geometry.coordinates[last][0]},${walk.features[0].geometry.coordinates[last][1]}</p>
+        <p>
+          Finish location: <br>
+          longitude ${walk.features[0].geometry.coordinates[last][0]}<br>
+          latitude  ${walk.features[0].geometry.coordinates[last][1]}
+        </p>
         ]]></description>
       <Style id="ylw-pushpin">
         <IconStyle id="myylwpushpin">
@@ -652,7 +659,7 @@ function startWalk(s) {
 function setWayPoint(w) {
   walkState.addPoint(w.wp, w.u)
   walkState.c = w.c
-  walkState.printPoints()
+  // walkState.printPoints()
 }
 
 function endWalk(e) {
