@@ -282,12 +282,96 @@ async function exportKML(credentials) {
       walk = { status: 'failed', msg: 'failed to retrieve walk from db', e }
     }
   }
+  if (walk.features[0].properties?.timestamps) {
+    kml = kmlTrack(walk)
+  } else {
+    kml = kmlLineString(walk)
+  }
+  console.log('kml', kml)
+  const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+  const niceDate = new Date(walk.features[0].properties.date)
+    .toLocaleString('en-US', fmt)
+  let _name = `${walk.features[0].properties.name} ${niceDate}`
+  _name = _name.replace(/ /g, '-').replace(/,/g, '')
+  return { kml, filename:`${_name}.kml`, newCsrfToken }
+}
+
+function kmlTrack(walk) {
   const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
   const niceDate = new Date(walk.features[0].properties.date)
     .toLocaleString('en-US', fmt)
   const last = walk.features[0].geometry.coordinates.length - 1
-  kml = 
-`<?xml version="1.0" encoding="UTF-8"?>
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"
+  xmlns:gx="http://www.google.com/kml/ext/2.2"
+  xmlns:atom="http://www.w3.org/2005/Atom">
+  <Document>
+    <atom:author>
+      <atom:name>Matthew Duffy</atom:name>
+    </atom:author>
+    <atom:link href="http://walk.genevalakepiers.com" />
+    <open>1</open>
+    <name>${walk.features[0].properties.name} walk</name>
+    <visibility>1</visibility>
+    <description>
+      <![CDATA[<h3>${walk.features[0].properties.name}</h3>
+      <h4>${walk.features[0].properties.location}</h4>
+      <h4>${niceDate}</h4>
+      <p>Duration ${new Date(walk.features[0].properties.duration)
+          .toISOString().slice(11, 19)}</p> 
+      <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>]]>
+    </description>
+    <LookAt>
+      <gx:TimeSpan>
+        <begin>${new Date(walk.features[0].properties.startTime).toISOString()}</begin>
+        <end>${new Date(walk.features[0].properties.endTime).toISOString()}</end>
+      </gx:TimeSpan>
+      <longitude>${walk.features[0].geometry.coordinates[0].longitude}</longitude>
+      <latitude>${walk.features[0].geometry.coordinates[0].latitude}</latitude>
+      <range>1300.000000</range> 
+    </LookAt> 
+    <Style id="check-hide-children">
+      <ListStyle>
+        <listItemType>checkHideChildren</listItemType>
+      </ListStyle>
+    </Style>
+    <styleUrl>#check-hide-children</styleUrl>
+    <Style id="lineStyle">
+      <LineStyle>
+        <color>ffD94F32</color>
+        <width>6</width>
+      </LineStyle>
+    </Style>
+    <Folder>
+      <name>Track</name>
+      <Placemark> 
+        <name>${new Date(walk.features[0].properties.date).toISOString()}</name>
+        <gx:Track id="theWalk">
+          <altitudeMode>clampToGround</altitudeMode>
+          ${walk.features[0].properties.timestamps.map((t) => {
+            return '<when>' + new Date(t).toISOString() + '</when>'
+          }).join('\n')}
+          ${walk.features[0].geometry.coordinates.map((w) => {
+            return '<gx:coord>'
+              + w.longitude
+              + w.latitude
+              + '0'
+              + '</gx:coord>'
+          }).join('\n')}
+        </gx:Track> 
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>
+`}
+
+function kmlLineString(walk) {
+  console.log('kmlLineString(walk)', walk)
+  const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+  const niceDate = new Date(walk.features[0].properties.date)
+    .toLocaleString('en-US', fmt)
+  const last = walk.features[0].geometry.coordinates.length - 1
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
   xmlns:atom="http://www.w3.org/2005/Atom">
   <Document>
@@ -401,14 +485,8 @@ async function exportKML(credentials) {
   </Document>
 </kml>
 `
-  let _name = `${walk.features[0].properties.name} ${niceDate}`
-  console.log('filename', _name)
-  _name = _name.replace(/ /g, '-')
-  console.log('filename', _name)
-  _name = _name.replace(/,/g, '')
-  console.log('filename', _name)
-  return { kml, filename:`${_name}.kml`, newCsrfToken }
 }
+
 async function showWalk(credentials) {
   console.log('woker::showWalk(credentials)', credentials)
   let response
