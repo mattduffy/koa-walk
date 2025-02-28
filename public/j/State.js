@@ -212,6 +212,7 @@ class State extends Subject {
             startPosition: this.state.startPosition,
             endPosition: this.state.endPosition,
             distance: this.state.distance,
+            timestamps: this.state.wayPoints.map((w) => w.timestamp),
           },
           geometry: {
             type: 'LineString',
