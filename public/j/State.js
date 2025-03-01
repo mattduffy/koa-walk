@@ -281,8 +281,8 @@ class State extends Subject {
           }).join('\n')}
           ${this.state.wayPoints.map((w) => {
             return '<gx:coord>'
-              + w.longitude
-              + w.latitude
+              + w[0] + ' '
+              + w[1] + ' '
               + '0'
               + '</gx:coord>'
           }).join('\n')}

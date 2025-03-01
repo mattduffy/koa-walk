@@ -353,8 +353,8 @@ function kmlTrack(walk) {
           }).join('\n')}
           ${walk.features[0].geometry.coordinates.map((w) => {
             return '<gx:coord>'
-              + w.longitude
-              + w.latitude
+              + w[0] + ' '
+              + w[1] + ' '
               + '0'
               + '</gx:coord>'
           }).join('\n')}
