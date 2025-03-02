@@ -239,56 +239,123 @@ class State extends Subject {
     </atom:author>
     <atom:link href="http://walk.genevalakepiers.com" />
     <open>1</open>
-    <name>${this.state.name} walk</name>
+    <name>${this.state.name} ${shortDate}</name>
     <visibility>1</visibility>
     <description>
-      <![CDATA[<h3>${this.state.name}</h3>
-      <h4>${this.state.location}</h4>
-      <h4>${niceDate}</h4>
+      <![CDATA[
+      <p>${this.state.name}</p>
+      <p>${this.state.location}</p>
+      <p>${niceDate}</h4>
       <p>Duration ${new Date(this.state.duration)
           .toISOString().slice(11, 19)}</p> 
-      <p>Distance ${this.state.distance.toFixed(1)} meters</p>]]>
+      <p>Distance ${this.state.distance.toFixed(1)} meters</p>
+      ]]>
     </description>
     <LookAt>
       <gx:TimeSpan>
         <begin>${new Date(this.state.startTime).toISOString()}</begin>
         <end>${new Date(this.state.endTime).toISOString()}</end>
       </gx:TimeSpan>
-      <longitude>${this.state.wayPoints[0].longitude}</longitude>
-      <latitude>${this.state.wayPoints[0].latitude}</latitude>
+      <longitude>${this.state.geometry.coordinates[0][0]}</longitude>
+      <latitude>${this.state.geometry.coordinates[0][1]}</latitude>
       <range>1300.000000</range> 
     </LookAt> 
     <Style id="check-hide-children">
       <ListStyle>
-        <listItemType>checkHideChildren</listItemType>
+        <listItemType>check</listItemType>
       </ListStyle>
     </Style>
     <styleUrl>#check-hide-children</styleUrl>
-    <Style id="lineStyle">
+    <Style id="myWalkStyle">
       <LineStyle>
         <color>ffD94F32</color>
         <width>6</width>
       </LineStyle>
+      <IconStyle>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/dir_0.png</href>
+          <scale>1.0</scale>
+        </Icon>
+      </IconStyle>
     </Style>
-    <Folder>
-      <name>Track</name>
-      <Placemark> 
-        <name>${new Date(this.state.date).toISOString()}</name>
-        <gx:Track id="theWalk">
-          <altitudeMode>clampToGround</altitudeMode>
-          ${this.state.wayPoints.map((w) => {
-            return '<when>' + new Date(w.timestamp).toISOString() + '</when>'
-          }).join('\n')}
-          ${this.state.wayPoints.map((w) => {
-            return '<gx:coord>'
-              + w[0] + ' '
-              + w[1] + ' '
-              + '0'
-              + '</gx:coord>'
-          }).join('\n')}
-        </gx:Track> 
-      </Placemark>
-    </Folder>
+    <Placemark>
+      <name>Start</name>
+      <Style id="grn-pushpin">
+        <IconStyle>
+          <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+            <scale>1.0</scale>
+          </Icon>
+        </IconStyle>
+      </Style>
+      <styleUrl>#grn-pushpin</styleUrl>
+      <description><![CDATA[
+        <p>Start time: ${new Date(this.state.startTime)
+        .toISOString().slice(11, 19)}</p>
+        <p>
+          Start location:<br>
+          longitude ${this.state.wayPoints[0].longitude}<br>
+          latitude  ${this.state.wayPoints[0].latitude}
+        </p>
+        ]]>
+      </description>
+      <Point>
+        <coordinates>
+          ${this.state.wayPoints[0].longitude},${this.state.wayPoints[0].latitude},0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Finish</name>
+      <Style id="ylw-pushpin">
+        <IconStyle>
+          <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+            <scale>1.0</scale>
+          </Icon>
+        </IconStyle>
+      </Style>
+      <styleUrl>#ylw-pushpin</styleUrl>
+      <description>
+        <![CDATA[<p>Finish time: ${new Date(this.state.endTime)
+        .toISOString().slice(11, 19)}</p>
+        <p>
+          Finish location: <br>
+          longitude ${this.state.wayPoints[last].longitude}<br>
+          latitude  ${this.state.wayPoints[last].latitude}
+        </p>]]>
+      </description>
+      <Point>
+        <coordinates>
+          ${this.state.wayPoints[last].longitude},${this.state.wayPoints[last].latitude},0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark> 
+      <styleUrl>#myWalkStyle</styleUrl> 
+      <name>walk route</name>
+      <description>
+        <![CDATA[<p>${walk.features[0].properties.name}</p>
+        <p>${walk.features[0].properties.location}</p>
+        <p>${niceDate}</p>
+        <p>Duration ${new Date(walk.features[0].properties.duration)
+            .toISOString().slice(11, 19)}</p> 
+        <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>]]>
+      </description>
+      <gx:Track id="theWalk">
+        <altitudeMode>clampToGround</altitudeMode>
+        ${this.state.wayPoints.map((w) => {
+          return '<when>' + new Date(w.timestamp).toISOString() + '</when>'
+        }).join('\n')}
+        ${this.state.wayPoints.map((w) => {
+          return '<gx:coord>'
+            + w[0] + ' '
+            + w[1] + ' '
+            + '0'
+            + '</gx:coord>'
+        }).join('\n')}
+      </gx:Track> 
+    </Placemark>
   </Document>
 </kml>
 `

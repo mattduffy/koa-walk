@@ -300,6 +300,8 @@ function kmlTrack(walk) {
   const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
   const niceDate = new Date(walk.features[0].properties.date)
     .toLocaleString('en-US', fmt)
+  const shortDate = new Date(walk.features[0].properties.date)
+    .toLocaleString('en-US', {year: 'numeric', month: '2-digit', day: 'numeric'})
   const last = walk.features[0].geometry.coordinates.length - 1
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
@@ -311,56 +313,123 @@ function kmlTrack(walk) {
     </atom:author>
     <atom:link href="http://walk.genevalakepiers.com" />
     <open>1</open>
-    <name>${walk.features[0].properties.name} walk</name>
+    <name>${walk.features[0].properties.name} ${shortDate}</name>
     <visibility>1</visibility>
     <description>
-      <![CDATA[<h3>${walk.features[0].properties.name}</h3>
-      <h4>${walk.features[0].properties.location}</h4>
-      <h4>${niceDate}</h4>
+      <![CDATA[
+      <p>${walk.features[0].properties.name}</p>
+      <p>${walk.features[0].properties.location}</p>
+      <p>${niceDate}</p>
       <p>Duration ${new Date(walk.features[0].properties.duration)
           .toISOString().slice(11, 19)}</p> 
-      <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>]]>
+      <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>
+      ]]>
     </description>
     <LookAt>
       <gx:TimeSpan>
         <begin>${new Date(walk.features[0].properties.startTime).toISOString()}</begin>
         <end>${new Date(walk.features[0].properties.endTime).toISOString()}</end>
       </gx:TimeSpan>
-      <longitude>${walk.features[0].geometry.coordinates[0].longitude}</longitude>
-      <latitude>${walk.features[0].geometry.coordinates[0].latitude}</latitude>
+      <longitude>${walk.features[0].geometry.coordinates[0][0]}</longitude>
+      <latitude>${walk.features[0].geometry.coordinates[0][1]}</latitude>
       <range>1300.000000</range> 
     </LookAt> 
     <Style id="check-hide-children">
       <ListStyle>
-        <listItemType>checkHideChildren</listItemType>
+        <listItemType>check</listItemType>
       </ListStyle>
     </Style>
     <styleUrl>#check-hide-children</styleUrl>
-    <Style id="lineStyle">
+    <Style id="myWalkStyle">
       <LineStyle>
         <color>ffD94F32</color>
         <width>6</width>
       </LineStyle>
+      <IconStyle>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/dir_0.png</href>
+          <scale>1.0</scale>
+        </Icon>
+      </IconStyle>
     </Style>
-    <Folder>
-      <name>Track</name>
-      <Placemark> 
-        <name>${new Date(walk.features[0].properties.date).toISOString()}</name>
-        <gx:Track id="theWalk">
-          <altitudeMode>clampToGround</altitudeMode>
-          ${walk.features[0].properties.timestamps.map((t) => {
-            return '<when>' + new Date(t).toISOString() + '</when>'
-          }).join('\n')}
-          ${walk.features[0].geometry.coordinates.map((w) => {
-            return '<gx:coord>'
-              + w[0] + ' '
-              + w[1] + ' '
-              + '0'
-              + '</gx:coord>'
-          }).join('\n')}
-        </gx:Track> 
-      </Placemark>
-    </Folder>
+    <Placemark>
+      <name>Start</name>
+      <Style id="grn-pushpin">
+        <IconStyle>
+          <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+            <scale>1.0</scale>
+          </Icon>
+        </IconStyle>
+      </Style>
+      <styleUrl>#grn-pushpin</styleUrl>
+      <description><![CDATA[
+        <p>Start time: ${new Date(walk.features[0].properties.startTime)
+        .toISOString().slice(11, 19)}</p>
+        <p>
+          Start location:<br>
+          longitude ${walk.features[0].geometry.coordinates[0][0]}<br>
+          latitude  ${walk.features[0].geometry.coordinates[0][1]}
+        </p>
+        ]]>
+      </description>
+      <Point>
+        <coordinates>
+          ${walk.features[0].geometry.coordinates[0][0]},${walk.features[0].geometry.coordinates[0][1]},0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Finish</name>
+      <Style id="ylw-pushpin">
+        <IconStyle>
+          <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+            <scale>1.0</scale>
+          </Icon>
+        </IconStyle>
+      </Style>
+      <styleUrl>#ylw-pushpin</styleUrl>
+      <description>
+        <![CDATA[<p>Finish time: ${new Date(walk.features[0].properties.endTime)
+        .toISOString().slice(11, 19)}</p>
+        <p>
+          Finish location: <br>
+          longitude ${walk.features[0].geometry.coordinates[last][0]}<br>
+          latitude  ${walk.features[0].geometry.coordinates[last][1]}
+        </p>]]>
+      </description>
+      <Point>
+        <coordinates>
+          ${walk.features[0].geometry.coordinates[last][0]},${walk.features[0].geometry.coordinates[last][1]},0
+        </coordinates>
+      </Point>
+    </Placemark>
+    <Placemark> 
+      <styleUrl>#myWalkStyle</styleUrl> 
+      <name>walk route</name>
+      <description>
+      <![CDATA[<p>${walk.features[0].properties.name}</p>
+      <p>${walk.features[0].properties.location}</p>
+      <p>${niceDate}</p>
+      <p>Duration ${new Date(walk.features[0].properties.duration)
+          .toISOString().slice(11, 19)}</p> 
+      <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>]]>
+    </description>
+    <gx:Track id="theWalk">
+        <altitudeMode>clampToGround</altitudeMode>
+        ${walk.features[0].properties.timestamps.map((t) => {
+          return '<when>' + new Date(t).toISOString() + '</when>'
+        }).join('\n')}
+        ${walk.features[0].geometry.coordinates.map((w) => {
+          return '<gx:coord>'
+            + w[0] + ' '
+            + w[1] + ' '
+            + '0'
+            + '</gx:coord>'
+        }).join('\n')}
+      </gx:Track> 
+    </Placemark>
   </Document>
 </kml>
 `}
@@ -370,9 +439,12 @@ function kmlLineString(walk) {
   const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
   const niceDate = new Date(walk.features[0].properties.date)
     .toLocaleString('en-US', fmt)
+  const shortDate = new Date(walk.features[0].properties.date)
+    .toLocaleString('en-US', {year: 'numeric', month: '2-digit', day: 'numeric'})
   const last = walk.features[0].geometry.coordinates.length - 1
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
+  xmlns:gx="http://www.google.com/kml/ext/2.2"
   xmlns:atom="http://www.w3.org/2005/Atom">
   <Document>
     <atom:author>
@@ -380,6 +452,7 @@ function kmlLineString(walk) {
     </atom:author>
     <atom:link href="http://walk.genevalakepiers.com" />
     <open>1</open>
+    <visibility>1</visibility>
     <Style id="myWalkStyle">
       <LineStyle id="walk">
         <color>ffD94F32</color>
@@ -403,17 +476,16 @@ function kmlLineString(walk) {
       </IconStyle>
     </Style>
     <Placemark>
-      <name>${walk.features[0].properties.name} walk</name>
+      <name>${walk.features[0].properties.name} ${shortDate}</name>
       <styleUrl>#myWalkStyle</styleUrl> 
-      <visibility>1</visibility>
-      <description><![CDATA[
-        <h3>${walk.features[0].properties.name}</h3>
+      <description>
+        <![CDATA[<h3>${walk.features[0].properties.name}</h3>
         <h4>${walk.features[0].properties.location}</h4>
         <h4>${niceDate}</h4>
         <p>Duration ${new Date(walk.features[0].properties.duration)
             .toISOString().slice(11, 19)}</p> 
-        <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>
-      ]]></description>
+        <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>]]>
+      </description>
       <LookAt>
         <longitude>${walk.features[0].geometry.coordinates[0][0]}</longitude>
         <latitude>${walk.features[0].geometry.coordinates[0][1]}</latitude>
