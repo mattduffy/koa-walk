@@ -853,6 +853,10 @@
         noAuthP.textContent = 'Login to see cloud saved walks.' 
         REMOTEDIV.appendChild(noAuthP)
       } else if (remoteWalks.children.length !== remoteList.length) {
+        const noWalks = REMOTEDIV.children.namedItem('noWalks')
+        if (noWalks) {
+          noWalks.remove()
+        }
         const replaceLis = []
         remoteList.forEach((w) => {
           // console.log(w)
@@ -876,6 +880,10 @@
       // console.log('localList.length', localList.length)
       if (localList.length === 0) {
         const noLocalWalks = document.querySelector('p#noLocalWalks') ?? (() => {
+          const removeLocalWalks = LOCALDIV.children.namedItem('local-walks')
+          if (removeLocalWalks) {
+            removeLocalWalks.remove()
+          }
           const p = document.createElement('p')
           p.textContent = 'No walks saved to this device.'
           p.id = 'noLocalWalks'  
@@ -891,6 +899,10 @@
           // console.log(ul)
           return LOCALDIV.children.namedItem('local-walks')
         })()
+        const noLocalWalks = LOCALDIV.children.namedItem('noLocalWalks')
+        if (noLocalWalks) {
+          noLocalWalks.remove()
+        }
         if (localWalks.children.length !== localList.length) {
           const replaceLis = []
           localList.forEach((w) => {
@@ -943,13 +955,14 @@
         if (noAuth) {
           noAuth.style.display = 'none'
         }
-        if (LISTDIV.children.namedItem('noWalks')) {
+        // if (LISTDIV.children.namedItem('noWalks')) {
+        if (REMOTEDIV.children.namedItem('noWalks')) {
           console.log('already displayed no walks')
         } else {
           const noWalks = document.createElement('p')
           noWalks.textContent = 'No saved walks.'
           noWalks.id = 'noWalks'
-          LISTDIV.children.namedItem('remote').children.appendChild(noWalks)
+          LISTDIV.children.namedItem('remote').appendChild(noWalks)
         }
       } else {
         console.log(`e.auth = ${e.auth} && `
