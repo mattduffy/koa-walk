@@ -13,10 +13,13 @@ export function pointDistance(p1, p2, u = 'metric') {
     r = earthRadiusMeters
   } else if (_u === 'km') {
     r = earthRadiusKm
-  } else if (_u === 'miles' || _u === 'mi') {
+  } else if (_u === 'miles' || _u === 'mi' || _u === 'imperial') {
     r = earthRadiusMi
+  } else {
+    r = earthRadiusMeters
+    console.log('No units given, default to earth radius in meters')
   }
-  console.log('using earth radius: ', r)
+  console.log(`Heading::pointDistance() using earth radius: ${r} ${_u}`)
   const dLat = rads(p2.latitude - p1.latitude)
   const dLon = rads(p2.longitude - p1.longitude)
   const lat1 = rads(p1.latitude)
