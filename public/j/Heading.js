@@ -2,6 +2,13 @@ function rads(degrees) {
   return degrees * (Math.PI / 180)
 }
 
+function degs(radians) {
+  console.log('radians:', radians)
+  const deg = radians * (180 / Math.PI)
+  console.log('degrees', deg)
+  return deg 
+}
+
 export function pointDistance(p1, p2, u = 'metric') {
   console.log('pointDistances(p1, p2, u): ', p1, p2, u)
   const earthRadiusKm = 6371
@@ -30,6 +37,32 @@ export function pointDistance(p1, p2, u = 'metric') {
   return r * c
 }
 
-export function heading(p1, p2) {
-  console.log(`calculating current heading from two points: ${p1} and ${p2}`)
+export function heading(p1, p2, l = false) {
+  console.log('calculating current heading from two points:', p1, p2)
+  // L = longitude
+  // θ = latitude
+  // β = Bearing
+  const A = p1
+  const B = p2
+  const deltaLongitude = Math.max(
+    Math.abs(A.longitude), Math.abs(B.longitude))
+    - Math.min(Math.abs(A.longitude), Math.abs(B.longitude));
+  if (l) console.log('deltaLongitude:', deltaLongitude)
+  const deltaLatitude = Math.max(
+    Math.abs(A.latitude),
+    Math.abs(B.latitude)) - Math.min(
+    Math.abs(A.latitude),
+    Math.abs(B.latitude))
+  if (l) console.log('deltaLatitude:', deltaLatitude)
+  const X = Math.cos(rads(B.latitude)) * Math.sin(rads(deltaLongitude))
+  if (l) console.log(`X = ${X} = Math.cos(${rads(B.latitude)}) * Math.sin(${rads(deltaLongitude)})`)
+  const Y = (Math.cos(rads(A.latitude)) * Math.sin(rads(B.latitude)))
+     - (Math.sin(rads(A.latitude)) * Math.cos(rads(B.latitude)) * Math.cos(rads(deltaLongitude)))
+  if (l) console.log(`Y = ${Y} = (Math.cos(${rads(A.latitude)} * Math.sin(${rads(B.latitude)}))`
+    + `- (Math.sin(${rads(A.latitude)}) * Math.cos(${rads(B.latitude)}) * Math.cos(${rads(deltaLongitude)}))`)
+  if (l) console.log(`Y = ${Y} = (${Math.cos(rads(A.latitude))} * ${Math.sin(rads(B.latitude))})`
+    + `- (${Math.sin(rads(A.latitude))} * ${Math.cos(rads(B.latitude))} * ${Math.cos(rads(deltaLongitude))})`)
+  const β = Math.atan2(X, Y)
+  if (l) console.log(`${β} = Math.atan2(${X}, ${Y})`)
+  return Math.round(degs(β) * 10) / 10
 }
