@@ -1,5 +1,5 @@
 import Subject from './Subject.js'
-import { pointDistance } from './Heading.js'
+import { pointDistance, heading } from './Heading.js'
 
 function normalizePosition(c) {
   console.log('normalizePosition(c): ', c)
@@ -178,6 +178,7 @@ class State extends Subject {
     if (this.state.wayPoints.length > 0) {
       prev = this.state.wayPoints[this.state.wayPoints.length - 1]
       point.distance = pointDistance(prev, point, u)
+      point.heading = heading(prev, point)
     } else {
       point.distance = 0
     }
@@ -193,6 +194,10 @@ class State extends Subject {
 
   printPoints() {
     console.dir(this.state.wayPoints)
+  }
+
+  get lastHeading() {
+    return this.state.wayPoints[this.state.wayPoints.length - 1].heading
   }
 
   get geojson() {
