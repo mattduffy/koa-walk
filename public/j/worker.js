@@ -50,8 +50,12 @@ async function setPref(credentials) {
   let json
   const formData = new FormData()
   formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
-  formData.append('units', credentials.units)
-  // formData.append('userId', user.userId)
+  if (credentials?.units) {
+    formData.append('units', credentials.units)
+  }
+  if (credentials?.orientation) {
+    formData.append('orientation', credentials.orientation)
+  }// formData.append('userId', user.userId)
   const opts = {
     method: 'POST',
     headeers: {
@@ -66,7 +70,11 @@ async function setPref(credentials) {
     response = await fetch(request)
     console.log(response)
     json = await response.json()
-    json.newUnits = credentials.units
+    if (credentials?.units) {
+      json.newUnits = credentials.units
+    } else if (credentials?.orientation) {
+      json.newOrientation = credentials.orientation
+    }
     console.log('setPref response: ', json)
   } catch (e) {
     console.error(e)
