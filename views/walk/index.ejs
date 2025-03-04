@@ -23,9 +23,14 @@
             <legend>Preferences</legend>
             Distance Units:
             <br>
-            <label>Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (units === 'Metric') ? 'checked' : '' %> tabindex="0"></label>
+            <label>Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (preferences.units === 'Metric') ? 'checked' : '' %> tabindex="0"></label>
             <br>
-            <label>Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (units === 'Imperial') ? 'checked' : '' %> tabindex="0"></label>
+            <label>Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (preferences.units === 'Imperial') ? 'checked' : '' %> tabindex="0"></label>
+            Map Orientation:
+            <br>
+            <label>North Up<input id="northUpId" name="orientation" type="radio" value="northUp"<%= (preferences?.orientation === 'northUp') ? 'checked' : '' %> tabindex="0"></label>
+            <br>
+            <label>Heading Up<input id="headingUpId" name="orientation" type="radio" value="headingUp" <%= (preferences?.orientation === 'headingUp') ? 'checked' : '' %> tabindex="0"></label>
           </fieldset>
         </form>
         <a id="logout" href="/logout">Log out</a>
@@ -96,10 +101,11 @@
 </script>
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
-  const DEBUG = new URLSearchParams(window.location.search).get('debug') || false
+  const DEBUG = new URLSearchParams(window.location.search).get('debug') ?? false
   console.log(`DEBUG === ${DEBUG}`)
   let HEADING = 0
-  let DISPLAY_UNITS = <%- (units !== false) ? `\'${units}\'` : false %> || 'Metric'
+  let DISPLAY_UNITS = <%- (preferences?.units) ? `\'${preferences.units}\'` : false %> ?? 'Metric'
+  let DISPLAY_ORIENTATION = <%- (preferences?.orientation) ? `\'${preferences.orientation}\'` : false %> ?? 'northUp'
   const identifier = 'my_walk'
   const origin = '<%= origin %>'
   const jwtAccess = '<%= searchJwtAccess %>'
@@ -167,13 +173,19 @@
     credentials.csrfTokenHidden = window.csrfToken
     credentials.jwtAccess = jwtAccess
     credentials.TASK = 'SET_PREF'
-    credentials.units = e.target.value
+    // credentials.units = e.target.value
+    credentials[e.target.name] = e.target.value
     console.log(credentials)
     function finish(e) {
       console.log(e)
       if (e.TASK === 'SET_PREF' && e.status === 'ok') {
-        DISPLAY_UNITS = e.newUnits
-        window._map.distances = mapkit.Map.Distances[DISPLAY_UNITS]
+        if (e?.newUnits) {
+          DISPLAY_UNITS = e.newUnits
+          window._map.distances = mapkit.Map.Distances[DISPLAY_UNITS]
+        } else if (e?.newOrientation) {
+          DISPLAY_ORIENTATION = e.newOrientation 
+          console.log('display orientation: ', DISPLAY_ORIENTATION)
+        }
       }
       if (e?.newCsrfToken) {
         window.csrfToken = e.newCsrfToken
@@ -398,8 +410,7 @@
         let li = document.createElement('li')
         li.textContent = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
           + `${evtCoords.longitude.toFixed(4)}), `
-          + `acc: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}`
-        // ol.appendChild(li)
+          + `acc: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)} `
         ol.insertBefore(li, ol.firstChild)
       }
     }
@@ -517,6 +528,7 @@
       window.walking.addPoint(wp)
       window.walker.postMessage(step)
       markWalkPointOnMap()
+      updateHeading()
     }
     window.saveWalk = async function(e) {
       e.preventDefault()
@@ -573,6 +585,16 @@
       window._map.removeOverlay(window._map.overlays.find((o) => o.data.name === identifier))
     }
     document.querySelector('button#clearWalk').addEventListener('click', clearWalk)
+    function updateHeading() {
+      if (DISPLAY_ORIENTATION && DISPLAY_ORIENTATION === 'northUp') {
+        console.log('map orientation: North Up')
+      } else {
+        console.log('map orientation: Heading Up')
+        const bearing = window.walking.lastHeading
+        console.log(`updating heading to ${bearing} degrees off North.`)
+        window._map.rotation = bearing
+      }
+    }
     function markWalkPointOnMap() {
       console.log('Mark point on map: ')
       const style = new mapkit.Style({
@@ -598,6 +620,7 @@
       window._map.addOverlay(polyline)
       window._map.showItems(polyline)
     }
+    // Feature detection for worker
     if (window.Worker) {
       console.log('Worker <=> Walker')
       const logged = <%= isAuthenticated %>
@@ -614,6 +637,9 @@
         welcomeDiv.style.display = 'block'
         loginForm.style.display = 'none'
         document.forms['preferences'].elements['units'].forEach((r) => {
+          r.addEventListener('change', updatePreferences)
+        })
+        document.forms['preferences'].elements['orientation'].forEach((r) => {
           r.addEventListener('change', updatePreferences)
         })
       }
