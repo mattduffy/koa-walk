@@ -39,6 +39,9 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   log('sessionUser: ', ctx.state?.sessionUser?.username)
   log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
   log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
+  log('preferences: ', ctx.state?.sessionUser?.preferences)
+  log('preferences.orientation: ', ctx.state?.sessionUser?.preferences?.orientation)
+
   const locals = {
     csrfToken,
     sessionUser: ctx.state.sessionUser,
@@ -46,7 +49,8 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
     flash: ctx.flash?.index ?? {},
     title: `${ctx.app.site}: Walk`,
     isAuthenticated: ctx.state.isAuthenticated ?? false,
-    units: ctx.state.sessionUser?.preferences?.units ?? false,
+    preferences: ctx.state.sessionUser?.preferences ?? false,
+    // units: ctx.state.sessionUser?.preferences?.units ?? false,
   }
   await ctx.render('index', locals)
 })
@@ -105,9 +109,22 @@ router.post('setPref', '/user/preferences/update', addIpToSession, processFormDa
       log('sessionUser: ', ctx.state?.sessionUser?.username)
       log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
       log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
-      const [units] = ctx.request.body.units
-      log(units)
-      ctx.state.sessionUser.preferences = { units }
+      let units
+      if (ctx.request.body?.units) {
+        [units] = ctx.request.body?.units
+      } 
+      let orientation
+      if (ctx.request.body?.orientation) {
+        [orientation] = ctx.request.body?.orientation
+      }
+      log('preference units:       ', units)
+      log('preference orientation: ', orientation)
+      if (units) {
+        ctx.state.sessionUser.preferences.units = units
+      }
+      if (orientation) {
+        ctx.state.sessionUser.preferences.orientation = orientation
+      }
       try {
         const temp = await ctx.state.sessionUser.update()
         log('did user.update() work to update preferences?')
