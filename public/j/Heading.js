@@ -3,9 +3,8 @@ function rads(degrees) {
 }
 
 function degs(radians) {
-  console.log('radians:', radians)
   const deg = radians * (180 / Math.PI)
-  console.log('degrees', deg)
+  console.log(`radians in ${radians} \ndegrees out ${deg}`)
   return deg 
 }
 
