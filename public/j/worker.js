@@ -810,12 +810,12 @@ function startWalk(s) {
   walkState.date = s.date
   walkState.startTime = s.startTime
   walkState.startPosition = s.startPosition
-  walkState.addPoint({ ...s.startPosition, timestamp: walkState.startTime, distance: 0 }, s.u)
+  walkState.addPoint({ ...s.startPosition, timestamp: walkState.startTime, distance: 0 }, s.u, s.verbose)
   walkState.c = s.c
 }
 
 function setWayPoint(w) {
-  walkState.addPoint(w.wp, w.u)
+  walkState.addPoint(w.wp, w.u, w.verbose)
   walkState.c = w.c
   // walkState.printPoints()
 }
@@ -824,7 +824,7 @@ function endWalk(e) {
   console.log('worker::endWalk(e)', e)
   walkState.endTime = e.endPosition.timestamp
   walkState.endPosition = e.endPosition
-  walkState.addPoint(e.endPosition, e.u)
+  walkState.addPoint(e.endPosition, e.u, e.verbose)
   walkState.c = e.c
 }
 
