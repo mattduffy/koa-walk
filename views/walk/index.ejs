@@ -101,11 +101,25 @@
 </script>
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
-  const DEBUG = new URLSearchParams(window.location.search).get('debug') ?? false
+  const qParams = new URLSearchParams(window.location.search)
+  const DEBUG = qParams.get('debug') ?? false
   console.log(`DEBUG === ${DEBUG}`)
   let HEADING = 0
-  let DISPLAY_UNITS = <%- (preferences?.units) ? `\'${preferences.units}\'` : false %> ?? 'Metric'
-  let DISPLAY_ORIENTATION = <%- (preferences?.orientation) ? `\'${preferences.orientation}\'` : false %> ?? 'northUp'
+  let DISPLAY_UNITS
+  let DISPLAY_ORIENTATION
+  let VERBOSE = false
+  if (DEBUG) {
+    VERBOSE = true
+    if (qParams.get('units')) {
+      DISPLAY_UNITS = qParams.get('units')
+    }
+    if (qParams.get('orientation')) {
+      DISPLAY_ORIENTATION = qParams.get('orientation')
+    }
+  } else {
+    DISPLAY_UNITS = <%- (preferences?.units) ? `\'${preferences.units}\'` : false %> || 'Metric'
+    DISPLAY_ORIENTATION = <%- (preferences?.orientation) ? `\'${preferences.orientation}\'` : false %> || 'northUp'
+  }
   const identifier = 'my_walk'
   const origin = '<%= origin %>'
   const jwtAccess = '<%= searchJwtAccess %>'
@@ -408,9 +422,10 @@
       })()
       if (e.detail.coords) {
         let li = document.createElement('li')
-        li.textContent = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
-          + `${evtCoords.longitude.toFixed(4)}), `
-          + `acc: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)} `
+        li.innerHTML = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
+          + `${evtCoords.longitude.toFixed(4)}), <br>`
+          + `accuracy: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}, `
+          + `heading: ${window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading} `
         ol.insertBefore(li, ol.firstChild)
       }
     }
@@ -474,9 +489,10 @@
         startTime: _d,
         u: DISPLAY_UNITS,
         startPosition: window.walking.currentPosition,
+        verbose: VERBOSE,
       }
       console.log('starting walk data:', w)
-      window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d })
+      window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d }, DISPLAY_UNITS, true)
       window.walking.c = c
       window.walker.postMessage(w)
       markWalkPointOnMap()
@@ -489,7 +505,7 @@
         const _dis = document.querySelector('span#distance')
         const reducedDistance = window.walking.totalDistance
         console.log('reducing distances: ', reducedDistance)
-        console.log('display formated redcuced: ', displayUnits(reducedDistance, DISPLAY_UNITS, 1))
+        console.log('display formated reduced: ', displayUnits(reducedDistance, DISPLAY_UNITS, 1))
         _dis.textContent = `${displayUnits(reducedDistance, DISPLAY_UNITS, 1)}`
       }, UPDATE_INTERVAL)
     }
@@ -513,19 +529,19 @@
       clearInterval(window.walking.state.intervalId)
     }
     async function endWalk(end) {
-      window.walking.state.active = false
+      window.walking.active = false
       window.walking.endPosition = end
       window.walking.endTime = end.timestamp
       const c = new mapkit.Coordinate(end.latitude, end.longitude)
-      const finalStep = { TASK: 'STOP_WALK', endPosition: end, c }
-      window.walking.addPoint(end)
+      const finalStep = { TASK: 'STOP_WALK', endPosition: end, c, verbose: VERBOSE }
+      window.walking.addPoint(end, DISPLAY_UNITS, true)
       window.walking.c = c
       window.walker.postMessage(finalStep)
     }
     async function recordWalk(wp, c) {
-      const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS }
+      const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS, verbose: VERBOSE }
       window.walking.c = c
-      window.walking.addPoint(wp)
+      window.walking.addPoint(wp, DISPLAY_UNITS, true)
       window.walker.postMessage(step)
       markWalkPointOnMap()
       updateHeading()
@@ -590,7 +606,8 @@
         console.log('map orientation: North Up')
       } else {
         console.log('map orientation: Heading Up')
-        const bearing = window.walking.lastHeading
+        // const bearing = window.walking.lastHeading
+        const bearing = window.walking.bearing
         console.log(`updating heading to ${bearing} degrees off North.`)
         window._map.rotation = bearing
       }
