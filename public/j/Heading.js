@@ -37,7 +37,7 @@ export function pointDistance(p1, p2, u = 'metric') {
 }
 
 export function heading(p1, p2, l = false) {
-  console.log('calculating current heading from two points:', p1, p2)
+  console.log('calculating current heading from two points:', p1, p2, l)
   // L = longitude
   // θ = latitude
   // β = Bearing

@@ -32,6 +32,7 @@ class State extends Subject {
       c: [],
       duration: null,
       distance: null,
+      headings: [],
     }
   }
 
@@ -171,16 +172,17 @@ class State extends Subject {
     this.state.c.push(p)
   }
 
-  addPoint(p, u = 'metric') {
-    console.log('State::addPoint(p, u): ', p, u)
+  addPoint(p, u = 'metric', verbose = false) {
+    console.log('State::addPoint(p, u, verbose): ', p, u, verbose)
     const point = p
     let prev
     if (this.state.wayPoints.length > 0) {
       prev = this.state.wayPoints[this.state.wayPoints.length - 1]
       point.distance = pointDistance(prev, point, u)
-      point.heading = heading(prev, point)
+      point.heading = heading(prev, point, verbose)
     } else {
       point.distance = 0
+      point.heading = 0.0
     }
     console.log('point distance:', point.distance)
     if (!this.state.distance) {
@@ -194,6 +196,28 @@ class State extends Subject {
 
   printPoints() {
     console.dir(this.state.wayPoints)
+  }
+
+  get bearing() {
+    if (this.state.wayPoints.length < 2) {
+      return 0.0
+    }
+    const l = this.state.wayPoints.length - 1
+    const p1 = this.state.wayPoints[l - 1]
+    const p2 = this.state.wayPoints[l]
+    console.log('State::bearing using p1, p2', p1, p2)
+    let bearing
+    if (p1.heading <= p2.heading) {
+      console.log(`p1.heading (${p1.heading} <= p2.heading ${p2.heading}`)
+      bearing = (p1.heading + p2.heading) % 360
+      console.log(`(p1.heading (${p1.heading} + p2.heading ${p2.heading}) % 360 = bearing ${bearing}`)
+    } else {
+      console.log(`p1.heading (${p1.heading} > p2.heading ${p2.heading}`)
+      bearing = (p1.heading - p2.heading) % 360
+      console.log(`(p1.heading $(p1.heading} - p2.heading ${p2.heading}) % 360 = bearing ${bearing}`)
+    }
+    this.state.headings.push(bearing)
+    return bearing
   }
 
   get lastHeading() {
@@ -221,7 +245,12 @@ class State extends Subject {
           },
           geometry: {
             type: 'LineString',
-            coordinates: this.state.wayPoints.map((w) => [w.longitude, w.latitude]),
+            coordinates: this.state.wayPoints.map((w) => [
+              w.longitude,
+              w.latitude,
+              0,                // placeholder for altitude
+              w.heading ?? 0.0, // property unsanctioned by geojson spec
+            ]),
           },
         },
       ],
