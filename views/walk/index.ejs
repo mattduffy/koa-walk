@@ -102,24 +102,30 @@
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
   const qParams = new URLSearchParams(window.location.search)
-  const DEBUG = qParams.get('debug') ?? false
-  console.log(`DEBUG === ${DEBUG}`)
+  const DEBUG_LEVEL = qParams.get('debug') ?? 'quiet'
+  const { log, info, warn, error } = await import(`./j/Logger.js?level=${DEBUG_LEVEL}`)
+  info('query string level', DEBUG_LEVEL)
+  info(`DEBUG LEVEL === ${DEBUG_LEVEL}`)
   let HEADING = 0
   let DISPLAY_UNITS
   let DISPLAY_ORIENTATION
   let VERBOSE = false
-  if (DEBUG) {
+  let DEBUG = false
+  DISPLAY_UNITS = <%- (preferences?.units) ? `\'${preferences.units}\'` : false %> || 'Metric'
+  DISPLAY_ORIENTATION = <%- (preferences?.orientation) ? `\'${preferences.orientation}\'` : false %> || 'northUp'
+  if (DEBUG_LEVEL && DEBUG_LEVEL !== 'quiet') {
+    console.log(DEBUG_LEVEL)
     VERBOSE = true
+    DEBUG = true
     if (qParams.get('units')) {
       DISPLAY_UNITS = qParams.get('units')
     }
     if (qParams.get('orientation')) {
       DISPLAY_ORIENTATION = qParams.get('orientation')
     }
-  } else {
-    DISPLAY_UNITS = <%- (preferences?.units) ? `\'${preferences.units}\'` : false %> || 'Metric'
-    DISPLAY_ORIENTATION = <%- (preferences?.orientation) ? `\'${preferences.orientation}\'` : false %> || 'northUp'
   }
+  info('DISPLAY_UNITS', DISPLAY_UNITS)
+  info('DISPLAY_ORIENTATION', DISPLAY_ORIENTATION)
   const identifier = 'my_walk'
   const origin = '<%= origin %>'
   const jwtAccess = '<%= searchJwtAccess %>'
@@ -350,7 +356,7 @@
             },
             (err) => {
               console.log(err)
-              console.info(`code: ${err.code}, msg: ${err.message}`)
+              info(`code: ${err.code}, msg: ${err.message}`)
               rej(err)
             },
             geoOpts
