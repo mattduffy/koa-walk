@@ -114,7 +114,7 @@
   DISPLAY_UNITS = <%- (preferences?.units) ? `\'${preferences.units}\'` : false %> || 'Metric'
   DISPLAY_ORIENTATION = <%- (preferences?.orientation) ? `\'${preferences.orientation}\'` : false %> || 'northUp'
   if (DEBUG_LEVEL && DEBUG_LEVEL !== 'quiet') {
-    console.log(DEBUG_LEVEL)
+    log(DEBUG_LEVEL)
     VERBOSE = true
     DEBUG = true
     if (qParams.get('units')) {
@@ -130,7 +130,7 @@
   const origin = '<%= origin %>'
   const jwtAccess = '<%= searchJwtAccess %>'
   window.csrfToken = '<%= csrfToken %>'
-  console.log('csrfToken on load: ', window.csrfToken)
+  info('csrfToken on load: ', window.csrfToken)
   window.walking = window.walking ?? new State()
   window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
   const dMap = document.querySelector('div#map')
@@ -164,12 +164,12 @@
     if (response.headers.get('content-type').includes("application/json")) {
       const x = await response.json()
       tokenID = x.tokenID
-      console.log('csrfToken before getToken: ', window.csrfToken)
+      info('csrfToken before getToken: ', window.csrfToken)
       window.csrfToken = x.newCsrfToken
-      console.log('csrfToken before getToken: ', window.csrfToken)
+      info('csrfToken before getToken: ', window.csrfToken)
     } else {
-      console.info('failed to get mapkit token')
-      console.log(await response.text())
+      info('failed to get mapkit token')
+      info(await response.text())
     }
     if (!window.mapkit || window.mapkit.loadedLibraries.length === 0) {
       // mapkit.core.js of the libraries are not loaded yet.
@@ -236,41 +236,41 @@
       distances: mapkit.Map.Distances[DISPLAY_UNITS],
     }
     if ("geolocation" in navigator) {
-      console.log('Can we get a location fix?') 
+      log('Can we get a location fix?') 
       const _opts = {
         enableHighAccuracy: true,
         timeout: 5000,
         maximumAge: 0,
       }
       async function geoSuccess(g) {
-        console.log('geoSuccess')
-        console.info(g)
+        info('geoSuccess')
+        log(g)
         updatePosition(g)
         position = g
         try {
           await setPosition(position)
         } catch (e) {
-          console.warn(e)
+          warn(e)
         }
       }
       function geoFail(g) {
-        console.info('geoFail')
-        console.info(g)
+        info('geoFail')
+        log(g)
       }
       const geoOpts = {
         enableHighAccuracy: true,
         maximumAge: 1000 * 3,
       }
-      console.log('geo options: ', geoOpts)
+      info('geo options: ', geoOpts)
       await myGetCurrentPosition(geoOpts)
     } else {
-      console.log('geolocation not available, no way of knowing.')
-      console.log(`using ${lat} ${lon} instead`)
-      console.log('geo error: ', position)
+      info('geolocation not available, no way of knowing.')
+      info(`using ${lat} ${lon} instead`)
+      info('geo error: ', position)
       await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
     }
     function updatePosition(g) {
-      console.log('updatePosition()', g)
+      log('updatePosition()', g)
       lat = g?.coords?.latitude ?? g.latitude
       lon = g?.coords?.longitude ?? g.longitude
       const _acc = g?.coords?.accuracy ?? g.accuracy
@@ -285,7 +285,7 @@
       }
     }
     async function setPosition(position) {
-      console.log('setPosition(position)', position, lowAccuracy)
+      log('setPosition(position)', position, lowAccuracy)
       if (window.walking) {
         window.walking.currentPosition = position
       }
@@ -295,17 +295,17 @@
         (lowAccuracy === undefined) &&
         (position?.coords?.accuracy > accuracy) &&
         (position?.coords?.accuracy <= accuracy + accuracyMargin)) {
-        console.info(`low geoLocation accuracy: ${position.coords.accuracy}`)
-        console.info('can\'t track movement very accurately.')
+        info(`low geoLocation accuracy: ${position.coords.accuracy}`)
+        info('can\'t track movement very accurately.')
         await lowAccuracyPositionCantWalk(mapOpts, position)
       } else if (position && lowAccuracy) {
-        console.info('really low geoLocation accuracy:', position)
-        console.info('cannot track movement accurately.')
-        console.log(mapOpts)
+        info('really low geoLocation accuracy:', position)
+        info('cannot track movement accurately.')
+        log(mapOpts)
         await lowAccuracyPositionCantWalk(mapOpts, position)
       } else {
-        console.log('no geo position available')
-        console.log('using lat: ', lat, ' lon: ', lon)
+        log('no geo position available')
+        log('using lat: ', lat, ' lon: ', lon)
         const x = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
         await noPositionCantWalk(mapOpts, x)
         lowAccuracy = true
@@ -314,11 +314,11 @@
     window.errCount = 0
     async function accuracyUpdater() {
       if (window.walking.active) {
-        console.log(`accuracyUpdater() error counter: ${window.errCount}`)
+        log(`accuracyUpdater() error counter: ${window.errCount}`)
         if (window.errCount >= 10) {
           clearInterval(window.walking.state.accuracyUpdateInterval)
           delete window.walking.state.accuracyUpdateInterval
-          console.log('should be undefined? ', window.walking.state?.accuracyUpdateInterval)
+          log('should be undefined? ', window.walking.state?.accuracyUpdateInterval)
         } else {
           try {
             const _acc = await new Promise((res, rej) => {
@@ -328,12 +328,12 @@
                 { enableHighAccuracy: true }
               )
             })
-            console.log(`updating walking state with new accuracy: ${_acc}`)
+            log(`updating walking state with new accuracy: ${_acc}`)
             if (typeof parseFloat(_acc) === 'number') {
               window.walking.currentPosition.accuracy = parseFloat(_acc)
             }
           } catch (e) {
-            console.log('geolocation returned an error: ', e)
+            log('geolocation returned an error: ', e)
             window.errCount += 1
           } 
         }
@@ -347,7 +347,7 @@
           navigator.geolocation.getCurrentPosition(
             (geo) => {
               if (geo.coords.accuracy > accuracy) {
-                console.info(`current position accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
+                info(`current position accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
                 lowAccuracy = true
               }
               lat = geo.coords.latitude
@@ -362,13 +362,13 @@
             geoOpts
           )
         })
-        console.log('myGetCurrentPosition() ', position)
+        log('myGetCurrentPosition() ', position)
         await setPosition(position)
         updatePosition(position)
       } catch (e) {
-        console.warn('Failed to acquire geoLocation for some reason.')
-        console.warn(e)
-        console.log(`Falling back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
+        warn('Failed to acquire geoLocation for some reason.')
+        warn(e)
+        log(`Falling back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
         position = { latitude: lat, longitude: lon, accuracy: 1000, timestamp: Date.now() }
         lowAccuracy = undefined
         await setPosition(position)
@@ -379,10 +379,10 @@
     window.myGetCurrentPosition = myGetCurrentPosition
     window._map.addEventListener('single-tap', mapSingleTap)
     async function mapSingleTap(e) {
-      console.log(e)
+      log(e)
     }
     async function userLocationChange(e) {
-      console.log('userLocationChange(e)', e)
+      log('userLocationChange(e)', e)
       const evtCoords = e.coordinate
       const coords = {
         latitude: evtCoords.latitude,
@@ -397,7 +397,7 @@
         await recordWalk(coords, mapkitCoordinate)
         window._map.setCenterAnimated(mapkitCoordinate, false)
       } else if (window.walking.state.showing) {
-        console.log('showing old (saved) walk')
+        log('showing old (saved) walk')
 
         return
       } else {
@@ -414,7 +414,7 @@
     }
     window._map.addEventListener('user-location-change', userLocationChange)
     function localityChanged(e) {
-      console.log('localityChanged(e)', e)
+      log('localityChanged(e)', e)
       e.preventDefault()
       e.stopPropagation()
       const evtCoords = e.detail.coords
@@ -443,7 +443,7 @@
       clickStartNew
     )
     function clickStartNew(e) {
-      console.log(e)
+      log(e)
       e.preventDefault()
       e.stopPropagation()
       document.querySelector('span[data-action="showNew"]').click()
@@ -457,7 +457,7 @@
         return false
       }
       if (!"geolocation" in navigator) {
-        console.warn('You don\'t have a location, can\'t start walk.')
+        warn('You don\'t have a location, can\'t start walk.')
         return false
       }
       const startButton = document.querySelector('button#start')
@@ -472,7 +472,7 @@
       h3.textContent = name
       h3.style.display = 'block'
       function go(e) {
-        console.log('startWalk.go(): ', e)
+        log('startWalk.go(): ', e)
       }
       startWalk.go = go
       const _d = Date.now()
@@ -497,7 +497,7 @@
         startPosition: window.walking.currentPosition,
         verbose: VERBOSE,
       }
-      console.log('starting walk data:', w)
+      log('starting walk data:', w)
       window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d }, DISPLAY_UNITS, true)
       window.walking.c = c
       window.walker.postMessage(w)
@@ -510,8 +510,8 @@
         _dur.textContent = new Date((_n)).toISOString().slice(11, 19)
         const _dis = document.querySelector('span#distance')
         const reducedDistance = window.walking.totalDistance
-        console.log('reducing distances: ', reducedDistance)
-        console.log('display formated reduced: ', displayUnits(reducedDistance, DISPLAY_UNITS, 1))
+        log('reducing distances: ', reducedDistance)
+        log('display formated reduced: ', displayUnits(reducedDistance, DISPLAY_UNITS, 1))
         _dis.textContent = `${displayUnits(reducedDistance, DISPLAY_UNITS, 1)}`
       }, UPDATE_INTERVAL)
     }
@@ -558,7 +558,7 @@
       if (window.walking.c.length === 0) {
         // No telemetry data, nothing to save.
         // Show some kind of message.
-        console.log('nothing to save')
+        log('nothing to save')
         return false
       }
       if (window.walking.active) {
@@ -575,21 +575,21 @@
       }
       window.walker.postMessage(credentials)
       function finish(e) {
-        console.log('finish saving walk: ', e)
+        log('finish saving walk: ', e)
         const savedWalk = { id: e.res.saved.insertedId, name: _name, date: _date }
         if (e.scope === 'remote') {
           if (!window.walking.state?.remoteListCache) {
             window.walking.state.remoteListCache = [ savedWalk ]
           } else {
             window.walking.state.remoteListCache.unshift(savedWalk)
-            console.log(window.walking.state.remoteListCache)
+            log(window.walking.state.remoteListCache)
           }
         } else {
           if (!window.walking.state?.localListCache) {
             window.walking.state.localListCache = [ savedWalk ]
           } else {
             window.walking.state.localListCache.unshift(savedWalk)
-            console.log(window.walking.state.localListCache)
+            log(window.walking.state.localListCache)
           }
         }
       }
@@ -609,17 +609,17 @@
     document.querySelector('button#clearWalk').addEventListener('click', clearWalk)
     function updateHeading() {
       if (DISPLAY_ORIENTATION && DISPLAY_ORIENTATION === 'northUp') {
-        console.log('map orientation: North Up')
+        log('map orientation: North Up')
       } else {
-        console.log('map orientation: Heading Up')
+        log('map orientation: Heading Up')
         // const bearing = window.walking.lastHeading
         const bearing = window.walking.bearing
-        console.log(`updating heading to ${bearing} degrees off North.`)
+        log(`updating heading to ${bearing} degrees off North.`)
         window._map.rotation = bearing
       }
     }
     function markWalkPointOnMap() {
-      console.log('Mark point on map: ')
+      log('Mark point on map: ')
       const style = new mapkit.Style({
         lineWidth: 10,
         lineJoin: "round",
@@ -631,21 +631,21 @@
       })
       let polyline
       if (window._map.overlays.length > 0) {
-        console.log(`${window._map.overlays.length} overlays present in map`)
+        log(`${window._map.overlays.length} overlays present in map`)
         polyline = window._map.overlays.find(o => o.data.name === identifier)
-        console.log('found previously created polyline: ', polyline)
+        log('found previously created polyline: ', polyline)
         window._map.removeOverlay(polyline)
       }
-      console.log(`no previous polyline overlay with data.name: ${identifier} found`)
+      log(`no previous polyline overlay with data.name: ${identifier} found`)
       polyline = new mapkit.PolylineOverlay( points, { style: style })
       polyline.data = { name: identifier }
-      console.log('creating new polyline overlay: ', polyline)
+      log('creating new polyline overlay: ', polyline)
       window._map.addOverlay(polyline)
       window._map.showItems(polyline)
     }
     // Feature detection for worker
     if (window.Worker) {
-      console.log('Worker <=> Walker')
+      log('Worker <=> Walker')
       const logged = <%= isAuthenticated %>
       const loginForm = document.forms['login']
       const login = loginForm.elements.submit
@@ -655,7 +655,7 @@
         doLogin(document.forms['login'])
       })
       const welcomeDiv = document.querySelector('div#welcomeId')
-      console.log(`logged = ${logged}`)
+      log(`logged = ${logged}`)
       if (logged) {
         welcomeDiv.style.display = 'block'
         loginForm.style.display = 'none'
@@ -673,67 +673,67 @@
         doLogout()
       })
       window.walker.onmessage = function(e) {
-        console.log('walker.onmessage: ', e.data)
+        log('walker.onmessage: ', e.data)
         switch (e.data.TASK) {
           case 'SETUP':
-            console.log('csrfToken before SETUP: ', window.csrfToken)
-            console.log(e.data)
+            log('csrfToken before SETUP: ', window.csrfToken)
+            log(e.data)
             if (e.data?.newCsrfToken) {
               window.csrfToken = e.data.newCsrfToken
             }
-            console.log('csrfToken after SETUP: ', window.csrfToken)
+            log('csrfToken after SETUP: ', window.csrfToken)
             break
           case 'LOGIN':
-            console.log('csrfToken before LOGIN: ', window.csrfToken)
+            log('csrfToken before LOGIN: ', window.csrfToken)
             if (/failed/i.test(e.data.user.status)) {
               doLogin.failed(e.data.user)
             } else {
               doLogin.success(e.data.user)
             }
-            console.log('csrfToken after LOGIN: ', window.csrfToken)
+            log('csrfToken after LOGIN: ', window.csrfToken)
             break
           case 'LOGOUT':
-            console.log('csrfToken before LOGOUT: ', window.csrfToken)
+            log('csrfToken before LOGOUT: ', window.csrfToken)
             doLogout.finish(e.data)
-            console.log('csrfToken after LOGOUT: ', window.csrfToken)
+            log('csrfToken after LOGOUT: ', window.csrfToken)
             break
           case 'GET_LIST':
-            console.log('csrfToken before GET_LIST: ', window.csrfToken)
+            log('csrfToken before GET_LIST: ', window.csrfToken)
             window.getList.finish(e.data)
-            console.log('csrfToken after GET_LIST: ', window.csrfToken)
+            log('csrfToken after GET_LIST: ', window.csrfToken)
             break
           case 'GET_WALK':
-            console.log('csrfToken before GET_WALK: ', window.csrfToken)
+            log('csrfToken before GET_WALK: ', window.csrfToken)
             window.showWalk.finish(e.data)
-            console.log('csrfToken after GET_WALK: ', window.csrfToken)
+            log('csrfToken after GET_WALK: ', window.csrfToken)
             break
           case 'EXPORT_WALK':
-            console.log('csrfToken before EXPORT_WALK: ', window.csrfToken)
+            log('csrfToken before EXPORT_WALK: ', window.csrfToken)
             window.exportWalkAsKML.finish(e.data)
-            console.log('csrfToken after EXPORT_WALK: ', window.csrfToken)
+            log('csrfToken after EXPORT_WALK: ', window.csrfToken)
             break
           case 'SET_PREF':
-            console.log('csrfToken before SET_PREF: ', window.csrfToken)
+            log('csrfToken before SET_PREF: ', window.csrfToken)
             window.updatePreferences.finish(e.data)
-            console.log('csrfToken after SET_PREF: ', window.csrfToken)
+            log('csrfToken after SET_PREF: ', window.csrfToken)
             break
           case 'START':
-            console.log('csrfToken before START_WALK: ', window.csrfToken)
+            log('csrfToken before START_WALK: ', window.csrfToken)
             startWalk.go(e.data)
-            console.log('csrfToken after START_WALK: ', window.csrfToken)
+            log('csrfToken after START_WALK: ', window.csrfToken)
             break
           case 'SAVE':
-            console.log('csrfToken before SAVE: ', window.csrfToken)
+            log('csrfToken before SAVE: ', window.csrfToken)
             window.saveWalk.finish(e.data)
-            console.log('csrfToken after SAVE: ', window.csrfToken)
+            log('csrfToken after SAVE: ', window.csrfToken)
             break
           case 'DELETE':
-            console.log('csrfToken before DELETE_WALK: ', window.csrfToken)
+            log('csrfToken before DELETE_WALK: ', window.csrfToken)
             window.deleteWalk.finish(e.data) 
-            console.log('csrfToken after DELETE_WALK: ', window.csrfToken)
+            log('csrfToken after DELETE_WALK: ', window.csrfToken)
             break
           default:
-            console.log(e.data)
+            log(e.data)
         }
       }
       window.walker.onerror = function(e) {
@@ -742,12 +742,12 @@
         console.warn('in: ', e.filename)
         console.warn('at: ', e.lineno)
       }
-      console.log('DOMContentLoaded: checking if refresh is necessary...')
+      log('DOMContentLoaded: checking if refresh is necessary...')
       window.isAuthenticated = <%= (isAuthenticated) ? true : false %>
-      console.log('isAuthenticated? ', isAuthenticated)
-      console.log('window.walker: ', window.walker)
+      log('isAuthenticated? ', isAuthenticated)
+      log('window.walker: ', window.walker)
       if (window.isAuthenticated && window.walker) {
-        console.log('refreshing user...')
+        log('refreshing user...')
         const msg = {
           TASK: 'SETUP',
           isAuth: true,
@@ -758,7 +758,7 @@
         window.walker.postMessage(msg)
       }
     } else {
-      console.log('Not compatible with walking.')
+      log('Not compatible with walking.')
     }   
   }
   function doLogin(form) {
@@ -770,9 +770,9 @@
     }
     credentials.csrfTokenHidden = csrfTokenHidden.value
     const email = form.elements['email']
-    console.log(email)
+    log(email)
     if (email.value === '' || email.value === undefined) {
-      console.log(email)
+      log(email)
       return isRequired(email)
     }
     credentials.email = email.value
@@ -783,9 +783,9 @@
     credentials.password = password.value
     credentials.jwtAccess = jwtAccess
     credentials.TASK = 'LOGIN'
-    console.log('1', credentials)
+    log('1', credentials)
     function isRequired(el) {
-      console.log(el) 
+      log(el) 
       el.style.border = '1px solid red'
       el.addEventListener('change', (e) => {
         e.target.style.border = ''
@@ -794,8 +794,8 @@
       return false
     }
     function success(e) {
-      console.log('login success')
-      console.log(e)
+      log('login success')
+      log(e)
       window.csrfToken = e.user.newCsrfToken
       const initials = document.querySelector('span[data-name-initials]')
       const i = `${e.user.first.slice(0, 1)}${e.user.last.slice(0, 1)}`
@@ -818,8 +818,8 @@
       if (e?.info?.match(/no user found with email/i)) {
         form.elements.email.style.border = '1px solid red'
       }
-      console.log('login failed')
-      console.log(e)
+      log('login failed')
+      log(e)
       window.csrfToken = e.user.newCsrfToken  
     }
     doLogin.failed = failed
@@ -831,7 +831,7 @@
     form.elements.email.value = ''
     window.walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
     function finish(e) {
-      console.log('logout response: ', e)
+      log('logout response: ', e)
       window.csrfToken = e.response.user.newCsrfToken
       delete window.walking.state.remoteListCache
       const initials = document.querySelector('span[data-name-initials]')
@@ -864,14 +864,14 @@
     credentials.jwtAccess = jwtAccess
     credentials.TASK = 'GET_LIST'
     credentials.scope = (window.isAuthenticated) ? 'both' : 'local'
-    console.log(credentials)
+    log(credentials)
     if (window.walking.state.showing) {
-      console.log('go back to showing walk instead of list.')
+      log('go back to showing walk instead of list.')
       const WALKDIV = document.querySelector('div#walk-div')
       WALKDIV.style.display = 'block'
-      console.log(WALKDIV)
+      log(WALKDIV)
       LISTDIV.style.display = 'none'
-      console.log(LISTDIV)
+      log(LISTDIV)
     } else {
       if (
         (!window.walking.state.remoteListCache && window.isAuthenticated) ||
@@ -892,7 +892,7 @@
         const ul = document.createElement('ul')
         ul.id = 'remote-walks'
         REMOTEDIV.appendChild(ul)
-        // console.log(ul)
+        // log(ul)
         return REMOTEDIV.children.namedItem('remote-walks')
       })()
       if (!window.isAuthenticated && !document.querySelector('p#noAuth')) {
@@ -908,7 +908,7 @@
         }
         const replaceLis = []
         remoteList.forEach((w) => {
-          // console.log(w)
+          // log(w)
           const li = document.createElement('li')
           li.style.marginLeft = '-1.5em'
           li.style.padding = '5px 0px'
@@ -925,8 +925,8 @@
         remoteWalks.replaceChildren(...replaceLis)
       }
       const localList = window.walking.state?.localListCache ?? []
-      // console.log('localList', localList)
-      // console.log('localList.length', localList.length)
+      // log('localList', localList)
+      // log('localList.length', localList.length)
       if (localList.length === 0) {
         const noLocalWalks = document.querySelector('p#noLocalWalks') ?? (() => {
           const removeLocalWalks = LOCALDIV.children.namedItem('local-walks')
@@ -936,7 +936,7 @@
           const p = document.createElement('p')
           p.textContent = 'No walks saved to this device.'
           p.id = 'noLocalWalks'  
-          console.log('p', p)
+          log('p', p)
           LOCALDIV.appendChild(p) 
           return LOCALDIV 
         })()
@@ -945,7 +945,7 @@
           const ul = document.createElement('ul')
           ul.id = 'local-walks'
           LOCALDIV.appendChild(ul)
-          // console.log(ul)
+          // log(ul)
           return LOCALDIV.children.namedItem('local-walks')
         })()
         const noLocalWalks = LOCALDIV.children.namedItem('noLocalWalks')
@@ -955,7 +955,7 @@
         if (localWalks.children.length !== localList.length) {
           const replaceLis = []
           localList.forEach((w) => {
-            // console.log(w)
+            // log(w)
             const li = document.createElement('li')
             li.style.marginLeft = '-1.5em'
             li.style.padding = '5px 0px'
@@ -984,12 +984,12 @@
     }
     window.getList.renderLists = renderLists
     function finish(e) {
-      console.log('getList.finish', e)
+      log('getList.finish', e)
       window.csrfToken = e.newCsrfToken
       const noAuth = LISTDIV.children.namedItem('noAuth') ?? null
       if (e.auth === 'no' && !noAuth) {
-        console.log(`e.auth: ${e.auth}`)
-        console.log(`noAuth: ${noAuth}`)
+        log(`e.auth: ${e.auth}`)
+        log(`noAuth: ${noAuth}`)
         const noAuthP = document.createElement('p')
         noAuthP.id = 'noAuth'
         noAuthP.textContent = 'Login to see cloud saved walks.'
@@ -997,10 +997,10 @@
       } else if (
         e.auth === 'no' &&
         LISTDIV.children.namedItem('remote').children.namedItem('noAuth')) {
-        console.log('show noAuth')
+        log('show noAuth')
         noAuth.style.display = 'block' 
       } else if (e.remoteList.length === 0) {
-        console.log(`e.remoteList.length = ${e.remoteList.length}`)
+        log(`e.remoteList.length = ${e.remoteList.length}`)
         if (noAuth) {
           noAuth.style.display = 'none'
         }
@@ -1014,7 +1014,7 @@
           LISTDIV.children.namedItem('remote').appendChild(noWalks)
         }
       } else {
-        console.log(`e.auth = ${e.auth} && `
+        log(`e.auth = ${e.auth} && `
           + `e.remoteList.length = ${e.remoteList.length} `
           + `e.localList.length = ${e.localList.length}`
         )
@@ -1034,7 +1034,7 @@
           date: w.features[0].properties.date,
         }
       })
-      // console.log('localListCache', window.walking.state.localListCache)
+      // log('localListCache', window.walking.state.localListCache)
       renderLists() 
     }
     getList.finish = finish
@@ -1043,16 +1043,16 @@
     e.preventDefault()
     e.stopPropagation()
     const _id = e.target.dataset.showId
-    console.log('showWalk(e)', e.target.dataset)
+    log('showWalk(e)', e.target.dataset)
     const divList = document.querySelector('div#list-div')
     const divWalk = document.querySelector('div#walk-div')
     if (window.walking.state.show) {
-      console.log('divList.style.display', divList.style.display)
+      log('divList.style.display', divList.style.display)
       divList.style.display = 'none'
-      console.log('divList.style.display', divList.style.display)
-      console.log('divWalk.style.display', divWalk.style.display)
+      log('divList.style.display', divList.style.display)
+      log('divWalk.style.display', divWalk.style.display)
       divWalk.style.display = 'block'
-      console.log('divWalk.style.display', divWalk.style.display)
+      log('divWalk.style.display', divWalk.style.display)
     } else {
       const credentials = {
         TASK: 'GET_WALK',
@@ -1065,7 +1065,7 @@
       window.walker.postMessage(credentials)
     }
     function finish(e) {
-      console.log(e.walk)
+      log(e.walk)
       document.querySelector('h4#walkNameH4').textContent = 
         e.walk.features[0].properties.name
       document.querySelector('h5#walkLocationH5').textContent = 
@@ -1085,7 +1085,7 @@
       window._map.showsUserLocation = false
       window.mapkit.importGeoJSON(e.walk, {
         itemForFeature: (overlay, geo) => {
-          console.log(geo)
+          log(geo)
           overlay.data = {
             type: 'walk',
             name: geo.properties.name,
@@ -1108,12 +1108,10 @@
           e.walk.features[0].properties.startPosition.latitude,
           e.walk.features[0].properties.startPosition.longitude,
         ), {
-          // url: { 1: `${origin}/i/start-flag.png` },
           glyphImage: { 1: `${origin}/i/start-flag-20x20.png` },
           glyphText: 'Start',
           glyphColor: 'white',
           color: 'green',
-
         }
       )
       startAnnotation.animates = false 
@@ -1123,7 +1121,6 @@
           e.walk.features[0].properties.endPosition.latitude,
           e.walk.features[0].properties.endPosition.longitude,
         ), {
-          // url: { 1: `${origin}/i/finish-flag.png` },
           glyphImage: { 1: `${origin}/i/finish-flag.png` },
           glyphText: 'Finish',
           glyphColor: '#FFFFFF',
@@ -1136,7 +1133,7 @@
     }
     window.showWalk.finish = finish
     function reset() {
-      console.log('clearing walk')
+      log('clearing walk')
       divList.style.display = 'block'
       divWalk.style.display = 'none'
       window.walking.active = false 
@@ -1153,7 +1150,7 @@
   window.deleteWalk = async function(e) {
     e.preventDefault()
     e.stopPropagation()
-    console.log(e.target.dataset)
+    log(e.target.dataset)
     const credentials = {
       TASK: 'DELETE_WALK',
       url: `${origin}/delete`,
@@ -1164,7 +1161,7 @@
     }
     window.walker.postMessage(credentials)
     function finish(e) {
-      console.log(e)
+      log(e)
       window.csrfToken = e.newCsrfToken
       if (e.scope === 'remote') { 
         window._temp = window.walking.state.remoteListCache.filter((w) => {
@@ -1177,7 +1174,7 @@
         })
         window.walking.state.localListCache = window._temp
       }
-      console.log(window._temp)
+      log(window._temp)
       delete window._temp
       window.getList.renderLists()
     }
@@ -1186,7 +1183,7 @@
   window.exportWalkAsKML = async function(e) {
     e.preventDefault()
     e.stopPropagation()
-    console.log('exportWalkAsKML(e)', e)
+    log('exportWalkAsKML(e)', e)
     const credentials = {
       TASK: 'EXPORT_WALK',
       url: `${origin}/getWalk`,
@@ -1197,9 +1194,9 @@
     }
     window.walker.postMessage(credentials)
     function finish(e) {
-      console.log('exportWalkAsKML().finish(e)', e)
+      log('exportWalkAsKML().finish(e)', e)
       window.csrfToken = e.newCsrfToken
-      console.log('kml', e) 
+      log('kml', e) 
       const blob = new Blob([e.kml], { type: 'application/vnd.google-earth.kml+xml' })
       const a = document.createElement('a')
       a.id = 'KML-download'
@@ -1211,7 +1208,7 @@
     window.exportWalkAsKML.finish = finish
   }
   async function noPositionCantWalk(o, g) {
-    console.log(`no position available: ${g}`)
+    log(`no position available: ${g}`)
     window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
     window.here = new mapkit.CoordinateRegion(
       me,
@@ -1222,7 +1219,7 @@
     }
     window._map.region = here
     window._map.cameraDistance = 2500000
-    console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
+    log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.showsUserLocation = true 
     window._map.setCenterAnimated(me, true)
     const strings = {
@@ -1235,7 +1232,7 @@
     app.style.display = 'block'
   }  
   async function lowAccuracyPositionCantWalk(o, g) {
-    console.log(`low accuracy: ${g.coords.accuracy}`)
+    log(`low accuracy: ${g.coords.accuracy}`)
     o.showsUserLocationControl = true
     o.tracksUserLocation = true
     window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
@@ -1248,13 +1245,13 @@
     }
     window._map.region = here
     if (10 * (accuracy + accuracyMargin) <= (Math.trunc(g.coords.accuracy))) {
-      console.log('really low accuracy', Math.trunc(g.coords.accuracy))
+      log('really low accuracy', Math.trunc(g.coords.accuracy))
       window._map.cameraDistance = Math.trunc(g.coords.accuracy) * 10
     } else {
       window._map.cameraDistance = 100
     }
     window._map.showsUserLocation = true 
-    console.log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
+    log(`map.showsUserLocation: ${window._map.showsUserLocation}`) 
     window._map.setCenterAnimated(me, true)
     myGeocoder(me)
     const strings = {
@@ -1269,7 +1266,7 @@
     app.style.display = 'block'
   }
   async function goodAccuracyCanWalk(o, g) {
-    console.log(`good accuracy: ${g.coords.accuracy}`)
+    log(`good accuracy: ${g.coords.accuracy}`)
     o.showsUserLocation = true
     o.tracksUserLocation = true
     o.showsUserLocationControl = true
@@ -1299,29 +1296,29 @@
   }
   // Geocoder
   function myGeocoder(coords) {
-    console.log('geocoder with: ', coords)
+    log('geocoder with: ', coords)
     const opts = {
       getsUserLocation: true,
       language: 'en-US'
     }
     const geocoder = new mapkit.Geocoder(opts)
-    console.log(geocoder)
+    log(geocoder)
     const reverseLookup = geocoder.reverseLookup(coords, function(error, data) {
-      console.log('reverseLookup callbback')
+      log('reverseLookup callbback')
       if (error) {
-        console.info(error)
+        warn(error)
       }
       if (data && data.results.length > 0) {
-        console.log(data.results[0])
+        log(data.results[0])
         populateApp(null, null, data.results[0])
       }
     })
   }
   function displayUnits(x, u = 'm', n = 1) {
     const _u = u.toLowerCase()
-    console.log('displayUnits(): ', x, _u, n)
+    log('displayUnits(): ', x, _u, n)
     if (x === null || x === undefined) {
-      console.log('displayUnits() missing x: ', x)
+      log('displayUnits() missing x: ', x)
       return 0 
     }
     if (/(metric)|(km)|(m$)/i.test(_u)) {
@@ -1341,7 +1338,7 @@
   }
   function populateApp(strings, coords = null, theLocality = null) {
     const a = window.app ?? document.querySelector('div#app')    
-    // console.log(a)
+    // log(a)
     if (strings) {
       a.children.namedItem('h3').innerHTML = strings.h3
       a.children.namedItem('p1').innerHTML = strings.p1
@@ -1361,7 +1358,7 @@
         administrativeArea,
         administrativeAreaCode,
       } = theLocality ?? null
-      console.log(`updating new locality: ${(subLocality) ? subLocality + ',' : ''} ${name}`)
+      log(`updating new locality: ${(subLocality) ? subLocality + ',' : ''} ${name}`)
       const l = `${(subLocality) ? '<span id="subLocality">' + subLocality + '</span><br>' : ''}`
         + `${(name) ? '<span id="name">' + name + '</span><br>' : ''}` 
         + `${(locality) ? '<span id="locality">' + locality + '</span>, ' : ''}`
@@ -1377,8 +1374,8 @@
       }
     }
     if (coords) {
-      console.log('populateApp coords: ', coords)
-      console.log(`updating user's coordinates: (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`)
+      log('populateApp coords: ', coords)
+      log(`updating user's coordinates: (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`)
       const _lat = a.querySelector('p > span#lat')
       if (coords.latitude && _lat) {
         a.querySelector('p > span#lat').innerHTML = coords.latitude.toFixed(4)
