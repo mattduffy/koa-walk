@@ -1,3 +1,6 @@
+/*
+ * file: public/j/State.js
+ */
 import Subject from './Subject.js'
 import { pointDistance, heading } from './Heading.js'
 
