@@ -612,10 +612,10 @@
         log('map orientation: North Up')
       } else {
         log('map orientation: Heading Up')
-        // const bearing = window.walking.lastHeading
-        const bearing = window.walking.bearing
-        log(`updating heading to ${bearing} degrees off North.`)
-        window._map.rotation = bearing
+        const bearing = window.walking.lastHeading
+        // const bearing = window.walking.bearing
+        log(`updating heading to ${-bearing} degrees off North.`)
+        window._map.rotation = -bearing
       }
     }
     function markWalkPointOnMap() {
@@ -636,7 +636,6 @@
         log('found previously created polyline: ', polyline)
         window._map.removeOverlay(polyline)
       }
-      log(`no previous polyline overlay with data.name: ${identifier} found`)
       polyline = new mapkit.PolylineOverlay( points, { style: style })
       polyline.data = { name: identifier }
       log('creating new polyline overlay: ', polyline)

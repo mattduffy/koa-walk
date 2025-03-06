@@ -210,15 +210,16 @@ class State extends Subject {
     const p2 = this.state.wayPoints[l]
     console.log('State::bearing using p1, p2', p1, p2)
     let bearing
-    if (p1.heading <= p2.heading) {
-      console.log(`p1.heading (${p1.heading} <= p2.heading ${p2.heading}`)
-      bearing = (p1.heading + p2.heading) % 360
-      console.log(`(p1.heading (${p1.heading} + p2.heading ${p2.heading}) % 360 = bearing ${bearing}`)
-    } else {
-      console.log(`p1.heading (${p1.heading} > p2.heading ${p2.heading}`)
-      bearing = (p1.heading - p2.heading) % 360
-      console.log(`(p1.heading $(p1.heading} - p2.heading ${p2.heading}) % 360 = bearing ${bearing}`)
-    }
+    // if (p1.heading <= p2.heading) {
+    //   console.log(`p1.heading (${p1.heading} <= p2.heading ${p2.heading}`)
+    //   bearing = (p1.heading + p2.heading) % 360
+    //   console.log(`(p1.heading (${p1.heading} + p2.heading ${p2.heading}) % 360 = bearing ${bearing}`)
+    // } else {
+    //   console.log(`p1.heading (${p1.heading} > p2.heading ${p2.heading}`)
+    //   bearing = (p1.heading - p2.heading) % 360
+    //   console.log(`(p1.heading $(p1.heading} - p2.heading ${p2.heading}) % 360 = bearing ${bearing}`)
+    // }
+    bearing = p2.heading
     this.state.headings.push(bearing)
     return bearing
   }
