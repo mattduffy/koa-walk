@@ -228,6 +228,10 @@ class State extends Subject {
     return this.state.wayPoints[this.state.wayPoints.length - 1].heading
   }
 
+  get lastPoint() {
+    return this.state.wayPoints[this.state.wayPoints.length - 1]
+  }
+
   get geojson() {
     return {
       type: 'FeatureCollection',
