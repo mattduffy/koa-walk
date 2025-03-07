@@ -140,11 +140,36 @@ div#map {
   justify-content: center;
 }
 
-div#container {
+div#logging {
+  z-index: 99;
+  display: none;
   position: absolute;
   top: 14vh;
   left: 4.5vw;
+  width: 90vw;
+  height: auto;
+  margin: 0 auto;
+}
+
+div#logging > div#bearings {
+  width: auto;
+  background-color: white;
+  border-radius: .5em;
+  max-height: 250px;
+  overflow: scroll;
+  font-size: .75em;
+}
+
+div#logging > div#bearings > ol {
+  padding-left: 20px;
+  font-size: .8em;
+}
+
+div#container {
   z-index: 100;
+  position: absolute;
+  top: 14vh;
+  left: 4.5vw;
   width: 90vw;
   height: auto;
   margin: 0 auto;
@@ -227,7 +252,7 @@ div#walk-div > h3, h4, h5 {
   margin: 0px;
 }
 
-span#close {
+span.close {
   cursor: pointer;
   position: relative;
   top: -.25em;
