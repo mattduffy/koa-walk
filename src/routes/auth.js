@@ -63,7 +63,7 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
     const collection = db.collection('users')
     const users = new Users(collection, ctx)
     const authUser = await users.authenticateAndGetUser(username, password)
-    log('authentication result: %O', authUser)
+    // log('authentication result: %O', authUser)
     log('authentication result: %O', authUser.email)
     log('authentication result: %O', authUser.user?._username)
     const doc = { attemptedAt: new Date(), username }
