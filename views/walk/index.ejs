@@ -21,12 +21,13 @@
         <form id="preferencesId" name="preferences">
           <fieldset id="set1Id" name="set1" form="preferencesId" title="User Preferences" tabindex="0">
             <legend>Preferences</legend>
-            Distance Units:
+            <span style="font-weight: 450;">Distance Units:</span>
             <br>
             <label>Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (preferences.units === 'Metric') ? 'checked' : '' %> tabindex="0"></label>
             <br>
             <label>Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (preferences.units === 'Imperial') ? 'checked' : '' %> tabindex="0"></label>
-            Map Orientation:
+            <br>
+            <span style="font-weight: 450;">Map Orientation:</span>
             <br>
             <label>North Up<input id="northUpId" name="orientation" type="radio" value="northUp"<%= (preferences?.orientation === 'northUp') ? 'checked' : '' %> tabindex="0"></label>
             <br>
@@ -622,11 +623,13 @@
         log('map orientation: North Up')
       } else {
         log('map orientation: Heading Up')
-        let bearing = window.walking.lastHeading
-        if (bearing > 0) {
-          bearing *= -1
-        }
-        bearing = window.walking.bearing
+        let bearing
+        // bearing = window.walking.lastHeading
+        // if (bearing > 0) {
+        //   bearing *= -1
+        // }
+        // bearing = window.walking.bearing
+        bearing = window.walking.lastHeading
         log(`updating heading to ${bearing} degrees off North.`)
         window._map.rotation = bearing
         if (DEBUG_LEVEL === 'verbose') {
