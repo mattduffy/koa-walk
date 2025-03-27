@@ -60,10 +60,15 @@
       <form id="startWalkForm" action="<%= origin %>/walk/start" method="POST">
         <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
         <label for="name">Give your walk a name</label>
+        <br>
         <input type="text" id="name" size=45 value="" autocomplete="off">
+        <br>
         <label for="location">Location</label>
+        <br>
         <input type="text" id="location" size=45 value="">
+        <br>
         <label for="coords">Starting Coordinates</label>
+        <br>
         <input type="text" id="coords" size=45 readonly value="">
       </form>
       <br>
