@@ -115,6 +115,59 @@ span.listpng {
   cursor: pointer;
 }
 
+span.countBadge {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 128, 172, 1) 0%,
+    rgba(0, 128, 172, 1) 70%,
+    rgba(0, 128, 172, 0) 70.3%
+  );
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle; 
+  font-size: .85em;
+  color: white;
+  display: none;
+  position: absolute;
+  top: 0px;
+  left: 0px;}
+
+span.countBadge:before {
+  content:'';
+  float: left;
+  width: auto;
+  padding-bottom: 100%;
+}
+
+div.countBadge {
+  align-items: center;
+  justify-content: center;
+  background-color: #555;
+  color: white;
+  min-width: 1em;
+  border-radius: 50%;
+  vertical-align: middle; 
+  display: none;
+  font-size: .65em;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+div.countBadge:before {
+  content:'';
+  float: left;
+  width: auto;
+  padding-bottom: 100%;
+}
+
+div.countBadge:after {
+  content:'';
+  float: left;
+  width: auto;
+  padding-bottom: 100%;
+}
+
 span.mapspng {
   content: url('/i/maps.png');
   max-width: 1.5em;

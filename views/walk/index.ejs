@@ -161,7 +161,15 @@
     dMap.style.height = `${mapHeight}px`
     dMap.style.maxHeight = `${mapHeight}px`
   }
-  window.addEventListener('resize', fitMap)
+  window.addEventListener('resize', (e) => {
+    if (window.showCountBadge) {
+      window.showCountBadge(
+        window.walking.state.localListCache + window.walking.state.remoteListCache,
+        document.querySelector('span[data-action=showList]')
+      )
+    }
+    fitMap()
+  })
   fitMap()
   async function setupMapKitJs() {
     const tokenOpts = {
@@ -939,6 +947,7 @@
     }
     getList.clearCache = clearCache
     function renderLists() {
+      let total = 0
       const remoteList = window.walking.state?.remoteListCache ?? []
       const remoteWalks = REMOTEDIV.children.namedItem('remote-walks') || (() => {
         const ul = document.createElement('ul')
@@ -959,6 +968,7 @@
           noWalks.remove()
         }
         const replaceLis = []
+        total += remoteList.length
         remoteList.forEach((w) => {
           // log(w)
           const li = document.createElement('li')
@@ -977,6 +987,7 @@
         remoteWalks.replaceChildren(...replaceLis)
       }
       const localList = window.walking.state?.localListCache ?? []
+      total += localList.length
       // log('localList', localList)
       // log('localList.length', localList.length)
       if (localList.length === 0) {
@@ -1024,6 +1035,10 @@
           localWalks.replaceChildren(...replaceLis)
         } 
       }
+      log(`total number of walks: ${total}`)
+      if (total > 0) {
+        window.showCountBadge(total, document.querySelector('span[data-action=showList]'))
+      }
       document.querySelectorAll('span[data-delete-id]').forEach((s) => {
         s.addEventListener('click', deleteWalk)
       })
@@ -1033,6 +1048,33 @@
       document.querySelectorAll('span[data-export-id]').forEach((s) => {
         s.addEventListener('click', exportWalkAsKML)
       })
+    }
+    window.showCountBadge = function(n = 0, el = null) {
+      if (n === 0 || el === null) return
+      const l = window.walking.state?.localListCache
+      const r = window.walking.state?.remoteListCache
+      const t = l.length + r.length
+      log(
+        `localListCache: ${l.length} + `
+        + `remoteListCache: ${r.length} = ${l.length + r.length}`
+      )
+      const listTabIconRect = el.getBoundingClientRect() ?? {x: 0, y: 0}
+      // log('listTabIconRect:', listTabIconRect)
+      // const badge = document.querySelector('div.countBadge')
+      // log('found', el.parentNode.querySelector('div.countBadge'))
+      const badge = el.parentNode.querySelector('div.countBadge') || (() => {
+        const div = document.createElement('div')
+        div.classList.add('countBadge')
+        div.style.display = 'inline-flex'
+        el.after(div)
+        log('created', div)
+        return div
+      })()
+      badge.style.top = `${listTabIconRect.y + 1}px`
+      badge.style.left = `${listTabIconRect.x + 42}px`
+      // badge.innerText = (n < 10) ? ` ${n} ` : `${n}`
+      badge.innerText = (t < 10) ? ` ${t} ` : `${t}`
+      // log(badge.style.top, badge.style.left)
     }
     window.getList.renderLists = renderLists
     function finish(e) {
