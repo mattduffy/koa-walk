@@ -745,8 +745,10 @@
             break
           case 'LOGIN':
             log('csrfToken before LOGIN: ', window.csrfToken)
-            if (/failed/i.test(e.data.user.status)) {
-              doLogin.failed(e.data.user)
+            // if (/failed/i.test(e.data.user.status)) {
+            if (/failed/i.test(e.data?.cause?.status)) {
+              // doLogin.failed(e.data.user)
+              doLogin.failed(e.data.cause)
             } else {
               doLogin.success(e.data.user)
             }
@@ -880,7 +882,8 @@
       }
       log('login failed')
       log(e)
-      window.csrfToken = e.user.newCsrfToken  
+      // window.csrfToken = e.user.newCsrfToken  
+      window.csrfToken = e.newCsrfToken  
     }
     doLogin.failed = failed
     window.walker.postMessage(credentials)

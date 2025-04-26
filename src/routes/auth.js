@@ -90,6 +90,8 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
           info: authUser.info,
           message: authUser.message,
           error: authUser.error,
+          newCsrfToken,
+          hint: 'here',
         }
       } else {
         error('unsuccessful login attempt - not an async request.')

@@ -768,7 +768,7 @@ async function login(credentials) {
       console.log('worker::login - success: ', _user)
     } else {
       console.log('worker::login - failed : ', _user)
-      return { TASK: 'LOGIN', login: 'failed', cause: _user }
+      return { TASK: 'LOGIN', login: 'failed', user: null, cause: _user, newCsrfToken: _user.newCsrfToken }
     }
   } catch (e) {
     console.error(e)
@@ -777,7 +777,7 @@ async function login(credentials) {
   user = _user
   console.log('is logged in: ', isLoggedIn)
   console.log('user: ', user)
-  return { TASK: 'LOGIN', user: _user }
+  return { TASK: 'LOGIN', user: _user, cause: { status: null } }
 }
 
 async function logout(data) {
