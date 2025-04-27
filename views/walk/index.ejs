@@ -8,13 +8,15 @@
   sessionUser?.email?.primary %>" placeholder="user@example.com" required
   autocomplete="email">
         <br>
+        <br>
         <label for="passwordId">Password: </label>
         <br>
         <input type="password" id="passwordId" name="password" size="40" value="" required>
         <br>
         <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>" required>
+        <br>
         <input type="submit" id="submitId" name="submit" value="Login">
-        <button id="cancelId" name="cancel">Cancel</button>
+        <button id="cancelId" name="cancel" style="float: right;">Cancel</button>
       </form>
       <div id="welcomeId">
         <h3>Hi, <span data-name-first=""><%= sessionUser?.firstName %></span></h3>
@@ -708,6 +710,19 @@
       log('Worker <=> Walker')
       const logged = <%= isAuthenticated %>
       const loginForm = document.forms['login']
+      const cancel = loginForm.elements.cancel
+      cancel.addEventListener('click', (e) => {
+        const pass = document.querySelector('span#wrongPassword')
+        if (pass) {
+          pass.remove()
+        }
+        const email = document.querySelector('span#wrongEmail')
+        if (email) {
+          email.remove()
+        }
+        loginForm.elements.email.value = ''
+        loginForm.elements.password.value = ''
+      })
       const login = loginForm.elements.submit
       login.addEventListener('click', (e) => {
         e.preventDefault()
@@ -876,9 +891,23 @@
     function failed(e) {
       if (e?.error?.match(/wrong password/i)) {
         form.elements.password.style.border = '1px solid red'
+        const span = document.createElement('span')
+        span.id = 'wrongPassword'
+        span.textContent = e.error
+        span.style.color = 'red'
+        span.style.display = 'inline-block'
+        span.style.fontSize = '.85em'
+        form.elements.password.after(span)
       }
       if (e?.info?.match(/no user found with email/i)) {
         form.elements.email.style.border = '1px solid red'
+        const span = document.createElement('span')
+        span.id = 'wrongEmail'
+        span.textContent = e.info
+        span.style.color = 'red'
+        span.style.display = 'inline-block'
+        span.style.fontSize = '.85em'
+        form.elements.email.after(span)
       }
       log('login failed')
       log(e)
