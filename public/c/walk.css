@@ -428,13 +428,17 @@ fieldset {
   border-radius: .5em;
 }
 
+fieldset label {
+  font-size: .90em;
+}
+
 fieldset label:hover {
   border-radius: .5em;
   background-color: lightblue;
 }
 
 input[type=radio] {
-  margin-left: 5em;
+  margin-left: .5em;
 }
 
 input[type=text] {
