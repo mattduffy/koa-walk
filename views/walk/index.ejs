@@ -452,10 +452,13 @@
       })()
       if (e.detail.coords) {
         let li = document.createElement('li')
+        const heading  = (window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading) ?
+          window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading :
+          'indeterminate'
         li.innerHTML = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
           + `${evtCoords.longitude.toFixed(4)}), <br>`
           + `accuracy: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}, `
-          + `heading: ${window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading} `
+          + `heading: ${heading} `
         ol.insertBefore(li, ol.firstChild)
       }
     }
