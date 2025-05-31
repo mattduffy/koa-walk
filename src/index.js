@@ -183,7 +183,7 @@ async function openGraph(ctx, next) {
   ogArray.push('<meta property="og:type" content="website">')
   ogArray.push('<meta property="og:site_name" content="Walk">')
   ogArray.push('<meta property="og:title" content="Walk.">')
-  ogArray.push(`<meta property="og:url" content="${ctx.request.href}${ctx.request.search}">`)
+  ogArray.push(`<meta property="og:url" content="${ctx.request.href}">`)
   ogArray.push(`<meta property="og:image" content="${ctx.request.origin}/i/walking-path-450x300.jpg">`)
   ogArray.push('<meta property="og:image:type" content="image/jpg">')
   ogArray.push('<meta property="og:image:width" content="450">')
