@@ -90,7 +90,12 @@ router.post('refresh', '/user/refresh', addIpToSession, processFormData, async (
   }
 })
 
-router.post('setPref', '/user/preferences/update', addIpToSession, processFormData, async (ctx) => {
+router.post(
+  'setPref',
+  '/user/preferences/update',
+  addIpToSession,
+  processFormData,
+  async (ctx) => {
   const log = walkLog.extend('setPref')
   const error = walkError.extend('setPref')
   const newCsrfToken = ulid()
