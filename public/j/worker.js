@@ -768,7 +768,13 @@ async function login(credentials) {
       console.log('worker::login - success: ', _user)
     } else {
       console.log('worker::login - failed : ', _user)
-      return { TASK: 'LOGIN', login: 'failed', user: null, cause: _user, newCsrfToken: _user.newCsrfToken }
+      return {
+        TASK: 'LOGIN',
+        login: 'failed',
+        user: null,
+        cause: _user,
+        newCsrfToken: _user.newCsrfToken,
+      }
     }
   } catch (e) {
     console.error(e)
