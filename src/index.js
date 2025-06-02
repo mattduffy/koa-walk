@@ -60,9 +60,15 @@ const longestlabel = [_startingup, _local, _public].reduce((a, c) => {
   return (c.indexOf(':') + 1)
 }, '')
 
-_startingup = _startingup.padStart((longestlabel - _startingup.indexOf(':')) + _startingup.length, ' ')
-_local = _local.padStart((longestlabel - _local.indexOf(':')) + _local.length, ' ')
-_public = _public.padStart((longestlabel - _public.indexOf(':')) + _public.length, ' ')
+_startingup = _startingup.padStart(
+  (longestlabel - _startingup.indexOf(':'))
+  + _startingup.length, ' ')
+_local = _local.padStart(
+  (longestlabel - _local.indexOf(':'))
+  + _local.length, ' ')
+_public = _public.padStart(
+  (longestlabel - _public.indexOf(':'))
+  + _public.length, ' ')
 const longestline = [_startingup, _local, _public].reduce((a, c) => {
   if (a > c.length) {
     return a
@@ -178,20 +184,21 @@ async function proxyCheck(ctx, next) {
 
 async function openGraph(ctx, next) {
   const logg = log.extend('OpenGraph-Embed')
-  // const err = error.extend('OpenGraph-Embed')
+  const o = ctx.request.origin
+  const h = ctx.request.href
   const ogArray = []
   ogArray.push('<meta property="og:type" content="website">')
   ogArray.push('<meta property="og:site_name" content="Walk">')
-  ogArray.push('<meta property="og:title" content="Walk.">')
-  ogArray.push(`<meta property="og:url" content="${ctx.request.href}">`)
-  ogArray.push(`<meta property="og:image" content="${ctx.request.origin}/i/walking-path-450x300.jpg">`)
+  ogArray.push('<meta property="og:title" content="Walk">')
+  ogArray.push(`<meta property="og:url" content="${h}">`)
+  ogArray.push(`<meta property="og:image" content="${o}/i/walking-path-450x300.jpg">`)
   ogArray.push('<meta property="og:image:type" content="image/jpg">')
   ogArray.push('<meta property="og:image:width" content="450">')
   ogArray.push('<meta property="og:image:height" content="300">')
   ogArray.push('<meta property="og:image:alt" content="Map your walk.">')
   ogArray.push('<meta property="og:description" content="Map your walk.">')
   ctx.state.openGraph = ogArray.join('\n')
-  logg(ctx.state.openGraph)
+  // logg(ctx.state.openGraph)
   await next()
 }
 
@@ -222,27 +229,31 @@ async function csp(ctx, next) {
   // nonce assignment moved to the viewGlobals() middleware function.
   // ctx.app.nonce = crypto.randomBytes(16).toString('base64')
   const { nonce } = ctx.state
+  const p = ctx.request.protocol
+  const d = ctx.app.domain
   const policy = 'base-uri \'none\'; '
     + 'default-src \'self\'; '
     + 'frame-ancestors \'none\'; '
     + 'object-src \'none\'; '
     + 'form-action \'self\'; '
-    + `style-src 'self' ${ctx.request.protocol}://${ctx.app.domain} 'unsafe-inline' 'nonce-${nonce}'; `
-    + `style-src-attr 'self' ${ctx.request.protocol}://${ctx.app.domain} 'unsafe-inline'; `
-    + `style-src-elem 'self' ${ctx.request.protocol}://${ctx.app.domain} 'unsafe-inline'; `
-    + `script-src 'self' ${ctx.request.protocol}://${ctx.app.domain} *.apple-mapkit.com *.geo.apple.com *.geo.apple.com 'wasm-unsafe-eval' 'nonce-${nonce}'; `
-    + `script-src-attr 'self' ${ctx.request.protocol}://${ctx.app.domain} 'nonce-${nonce}'; `
-    + `script-src-elem 'self' ${ctx.request.protocol}://${ctx.app.domain} 'nonce-${nonce}'; `
-    + `img-src 'self' data: blob: ${ctx.request.protocol}://${ctx.app.domain} *.apple-mapkit.com; `
-    + `font-src 'self' ${ctx.request.protocol}://${ctx.app.domain}; `
-    + `media-src 'self' data: ${ctx.request.protocol}://${ctx.app.domain}; `
+    + `style-src 'self' ${p}://${d} 'unsafe-inline' 'nonce-${nonce}'; `
+    + `style-src-attr 'self' ${p}://${d} 'unsafe-inline'; `
+    + `style-src-elem 'self' ${p}://${d} 'unsafe-inline'; `
+    + `script-src 'self' ${p}://${d} `
+      + `*.apple-mapkit.com *.geo.apple.com *.geo.apple.com 'wasm-unsafe-eval' 'nonce-${nonce}'; `
+    + `script-src-attr 'self' ${p}://${d} 'nonce-${nonce}'; `
+    + `script-src-elem 'self' ${p}://${d} 'nonce-${nonce}'; `
+    + `img-src 'self' data: blob: ${p}://${d} *.apple-mapkit.com; `
+    + `font-src 'self' ${p}://${d}; `
+    + `media-src 'self' data: ${p}://${d}; `
     + 'frame-src \'self\'; '
-    + `child-src 'self' blob: ${ctx.request.protocol}://${ctx.app.domain}; `
-    + `worker-src 'self' blob: ${ctx.request.protocol}://${ctx.app.domain}; `
-    + `manifest-src 'self' blob: ${ctx.request.protocol}://${ctx.app.domain}; `
-    + `connect-src 'self' blob: ${ctx.request.protocol}://${ctx.app.domain} *.apple-mapkit.com *.geo.apple.com https://mw-ci1-mapkitjs.geo.apple.com; `
+    + `child-src 'self' blob: ${p}://${d}; `
+    + `worker-src 'self' blob: ${p}://${d}; `
+    + `manifest-src 'self' blob: ${p}://${d}; `
+    + `connect-src 'self' blob: ${p}://${d} `
+      + `*.apple-mapkit.com *.geo.apple.com https://mw-ci1-mapkitjs.geo.apple.com; `
   ctx.set('Content-Security-Policy', policy)
-  logg(`Content-Security-Policy: ${policy}`)
+  // logg(`Content-Security-Policy: ${policy}`)
   try {
     await next()
   } catch (e) {
@@ -278,6 +289,7 @@ async function isMongo(ctx, next) {
   const err = error.extend('isMongo')
   // const { client, ObjectId } = mongoClient
   // logg(mongoClient.uri)
+  logg('ctx.request.href', ctx.request.href)
   ctx.state.mongodb = mongoClient
   try {
     logg(mongoClient.uri)
@@ -299,8 +311,8 @@ async function viewGlobals(ctx, next) {
     ctx.state.origin = `${ctx.request.protocol}://${ctx.app.domain}`
     ctx.state.domain = `${ctx.request.protocol}://${ctx.app.domain}`
   }
-  logg(ctx.state.origin)
-  logg(ctx.state.domain)
+  logg('origin', ctx.state.origin)
+  logg('domain', ctx.state.domain)
   ctx.state.nonce = crypto.randomBytes(16).toString('base64')
   ctx.state.siteName = ctx.app.site
   ctx.state.appName = ctx.app.site.toProperCase()
@@ -349,7 +361,7 @@ async function logRequest(ctx, next) {
               geo.coords = [city?.location?.latitude, city?.location?.longitude]
               logEntry[`geo_${i}`] = geo
               geos.push(geo)
-              logg('Request ip geo:     %o', geo)
+              // logg('Request ip geo:     %o', geo)
               // ctx.session.ip = ctx.request.ips
             })
           } else {
@@ -363,7 +375,7 @@ async function logRequest(ctx, next) {
             geo.coords = [city?.location?.latitude, city?.location?.longitude]
             logEntry.geo = geo
             geos.push(geo)
-            logg('Request ip geo:     %O', geo)
+            // logg('Request ip geo:     %O', geo)
             // ctx.session.ip = ctx.request.ip
           }
         } catch (e) {
@@ -384,8 +396,8 @@ async function logRequest(ctx, next) {
     logg(`Request href:        ${ctx.request.href}`)
     logg(`Request remote ips:  ${ctx.request.ips}`)
     logg(`Request remote ip:   ${ctx.request.ip}`)
-    logg('Request headers:     %O', ctx.request.headers)
-    logg('Request querystring: %P', ctx.request.query)
+    logg('Request user-agent:  %O', ctx.request.headers['user-agent'])
+    logg('Request querystring: %O', ctx.request.query)
     await next()
   } catch (e) {
     err(e)
