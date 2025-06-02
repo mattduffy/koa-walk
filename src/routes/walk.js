@@ -28,10 +28,21 @@ function sanitize(param) {
 }
 const router = new Router()
 
+router.get('test', '/test', addIpToSession, async (ctx) => {
+  const log = walkLog.extend('index-TEST')
+  log(router.stack[0].path)
+  log(router.stack[0].opts)
+  log(router.stack[0].methods)
+  log(router.stack[0].stack)
+  ctx.type = 'application/json; charset=utf-8'
+  ctx.body = router.stack[0]
+})
+
 router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   const log = walkLog.extend('index')
   // const error = walkError.extend('index')
   log('inside walk router: /')
+  log('was this a redirect from /mapkit/getToken?', ctx.request.headers)
   ctx.status = 200
   const csrfToken = ulid()
   ctx.session.csrfToken = csrfToken

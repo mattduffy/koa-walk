@@ -27,7 +27,8 @@ export function doTokensMatch(ctx) {
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
   let csrfTokenHidden
-  if (ctx.request?.body) {
+  log('testing testing testing')
+  if (ctx.request?.body && (ctx.request.body?.['csrf-token'] || ctx.request.body?.csrfTokenHidden)) {
     if (ctx.request.body?.['csrf-token']) {
       [csrfTokenHidden] = ctx.request.body['csrf-token']
     }
@@ -56,7 +57,11 @@ export function doTokensMatch(ctx) {
     ctx.status = 403
     ctx.type = 'application/json; charset=utf-8'
     ctx.body = { status: 'Error, csrf tokens do not match' }
+    // return false
   }
+  log(`csrf token match: header: ${csrfTokenCookie}`)
+  log(`                  hidden: ${csrfTokenHidden}`)
+  log(`                 session: ${csrfTokenSession}`)
   return true
 }
 
