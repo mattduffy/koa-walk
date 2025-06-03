@@ -265,7 +265,12 @@ async function csp(ctx, next) {
 async function cors(ctx, next) {
   const logg = log.extend('CORS')
   const err = error.extend('CORS')
-  logg('Cors middleware checking headers.')
+  logg('********** CORS middleware checking headers **********')
+  logg('ctx.request.method', ctx.request.method)
+  if (ctx.request.method.toLowerCase() === 'options') {
+    logg('********** Trapped an HTTP OPTIONS request **********') 
+    logg(ctx.req)
+  }
   ctx.set('Vary', 'Origin')
   if (/webfinger/.test(ctx.request.url)) {
     ctx.set('Access-Control-Allow-Origin', '*')
