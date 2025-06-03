@@ -527,9 +527,9 @@ router.get('mapkitGetToken', '/mapkit/getToken', async (ctx) => {
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
   // const [csrfTokenHidden] = ctx.request.body.csrfTokenHidden
-  log(' csrfTokenCookie', csrfTokenCookie)
-  log('csrfTokenSession', csrfTokenSession)
-  log('request body csrfTokenHidden', ctx.request.body)
+  log('                 csrfTokenCookie', csrfTokenCookie)
+  log('                csrfTokenSession', csrfTokenSession)
+  log('ctx.request.body csrfTokenHidden', ctx.request.body)
   const newCsrfToken = ulid()
   if (doTokensMatch(ctx)) {
     try {

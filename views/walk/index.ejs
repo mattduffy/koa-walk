@@ -117,7 +117,7 @@
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
   const qParams = new URLSearchParams(window.location.search)
-  const DEBUG_LEVEL = qParams.get('debug') ?? 'quiet'
+  const DEBUG_LEVEL = qParams.get('debug') ?? 'verbose' // 'quiet'
   const { log, info, warn, error } = await import(`./j/Logger.js?level=${DEBUG_LEVEL}`)
   info('query string level', DEBUG_LEVEL)
   info(`DEBUG LEVEL === ${DEBUG_LEVEL}`)
@@ -173,26 +173,42 @@
     fitMap()
   })
   fitMap()
-  async function setupMapKitJs() {
+  window.setupMapKitJs = async function() {
+  // async function setupMapKitJs() {
     const tokenOpts = {
       method: 'GET',
+      mode: 'cors',
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${jwtAccess}`,
+        'X-HELP': 'this came from setupMapKitJs token request',
       },
+      redirect: 'error',
     }
-    const request = new Request(`${origin}/mapkit/getToken`, tokenOpts)
+    info('tokenOpts', tokenOpts)
+    const url = `${origin}/mapkit/getToken/`
+    info('getToken url', url)
+    const request = new Request(url, tokenOpts)
     const response = await fetch(request)
     let tokenID
-    if (response.headers.get('content-type').includes("application/json")) {
+    info('getToken response', response)
+    info(response.status)
+    info(response.headers.get('content-type'))
+    if (response.status >= 300 && response.status < 400) {
+      info(reponse.headers.get('Location'))
+      // console reports: Fetch API cannot load https://walk.genevalakepiers.com/mapkit/getToken due to access control checks.
+      // https://stackoverflow.com/questions/63141448/safari-fetch-api-cannot-load-due-to-access-control-checks-after-reload
+      // https://www.sitepoint.com/community/t/fetch-api-cannot-load-but-only-ios-safari-and-only-on-https/357798
+    } else if (response.headers.get('content-type').includes("application/json")) {
       const x = await response.json()
       tokenID = x.tokenID
       info('csrfToken before getToken: ', window.csrfToken)
       window.csrfToken = x.newCsrfToken
-      info('csrfToken before getToken: ', window.csrfToken)
+      info('csrfToken after getToken: ', window.csrfToken)
     } else {
       info('failed to get mapkit token')
-      info(await response.text())
+      // info(await response.text())
+      info('failed')
     }
     if (!window.mapkit || window.mapkit.loadedLibraries.length === 0) {
       // mapkit.core.js of the libraries are not loaded yet.
