@@ -47,7 +47,11 @@ const __dirname = path.dirname(__filename)
 const appRoot = path.resolve(`${__dirname}/..`)
 const appEnv = {}
 const showDebug = process.env.NODE_ENV !== 'production'
-dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv, debug: showDebug })
+dotenv.config({
+  path: path.resolve(appRoot, 'config/app.env'),
+  processEnv: appEnv,
+  debug: showDebug,
+})
 
 const horizontalborder = '*'
 let _startingup = `Starting up: ${appEnv.SITE_NAME}`
@@ -240,7 +244,7 @@ async function csp(ctx, next) {
     + `style-src-attr 'self' ${p}://${d} 'unsafe-inline'; `
     + `style-src-elem 'self' ${p}://${d} 'unsafe-inline'; `
     + `script-src 'self' ${p}://${d} `
-      + `*.apple-mapkit.com *.geo.apple.com *.geo.apple.com 'wasm-unsafe-eval' 'nonce-${nonce}'; `
+      + `*.apple-mapkit.com *.geo.apple.com *.geo.apple.com 'wasm-unsafe-eval' 'nonce-${nonce}'; geo`
     + `script-src-attr 'self' ${p}://${d} 'nonce-${nonce}'; `
     + `script-src-elem 'self' ${p}://${d} 'nonce-${nonce}'; `
     + `img-src 'self' data: blob: ${p}://${d} *.apple-mapkit.com; `
