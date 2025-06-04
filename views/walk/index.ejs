@@ -177,7 +177,7 @@
   // async function setupMapKitJs() {
     const tokenOpts = {
       method: 'GET',
-      mode: 'cors',
+      mode: 'same-origin',
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${jwtAccess}`,
@@ -196,9 +196,6 @@
     info(response.headers.get('content-type'))
     if (response.status >= 300 && response.status < 400) {
       info(reponse.headers.get('Location'))
-      // console reports: Fetch API cannot load https://walk.genevalakepiers.com/mapkit/getToken due to access control checks.
-      // https://stackoverflow.com/questions/63141448/safari-fetch-api-cannot-load-due-to-access-control-checks-after-reload
-      // https://www.sitepoint.com/community/t/fetch-api-cannot-load-but-only-ios-safari-and-only-on-https/357798
     } else if (response.headers.get('content-type').includes("application/json")) {
       const x = await response.json()
       tokenID = x.tokenID
