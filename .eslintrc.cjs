@@ -31,7 +31,7 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'import/extensions': 'off',
     'import/prefer-default-export': 'off',
-    'max-len': ['error', {'code': 100}],
+    'max-len': ['error', {"code": 100}],
     'new-cap': 'off',
   },
 }
