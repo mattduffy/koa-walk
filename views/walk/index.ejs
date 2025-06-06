@@ -147,7 +147,10 @@
   window.csrfToken = '<%= csrfToken %>'
   info('csrfToken on load: ', window.csrfToken)
   window.walking = window.walking ?? new State()
-  window.walker = new Worker('<%= origin %>/j/worker.js', { name: 'walker', type: 'module' }) || null
+  window.walker = new Worker(
+    '<%= origin %>/j/worker.js',
+    { name: 'walker', type: 'module' }
+  ) || null
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   const UPDATE_INTERVAL = 1000
@@ -181,7 +184,6 @@
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${jwtAccess}`,
-        'X-HELP': 'this came from setupMapKitJs token request',
       },
       redirect: 'error',
     }
@@ -252,10 +254,13 @@
   }
   async function main() {
     await setupMapKitJs()
+    let position
     let lat = 39.833333 
     let lon = -98.583333
-    let position
+    let _alt
+    let _heading
     const mapOpts = {
+      distances: mapkit.Map.Distances[DISPLAY_UNITS],
       mapType: mapkit.Map.MapTypes.Standard,
       loadPriority: mapkit.Map.LoadPriorities.PointsOfInterest,
       selectableMapFeatures: [
@@ -263,66 +268,63 @@
         mapkit.MapFeatureType.PointOfInterest
       ],
       visibleMapRect: new mapkit.MapRect(0, 0, 1, 1),
-      isZoomEnabled: true,
       showsCompass: mapkit.FeatureVisibility.Visible,
       showsScale: mapkit.FeatureVisibility.Visible,
       showsZoomControl: true,
-      cameraDistance: 100,
       showsPointsOfInterest: true,
+      showsMapTypeControl: true,
+      cameraDistance: 100,
       isRotationEnabled: true,
       isScrollEnabled: true,
-      showsMapTypeControl: true,
-      distances: mapkit.Map.Distances[DISPLAY_UNITS],
+      isZoomEnabled: true,
     }
     if ("geolocation" in navigator) {
-      info('Can we get a location fix?') 
-      const _opts = {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0,
-      }
-      async function geoSuccess(g) {
-        info('geoSuccess(g)', g)
-        updatePosition(g)
-        position = g
-        try {
-          await setPosition(position)
-        } catch (e) {
-          warn(e)
-        }
-      }
-      function geoFail(g) {
-        info('geoFail(g)', g)
-      }
       const geoOpts = {
         enableHighAccuracy: true,
-        maximumAge: 1000 * 3,
+        maximumAge: 0,
       }
-      info('geo options: ', geoOpts)
-      await myGetCurrentPosition(geoOpts)
+      const x = await myGetCurrentPosition(geoOpts)
+      info('first position fix', x)
     } else {
       info('geolocation not available, no way of knowing.')
       info(`using ${lat} ${lon} instead`)
       info('geo error: ', position)
-      await noPositionCantWalk(mapOpts, { coords: { latitude: lat, longitude: lon, accuracy: 0 } })
+      await noPositionCantWalk(
+        mapOpts,
+        { coords: { latitude: lat, longitude: lon, accuracy: 0 } },
+      )
     }
     function updatePosition(g) {
       info('updatePosition(g)', g)
       lat = g?.coords?.latitude ?? g.latitude
       lon = g?.coords?.longitude ?? g.longitude
       const _acc = g?.coords?.accuracy ?? g.accuracy
+      const _alt = g?.coords?.altitude ?? g.altitude
+      const _heading = g?.coords?.heading ?? g.heading
       if (_acc >= accuracy) {
-        console.info(`position.accuracy (${_acc}) is greater than ${accuracy}m`)
+        info(
+          `position.accuracy (${_acc}) is greater than ${accuracy}m, `
+          + `heading: ${_heading}, `
+          + `altitude: ${_alt}`
+        )
         lowAccuracy = true
       }
-      const coords = { latitude: lat, longitude: lon, accuracy: _acc}
+      const coords = {
+        latitude: lat,
+        longitude: lon,
+        accuracy: _acc,
+        altitude: _alt,
+        heading: _heading,
+      }
+      info(coords)
       populateApp(null, coords)
       if (window.walking) {
         window.walking.currentPosition = coords
       }
     }
     async function setPosition(position) {
-      info('setPosition(position)', position, lowAccuracy)
+      info('setPosition(position)', position)
+      info('window.lowAccuracy', lowAccuracy)
       if (window.walking) {
         window.walking.currentPosition = position
       }
@@ -362,7 +364,7 @@
               navigator.geolocation.getCurrentPosition(
                 (g) => res(g.coords.accuracy),
                 (e) => rej(e),
-                { enableHighAccuracy: true }
+                { enableHighAccuracy: true, maximumAge: 100 }
               )
             })
             log(`updating walking state with new accuracy: ${_acc}`)
@@ -376,7 +378,10 @@
         }
       }
     }
-    window.walking.state.accuracyUpdateInterval = setInterval(accuracyUpdater, ACCURACY_INTERVAL)
+    window.walking.state.accuracyUpdateInterval = setInterval(
+      accuracyUpdater,
+      ACCURACY_INTERVAL,
+    )
     async function myGetCurrentPosition(geoOpts) {
       let position
       try {
@@ -384,11 +389,16 @@
           navigator.geolocation.getCurrentPosition(
             (geo) => {
               if (geo.coords.accuracy > accuracy) {
-                info(`current position accuracy (${geo.coords.accuracy}) is greater than ${accuracy}m`)
+                info(
+                  `current position accuracy (${geo.coords.accuracy}) `
+                  + `is greater than ${accuracy}m`
+                )
                 lowAccuracy = true
               }
               lat = geo.coords.latitude
               lon = geo.coords.longitude
+              _alt = geo.coords?.altitude
+              _heading = geo.coords?.heading
               res(geo)
             },
             (err) => {
@@ -427,7 +437,22 @@
         accuracy: (evtCoords?.accuracy)
           ? evtCoords.accuracy
           : window.walking.state.currentPosition.accuracy,
+        altitude: evtCoords?.altitude,
+        heading: evtCoords?.heading,
         timestamp: e.timestamp.valueOf()
+      }
+      if (!evtCoords?.altitude) {
+        const position = await new Promise((res, rej) => {
+          navigator.geolocation.getCurrentPosition(
+            (g) => res(g.coords),
+            (e) => rej(e),
+            { enableHighAccuracy: true, maximumAge: 0 }
+          )
+        })
+        // info(position)
+        coords.altitude = position.altitude
+        coords.heading = position.heading
+        info('no altitude value provided', coords)
       }
       const mapkitCoordinate = new mapkit.Coordinate(evtCoords.latitude, evtCoords.longitude)
       if (window.walking.active) {
@@ -447,6 +472,7 @@
           })
         )
       }
+      info('locality-changed coords', coords)
       updatePosition(coords)
     }
     window._map.addEventListener('user-location-change', userLocationChange)
@@ -464,14 +490,17 @@
         return a.children.namedItem('change')
       })()
       if (e.detail.coords) {
+        info('localityChanged(e) coords', e.detail.coords)
         let li = document.createElement('li')
-        const heading  = (window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading) ?
-          window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading :
-          'indeterminate'
-        li.innerHTML = `lat/lon: (${evtCoords.latitude.toFixed(4)}, `
-          + `${evtCoords.longitude.toFixed(4)}), <br>`
+        const heading  = 
+          (window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading)
+          ? window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading
+          : '???'
+        li.innerHTML = `lat ${evtCoords.latitude.toFixed(4)}, `
+          + `lon ${evtCoords.longitude.toFixed(4)} <br>`
           + `accuracy: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}, `
-          + `heading: ${heading} `
+          + `heading: ${heading}, `
+          + `alt: ${evtCoords.altitude.toFixed(1)}`
         ol.insertBefore(li, ol.firstChild)
       }
     }
@@ -1107,9 +1136,6 @@
         + `remoteListCache: ${r.length} = ${l.length + r.length}`
       )
       const listTabIconRect = el.getBoundingClientRect() ?? {x: 0, y: 0}
-      // log('listTabIconRect:', listTabIconRect)
-      // const badge = document.querySelector('div.countBadge')
-      // log('found', el.parentNode.querySelector('div.countBadge'))
       const badge = el.parentNode.querySelector('div.countBadge') || (() => {
         const div = document.createElement('div')
         div.classList.add('countBadge')
@@ -1120,9 +1146,7 @@
       })()
       badge.style.top = `${listTabIconRect.y + 1}px`
       badge.style.left = `${listTabIconRect.x + 42}px`
-      // badge.innerText = (n < 10) ? ` ${n} ` : `${n}`
       badge.innerText = (t < 10) ? ` ${t} ` : `${t}`
-      // log(badge.style.top, badge.style.left)
     }
     window.getList.renderLists = renderLists
     function finish(e) {
@@ -1146,7 +1170,6 @@
         if (noAuth) {
           noAuth.style.display = 'none'
         }
-        // if (LISTDIV.children.namedItem('noWalks')) {
         if (REMOTEDIV.children.namedItem('noWalks')) {
           console.log('already displayed no walks')
         } else {
@@ -1398,10 +1421,15 @@
     myGeocoder(me)
     const strings = {
       h3: `Can't get a very accurate GPS position.`,
-      p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
-      p2: ``,
-      p3: `GPS accuracy is low, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}</span>.<br>`
-        + `  Your walk may not be recorded very accurately.`,
+      p1: 'Your position is '
+        + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4 )}</span>, `
+        + `<span id="lon" class="coords">lon ${g.coords.longitude.toFixed(4)}</span>.<br>`,
+      p2: '<span id="alt" class="coords">Your altitude is '
+        + `${g.coords.altitude.toFixed(1)}</span>, `
+        + `<span id="heading" class="coords">heading ${g.coords.heading}</span><br>`,
+      p3: 'GPS accuracy is low, <span id="acc" class="coords">'
+        + `${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}</span>.<br>`
+        + `Your walk may not be recorded very accurately.`,
       b1: '<button name="showStartNew">Start a walk!</button>',
     }
     populateApp(strings)
@@ -1427,10 +1455,16 @@
     myGeocoder(me) 
     const strings = {
       h3: 'Your starting position looks good.',
-      p1: `Your position is <span id="lat" class="coords">${g.coords.latitude.toFixed(4)}</span> lat, <span id="lon" class="coords">${g.coords.longitude.toFixed(4)}</span> lon.<br>`,
-      p2: '',
-      p3: `GPS accuracy is good, <span id="acc" class="coords">${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}</span>.<br>`
-        + '  Tap the start button when you are ready.',
+      p1: 'Your position is '
+        + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4)}</span>, `
+        + `<span id="lon" class="coords">lon ${g.coords.longitude.toFixed(4)}</span><br>`,
+      p2: '<span id="alt" class="coords">Your altitude is '
+        + `${g.coords.altitude.toFixed(1)} m</span>, `
+        + `<span id="heading" class="coords">heading ${g.coords.heading}</span><br>`,
+      p3: 'GPS accuracy is good, <span id="acc" class="coords">'
+        + `${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}`
+        + '</span>.<br>'
+        + 'Tap the start button when you are ready.',
       b1: '<button name="showStartNew">Start a walk!</button>',
     }
     populateApp(strings)
@@ -1504,9 +1538,11 @@
       const l = `${(subLocality) ? '<span id="subLocality">' + subLocality + '</span><br>' : ''}`
         + `${(name) ? '<span id="name">' + name + '</span><br>' : ''}` 
         + `${(locality) ? '<span id="locality">' + locality + '</span>, ' : ''}`
-        + `${(administrativeAreaCode) ? '<span id="administrativeAC">' + administrativeAreaCode + '</span>' : ''}`
+        + `${(administrativeAreaCode)
+          ? '<span id="administrativeAC">' + administrativeAreaCode + '</span>'
+          : ''}`
         + '<br>'
-        a.children.namedItem('p2').innerHTML += l
+        a.children.namedItem('p2').innerHTML += `<br>${l}`
       // new walk div content
       if (!window.walking.active) {
         document.querySelector('input[id="name"]').value = (subLocality) ? subLocality : name
@@ -1517,18 +1553,30 @@
     }
     if (coords) {
       log('populateApp coords: ', coords)
-      log(`updating user's coordinates: (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`)
+      log(
+        `updating user's coordinates: (${coords.latitude.toFixed(4)}, `
+        + `${coords.longitude.toFixed(4)})`
+      )
       const _lat = a.querySelector('p > span#lat')
       if (coords.latitude && _lat) {
-        a.querySelector('p > span#lat').innerHTML = coords.latitude.toFixed(4)
+        a.querySelector('p > span#lat').innerHTML = `lat ${coords.latitude.toFixed(4)}`
       }
       const _lon = a.querySelector('p > span#lon')
       if (coords.longitude && _lon) {
-        a.querySelector('p > span#lon').innerHTML = coords.longitude.toFixed(4)
+        a.querySelector('p > span#lon').innerHTML = `lon ${coords.longitude.toFixed(4)}`
       }
       const _acc = a.querySelector('p > span#acc')
       if (coords.accuracy && _acc) {
         _acc.innerHTML = displayUnits(coords.accuracy, DISPLAY_UNITS, 1)
+      }
+      const _alt = a.querySelector('p > span#alt')
+      if (coords.altitude && _alt) {
+        a.querySelector('p > span#alt').innerHTML = 
+          `Your altitude is ${coords.altitude.toFixed(1)}`
+      }
+      const _heading = a.querySelector('p > span#heading')
+      if (coords.heading && _heading) {
+        a.querySelector('p > span#heading').innerHTML = `heading ${coord.heading}`
       }
       // new walk div content
       if (!window.walking.active) {
