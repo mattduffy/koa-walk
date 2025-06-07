@@ -231,10 +231,14 @@ async function saveWalk(credentials) {
     }
   }
 }
-async function exportKML(credentials) {
-  console.log('worker::exportKML(credentials)', credentials)
+async function exportAs(credentials) {
+  console.log('worker::exportAs(credentials)', credentials)
   let response
+  let { format } = credentials
+  let body = {}
   let kml
+  let gpx
+  let geojson
   let walk
   let newCsrfToken
   if (credentials.scope === 'local') {
@@ -285,23 +289,40 @@ async function exportKML(credentials) {
       console.log('showWalk response:', json)
       walk = json.walk
       newCsrfToken = json.newCsrfToken
+      body.newCsrfToken = newCsrfToken
     } catch (e) {
       console.error(e)
       walk = { status: 'failed', msg: 'failed to retrieve walk from db', e }
     }
   }
-  if (walk.features[0].properties?.timestamps) {
-    kml = kmlTrack(walk)
-  } else {
-    kml = kmlLineString(walk)
+  if (format === 'kml') {
+    if (walk.features[0].properties?.timestamps) {
+      kml = kmlTrack(walk)
+    } else {
+      kml = kmlLineString(walk)
+    }
+    console.log('kml', kml)
+    body.kml = kml
   }
-  console.log('kml', kml)
+  if (format === 'gpx') {
+    body.gpx = gpx
+    console.log('gpx', gpx)
+  }
+  if (format === 'geojson') {
+    delete walk._id
+    delete walk.userId
+    body.geojson = JSON.stringify(walk)
+    console.log('geojson', walk)
+  }
   const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
   const niceDate = new Date(walk.features[0].properties.date)
     .toLocaleString('en-US', fmt)
   let _name = `${walk.features[0].properties.name} ${niceDate}`
-  _name = _name.replace(/ /g, '-').replace(/,/g, '')
-  return { kml, filename:`${_name}.kml`, newCsrfToken }
+    .replace(/ /g, '-')
+    .replace(/,/g, '')
+    .replace(/'/g, '')
+  body.filename = `${_name}.${format}`
+  return body 
 }
 
 function kmlTrack(walk) {
@@ -911,7 +932,7 @@ onmessage = async (e) => {
         break
       case 'EXPORT_WALK':
         console.log('worker', e.data.TASK)
-        postMessage({ TASK: 'EXPORT_WALK', ...await exportKML(e.data) })
+        postMessage({ TASK: 'EXPORT_WALK', ...await exportAs(e.data) })
         break
       default:
         console.info(e)

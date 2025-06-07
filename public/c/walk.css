@@ -73,8 +73,8 @@ nav#nav > div {
   padding: .0em 0em;
 }
 
-span.export::after {
-  background-image: url('/i/export.svg');
+span[data-type=geojson].export::after {
+  background-image: url('/i/geojson-icon.png');
   background-size: 20px 20px;
   display: inline-block;
   width: 20px; 
@@ -82,7 +82,31 @@ span.export::after {
   content:"";
   position: relative;
   top: 5px;
-  margin: 0px 10px 0px 5px;
+  margin: 0px 10px 0px 1px;
+}
+
+span[data-type=gpx].export::after {
+  background-image: url('/i/gpx-icon.png');
+  background-size: 20px 20px;
+  display: inline-block;
+  width: 20px; 
+  height: 20px;
+  content:"";
+  position: relative;
+  top: 5px;
+  margin: 0px 10px 0px 1px;
+}
+
+span[data-type=kml].export::after {
+  background-image: url('/i/kml-icon.png');
+  background-size: 20px 20px;
+  display: inline-block;
+  width: 20px; 
+  height: 20px;
+  content:"";
+  position: relative;
+  top: 5px;
+  margin: 0px 10px 0px 1px;
 }
 
 span.delete::after {
@@ -94,7 +118,7 @@ span.delete::after {
   content:"";
   position: relative;
   top: 5px;
-  margin: 0px 10px 0px 5px;
+  margin: 0px 10px 0px 1px;
 }
 
 span.hikingpng {

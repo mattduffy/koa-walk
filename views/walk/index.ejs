@@ -831,7 +831,7 @@
             break
           case 'EXPORT_WALK':
             log('csrfToken before EXPORT_WALK: ', window.csrfToken)
-            window.exportWalkAsKML.finish(e.data)
+            window.exportWalkAs.finish(e.data)
             log('csrfToken after EXPORT_WALK: ', window.csrfToken)
             break
           case 'SET_PREF':
@@ -1050,13 +1050,18 @@
           // log(w)
           const li = document.createElement('li')
           li.style.marginLeft = '-1.5em'
-          li.style.padding = '5px 0px'
+          li.style.padding = '5px 0px 6px 0px'
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
           li.innerHTML = `<span data-show-id="${w.id}" data-scope="remote" class="pointer">`
             + `${w.name}</span> `
             + `(${new Date(w.date).toLocaleString('en-US', fmt)}) <br>`
-            + `<span data-export-id=${w.id} data-scope="remote" class="pointer export tiny">`
-            + `export KML</span> `
+            + 'export: '
+            + `<span data-export-id=${w.id} data-type="kml" data-scope="remote" `
+            + 'class="pointer export tiny">KML</span>'
+            + `<span data-export-id=${w.id} data-type="gpx" data-scope="remote" `
+            + 'class="pointer export tiny">GPX</span>'
+            + `<span data-export-id=${w.id} data-type="geojson" data-scope="remote" `
+            + 'class="pointer export tiny">GEOJson</span>'
             + `<span data-delete-id=${w.id} data-scope="remote" class="pointer delete tiny">`
             + `delete</span>`
           replaceLis.push(li)
@@ -1103,8 +1108,13 @@
             li.innerHTML = `<span data-show-id="${w.id}" data-scope="local" class="pointer">`
               + `${w.name}</span> `
               + `(${new Date(w.date).toLocaleString('en-US', fmt)}) <br>`
-              + `<span data-export-id=${w.id} data-scope="local" class="pointer export tiny">`
-              + `export KML</span> `
+              + 'export: '
+              + `<span data-export-id=${w.id} data-type="kml" data-scope="local" `
+              + 'class="pointer export tiny">KML</span>'
+              + `<span data-export-id=${w.id} data-type="gpx" data-scope="local" `
+              + 'class="pointer export tiny">GPX</span>'
+              + `<span data-export-id=${w.id} data-type="geojson" data-scope="local" `
+              + 'class="pointer export tiny">GEOJson</span>'
               + `<span data-delete-id=${w.id} data-scope="local" class="pointer delete tiny">`
               + `delete</span>`
             replaceLis.push(li)
@@ -1123,7 +1133,7 @@
         s.addEventListener('click', showWalk)
       })
       document.querySelectorAll('span[data-export-id]').forEach((s) => {
-        s.addEventListener('click', exportWalkAsKML)
+        s.addEventListener('click', exportWalkAs)
       })
     }
     window.showCountBadge = function(n = 0, el = null) {
@@ -1345,32 +1355,44 @@
     }
     window.deleteWalk.finish = finish
   }
-  window.exportWalkAsKML = async function(e) {
+  window.exportWalkAs = async function(e) {
     e.preventDefault()
     e.stopPropagation()
-    log('exportWalkAsKML(e)', e)
+    log('exportWalkAs(e)', e)
+    const format = e.target.dataset.type
     const credentials = {
       TASK: 'EXPORT_WALK',
       url: `${origin}/getWalk`,
       csrfTokenHidden: window.csrfToken,
       id: e.target.dataset.exportId,
       scope: e.target.dataset.scope,
+      format,
       jwtAccess,
     }
+    info('export walk as', credentials)
     window.walker.postMessage(credentials)
     function finish(e) {
-      log('exportWalkAsKML().finish(e)', e)
+      log('exportWalkAs().finish(e)', e)
       window.csrfToken = e.newCsrfToken
-      log('kml', e) 
-      const blob = new Blob([e.kml], { type: 'application/vnd.google-earth.kml+xml' })
+      log('export data type', e) 
       const a = document.createElement('a')
-      a.id = 'KML-download'
+      let blob
+      if (format === 'kml') {
+        blob = new Blob([e.kml], { type: 'application/vnd.google-earth.kml+xml' })
+        a.id = 'KML-download'
+      } else if (format === 'gpx') {
+        blob = new Blob([e.gpx], { type: 'application/gpx+xml' })
+        a.id = 'GPX-download'
+      } else if (format === 'geojson') {
+        blob = new Blob([e.geojson], { type: 'application/json' })
+        a.id = 'GEOJson-download'
+      }
       a.setAttribute('download', e.filename)
       a.setAttribute('href', window.URL.createObjectURL(blob))
       a.click()
       a.remove()
     }
-    window.exportWalkAsKML.finish = finish
+    window.exportWalkAs.finish = finish
   }
   async function noPositionCantWalk(o, g) {
     log(`no position available: ${g}`)
@@ -1576,7 +1598,7 @@
       }
       const _heading = a.querySelector('p > span#heading')
       if (coords.heading && _heading) {
-        a.querySelector('p > span#heading').innerHTML = `heading ${coord.heading}`
+        a.querySelector('p > span#heading').innerHTML = `heading ${coords.heading}`
       }
       // new walk div content
       if (!window.walking.active) {
