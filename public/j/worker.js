@@ -9,6 +9,9 @@ import { heading, pointDistance } from './Heading.js'
 import { ObjectId } from './lib/bson.mjs'
 
 const worker = self
+let origin
+let appName
+
 const IDB_OBJ_VER = 1
 const DBNAME = 'walks'
 const OBJSTORENAME = 'walk'
@@ -305,8 +308,9 @@ async function exportAs(credentials) {
     body.kml = kml
   }
   if (format === 'gpx') {
-    body.gpx = gpx
+    gpx = gpxTrack(walk)
     console.log('gpx', gpx)
+    body.gpx = gpx
   }
   if (format === 'geojson') {
     delete walk._id
@@ -319,10 +323,71 @@ async function exportAs(credentials) {
     .toLocaleString('en-US', fmt)
   let _name = `${walk.features[0].properties.name} ${niceDate}`
     .replace(/ /g, '-')
-    .replace(/,/g, '')
-    .replace(/'/g, '')
+    .replace(/[,’?!#]/g, '')
   body.filename = `${_name}.${format}`
   return body 
+}
+
+function gpxTrack(walk) {
+  const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+  const niceDate = new Date(walk.features[0].properties.date)
+    .toLocaleString('en-US', fmt)
+  const shortDate = new Date(walk.features[0].properties.date)
+    .toLocaleString('en-US', {year: 'numeric', month: '2-digit', day: 'numeric'})
+  const last = walk.features[0].geometry.coordinates.length - 1
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1"
+version="1.1"
+creator="${origin}"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="`
+  + 'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\n'
+  + 'http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd \n'
+  + 'http://www.topografix.com/GPX/gpx_overlay/0/4 http://www.topografix.com/GPX/gpx_overlay/0/4/gpx_overlay.xsd \n'
+  + 'http://www.topografix.com/GPX/gpx_modified/0/1 http://www.topografix.com/GPX/gpx_modified/0/1/gpx_modified.xsd">\n '
+  + `<metadata>
+     <name>${appName}</name>
+     <desc>Take a walk.  Record where you went.  Export the data in GPX format.</desc>
+     <author>
+       <name>Matthew Duffy</name>
+       <email>mattduffy@gmail.com</email>
+       <link href="${origin}">
+         <text>Record your walk.</text>
+         <type>text/html</type>
+       </link>
+     </author>
+     <copyright author="Matthew Duffy">
+       <year>2025</year>
+     </copyright>
+     <link href="${origin}">
+       <text>Record your walk.</text>
+       <type>text/html</type>
+     </link>
+     <time>${new Date(walk.features[0].properties.date).toISOString()}</time>
+  </metadata>
+  <trk>
+     <name>${walk.features[0].properties.name}</name>
+     <cmt>${walk.features[0].properties.location}</cmt>
+     <desc>
+         Duration: ${
+           new Date(walk.features[0].properties.duration)
+           .toISOString().slice(11, 19)
+         }\n
+         Distance: ${walk.features[0].properties.distance.toFixed(1)} meters.
+     </desc>
+     <type>Walk</type>
+     <trkseg>
+       ${walk.features[0].geometry.coordinates.map((w, i) => {
+         return `<trkpt lat="${w[1]}" lon="${w[0]}">`
+           + `<ele>${w[3]}</ele>`
+           + `<time>${new Date(walk.features[0].properties.timestamps[i]).toISOString()}</time>`
+           + '<fix>3d</fix>'
+         + '</trkpt>'
+       }).join('\n')}
+     </trkseg>
+  </trk>
+ </gpx>
+</xml>`
 }
 
 function kmlTrack(walk) {
@@ -404,7 +469,8 @@ function kmlTrack(walk) {
       </description>
       <Point>
         <coordinates>
-          ${walk.features[0].geometry.coordinates[0][0]},${walk.features[0].geometry.coordinates[0][1]},0
+          ${walk.features[0].geometry.coordinates[0][0]},
+          ${walk.features[0].geometry.coordinates[0][1]},0
         </coordinates>
       </Point>
     </Placemark>
@@ -858,6 +924,9 @@ function endWalk(e) {
 onmessage = async (e) => {
   if (e.data?.TASK) {
     switch (e.data.TASK) {
+      case 'INIT':
+        ({ origin, appName } = e.data)
+        break;
       case 'SETUP':
         if (e.data.isAuth) {
           postMessage({ TASK: 'SETUP', ...await refresh(e.data) })
