@@ -151,6 +151,7 @@
     '<%= origin %>/j/worker.js',
     { name: 'walker', type: 'module' }
   ) || null
+  window.walker.postMessage({ TASK: 'INIT', origin, appName: 'Walk' })
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   const UPDATE_INTERVAL = 1000
