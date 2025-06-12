@@ -451,8 +451,8 @@
           )
         })
         // info(position)
-        coords.altitude = position.altitude
-        coords.heading = position.heading
+        coords.altitude = position?.altitude
+        coords.heading = position?.heading
         info('no altitude value provided', coords)
       }
       const mapkitCoordinate = new mapkit.Coordinate(evtCoords.latitude, evtCoords.longitude)
@@ -501,7 +501,7 @@
           + `lon ${evtCoords.longitude.toFixed(4)} <br>`
           + `accuracy: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}, `
           + `heading: ${heading}, `
-          + `alt: ${evtCoords.altitude.toFixed(1)}`
+          + `alt: ${evtCoords.altitude?.toFixed(1) ?? 0}`
         ol.insertBefore(li, ol.firstChild)
       }
     }
@@ -1139,8 +1139,8 @@
     }
     window.showCountBadge = function(n = 0, el = null) {
       if (n === 0 || el === null) return
-      const l = window.walking.state?.localListCache
-      const r = window.walking.state?.remoteListCache
+      const l = window.walking.state?.localListCache ?? {length: 0}
+      const r = window.walking.state?.remoteListCache ?? {length: 0}
       const t = l.length + r.length
       log(
         `localListCache: ${l.length} + `
@@ -1448,8 +1448,8 @@
         + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4 )}</span>, `
         + `<span id="lon" class="coords">lon ${g.coords.longitude.toFixed(4)}</span>.<br>`,
       p2: '<span id="alt" class="coords">Your altitude is '
-        + `${g.coords.altitude.toFixed(1)}</span>, `
-        + `<span id="heading" class="coords">heading ${g.coords.heading}</span><br>`,
+        + `${g.coords?.altitude?.toFixed(1) ?? 0}</span>, `
+        + `<span id="heading" class="coords">heading ${g.coords?.heading}</span><br>`,
       p3: 'GPS accuracy is low, <span id="acc" class="coords">'
         + `${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}</span>.<br>`
         + `Your walk may not be recorded very accurately.`,
@@ -1482,7 +1482,7 @@
         + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4)}</span>, `
         + `<span id="lon" class="coords">lon ${g.coords.longitude.toFixed(4)}</span><br>`,
       p2: '<span id="alt" class="coords">Your altitude is '
-        + `${g.coords.altitude.toFixed(1)} m</span>, `
+        + `${g.coords?.altitude?.toFixed(1) ?? 0} m</span>, `
         + `<span id="heading" class="coords">heading ${g.coords.heading}</span><br>`,
       p3: 'GPS accuracy is good, <span id="acc" class="coords">'
         + `${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}`
@@ -1593,9 +1593,9 @@
         _acc.innerHTML = displayUnits(coords.accuracy, DISPLAY_UNITS, 1)
       }
       const _alt = a.querySelector('p > span#alt')
-      if (coords.altitude && _alt) {
+      if (coords?.altitude && _alt) {
         a.querySelector('p > span#alt').innerHTML = 
-          `Your altitude is ${coords.altitude.toFixed(1)}`
+          `Your altitude is ${coords?.altitude?.toFixed(1) ?? 0}`
       }
       const _heading = a.querySelector('p > span#heading')
       if (coords.heading && _heading) {
