@@ -25,15 +25,23 @@
             <legend>Preferences</legend>
             <span style="font-weight: 450;">Distance Units:</span>
             <br>
-            <label>Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (preferences.units === 'Metric') ? 'checked' : '' %> tabindex="0"></label>
+            <label>
+              Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (preferences.units === 'Metric') ? 'checked' : '' %> tabindex="0">
+            </label>
             <br>
-            <label>Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (preferences.units === 'Imperial') ? 'checked' : '' %> tabindex="0"></label>
+            <label>
+              Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (preferences.units === 'Imperial') ? 'checked' : '' %> tabindex="0">
+            </label>
             <br>
             <span style="font-weight: 450;">Map Orientation:</span>
             <br>
-            <label>North Up<input id="northUpId" name="orientation" type="radio" value="northUp"<%= (preferences?.orientation === 'northUp') ? 'checked' : '' %> tabindex="0"></label>
+            <label>
+              North Up<input id="northUpId" name="orientation" type="radio" value="northUp" <%= (preferences?.orientation === 'northUp') ? 'checked' : '' %> tabindex="0">
+            </label>
             <br>
-            <label>Heading Up<input id="headingUpId" name="orientation" type="radio" value="headingUp" <%= (preferences?.orientation === 'headingUp') ? 'checked' : '' %> tabindex="0"></label>
+            <label>
+              Heading Up<input id="headingUpId" name="orientation" type="radio" value="headingUp" <%= (preferences?.orientation === 'headingUp') ? 'checked' : '' %> tabindex="0">
+            </label>
           </fieldset>
         </form>
         <a id="logout" href="/logout">Log out</a>
@@ -117,7 +125,7 @@
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
   const qParams = new URLSearchParams(window.location.search)
-  const DEBUG_LEVEL = qParams.get('debug') ?? 'verbose' // 'quiet'
+  const DEBUG_LEVEL = qParams.get('debug') ?? 'quiet' // 'quiet'
   const { log, info, warn, error } = await import(`./j/Logger.js?level=${DEBUG_LEVEL}`)
   info('query string level', DEBUG_LEVEL)
   info(`DEBUG LEVEL === ${DEBUG_LEVEL}`)
@@ -126,8 +134,12 @@
   let DISPLAY_ORIENTATION
   let VERBOSE = false
   let DEBUG = false
-  DISPLAY_UNITS = <%- (preferences?.units) ? `\'${preferences.units}\'` : false %> || 'Metric'
-  DISPLAY_ORIENTATION = <%- (preferences?.orientation) ? `\'${preferences.orientation}\'` : false %> || 'northUp'
+  DISPLAY_UNITS = <%- (preferences?.units)
+    ? `\'${preferences.units}\'`
+    : false %> || 'Metric'
+  DISPLAY_ORIENTATION = <%- (preferences?.orientation)
+    ? `\'${preferences.orientation}\'`
+    : false %> || 'northUp'
   if (DEBUG_LEVEL && DEBUG_LEVEL !== 'quiet') {
     log('DEBUG_LEVEL', DEBUG_LEVEL)
     VERBOSE = true
@@ -431,6 +443,7 @@
     }
     async function userLocationChange(e) {
       log('userLocationChange(e)', e)
+      const isHeadingUp = document.querySelector('input#headingUpId').checked
       const evtCoords = e.coordinate
       const coords = {
         latitude: evtCoords.latitude,
@@ -450,15 +463,17 @@
             { enableHighAccuracy: true, maximumAge: 0 }
           )
         })
-        // info(position)
         coords.altitude = position?.altitude
         coords.heading = position?.heading
-        info('no altitude value provided', coords)
+        info('filled in missing altitude and heading values', coords)
       }
       const mapkitCoordinate = new mapkit.Coordinate(evtCoords.latitude, evtCoords.longitude)
       if (window.walking.active) {
         await recordWalk(coords, mapkitCoordinate)
         window._map.setCenterAnimated(mapkitCoordinate, false)
+        // if (isHeadingUp) {
+        //   window._map.rotation = coords.heading
+        // }
       } else if (window.walking.state.showing) {
         info('showing old (saved) walk')
 
@@ -500,7 +515,8 @@
         li.innerHTML = `lat ${evtCoords.latitude.toFixed(4)}, `
           + `lon ${evtCoords.longitude.toFixed(4)} <br>`
           + `accuracy: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}, `
-          + `heading: ${heading}, `
+          // + `heading: ${heading}, `
+          + `heading: ${evtCoords.heading?.toFixed(1) ?? 0}°, `
           + `alt: ${evtCoords.altitude?.toFixed(1) ?? 0}`
         ol.insertBefore(li, ol.firstChild)
       }
@@ -620,6 +636,7 @@
       const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS, verbose: VERBOSE }
       window.walking.c = c
       window.walking.addPoint(wp, DISPLAY_UNITS, true)
+      // info(window.walking.printPoints())
       window.walker.postMessage(step)
       markWalkPointOnMap()
       updateHeading()
@@ -674,6 +691,7 @@
       document.querySelector('span#numWaypoints').textContent = '0'
       document.querySelector('span#duration').textContent = '00:00:00'
       document.querySelector('span#distance').textContent = '0'
+      document.querySelector('input[type=text]#name').value = ''
       window.walking.clear()
       window.walker.postMessage({ TASK: 'CLEAR_WALK' })
       window._map.removeOverlay(window._map.overlays.find((o) => o.data.name === identifier))
@@ -685,12 +703,7 @@
       } else {
         log('map orientation: Heading Up')
         let bearing
-        // bearing = window.walking.lastHeading
-        // if (bearing > 0) {
-        //   bearing *= -1
-        // }
-        // bearing = window.walking.bearing
-        bearing = window.walking.lastHeading
+        bearing = -window.walking.lastHeading
         log(`updating heading to ${bearing} degrees off North.`)
         window._map.rotation = bearing
         if (DEBUG_LEVEL === 'verbose') {
@@ -1445,11 +1458,14 @@
     const strings = {
       h3: `Can't get a very accurate GPS position.`,
       p1: 'Your position is '
-        + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4 )}</span>, `
+        + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4)}</span>, `
         + `<span id="lon" class="coords">lon ${g.coords.longitude.toFixed(4)}</span>.<br>`,
       p2: '<span id="alt" class="coords">Your altitude is '
-        + `${g.coords?.altitude?.toFixed(1) ?? 0}</span>, `
-        + `<span id="heading" class="coords">heading ${g.coords?.heading}</span><br>`,
+        + `${g.coords?.altitude?.toFixed(1)}</span>`
+        + ', <span id="heading" class="coords">heading '
+        + `${g.coords?.heading?.toFixed(1) ?? 0}°`
+        + '</span>'
+        + '.<br>',
       p3: 'GPS accuracy is low, <span id="acc" class="coords">'
         + `${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}</span>.<br>`
         + `Your walk may not be recorded very accurately.`,
@@ -1482,8 +1498,11 @@
         + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4)}</span>, `
         + `<span id="lon" class="coords">lon ${g.coords.longitude.toFixed(4)}</span><br>`,
       p2: '<span id="alt" class="coords">Your altitude is '
-        + `${g.coords?.altitude?.toFixed(1) ?? 0} m</span>, `
-        + `<span id="heading" class="coords">heading ${g.coords.heading}</span><br>`,
+        + `${g.coords?.altitude?.toFixed(1) ?? 0} m</span>`
+        + ', <span id="heading" class="coords">heading '
+        + `${g.coords?.heading?.toFixed(1) ?? 0}°`
+        + '</span>'
+        + '.<br>',
       p3: 'GPS accuracy is good, <span id="acc" class="coords">'
         + `${displayUnits(g.coords.accuracy, DISPLAY_UNITS, 1)}`
         + '</span>.<br>'
@@ -1614,7 +1633,7 @@
     const delay = ms => new Promise(res => setTimeout(res, ms))
     let i = 0
     for await (const p of P) {
-      await delay(5000)
+      await delay(1000)
       console.log(i, p)
       window._map.addAnnotations(
         [ new window.mapkit.MarkerAnnotation(
