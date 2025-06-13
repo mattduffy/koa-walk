@@ -12,7 +12,7 @@ function degs(radians) {
 }
 
 export function pointDistance(p1, p2, u = 'metric') {
-  console.log('pointDistances(p1, p2, u): ', p1, p2, u)
+  console.log('Heading::pointDistances(p1, p2, u): ', p1, p2, u)
   const earthRadiusKm = 6371
   const earthRadiusMeters = 6371000
   const earthRadiusMi = 3959
@@ -28,7 +28,7 @@ export function pointDistance(p1, p2, u = 'metric') {
     r = earthRadiusMeters
     console.log('No units given, default to earth radius in meters')
   }
-  console.log(`Heading::pointDistance() using earth radius: ${r} ${_u}`)
+  // console.log(`Heading::pointDistance() using earth radius: ${r} ${_u}`)
   const dLat = rads(p2.latitude - p1.latitude)
   const dLon = rads(p2.longitude - p1.longitude)
   const lat1 = rads(p1.latitude)
@@ -55,13 +55,24 @@ export function heading(p1, p2, l = false) {
     - Math.min(A.latitude, B.latitude))
   if (l) console.log('deltaLatitude:', deltaLatitude)
   const X = Math.cos(rads(B.latitude)) * Math.sin(rads(deltaLongitude))
-  if (l) console.log(`X = ${X} = Math.cos(${rads(B.latitude)}) * Math.sin(${rads(deltaLongitude)})`)
-  const Y = (Math.cos(rads(A.latitude)) * Math.sin(rads(B.latitude)))
-     - (Math.sin(rads(A.latitude)) * Math.cos(rads(B.latitude)) * Math.cos(rads(deltaLongitude)))
-  if (l) console.log(`Y = ${Y} = (Math.cos(${rads(A.latitude)} * Math.sin(${rads(B.latitude)}))`
-    + `- (Math.sin(${rads(A.latitude)}) * Math.cos(${rads(B.latitude)}) * Math.cos(${rads(deltaLongitude)}))`)
-  if (l) console.log(`Y = ${Y} = (${Math.cos(rads(A.latitude))} * ${Math.sin(rads(B.latitude))})`
-    + `- (${Math.sin(rads(A.latitude))} * ${Math.cos(rads(B.latitude))} * ${Math.cos(rads(deltaLongitude))})`)
+  if (l) console.log(
+    `X = ${X} = Math.cos(${rads(B.latitude)}) * Math.sin(${rads(deltaLongitude)})`
+  )
+  const Y = (Math.cos(rads(A.latitude))
+    * Math.sin(rads(B.latitude)))
+    - (Math.sin(rads(A.latitude))
+    * Math.cos(rads(B.latitude))
+    * Math.cos(rads(deltaLongitude)))
+  if (l) console.log(
+    `Y = ${Y} = (Math.cos(${rads(A.latitude)} * Math.sin(${rads(B.latitude)}))`
+    + `- (Math.sin(${rads(A.latitude)}) `
+    + `* Math.cos(${rads(B.latitude)}) `
+    + `* Math.cos(${rads(deltaLongitude)}))`)
+  if (l) console.log(
+    `Y = ${Y} = (${Math.cos(rads(A.latitude))} * ${Math.sin(rads(B.latitude))})`
+    + `- (${Math.sin(rads(A.latitude))} `
+    + `* ${Math.cos(rads(B.latitude))} `
+    + `* ${Math.cos(rads(deltaLongitude))})`)
   const β = Math.atan2(X, Y)
   if (l) console.log(`${β} = Math.atan2(${X}, ${Y})`)
   return Math.round(degs(β) * 10) / 10
@@ -83,9 +94,13 @@ export function headingArr(p1, p2, l = false) {
   const Y = (Math.cos(rads(A[1])) * Math.sin(rads(B[1])))
      - (Math.sin(rads(A[1])) * Math.cos(rads(B[1])) * Math.cos(rads(deltaLongitude)))
   if (l) console.log(`Y = ${Y} = (Math.cos(${rads(A[1])} * Math.sin(${rads(B[1])}))`
-    + `- (Math.sin(${rads(A[1])}) * Math.cos(${rads(B[1])}) * Math.cos(${rads(deltaLongitude)}))`)
+    + `- (Math.sin(${rads(A[1])}) `
+    + `* Math.cos(${rads(B[1])}) `
+    + `* Math.cos(${rads(deltaLongitude)}))`)
   if (l) console.log(`Y = ${Y} = (${Math.cos(rads(A[1]))} * ${Math.sin(rads(B[1]))})`
-    + `- (${Math.sin(rads(A[1]))} * ${Math.cos(rads(B[1]))} * ${Math.cos(rads(deltaLongitude))})`)
+    + `- (${Math.sin(rads(A[1]))} `
+    + `* ${Math.cos(rads(B[1]))} `
+    + `* ${Math.cos(rads(deltaLongitude))})`)
   const β = Math.atan2(X, Y)
   if (l) console.log(`${β} = Math.atan2(${X}, ${Y})`)
   return Math.round(degs(β) * 10) / 10
