@@ -5,13 +5,14 @@ import Subject from './Subject.js'
 import { pointDistance, heading } from './Heading.js'
 
 function normalizePosition(c) {
-  console.log('normalizePosition(c): ', c)
+  // console.log('normalizePosition(c): ', c)
   if (c.constructor.name === 'GeolocationPosition') {
     console.log('normalizing GeoLocationPosition into smaller obj.')
     return {
       latitude: c.coords.latitude,
       longitude: c.coords.longitude,
       accuracy: c.coords.accuracy,
+      altitude: c.coords.altitude,
       timestamp: c.timestamp,
       distance: c.distance ?? 0,
     }
@@ -148,7 +149,7 @@ class State extends Subject {
   set currentPosition(c) {
     console.log('setCurrentPosition(c): ', c)
     this.state.currentPosition = normalizePosition(c)
-    console.log('current position is now: ', this.state.currentPosition)
+    // console.log('current position is now: ', this.state.currentPosition)
   }
 
   get currentPosition() {
@@ -181,11 +182,13 @@ class State extends Subject {
     let prev
     if (this.state.wayPoints.length > 0) {
       prev = this.state.wayPoints[this.state.wayPoints.length - 1]
+      // point includes heading now, from GPS 
+      // point.heading = heading(prev, point, verbose)
       point.distance = pointDistance(prev, point, u)
-      point.heading = heading(prev, point, verbose)
     } else {
       point.distance = 0
       point.heading = 0.0
+      point.altitude = 0.0
     }
     console.log('point distance:', point.distance)
     if (!this.state.distance) {
@@ -213,11 +216,15 @@ class State extends Subject {
     // if (p1.heading <= p2.heading) {
     //   console.log(`p1.heading (${p1.heading} <= p2.heading ${p2.heading}`)
     //   bearing = (p1.heading + p2.heading) % 360
-    //   console.log(`(p1.heading (${p1.heading} + p2.heading ${p2.heading}) % 360 = bearing ${bearing}`)
+    //   console.log(
+    //    `(p1.heading (${p1.heading} + p2.heading ${p2.heading}) % 360 = bearing ${bearing}`
+    //   )
     // } else {
     //   console.log(`p1.heading (${p1.heading} > p2.heading ${p2.heading}`)
     //   bearing = (p1.heading - p2.heading) % 360
-    //   console.log(`(p1.heading $(p1.heading} - p2.heading ${p2.heading}) % 360 = bearing ${bearing}`)
+    //   console.log(
+    //    `(p1.heading $(p1.heading} - p2.heading ${p2.heading}) % 360 = bearing ${bearing}`
+    //   )
     // }
     bearing = p2.heading
     this.state.headings.push(bearing)
@@ -256,8 +263,8 @@ class State extends Subject {
             coordinates: this.state.wayPoints.map((w) => [
               w.longitude,
               w.latitude,
-              0,                // placeholder for altitude
-              w.heading ?? 0.0, // property unsanctioned by geojson spec
+              w.heading ?? 0.0, // property unsanctioned by geojson spec (heading)
+              w.altitude,       // property unscantioned by geojson spec (altitude)
             ]),
           },
         },
