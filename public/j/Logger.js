@@ -21,7 +21,7 @@ class Logger {
         break
       case 'normal':
         this.log = console.log.bind(console)
-        this.info = () => {}
+        this.info = console.info.bind(console)
         this.warn = () => {}
         this.error = console.error.bind(console)
         this.log('level is', level)
