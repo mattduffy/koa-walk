@@ -260,10 +260,6 @@ async function exportAs(credentials) {
         console.log(`store.get(${credentials.id})`, e.target)
         console.log('request.result', e.target.result)
         const _walk = e.target.result ?? {}
-        _walk.scope = credentials.scope
-        _walk.msg = 'Walk retrieved fom local device.'
-        _walk.status = 'ok'
-        _walk.newCsrfToken = credentials.csrfTokenHidden
         console.log('about to resolve local walk', _walk)
         resolve(_walk)
       }
@@ -272,6 +268,10 @@ async function exportAs(credentials) {
         // console.log(walk)
       } 
     })
+    body.newCsrfToken = credentials.csrfTokenHidden
+    body.msg = 'Walk retrieved fom local device.'
+    body.status = 'ok'
+    body.scope = credentials.scope
   } else {
     const formData = new FormData()
     formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
@@ -323,6 +323,7 @@ async function exportAs(credentials) {
     .toLocaleString('en-US', fmt)
   let _name = `${walk.features[0].properties.name} ${niceDate}`
     .replace(/ /g, '-')
+    .replace(/[()]/g, '_')
     .replace(/[,’?!#]/g, '')
   body.filename = `${_name}.${format}`
   return body 
