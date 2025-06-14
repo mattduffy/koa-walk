@@ -54,6 +54,10 @@ nav#nav > div {
   justify-content: center;
 }
 
+nav#nav > div:not(:last-child) {
+  border-right: 1px solid slateray;
+}
+
 .outline {
   border: 1px solid slategray;
 }
@@ -502,6 +506,10 @@ textarea {
     align-items: center;
     display: flex;
     justify-content: center;
+  }
+
+  nav#nav > div:not(:last-child) {
+    border-right: 1px solid slategray;
   }
 
   form {
