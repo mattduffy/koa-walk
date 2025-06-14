@@ -304,8 +304,14 @@
       info('geo error: ', position)
       await noPositionCantWalk(
         mapOpts,
-        { coords: { latitude: lat, longitude: lon, accuracy: 0 } },
-      )
+        { coords: {
+          latitude: lat,
+          longitude: lon,
+          accuracy: 0,
+          heading: 0,
+          altitude: 0,
+        },
+      })
     }
     function updatePosition(g) {
       info('updatePosition(g)', g)
@@ -341,9 +347,7 @@
       if (window.walking) {
         window.walking.currentPosition = position
       }
-      if (position && (!lowAccuracy && lowAccuracy !== undefined)) {
-        await goodAccuracyCanWalk(mapOpts, position)
-      } else if (
+      if (
         (lowAccuracy === undefined) &&
         (position?.coords?.accuracy > accuracy) &&
         (position?.coords?.accuracy <= accuracy + accuracyMargin)) {
@@ -355,10 +359,20 @@
         info('cannot track movement accurately.')
         info('mapOpts', mapOpts)
         await lowAccuracyPositionCantWalk(mapOpts, position)
+      } else if (position && (lowAccuracy !== undefined && !lowAccuracy )) {
+        await goodAccuracyCanWalk(mapOpts, position)
       } else {
         info('no geo position available')
         info('using lat: ', lat, ' lon: ', lon)
-        const x = { coords: { latitude: lat, longitude: lon, accuracy: 1000 } }
+        const x = {
+          coords: {
+            latitude: lat,
+            longitude: lon,
+            accuracy: 1000,
+            heading: 0,
+            altitude: 0,
+          },
+        }
         await noPositionCantWalk(mapOpts, x)
         lowAccuracy = true
       }
@@ -410,8 +424,8 @@
               }
               lat = geo.coords.latitude
               lon = geo.coords.longitude
-              _alt = geo.coords?.altitude
               _heading = geo.coords?.heading
+              _alt = geo.coords?.altitude
               res(geo)
             },
             (err) => {
@@ -426,10 +440,17 @@
         await setPosition(position)
         updatePosition(position)
       } catch (e) {
-        warn('Failed to acquire geoLocation for some reason.')
+        info('myGetCurrentPosition(): Failed to acquire geoLocation for some reason.')
         warn(e)
         info(`Falling back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
-        position = { latitude: lat, longitude: lon, accuracy: 1000, timestamp: Date.now() }
+        position = {
+          latitude: lat,
+          longitude: lon,
+          accuracy: 1000,
+          heading: 0,
+          altitude: 0,
+          timestamp: Date.now(),
+        }
         lowAccuracy = undefined
         await setPosition(position)
         updatePosition(position)
@@ -585,7 +606,10 @@
         verbose: VERBOSE,
       }
       log('starting walk data:', w)
-      window.walking.addPoint({ ...window.walking.startPosition, timestamp: _d }, DISPLAY_UNITS, true)
+      window.walking.addPoint(
+        { ...window.walking.startPosition, timestamp: _d },
+        DISPLAY_UNITS, true
+      )
       window.walking.c = c
       window.walker.postMessage(w)
       markWalkPointOnMap()
@@ -894,7 +918,7 @@
         window.walker.postMessage(msg)
       }
     } else {
-      log('Not compatible with walking.')
+      warn('Not compatible with walking.')
     }   
   }
   function doLogin(form) {
