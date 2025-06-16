@@ -526,10 +526,6 @@ router.get('mapkitGetToken', '/mapkit/getToken', async (ctx) => {
   let mapKitAccessToken
   const csrfTokenCookie = ctx.cookies.get('csrfToken')
   const csrfTokenSession = ctx.session.csrfToken
-  // const [csrfTokenHidden] = ctx.request.body.csrfTokenHidden
-  log('                 csrfTokenCookie', csrfTokenCookie)
-  log('                csrfTokenSession', csrfTokenSession)
-  log('ctx.request.body csrfTokenHidden', ctx.request.body)
   const newCsrfToken = ulid()
   if (doTokensMatch(ctx)) {
     try {
@@ -552,9 +548,6 @@ router.get('mapkitGetToken', '/mapkit/getToken', async (ctx) => {
     ctx.body = { tokenID: mapKitAccessToken, newCsrfToken }
   } else {
     error(`CSR-Token mismatch: header:${csrfTokenCookie} - session:${csrfTokenSession}`)
-    // ctx.status = 301
-    // ctx.response.redirect('/')
-    // ctx.response.message = 'Session token is missing, redirect back to home page.'
     ctx.session.csrfToken = newCsrfToken
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
     ctx.type = 'application/json; charset=utf-8'
