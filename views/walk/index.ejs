@@ -215,7 +215,8 @@
       const x = await response.json()
       tokenID = x.tokenID
       info('csrfToken before getToken: ', window.csrfToken)
-      window.csrfToken = x.newCsrfToken
+      // window.csrfToken = x.newCsrfToken
+      updateCsrfToken(x.newCsrfToken)
       info('csrfToken after getToken: ', window.csrfToken)
     } else {
       info('failed to get mapkit token')
@@ -259,7 +260,8 @@
         }
       }
       if (e?.newCsrfToken) {
-        window.csrfToken = e.newCsrfToken
+        // window.csrfToken = e.newCsrfToken
+        updateCsrfToken(e.newCsrfToken)
       }
     }
     updatePreferences.finish = finish
@@ -477,27 +479,31 @@
         timestamp: e.timestamp.valueOf()
       }
       if (!evtCoords?.altitude) {
-        const position = await new Promise((res, rej) => {
-          navigator.geolocation.getCurrentPosition(
-            (g) => res(g.coords),
-            (e) => rej(e),
-            { enableHighAccuracy: true, maximumAge: 0 }
-          )
-        })
-        coords.altitude = position?.altitude
-        coords.heading = position?.heading
-        info('filled in missing altitude and heading values', coords)
+        try {
+          const position = await new Promise((res, rej) => {
+            navigator.geolocation.getCurrentPosition(
+              (g) => res(g.coords),
+              (e) => rej(e),
+              { enableHighAccuracy: true, maximumAge: 0 }
+            )
+          })
+          coords.altitude = position?.altitude
+          coords.heading = position?.heading
+          info('filled in missing altitude and heading values', coords)
+        } catch (e) {
+          warn('failed getCurrentPosition()')
+          warn('failing back to mapkit provided position, ')
+          warn('which is missing altitude and heading values')
+          coords.altitude = null
+          coords.heading = null
+        }
       }
       const mapkitCoordinate = new mapkit.Coordinate(evtCoords.latitude, evtCoords.longitude)
       if (window.walking.active) {
         await recordWalk(coords, mapkitCoordinate)
         window._map.setCenterAnimated(mapkitCoordinate, false)
-        // if (isHeadingUp) {
-        //   window._map.rotation = coords.heading
-        // }
       } else if (window.walking.state.showing) {
         info('showing old (saved) walk')
-
         return
       } else {
         window._map.setCenterAnimated(mapkitCoordinate, true)
@@ -837,7 +843,8 @@
             log('csrfToken before SETUP: ', window.csrfToken)
             log(e.data)
             if (e.data?.newCsrfToken) {
-              window.csrfToken = e.data.newCsrfToken
+              // window.csrfToken = e.data.newCsrfToken
+              updateCsrfToken(e.data.newCsrfToken)
             }
             log('csrfToken after SETUP: ', window.csrfToken)
             break
@@ -956,7 +963,8 @@
     function success(e) {
       log('login success')
       log(e)
-      window.csrfToken = e.user.newCsrfToken
+      // window.csrfToken = e.user.newCsrfToken
+      updateCsrfToken(e.user.newCsrfToken)
       const initials = document.querySelector('span[data-name-initials]')
       const i = `${e.user.first.slice(0, 1)}${e.user.last.slice(0, 1)}`
       initials.dataset.nameInitials = i
@@ -995,7 +1003,8 @@
       log('login failed')
       log(e)
       // window.csrfToken = e.user.newCsrfToken  
-      window.csrfToken = e.newCsrfToken  
+      // window.csrfToken = e.newCsrfToken  
+      updateCsrfToken(e.newCsrfToken)
     }
     doLogin.failed = failed
     window.walker.postMessage(credentials)
@@ -1007,7 +1016,8 @@
     window.walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
     function finish(e) {
       log('logout response: ', e)
-      window.csrfToken = e.response.user.newCsrfToken
+      // window.csrfToken = e.response.user.newCsrfToken
+      updateCsrfToken(e.response.user.newCsrfToken)
       delete window.walking.state.remoteListCache
       const initials = document.querySelector('span[data-name-initials]')
       initials.dataset.nameInitials = ''
@@ -1024,7 +1034,8 @@
       form.style.display = 'block'
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'none'
-      window.csrfToken = e.response.user.csrfToken
+      // window.csrfToken = e.response.user.csrfToken
+      updateCsrfToken(e.response.user.csrfToken)
     }
     doLogout.finish = finish
   }
@@ -1199,7 +1210,8 @@
     window.getList.renderLists = renderLists
     function finish(e) {
       log('getList.finish', e)
-      window.csrfToken = e.newCsrfToken
+      // window.csrfToken = e.newCsrfToken
+      updateCsrfToken(e.newCsrfToken)
       const noAuth = LISTDIV.children.namedItem('noAuth') ?? null
       if (e.auth === 'no' && !noAuth) {
         log(`e.auth: ${e.auth}`)
@@ -1375,7 +1387,8 @@
     window.walker.postMessage(credentials)
     function finish(e) {
       log(e)
-      window.csrfToken = e.newCsrfToken
+      // window.csrfToken = e.newCsrfToken
+      updateCsrfToken(e.newCsrfToken)
       if (e.scope === 'remote') { 
         window._temp = window.walking.state.remoteListCache.filter((w) => {
           return w.id !== e.id
@@ -1411,7 +1424,8 @@
     window.walker.postMessage(credentials)
     function finish(e) {
       log('exportWalkAs().finish(e)', e)
-      window.csrfToken = e.newCsrfToken
+      // window.csrfToken = e.newCsrfToken
+      updateCsrfToken(e.newCsrfToken)
       log('export data type', e) 
       const a = document.createElement('a')
       let blob
@@ -1652,6 +1666,10 @@
     }
   }
   await main()
+  function updateCsrfToken(token) {
+    window.csrfToken = token
+    document.querySelector('input[type=hidden]#csrfTokenId').value = token
+  }
   window._x = async function(P) {
     window.walking.state.showing = true
     const delay = ms => new Promise(res => setTimeout(res, ms))
