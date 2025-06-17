@@ -189,6 +189,9 @@
     fitMap()
   })
   fitMap()
+  document.addEventListener("readystatechange", (event) => {
+    console.log(`readystate: ${document.readyState}\n`)
+  })
   window.setupMapKitJs = async function() {
   // async function setupMapKitJs() {
     const tokenOpts = {
@@ -311,7 +314,7 @@
           longitude: lon,
           accuracy: 0,
           heading: 0,
-          altitude: 0,
+          altitude: null,
         },
       })
     }
@@ -366,16 +369,16 @@
       } else {
         info('no geo position available')
         info('using lat: ', lat, ' lon: ', lon)
-        const x = {
-          coords: {
+        await noPositionCantWalk(
+          mapOpts,
+          { coords: {
             latitude: lat,
             longitude: lon,
             accuracy: 1000,
             heading: 0,
-            altitude: 0,
+            altitude: null,
           },
-        }
-        await noPositionCantWalk(mapOpts, x)
+        })
         lowAccuracy = true
       }
     }
@@ -438,9 +441,9 @@
             geoOpts
           )
         })
-        log('myGetCurrentPosition() ', position)
-        await setPosition(position)
-        updatePosition(position)
+        // log('myGetCurrentPosition() ', position)
+        // await setPosition(position)
+        // updatePosition(position)
       } catch (e) {
         info('myGetCurrentPosition(): Failed to acquire geoLocation for some reason.')
         warn(e)
@@ -450,13 +453,16 @@
           longitude: lon,
           accuracy: 1000,
           heading: 0,
-          altitude: 0,
+          altitude: null,
           timestamp: Date.now(),
         }
         lowAccuracy = undefined
-        await setPosition(position)
-        updatePosition(position)
+        // await setPosition(position)
+        // updatePosition(position)
       }
+      log('myGetCurrentPosition() ', position)
+      await setPosition(position)
+      updatePosition(position)
       return position
     }
     window.myGetCurrentPosition = myGetCurrentPosition
@@ -549,19 +555,22 @@
       }
     }
     if (DEBUG) {
+      log('DEBUG=',DEBUG)
       window.addEventListener('locality-changed', localityChanged)
     }
-    document.querySelector('button[name="showStartNew"]').addEventListener(
-      'click',
-      clickStartNew
-    )
     function clickStartNew(e) {
       info('clickStartNew(e)', e)
       e.preventDefault()
       e.stopPropagation()
       document.querySelector('span[data-action="showNew"]').click()
     }
-    document.querySelector('button#start').addEventListener('click', startWalk)
+    const showStartButton = document.querySelector('button[name="showStartNew"]')
+    if (showStartButton) {
+      showStartButton.addEventListener(
+        'click',
+        clickStartNew
+      )
+    }
     async function startWalk(e) {
       info('startWalk(e)', e)
       e.preventDefault()
@@ -632,7 +641,17 @@
         _dis.textContent = `${displayUnits(reducedDistance, DISPLAY_UNITS, 1)}`
       }, UPDATE_INTERVAL)
     }
-    document.querySelector('button#stop').addEventListener('click', stopWalk)
+    document.querySelector('button#start').addEventListener('click', startWalk)
+    async function endWalk(end) {
+      window.walking.active = false
+      window.walking.endPosition = end
+      window.walking.endTime = end.timestamp
+      const c = new mapkit.Coordinate(end.latitude, end.longitude)
+      const finalStep = { TASK: 'STOP_WALK', endPosition: end, c, verbose: VERBOSE }
+      window.walking.addPoint(end, DISPLAY_UNITS, true)
+      window.walking.c = c
+      window.walker.postMessage(finalStep)
+    }
     async function stopWalk(e) {
       info('stopWalk(e)', e)
       e.preventDefault()
@@ -652,16 +671,7 @@
       await endWalk(coords)
       clearInterval(window.walking.state.intervalId)
     }
-    async function endWalk(end) {
-      window.walking.active = false
-      window.walking.endPosition = end
-      window.walking.endTime = end.timestamp
-      const c = new mapkit.Coordinate(end.latitude, end.longitude)
-      const finalStep = { TASK: 'STOP_WALK', endPosition: end, c, verbose: VERBOSE }
-      window.walking.addPoint(end, DISPLAY_UNITS, true)
-      window.walking.c = c
-      window.walker.postMessage(finalStep)
-    }
+    document.querySelector('button#stop').addEventListener('click', stopWalk)
     async function recordWalk(wp, c) {
       const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS, verbose: VERBOSE }
       window.walking.c = c
@@ -843,7 +853,6 @@
             log('csrfToken before SETUP: ', window.csrfToken)
             log(e.data)
             if (e.data?.newCsrfToken) {
-              // window.csrfToken = e.data.newCsrfToken
               updateCsrfToken(e.data.newCsrfToken)
             }
             log('csrfToken after SETUP: ', window.csrfToken)
@@ -922,11 +931,12 @@
           jwtAccess: '<%= searchJwtAccess %>',
           csrfTokenHidden: window.csrfToken,
         }
+        log(msg)
         window.walker.postMessage(msg)
       }
     } else {
       warn('Not compatible with walking.')
-    }   
+    }
   }
   function doLogin(form) {
     const credentials = {}
@@ -1447,7 +1457,7 @@
     window.exportWalkAs.finish = finish
   }
   async function noPositionCantWalk(o, g) {
-    log(`no position available: ${g}`)
+    log('using fallback position: ', g)
     window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
     window.here = new mapkit.CoordinateRegion(
       me,
