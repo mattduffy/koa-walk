@@ -323,7 +323,7 @@ div#list p {
 div#walk-div {
   display: none;
   width: auto;
-  max-height: 100px;
+  max-height: fit-content;
   overflow: scroll;
   background-color: white;
   border-radius: .5em;
@@ -349,6 +349,15 @@ span.close {
   padding: 0px;
   margin: 0px;
   font-size: .89em; 
+}
+
+div#walk-div > ul#walkData {
+  list-style: none;
+  padding-left: .5em;
+  font-size: 1em;
+  margin: auto;
+  margin-top: 1em;
+
 }
 
 h3#walkName {
