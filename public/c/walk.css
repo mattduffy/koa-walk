@@ -308,6 +308,17 @@ div#list div ul {
   margin: 0px 0px 1em 0px;
 }
 
+ul[id$=walks] {
+  margin-left: -.25em!important;
+  max-width: fit-content;
+}
+
+ul[id$=walks] li {
+  border-bottom: solid 1px lightgray;
+  margin: 0px 0px 1.25em -1.5em;
+  
+}
+
 div#list p {
   font-size: .75em;
 }
