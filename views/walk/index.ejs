@@ -989,6 +989,12 @@
       const first = document.querySelector('span[data-name-first]')
       first.dataset.first = e.user.first
       first.textContent = e.user.first
+      document.querySelector(`input[type=radio][value=${
+        e.user.preferences.units
+      }]`).checked = 'checked'
+      document.querySelector(`input[type=radio][value=${
+        e.user.preferences.orientation
+      }]`).checked = 'checked'
       toggleTab('login')
       form.style.display = 'none'
       const welcome = document.querySelector('div#welcomeId')
