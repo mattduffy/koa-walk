@@ -784,7 +784,11 @@ async function getList(credentials) {
       console.log(response)
       const json = await response.json()
       console.log('getList response: ', json)
-      list.remoteList = json.list
+      if (json.error && json.error == 'token mismatch') {
+        list.remoteList = []
+      } else {
+        list.remoteList = json.list
+      }
       list.auth = auth
       list.newCsrfToken = json.newCsrfToken
     } catch (e) {

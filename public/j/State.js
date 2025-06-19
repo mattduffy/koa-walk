@@ -32,10 +32,13 @@ class State extends Subject {
       currentPosition: null,
       endPosition: null,
       endTime: null,
-      wayPoints: [],
-      c: [],
       duration: null,
       distance: null,
+      highestElevation: null,
+      lowestElevation: null,
+      changeInElevation: null,
+      c: [],
+      wayPoints: [],
       headings: [],
     }
   }
@@ -59,6 +62,13 @@ class State extends Subject {
     this.state.duration = null
     this.state.distance = null
   }
+
+  get totalElevationChange() {
+    if (highestElevation && lowestElevation) {
+      return highestElevation - lowestElevation
+    }
+    return null
+  } 
 
   get totalDistance() {
     if (!this.state.distance) {
@@ -188,7 +198,13 @@ class State extends Subject {
     } else {
       point.distance = 0
       point.heading = 0.0
-      point.altitude = 0.0
+      point.altitude = null
+    }
+    if (point.altitude > this.state.highestElevation) {
+      this.state.highestElevation = point.altitude
+    }
+    if (point.altitude < this.state.lowestElevation) {
+      this.state.lowestElevation = point.altitude
     }
     console.log('point distance:', point.distance)
     if (!this.state.distance) {
@@ -235,11 +251,19 @@ class State extends Subject {
     return this.state.wayPoints[this.state.wayPoints.length - 1].heading
   }
 
+  get firstElevation() {
+    return this.state.wayPoints[0].altitude
+  }
+
+  get lastElevation() {
+    return this.state.wayPoints[this.state.wayPoints.length - 1].altitude
+  }
+
   get lastPoint() {
     return this.state.wayPoints[this.state.wayPoints.length - 1]
   }
 
-  get geojson() {
+    get geojson() {
     return {
       type: 'FeatureCollection',
       features: [

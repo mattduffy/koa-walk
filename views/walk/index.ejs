@@ -671,7 +671,9 @@
         latitude: window.walking.currentPosition.latitude,
         longitude: window.walking.currentPosition.longitude,
         accuracy: window.walking.currentPosition.accuracy,
-        timestamp: Date.now()
+        heading: window.walking.currentPosition.heading,
+        altitude: window.walking.currentPosition.altitude,
+        timestamp: Date.now(),
       }
       await endWalk(coords)
       clearInterval(window.walking.state.intervalId)
@@ -1318,6 +1320,23 @@
         new Date(e.walk.features[0].properties.duration)
         .toISOString().slice(11, 19)
       }`
+      document.querySelector('span#startingElevation').textContent = `${
+        displayUnits((e.walk.features[0].properties.startPosition.altitude)
+          ? e.walk.features[0].properties.startPosition.altitude
+          : 'N/A',
+          DISPLAY_UNITS
+      )}`
+      document.querySelector('span#endingElevation').textContent = `${
+        displayUnits((e.walk.features[0].properties.endPosition.altitude)
+          ? e.walk.features[0].properties.endPosition.altitude
+          : 'N/A',
+          DISPLAY_UNITS
+      )}`
+      document.querySelector('span#changeInElevation').textContent = `${
+        displayUnits(e.walk.features[0].properties.endPosition.altitude
+          - e.walk.features[0].properties.startPosition.altitude,
+          DISPLAY_UNITS
+      )}`
       divList.style.display = 'none'
       divWalk.style.display = 'block'
       window.walking.active = false 
@@ -1588,6 +1607,9 @@
   function displayUnits(x, u = 'm', n = 1) {
     const _u = u.toLowerCase()
     log('displayUnits(): ', x, _u, n)
+    if (isNaN(x)) {
+      return 'N/A'
+    }
     if (x === null || x === undefined) {
       log('displayUnits() missing x: ', x)
       return 0 
