@@ -128,6 +128,7 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
               first: loggedInUser.firstName,
               last: loggedInUser.lastName,
               email: loggedInUser.email.primary,
+              preferences: loggedInUser.preferences,
               newCsrfToken,
             },
           }
@@ -155,14 +156,17 @@ router.post('postLogin', '/login', addIpToSession, hasFlash, processFormData, as
 router.get('getLogout', '/logout', async (ctx) => {
   const log = authLog.extend('logout-get')
   // const error = authError.extend('logout')
+  log(ctx.session)
   if (ctx.state.isAuthenticated) {
     log('logging out')
     ctx.state.sessionUser = null
-    ctx.session = null
+    ctx.session = {}
+    log(ctx.session)
   }
   ctx.state.isAuthenticated = false
   const newCsrfToken = ulid()
-  ctx.cookies.set('csrfToken', newCsrfToken)
+  ctx.session.csrfToken = newCsrfToken
+  ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
   if (ctx.state.isAsyncRequest) {
     ctx.body = { status: 'loggedOut', user: { newCsrfToken } }
   } else {
