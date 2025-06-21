@@ -315,8 +315,13 @@ ul[id$=walks] {
 
 ul[id$=walks] li {
   border-bottom: solid 1px lightgray;
-  margin: 0px 0px 1.25em -1.5em;
+  margin: 0px 0px 1.25em -1.75em;
+  list-style: none;
   
+}
+
+ul[id$=walks] li:nth-child(odd) {
+  background-color: ghostwhite; 
 }
 
 div#list p {
