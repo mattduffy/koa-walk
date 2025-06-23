@@ -4,9 +4,10 @@
       <form id="loginId" name="login">
         <label for="emailId">Email: </label>
         <br>
-        <input type="email" id="emailId" name="email" size="40" value="<%=
-  sessionUser?.email?.primary %>" placeholder="user@example.com" required
-  autocomplete="email">
+        <input type="email" id="emailId" name="email" size="40" 
+          value="<%= sessionUser?.email?.primary %>" 
+          placeholder="user@example.com" 
+          autocomplete="email" required>
         <br>
         <br>
         <label for="passwordId">Password: </label>
@@ -137,6 +138,7 @@
   let HEADING = 0
   let DISPLAY_UNITS
   let DISPLAY_ORIENTATION
+  const POLYLINE_SEGEMENT_LENGTH = 10
   let VERBOSE = false
   let DEBUG = false
   DISPLAY_UNITS = <%- (preferences?.units)
@@ -647,6 +649,15 @@
       }, UPDATE_INTERVAL)
     }
     document.querySelector('button#start').addEventListener('click', startWalk)
+    async function recordWalk(wp, c) {
+      const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS, verbose: VERBOSE }
+      window.walking.c = c
+      window.walking.addPoint(wp, DISPLAY_UNITS, true)
+      // info(window.walking.printPoints())
+      window.walker.postMessage(step)
+      markWalkPointOnMap()
+      updateHeading()
+    }
     async function endWalk(end) {
       window.walking.active = false
       window.walking.endPosition = end
@@ -679,15 +690,6 @@
       clearInterval(window.walking.state.intervalId)
     }
     document.querySelector('button#stop').addEventListener('click', stopWalk)
-    async function recordWalk(wp, c) {
-      const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS, verbose: VERBOSE }
-      window.walking.c = c
-      window.walking.addPoint(wp, DISPLAY_UNITS, true)
-      // info(window.walking.printPoints())
-      window.walker.postMessage(step)
-      markWalkPointOnMap()
-      updateHeading()
-    }
     window.saveWalk = async function(e) {
       e.preventDefault()
       e.stopPropagation()
@@ -791,9 +793,9 @@
       log('Mark point on map: ')
       const style = new mapkit.Style({
         lineWidth: 10,
-        lineJoin: "round",
+        lineJoin: 'round',
         lineDash: [],
-        strokeColor: "royalblue"
+        strokeColor: 'royalblue'
       })
       const points = window.walking.points.map((p) => {
         return new mapkit.Coordinate(p.latitude, p.longitude)
@@ -810,6 +812,25 @@
       log('creating new polyline overlay: ', polyline)
       window._map.addOverlay(polyline)
       window._map.showItems(polyline)
+    }
+    window.segments = []
+    window.currentSegment = []
+    function segmentedMarkWalkPointOnMap() {
+      log('Segmented Polyline points on map')
+      window.currentSegment.push(window.walking.points[window.walking.points.length - 1])
+      if (window.currentSegment.length >= POLYLINE_SEGEMENT_LENGTH) {
+        // make a polyline overlay segment out of currentSegment...
+        // move it to the segments array...
+        // empty out currentSegment
+      } else {
+        // just make a polyline overlay segment of currentSegment waypoints 
+      }
+      const style = new mapkit.Style({
+        lineWidth: 7,
+        lineJoin: 'round',
+        lineDash: [],
+        strokeColor: 'rgb(0, 122, 255)',
+      })
     }
     // Feature detection for worker
     if (window.Worker) {
@@ -1121,8 +1142,8 @@
         remoteList.forEach((w) => {
           // log(w)
           const li = document.createElement('li')
-          li.style.marginLeft = '-1.5em'
-          li.style.padding = '5px 0px 6px 0px'
+          // li.style.marginLeft = '-1.5em'
+          // li.style.padding = '5px 0px 6px 0px'
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
           li.innerHTML = `<span data-show-id="${w.id}" data-scope="remote" class="pointer">`
             + `${w.name}</span> `
@@ -1174,8 +1195,8 @@
           localList.forEach((w) => {
             // log(w)
             const li = document.createElement('li')
-            li.style.marginLeft = '-1.5em'
-            li.style.padding = '5px 0px'
+            // li.style.marginLeft = '-1.5em'
+            // li.style.padding = '5px 0px'
             const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
             li.innerHTML = `<span data-show-id="${w.id}" data-scope="local" class="pointer">`
               + `${w.name}</span> `
@@ -1333,14 +1354,14 @@
           DISPLAY_UNITS
       )}`
       document.querySelector('span#endingElevation').textContent = `${
-        displayUnits((e.walk.features[0].properties.endPosition.altitude)
+        displayUnits((e.walk.features[0].properties.endPosition?.altitude)
           ? e.walk.features[0].properties.endPosition.altitude
           : 'N/A',
           DISPLAY_UNITS
       )}`
       document.querySelector('span#changeInElevation').textContent = `${
-        displayUnits(e.walk.features[0].properties.endPosition.altitude
-          - e.walk.features[0].properties.startPosition.altitude,
+        displayUnits(e.walk.features[0].properties.highestElevation
+          - e.walk.features[0].properties.lowestElevation,
           DISPLAY_UNITS
       )}`
       divList.style.display = 'none'
