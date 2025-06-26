@@ -57,7 +57,9 @@ const horizontalborder = '*'
 let _startingup = `Starting up: ${appEnv.SITE_NAME}`
 let _local = `local: http://${appEnv.HOST}:${appEnv.PORT}`
 let _public = `public: https://${appEnv.DOMAIN_NAME}`
-const longestlabel = [_startingup, _local, _public].reduce((a, c) => {
+let _nodejs = `process: ${process.release.name} ${process.version} (${process.release.lts})`
+let _arch = `arch: ${process.arch} ${process.platform}`
+const longestlabel = [_startingup, _local, _public, _nodejs, _arch].reduce((a, c) => {
   if (a > (c.indexOf(':') + 1)) {
     return a
   }
@@ -73,6 +75,12 @@ _local = _local.padStart(
 _public = _public.padStart(
   (longestlabel - _public.indexOf(':'))
   + _public.length, ' ')
+_nodejs = _nodejs.padStart(
+  (longestlabel - _nodejs.indexOf(':'))
+  + _nodejs.length, ' ')
+_arch = _arch.padStart(
+  (longestlabel - _arch.indexOf(':'))
+  + _arch.length, ' ')
 const longestline = [_startingup, _local, _public].reduce((a, c) => {
   if (a > c.length) {
     return a
@@ -84,6 +92,8 @@ console.info(`*  ${' '.padEnd(longestline + 2, ' ')} *`)
 console.info(`* ${_startingup}${' '.padEnd((longestline - _startingup.length) + 3, ' ')} *`)
 console.info(`* ${_local}${' '.padEnd((longestline - _local.length) + 3, ' ')} *`)
 console.info(`* ${_public}${' '.padEnd((longestline - _public.length) + 3, ' ')} *`)
+console.info(`* ${_nodejs}${' '.padEnd((longestline - _nodejs.length) + 3, ' ')} *`)
+console.info(`* ${_arch}${' '.padEnd((longestline - _arch.length) + 3, ' ')} *`)
 console.info(`*  ${' '.padEnd(longestline + 2, ' ')} *`)
 console.info(`*${horizontalborder.padEnd(longestline + 5, '*')}*`)
 
