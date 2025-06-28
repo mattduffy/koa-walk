@@ -37,6 +37,7 @@
     "@mattduffy/koa-migrations": "file:./../koa-migrations",
     "@mattduffy/users": "file:./../users",
     "@mattduffy/webfinger": "file:./../webfinger",
+    "@mattduffy/banner": "file:./../banner",
     "@maxmind/geoip2-node": "5.0.0",
     "bson": "6.10.3",
     "commander": "11.0.0",

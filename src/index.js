@@ -13,6 +13,7 @@ import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import { migrations } from '@mattduffy/koa-migrations'
+import { Banner } from '@mattduffy/banner'
 import { _log, _error } from './utils/logging.js'
 import { geoIPCity } from './utils/geoip.js'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
@@ -53,6 +54,14 @@ dotenv.config({
   debug: showDebug,
 })
 
+const banner = new Banner({
+  name: appEnv.SITE_NAME,
+  local: appEnv.HOST,
+  localPort: appEnv.PORT,
+  public: appEnv.DOMAIN_NAME,
+})
+banner.print()
+// app.use(banner.use())
 const horizontalborder = '*'
 let _startingup = `Starting up: ${appEnv.SITE_NAME}`
 let _local = `local: http://${appEnv.HOST}:${appEnv.PORT}`
@@ -87,15 +96,15 @@ const longestline = [_startingup, _local, _public].reduce((a, c) => {
   }
   return c.length
 }, '')
-console.info(`*${horizontalborder.padEnd(longestline + 5, '*')}*`)
-console.info(`*  ${' '.padEnd(longestline + 2, ' ')} *`)
-console.info(`* ${_startingup}${' '.padEnd((longestline - _startingup.length) + 3, ' ')} *`)
-console.info(`* ${_local}${' '.padEnd((longestline - _local.length) + 3, ' ')} *`)
-console.info(`* ${_public}${' '.padEnd((longestline - _public.length) + 3, ' ')} *`)
-console.info(`* ${_nodejs}${' '.padEnd((longestline - _nodejs.length) + 3, ' ')} *`)
-console.info(`* ${_arch}${' '.padEnd((longestline - _arch.length) + 3, ' ')} *`)
-console.info(`*  ${' '.padEnd(longestline + 2, ' ')} *`)
-console.info(`*${horizontalborder.padEnd(longestline + 5, '*')}*`)
+// console.info(`*${horizontalborder.padEnd(longestline + 5, '*')}*`)
+// console.info(`*  ${' '.padEnd(longestline + 2, ' ')} *`)
+// console.info(`* ${_startingup}${' '.padEnd((longestline - _startingup.length) + 3, ' ')} *`)
+// console.info(`* ${_local}${' '.padEnd((longestline - _local.length) + 3, ' ')} *`)
+// console.info(`* ${_public}${' '.padEnd((longestline - _public.length) + 3, ' ')} *`)
+// console.info(`* ${_nodejs}${' '.padEnd((longestline - _nodejs.length) + 3, ' ')} *`)
+// console.info(`* ${_arch}${' '.padEnd((longestline - _arch.length) + 3, ' ')} *`)
+// console.info(`*  ${' '.padEnd(longestline + 2, ' ')} *`)
+// console.info(`*${horizontalborder.padEnd(longestline + 5, '*')}*`)
 
 const key1 = appEnv.KEY1
 const key2 = appEnv.KEY2
