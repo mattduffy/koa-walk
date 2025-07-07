@@ -97,7 +97,12 @@ router.get('accountPasswordGET', '/account/change/password', hasFlash, async (ct
   }
 })
 
-router.post('accountPasswordPOST', '/account/change/password', hasFlash, processFormData, async (ctx) => {
+router.post(
+  'accountPasswordPOST',
+  '/account/change/password',
+  hasFlash,
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('POST-account-change-password')
   const error = accountError.extend('POST-account-change-password')
   if (!ctx.state?.isAuthenticated) {
@@ -169,7 +174,11 @@ router.get('accountTokens', '/account/tokens', hasFlash, async (ctx) => {
   }
 })
 
-router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash, async (ctx) => {
+router.get(
+  'accountCreateKeys',
+  '/account/:username/createKeys/:type?',
+  hasFlash,
+  async (ctx) => {
   const log = accountLog.extend('GET-account-generateKeys')
   const error = accountError.extend('GET-account-generateKeys')
   let status
@@ -180,7 +189,10 @@ router.get('accountCreateKeys', '/account/:username/createKeys/:type?', hasFlash
     ctx.status = 401
     ctx.redirect('/')
   } else if (ctx.request.header.csrftoken !== ctx.session.csrfToken) {
-    error(`CSR-Token mismatch: header:${ctx.request.header.csrftoken} - session:${ctx.session.csrfToken}`)
+    error(
+      `CSR-Token mismatch: header:${ctx.request.header.csrftoken} - `
+      + `session:${ctx.session.csrfToken}`
+    )
     status = 401
     ctx.body = { error: 'csrf token mismatch' }
   } else {
@@ -322,7 +334,12 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
   }
 })
 
-router.post('accountBlogEdit', '/account/blog/edit', hasFlash, processFormData, async (ctx) => {
+router.post(
+  'accountBlogEdit',
+  '/account/blog/edit',
+  hasFlash,
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('POST-account-blog-edit')
   const error = accountError.extend('POST-account-blog-edit')
   if (!isAsyncRequest(ctx)) {
@@ -336,7 +353,10 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, processFormData, 
     ctx.status = 401
     ctx.redirect('/')
   } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-    error(`CSR-Token mismatch: header: ${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
+    error(
+      `CSR-Token mismatch: header: ${ctx.cookies.get('csrfToken')} - `
+      + `session:${ctx.session.csrfToken}`
+    )
     status = 401
     body = { error: 'csrf token mismatch' }
   } else {
@@ -346,9 +366,13 @@ router.post('accountBlogEdit', '/account/blog/edit', hasFlash, processFormData, 
     const blogId = (!ctx.request.body.id?.[0]?.length) ? null : ctx.request.body.id[0]
     const blogTitle = ctx.request.body.title?.[0] ?? ''
     const blogDescription = ctx.request.body.description[0] ?? ''
-    const blogPublic = (ctx.request.body?.public?.[0]) ? ((ctx.request.body.public[0] === 'true') ? true : false) : false // eslint-disable-line
+    const blogPublic = (ctx.request.body?.public?.[0])
+      ? ((ctx.request.body.public[0] === 'true') ? true : false)
+      : false // eslint-disable-line
     log(`blog access: ${blogPublic}`)
-    const blogKeywords = (ctx.request.body?.keywords) ? Array.from(ctx.request.body?.keywords?.[0]?.split(',')) : []
+    const blogKeywords = (ctx.request.body?.keywords)
+      ? Array.from(ctx.request.body?.keywords?.[0]?.split(','))
+      : []
     if (doTokensMatch(ctx)) {
       const blogDirPath = path.join(
         ctx.app.dirs.public.dir,
@@ -471,7 +495,12 @@ router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) 
   ctx.body = body
 })
 
-router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, processFormData, async (ctx) => {
+router.post(
+  'accountBlogPostNew-POST',
+  '/account/blog/post/save',
+  hasFlash,
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('POST-account-blog-post-save')
   const error = accountError.extend('POST-account-blog-post-save')
   if (!ctx.state.isAsyncRequest) {
@@ -497,11 +526,17 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
     const postId = ctx.request.body?.postId[0] ?? null
     const blogId = ctx.request.body?.blogId[0] ?? null
     const postTitle = ctx.request.body?.postTitle?.[0] ?? null
-    const postSlug = (ctx.request.body?.postSlug?.[0] === '') ? slugify(postTitle) : slugify(ctx.request.body.postSlug[0])
+    const postSlug = (ctx.request.body?.postSlug?.[0] === '')
+      ? slugify(postTitle)
+      : slugify(ctx.request.body.postSlug[0])
     const postDescription = ctx.request.body?.postDescription?.[0] ?? null
     const postContent = ctx.request.body?.postContent?.[0] ?? null
-    const postKeywords = (ctx.request.body?.postKeywords) ? Array.from(ctx.request.body.postKeywords[0].split(',')) : []
-    const postPublic = (ctx.request.body?.postPublic) ? ((ctx.request.body.postPublic[0] === 'true') ? true : false) : false // eslint-disable-line
+    const postKeywords = (ctx.request.body?.postKeywords)
+      ? Array.from(ctx.request.body.postKeywords[0].split(','))
+      : []
+    const postPublic = (ctx.request.body?.postPublic)
+      ? ((ctx.request.body.postPublic[0] === 'true') ? true : false)
+      : false // eslint-disable-line
     if (ctx.request.files?.postPreviewImageSmall) {
       [smallImg] = ctx.request.files.postPreviewImageSmall
       const originalNameSmall = smallImg.originalFilename
@@ -513,7 +548,9 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
       log(`${blog}`)
       if (!postId) {
         const newPost = {
-          postAuthors: [{ author: ctx.state.sessionUser.username, id: ctx.state.sessionUser.id }],
+          postAuthors: [
+            { author: ctx.state.sessionUser.username, id: ctx.state.sessionUser.id }
+          ],
           postTitle,
           postDescription,
           postContent,
@@ -548,7 +585,8 @@ router.post('accountBlogPostNew-POST', '/account/blog/post/save', hasFlash, proc
           await rename(smallImg.filepath, newImageAlbumDirPath)
           await stat(newImageAlbumDirPath)
         } catch (e) {
-          const msg = `Failed to move ${smallImg.originalFilename} into album dir: ${album.albumDir}`
+          const msg = `Failed to move ${smallImg.originalFilename} `
+          + `into album dir: ${album.albumDir}`
           error(msg)
           error(e)
           ctx.type = 'application/json; charset=utf-8'
@@ -690,7 +728,10 @@ router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) =
     ctx.status = 401
     ctx.redirect('/')
   } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-    error(`CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
+    error(
+      `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
+      + `session:${ctx.session.csrfToken}`
+    )
     ctx.status = 401
     ctx.body = { error: 'csrf token mismatch' }
   } else {
@@ -716,7 +757,11 @@ router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) =
   }
 })
 
-router.delete('deleteGalleryImage', '/account/gallery/:id/image/delete', processFormData, async (ctx) => {
+router.delete(
+  'deleteGalleryImage',
+  '/account/gallery/:id/image/delete',
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('DELETE-account-gallery-image-delete')
   const error = accountError.extend('DELETE-account-gallery-image-delete')
   if (!ctx.state.isAsyncRequest) {
@@ -751,13 +796,16 @@ router.delete('deleteGalleryImage', '/account/gallery/:id/image/delete', process
       body = { status: 500, err: 'album failure.' }
     }
   }
-
   ctx.status = status
   ctx.type = 'application/json; charset=utf-8'
   ctx.body = body
 })
 
-router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', processFormData, async (ctx) => {
+router.put(
+  'accountGalleryAddImage',
+  '/account/gallery/:id/image/add',
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('PUT-account-gallery-image-add')
   const error = accountError.extend('PUT-account-gallery-imageadd')
   if (!ctx.state.isAsyncRequest) {
@@ -780,7 +828,10 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', processFo
     const image = ctx.request.files.image[0]
     // log(image)
     const originalFilenameCleaned = sanitizeFilename(image.originalFilename)
-    const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
+    const originalFilenamePath = path.resolve(
+      ctx.app.dirs.private.uploads,
+      originalFilenameCleaned,
+    )
     log('uploaded filepath:             ', image.filepath)
     log('uploaded originalFilename:     ', image.originalFilename)
     log('uploaded originalFilenamePath: ', originalFilenamePath)
@@ -805,7 +856,8 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', processFo
         log(`newImageAlbumDirPath: ${newImageAlbumDirPath}`)
         await rename(image.filepath, newImageAlbumDirPath)
       } catch (e) {
-        const err = `Failed to rename uploaded image back to its original name ${originalFilenamePath}, and move to album dir ${newImageAlbumDirPath}.`
+        const err = `Failed to rename uploaded image back to its original `
+          + `name ${originalFilenamePath}, and move to album dir ${newImageAlbumDirPath}.`
         error(err)
         ctx.type = 'application/json; charset=utf-8'
         status = 500
@@ -833,7 +885,11 @@ router.put('accountGalleryAddImage', '/account/gallery/:id/image/add', processFo
   ctx.body = body
 })
 
-router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', processFormData, async (ctx) => {
+router.post(
+  'accountEditGalleryImage',
+  '/account/gallery/:id/image/:name',
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('POST-account-gallery-image-edit')
   const error = accountError.extend('POST-account-gallery-image-edit')
   if (!ctx.state.isAsyncRequest) {
@@ -848,7 +904,10 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', proce
     ctx.status = 401
     ctx.redirect('/')
   } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-    error(`CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
+    error(
+      `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
+      + `session:${ctx.session.csrfToken}`
+    )
     status = 401
     body = { error: 'csrf token mismatch' }
   } else {
@@ -884,7 +943,10 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', proce
           i.rotateFullSize = imageRotateFullSize
         }
         if (imageRotateThumbnail && thumbnailName) {
-          log(`Rotate thumbnail image ${thumbnailName} counter-clockwise ${imageRotateThumbnail}`)
+          log(
+            `Rotate thumbnail image ${thumbnailName} `
+            + `counter-clockwise ${imageRotateThumbnail}`
+          )
           i.thumbnailName = thumbnailName
           i.rotateThumbnail = imageRotateThumbnail
         }
@@ -924,7 +986,12 @@ router.post('accountEditGalleryImage', '/account/gallery/:id/image/:name', proce
   ctx.body = body
 })
 
-router.post('accountEditGallery', '/account/gallery/:id', hasFlash, processFormData, async (ctx) => {
+router.post(
+  'accountEditGallery',
+  '/account/gallery/:id',
+  hasFlash,
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('POST-account-gallery-edit')
   const error = accountError.extend('POST-account-gallery-edit')
   if (!ctx.state.isAsyncRequest) {
@@ -938,7 +1005,10 @@ router.post('accountEditGallery', '/account/gallery/:id', hasFlash, processFormD
     ctx.status = 401
     ctx.redirect('/')
   } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-    error(`CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - session:${ctx.session.csrfToken}`)
+    error(
+      `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
+      + `session:${ctx.session.csrfToken}`
+    )
     status = 401
     body = { error: 'csrf token mismatch' }
   } else {
@@ -950,7 +1020,9 @@ router.post('accountEditGallery', '/account/gallery/:id', hasFlash, processFormD
     const albumSlug = ctx.request.body?.albumSlug?.[0] ?? slugify(albumName)
     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
     const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
-    const albumKeywords = (ctx.request.body?.albumKeywords) ? Array.from(ctx.request.body?.albumKeywords?.[0]?.split(', ')) : []
+    const albumKeywords = (ctx.request.body?.albumKeywords)
+      ? Array.from(ctx.request.body?.albumKeywords?.[0]?.split(', '))
+      : []
     const albumPreviewImage = ctx.request.body?.albumPreviewImage?.[0] ?? null
     if (doTokensMatch(ctx)) {
       try {
@@ -1072,7 +1144,11 @@ router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
   }
 })
 
-router.delete('deleteGallery', '/account/galleries/delete/:id', processFormData, async (ctx) => {
+router.delete(
+  'deleteGallery',
+  '/account/galleries/delete/:id',
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('DELETE-account-galleries-delete')
   const error = accountError.extend('DELETE-account-galleries-delete')
   if (!isAsyncRequest(ctx)) {
@@ -1153,12 +1229,19 @@ router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, asy
     // const userPubDir = ctx.state.sessionUser.publicDir
     const archive = ctx.request.files.archive[0]
     const originalFilenameCleaned = sanitizeFilename(archive.originalFilename)
-    const originalFilenamePath = path.resolve(ctx.app.dirs.private.uploads, originalFilenameCleaned)
+    const originalFilenamePath = path.resolve(
+      ctx.app.dirs.private.uploads,
+      originalFilenameCleaned,
+    )
     try {
       await rename(archive.filepath, originalFilenamePath)
     } catch (e) {
       error(e)
-      throw new Error('Failed to rename uploaded archive back to its original name.', { cause: e })
+      const err = new Error(
+        'Failed to rename uploaded archive back to its original name.',
+        { cause: e },
+      )
+      ctx.throw(500, err)
     }
     log(archive)
     if (archive.size > 0) {
@@ -1437,27 +1520,35 @@ router.post('accountEditPost', '/account/edit', hasFlash, processFormData, async
         log('avatar file size:      %O', ctx.request.files.avatar[0].size)
         log('avatar file temp path: %O', ctx.request.files.avatar[0].filepath)
         const avatarOriginalFilenameCleaned = sanitizeFilename(avatar.originalFilename)
-        const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}avatar-${avatarOriginalFilenameCleaned}`)
+        const avatarSaved = path.resolve(
+          `${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}`
+          + `avatar-${avatarOriginalFilenameCleaned}`
+        )
         try {
           await rename(avatar.filepath, avatarSaved)
         } catch (e) {
           error(e)
         }
-        ctx.state.sessionUser.avatar = `${ctx.state.sessionUser.publicDir}avatar-${avatarOriginalFilenameCleaned}`
+        ctx.state.sessionUser.avatar = `${ctx.state.sessionUser.publicDir}`
+          + `avatar-${avatarOriginalFilenameCleaned}`
       }
       const [header] = ctx.request.files.header
       if (header.size > 0) {
         log('header file size:      %O', ctx.request.files.header[0].size)
         log('header file temp path: %O', ctx.request.files.header[0].filepath)
         const headerOriginalFilenameCleaned = sanitizeFilename(header.originalFilename)
-        const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}header-${headerOriginalFilenameCleaned}`)
+        const headerSaved = path.resolve(
+          `${ctx.app.dirs.public.dir}/${ctx.state.sessionUser.publicDir}`
+          + `header-${headerOriginalFilenameCleaned}`
+        )
         try {
           log(headerSaved)
           await rename(header.filepath, headerSaved)
         } catch (e) {
           error(e)
         }
-        ctx.state.sessionUser.header = `${ctx.state.sessionUser.publicDir}header-${headerOriginalFilenameCleaned}`
+        ctx.state.sessionUser.header = `${ctx.state.sessionUser.publicDir}`
+          + `header-${headerOriginalFilenameCleaned}`
       }
       try {
         ctx.state.sessionUser = await ctx.state.sessionUser.update()
@@ -1554,7 +1645,9 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx) =
       })
     } catch (e) {
       error('Error trying to retrieve list of all user accounts.')
-      ctx.throw('Error trying to retrieve list of all user accounts.')
+      // ctx.throw('Error trying to retrieve list of all user accounts.')
+      const err = new Error('Error trying to retrieve list of all user accounts.', { cause: e })
+      ctx.throw(500, err)
     }
     await ctx.render('account/admin-listusers', locals)
   }
@@ -1607,7 +1700,12 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
     } catch (e) {
       error(`Error trying to retrieve ${ctx.params.username}'s account.`)
       error(e)
-      ctx.throw(500, `Error trying to retrieve ${ctx.params.username}'s account.`)
+      // ctx.throw(500, `Error trying to retrieve ${ctx.params.username}'s account.`)
+      const err = new Error(
+        `Error trying to retrieve ${ctx.params.username}'s account.`,
+        { cause: e },
+      )
+      ctx.throw(500, err)
     }
     await ctx.render('account/admin-user-details-view', locals)
   }
@@ -1652,13 +1750,23 @@ router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async 
     } catch (e) {
       error(`Error trying to retrieve ${ctx.params.username}'s account.`)
       error(e)
-      ctx.throw(500, `Error trying to retrieve ${ctx.params.username}'s account.`)
+      // ctx.throw(500, `Error trying to retrieve ${ctx.params.username}'s account.`)
+      const err = new Error(
+        `Error trying to retrieve ${ctx.params.username}'s account.`,
+        { cause: e },
+      )
+      ctx.throw(500, err)
     }
     await ctx.render('account/admin-user-details-edit', locals)
   }
 })
 
-router.post('adminEditUserPost', '/admin/account/edit', hasFlash, processFormData, async (ctx) => {
+router.post(
+  'adminEditUserPost',
+  '/admin/account/edit',
+  hasFlash,
+  processFormData,
+  async (ctx) => {
   const log = accountLog.extend('POST-admin-editusers')
   const error = accountError.extend('POST-admin-editusers')
   if (!ctx.state?.isAuthenticated) {
@@ -1757,8 +1865,14 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, processFormDat
         const { avatar } = ctx.request.files
         if (avatar.size > 0) {
           const avatarOriginalFilenameCleaned = sanitizeFilename(avatar.originalFilename)
-          // const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${displayUser.publicDir}avatar-${avatar.originalFilename}`)
-          const avatarSaved = path.resolve(`${ctx.app.dirs.public.dir}/${displayUser.publicDir}avatar-${avatarOriginalFilenameCleaned}`)
+          // const avatarSaved = path.resolve(
+          //   `${ctx.app.dirs.public.dir}/${displayUser.publicDir}`
+          //   + `avatar-${avatar.originalFilename}`
+          // )
+          const avatarSaved = path.resolve(
+            `${ctx.app.dirs.public.dir}/${displayUser.publicDir}`
+            + `avatar-${avatarOriginalFilenameCleaned}`
+          )
           await rename(avatar.filepath, avatarSaved)
           // displayUser.avatar = `${displayUser.publicDir}avatar-${avatar.originalFilename}`
           displayUser.avatar = `${displayUser.publicDir}avatar-${avatarOriginalFilenameCleaned}`
@@ -1767,8 +1881,14 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, processFormDat
         const { header } = ctx.request.files
         if (header.size > 0) {
           const headerOriginalFilenameCleaned = sanitizeFilename(header.originalFilename)
-          // const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${displayUser.publicDir}header-${header.originalFilename}`)
-          const headerSaved = path.resolve(`${ctx.app.dirs.public.dir}/${displayUser.publicDir}header-${headerOriginalFilenameCleaned}`)
+          // const headerSaved = path.resolve(
+          //   `${ctx.app.dirs.public.dir}/${displayUser.publicDir}`
+          //   + `header-${header.originalFilename}`
+          // )
+          const headerSaved = path.resolve(
+            `${ctx.app.dirs.public.dir}/${displayUser.publicDir}`
+            + `header-${headerOriginalFilenameCleaned}`
+          )
           await rename(header.filepath, headerSaved)
           // displayUser.header = `${displayUser.publicDir}header-${header.originalFilename}`
           displayUser.header = `${displayUser.publicDir}header-${headerOriginalFilenameCleaned}`
@@ -1787,6 +1907,8 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, processFormDat
         } catch (e) {
           error(e)
           // ctx.throw(400, 'Failed to update user account.', e)
+          // const err = new Error('Failed to update user account.', { cause: e })
+          // ctx.throw(400, err)
           ctx.flash = {
             view: {
               info: null,
@@ -1802,12 +1924,18 @@ router.post('adminEditUserPost', '/admin/account/edit', hasFlash, processFormDat
       }
     } catch (e) {
       error(e)
-      ctx.throw(500, 'Failed up update user\'s account.', e)
+      // ctx.throw(500, 'Failed up update user\'s account.', e)
+      const err = new Error('Failed up update user\'s account.', { cause: e })
+      ctx.throw(500, err)
     }
   }
 })
 
-router.delete('deleteUserAccount', '/admin/account/delete/:id', hasFlash, processFormData, async (ctx) => {
+router.delete(
+  'deleteUserAccount',
+  '/admin/account/delete/:id',
+  hasFlash,
+  processFormData,async (ctx) => {
   const log = accountLog.extend('POST-account-delete')
   const error = accountError.extend('POST-account-delete')
   if (!ctx.state?.isAuthenticated) {
