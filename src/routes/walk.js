@@ -42,7 +42,7 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   const log = walkLog.extend('index')
   // const error = walkError.extend('index')
   log('inside walk router: /')
-  log('was this a redirect from /mapkit/getToken?', ctx.request.headers)
+  // log('was this a redirect from /mapkit/getToken?', ctx.request.headers)
   ctx.status = 200
   const csrfToken = ulid()
   ctx.session.csrfToken = csrfToken

@@ -61,50 +61,6 @@ const banner = new Banner({
   public: appEnv.DOMAIN_NAME,
 })
 banner.print()
-// app.use(banner.use())
-const horizontalborder = '*'
-let _startingup = `Starting up: ${appEnv.SITE_NAME}`
-let _local = `local: http://${appEnv.HOST}:${appEnv.PORT}`
-let _public = `public: https://${appEnv.DOMAIN_NAME}`
-let _nodejs = `process: ${process.release.name} ${process.version} (${process.release.lts})`
-let _arch = `arch: ${process.arch} ${process.platform}`
-const longestlabel = [_startingup, _local, _public, _nodejs, _arch].reduce((a, c) => {
-  if (a > (c.indexOf(':') + 1)) {
-    return a
-  }
-  return (c.indexOf(':') + 1)
-}, '')
-
-_startingup = _startingup.padStart(
-  (longestlabel - _startingup.indexOf(':'))
-  + _startingup.length, ' ')
-_local = _local.padStart(
-  (longestlabel - _local.indexOf(':'))
-  + _local.length, ' ')
-_public = _public.padStart(
-  (longestlabel - _public.indexOf(':'))
-  + _public.length, ' ')
-_nodejs = _nodejs.padStart(
-  (longestlabel - _nodejs.indexOf(':'))
-  + _nodejs.length, ' ')
-_arch = _arch.padStart(
-  (longestlabel - _arch.indexOf(':'))
-  + _arch.length, ' ')
-const longestline = [_startingup, _local, _public].reduce((a, c) => {
-  if (a > c.length) {
-    return a
-  }
-  return c.length
-}, '')
-// console.info(`*${horizontalborder.padEnd(longestline + 5, '*')}*`)
-// console.info(`*  ${' '.padEnd(longestline + 2, ' ')} *`)
-// console.info(`* ${_startingup}${' '.padEnd((longestline - _startingup.length) + 3, ' ')} *`)
-// console.info(`* ${_local}${' '.padEnd((longestline - _local.length) + 3, ' ')} *`)
-// console.info(`* ${_public}${' '.padEnd((longestline - _public.length) + 3, ' ')} *`)
-// console.info(`* ${_nodejs}${' '.padEnd((longestline - _nodejs.length) + 3, ' ')} *`)
-// console.info(`* ${_arch}${' '.padEnd((longestline - _arch.length) + 3, ' ')} *`)
-// console.info(`*  ${' '.padEnd(longestline + 2, ' ')} *`)
-// console.info(`*${horizontalborder.padEnd(longestline + 5, '*')}*`)
 
 const key1 = appEnv.KEY1
 const key2 = appEnv.KEY2
@@ -154,6 +110,8 @@ const o = {
   db_name: mongoClient.dbname ?? appEnv.MONGODB_DBNAME ?? 'test',
 }
 
+// app.use(banner.use(log, error))
+app.use(banner.use())
 let isHTTPS
 log(`isHTTPS: ${isHTTPS}`)
 app.use(async (ctx, next) => {
@@ -288,8 +246,8 @@ async function csp(ctx, next) {
 async function cors(ctx, next) {
   const logg = log.extend('CORS')
   const err = error.extend('CORS')
-  logg('********** CORS middleware checking headers **********')
-  logg('ctx.request.method', ctx.request.method)
+  // logg('********** CORS middleware checking headers **********')
+  // logg('ctx.request.method', ctx.request.method)
   if (ctx.request.method.toLowerCase() === 'options') {
     logg('********** Trapped an HTTP OPTIONS request **********') 
     logg(ctx.req)

@@ -5,30 +5,30 @@
  * @file src/routes/account.js The router for the account api endpoints.
  */
 
+import Router from '@koa/router'
+import { ulid } from 'ulid'
+// import { ObjectId } from 'mongodb'
 import path from 'node:path'
 import {
   mkdir, rename, writeFile, stat,
 } from 'node:fs/promises'
-import Router from '@koa/router'
-import { ulid } from 'ulid'
-// import { ObjectId } from 'mongodb'
-// import formidable from 'formidable'
-/* eslint-disable */
+import {
+  addIpToSession,
+  doTokensMatch,
+  processFormData,
+  hasFlash }
+from './middlewares.js'
+import { _log, _error } from '../utils/logging.js'
+import { Users, AdminUser } from '../models/users.js'
 import { Blog, Blogs, slugify } from '@mattduffy/blogs'
 import { Album } from '@mattduffy/albums'
 import { Albums } from '@mattduffy/albums/Albums'
 import { Unpacker } from '@mattduffy/unpacker'
-/* eslint-enable */
-import { _log, _error } from '../utils/logging.js'
-/* eslint-disable-next-line no-unused-vars */
-import { Users, AdminUser } from '../models/users.js'
 import { redis } from '../daos/impl/redis/redis-client.js'
-import { doTokensMatch, processFormData, hasFlash } from './middlewares.js'
 
 const USERS = 'users'
 const accountLog = _log.extend('account')
 const accountError = _error.extend('account')
-
 const router = new Router()
 
 function isAsyncRequest(ctx) {
@@ -224,7 +224,8 @@ router.get(
         status = 200
         body = {
           status: 'success',
-          url: `${ctx.request.origin}/${user.url}/jwks.json`,
+          // url: `${ctx.request.origin}/${user.url}/jwks.json`,
+          url: `${ctx.state.origin}/${user.url}/jwks.json`,
           keys: await user.publicKeys(0, 'jwk'),
         }
       } else {
@@ -266,7 +267,7 @@ router.get('accountPublicKeys', '/account/pubkeys', hasFlash, async (ctx) => {
         pageName: 'pubkeys',
         // nonce: ctx.app.nonce,
         view: ctx.flash.view ?? {},
-        origin: ctx.request.origin,
+        // origin: ctx.request.origin,
         sessionUser: ctx.state.sessionUser,
         title: `${ctx.app.site}: View Public Key`,
         isAuthenticated: ctx.state.isAuthenticated,
@@ -321,7 +322,7 @@ router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
       body: ctx.body,
       view: ctx.flash.view ?? {},
       edit: ctx.flash.edit ?? {},
-      origin: `${ctx.request.origin}`,
+      // origin: `${ctx.request.origin}`,
       jwtAccess: (ctx.state.sessionUser.jwts).token,
       csrfToken,
       // public: pub,
@@ -669,7 +670,7 @@ router.get('accountBlogPostNew', '/account/blog/post/new', hasFlash, async (ctx)
       body: ctx.body,
       view: ctx.flash.view ?? {},
       edit: ctx.flash.edit ?? {},
-      origin: `${ctx.request.origin}`,
+      // origin: `${ctx.request.origin}`,
       jwtAccess: (ctx.state.sessionUser.jwts).token,
       csrfToken,
       isAuthenticated: ctx.state.isAuthenticated,
@@ -709,7 +710,7 @@ router.get('accountBlogPostNew', '/account/blog/post/:id', hasFlash, async (ctx)
       body: ctx.body,
       view: ctx.flash.view ?? {},
       edit: ctx.flash.edit ?? {},
-      origin: `${ctx.request.origin}`,
+      // origin: `${ctx.request.origin}`,
       jwtAccess: (ctx.state.sessionUser.jwts).token,
       csrfToken,
       isAuthenticated: ctx.state.isAuthenticated,
@@ -748,7 +749,7 @@ router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) =
       body: ctx.body,
       view: ctx.flash.view ?? {},
       edit: ctx.flash.edit ?? {},
-      origin: `${ctx.request.origin}`,
+      // origin: `${ctx.request.origin}`,
       jwtAccess: (ctx.state.sessionUser.jwts).token,
       csrfToken,
       title: `${ctx.app.site}: View ALbum Details`,
@@ -1131,7 +1132,7 @@ router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
       body: ctx.body,
       view: ctx.flash.view ?? {},
       edit: ctx.flash.edit ?? {},
-      origin: `${ctx.request.origin}`,
+      // origin: `${ctx.request.origin}`,
       jwtAccess: (ctx.state.sessionUser.jwts).token,
       csrfToken,
       public: pub,
@@ -1383,12 +1384,12 @@ router.get('accountView', '/account/view', hasFlash, async (ctx) => {
       sessionUser: ctx.state.sessionUser,
       body: ctx.body,
       edit: ctx.flash.edit ?? {},
-      origin: `${ctx.request.origin}`,
+      // origin: `${ctx.request.origin}`,
       // csrfToken: new ObjectId().toString(),
       csrfToken: ulid(),
       isAuthenticated: ctx.state.isAuthenticated,
-      defaultAvatar: `${ctx.request.origin}/i/accounts/avatars/missing.png`,
-      defaultHeader: `${ctx.request.origin}/i/accounts/headers/generic.png`,
+      defaultAvatar: '/i/accounts/avatars/missing.png',
+      defaultHeader: '/i/accounts/headers/generic.png',
       title: `${ctx.app.site}: View Account Details`,
     }
     ctx.status = 200
@@ -1595,7 +1596,7 @@ router.get('account', '/account', hasFlash, async (ctx) => {
       body: ctx.body,
       // view: ctx.flash.view ?? {},
       flash: ctx.flash.index ?? {},
-      origin: `${ctx.request.origin}`,
+      // origin: `${ctx.request.origin}`,
       jwtAccess: (ctx.state.sessionUser.jwts).token,
       // csrfToken,
       isAuthenticated: ctx.state.isAuthenticated,
@@ -1636,7 +1637,7 @@ router.get('adminListUsers', '/admin/account/listusers', hasFlash, async (ctx) =
       locals.jwtAccess = (ctx.state.sessionUser.jwts).token
       locals.csrfToken = csrfToken
       // locals.nonce = ctx.app.nonce
-      locals.origin = ctx.request.origin
+      // locals.origin = ctx.request.origin
       locals.title = `${ctx.app.site}: List Users`
       locals.isAuthenticated = ctx.state.isAuthenticated
       allUsers.map((u) => {
@@ -1688,15 +1689,15 @@ router.get('adminViewUser', '/admin/account/view/:username', hasFlash, async (ct
       locals.displayUser = displayUser
       // log(displayUser)
       locals.view = ctx.flash.view ?? {}
-      locals.origin = ctx.request.origin
+      // locals.origin = ctx.request.origin
       locals.pageName = 'admin_account_view'
       // locals.privateDir = ctx.app.privateDir
       locals.privateDir = ctx.app.dirs.private.dir
       locals.isAuthenticated = ctx.state.isAuthenticated
       locals.jwtAccess = (ctx.state.sessionUser.jwts).token
       locals.title = `${ctx.app.site}: View ${ctx.params.username}`
-      locals.defaultAvatar = `${ctx.request.origin}/i/missing.png`
-      locals.defaultHeader = `${ctx.request.origin}/i/missing.png`
+      locals.defaultAvatar = '/i/missing.png'
+      locals.defaultHeader = '/i/missing.png'
     } catch (e) {
       error(`Error trying to retrieve ${ctx.params.username}'s account.`)
       error(e)
@@ -1739,7 +1740,7 @@ router.get('adminEditUserGet', '/admin/account/edit/:username', hasFlash, async 
       displayUser = await users.getByUsername(displayUser)
       locals.edit = ctx.flash.edit ?? {}
       locals.title = `${ctx.app.site}: Edit ${ctx.params.username}`
-      locals.origin = ctx.request.origin
+      // locals.origin = ctx.request.origin
       locals.isAuthenticated = ctx.state.isAuthenticated
       // const csrfToken = new ObjectId().toString()
       const csrfToken = ulid()
