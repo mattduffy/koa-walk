@@ -1,9 +1,9 @@
 /**
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/session-handler.js The setup and configuration of the koa app session handler.
+ * @summary The setup and configuration of the koa app session handler.
+ * @file src/session-handler.js
  */
-// "ioredis": "5.3.2",
 // import fs from 'node:fs/promises'
 import fs from 'node:fs'
 import session from 'koa-session'
@@ -75,7 +75,7 @@ const ioredisConnOpts = {
     // return false
   },
 }
-// const redis = redisStore(ioredisConnOpts)
+// const ioredis = redisStore(ioredisConnOpts)
 const redisConnOpts = {
   keyPrefix: `${redisEnv.REDIS_KEY_PREFIX}:sessions:` ?? 'koa:sessions:',
   sentinelRootNodes: [
@@ -108,13 +108,14 @@ const redisConnOpts = {
   lazyConnect: true,
   role: 'master',
 }
-// const redis = redisStore(redisConnOpts)
+// const redis = redisStore(ioredisConnOpts)
 const redis = await redisStore.init(redisConnOpts)
 console.log(
   'did redisStore init work?', await redis.ping()
 )
 
 const config = {
+  // store: ioredis,
   store: redis,
   key: redisEnv.SESSION_KEY ?? 'session',
   maxAge: redisEnv.SESSION_1_DAY * 3 ?? (86400000 * 3),
