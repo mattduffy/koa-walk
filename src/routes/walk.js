@@ -2,7 +2,8 @@
  * @summary Koa router for the main top-level pages.
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/routes/walk.js The router for the top level app URLs.
+ * @description The router for the top level app URLs.
+ * @file src/routes/walk.js
  */
 
 import Router from '@koa/router'
@@ -35,7 +36,27 @@ router.get('test', '/test', addIpToSession, async (ctx) => {
   log(router.stack[0].methods)
   log(router.stack[0].stack)
   ctx.type = 'application/json; charset=utf-8'
-  ctx.body = router.stack[0]
+  ctx.body = router.stack
+})
+
+router.get('ruckIndex', '/ruck', addIpToSession, hasFlash, async (ctx) => {
+  const log = walkLog.extend('ruckIndex')
+  const error = walkError.extend('ruckIndex')
+  log('inside ruck index')
+  ctx.status = 200
+  const csrfToken = ulid()
+  ctx.session.csrfToken = csrfToken
+  ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+  const locals = {
+    layout: '../ruck/template',
+    csrfToken,
+    sessionUser: ctx.state.sessionUser,
+    flash: ctx.flash?.ruck ?? {},
+    title: `${ctx.app.site}: Ruck`,
+    isAuthenticated: ctx.state.isAuthenticated,
+    preferences: ctx.state.sessionUser?.preferences ?? false,
+  }
+  await ctx.render('index', locals)
 })
 
 router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
@@ -97,8 +118,11 @@ router.post('refresh', '/user/refresh', addIpToSession, processFormData, async (
   } else {
     ctx.session.csrfToken = newCsrfToken
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.body = { status: 'fail', message: 'csrf token mismatch', csrfToken: newCsrfToken }
-  }
+    ctx.body = {
+      status: 'fail',
+      message: 'csrf token mismatch',
+      csrfToken: newCsrfToken,}
+    }
 })
 
 router.post(
@@ -157,7 +181,11 @@ router.post(
     }
   } else {
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.body = { status: 'fail', message: 'user is not authenticated', csrfToken: newCsrfToken }
+    ctx.body = {
+      status: 'fail',
+      message: 'user is not authenticated',
+      csrfToken: newCsrfToken,
+    }
   }
 })
 
@@ -373,7 +401,10 @@ router.post('getWalk', '/getWalk', addIpToSession, processFormData, async (ctx) 
       const walkId = ctx.request.body.walkId[0]
       const db = ctx.state.mongodb.client.db()
       const collection = db.collection('walks')
-      const query = { _id: new ObjectId(walkId), userId: new ObjectId(ctx.state.sessionUser.id) }
+      const query = {
+        _id: new ObjectId(walkId),
+        userId: new ObjectId(ctx.state.sessionUser.id),
+      }
       walk = await collection.findOne(query)
       log(walk)
       ctx.status = 200
