@@ -1,0 +1,181 @@
+<header>
+  <a id="skipnav" href="#main-content">Skip to main content</a>
+  <div id="header">
+    <nav id="nav" aria-label="Main">
+      <div>
+        <span data-action="showLogin" class="userpng outline"></span>
+        <span data-name-initials="" style="margin-left: 5px;">
+          <% if (isAuthenticated) { %>
+            <%= `${sessionUser?.firstName.slice(0, 1)}${sessionUser?.lastName.slice(0, 1)}` %>
+          <% } %>
+        </span>
+      </div>
+      <div><span data-action="showList" class="listpng outline"></span></div>
+      <div><span data-action="showNew" class="hikingpng outline"></span></div>
+      <div><span data-action="showMaps" class="mapspng outline"></span></div>
+    </nav>
+    <script nonce="<%= nonce %>">
+      document.addEventListener("DOMContentLoaded", (event) => {
+        const buttons = Array.from(document.querySelector('nav#nav').children)
+        buttons.forEach((b) => {
+          if (b.firstElementChild.dataset) {
+            const button = b.firstElementChild
+            button.addEventListener('click', (e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              function actionName(fnName, a) {
+                return this[fnName](a)
+              }
+              actionName(button.dataset.action, button.dataset.action) 
+            })
+          }
+        })
+      })
+      function showLogin(o) {
+        // console.log(o)
+        toggleButtons(o)
+        const container = document.querySelector('div#container')
+        const app = container.querySelector('div#app')
+        const login = container.querySelector('div#login')
+        toggleTab(login.dataset.tab)
+        const form = login.children[0]
+        form.elements.email.focus()
+        const submit = form.elements.submit
+        const cancel = form.elements.cancel
+        cancel.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          // console.log(app.dataset.tab)
+          toggleTab(app.dataset.tab)
+          toggleButtons('showLogin')
+        })
+      }
+      function showList(o) {
+        // console.log(o)
+        toggleButtons(o)
+        const container = document.querySelector('div#container')
+        const app = container.querySelector('div#app')
+        const list = container.querySelector('div#list')
+        if (displayed(list)) {
+          console.log('list tab currently displayed, turn it off...')
+        } else {
+          window.getList()
+        }
+        toggleTab(list.dataset.tab)
+      }
+      function showNew(o) {
+        // console.log(o)
+        toggleButtons(o)
+        const container = document.querySelector('div#container')
+        const app = container.querySelector('div#app')
+        const newTab = container.querySelector('div#new')
+        toggleTab(newTab.dataset.tab)
+      }
+      function showMaps(o) {
+        // console.log(o)
+        const app = document.querySelector('div#app')
+        const maps  = document.querySelector('div#maps')
+        toggleButtons(o)
+        toggleTab(maps.dataset.tab)
+      }
+      function hide(t) {
+        t.style.display = 'none'
+      }
+      function show(t) {
+        t.style.display = 'block'
+      }
+      function displayed(t) {
+          return (t.style.display === 'block') ? true : false
+      }
+      function reset(t) {
+        document.querySelectorAll('[data-tab]').forEach((tab) => {
+          if (tab.dataset.tab === t) {
+            console.log(t)
+          } else {
+            hide(tab)
+          }
+        })
+      }
+      function toggleButtons(b) {
+        // console.log(`b = ${b}`)
+        const mapButton = document.querySelector(`span[data-action=showMaps]`)
+        if (b === 'showMaps') {
+          if (mapButton.classList.contains('hilite')) {
+            // console.log(`__showMaps__ removing hilite (back to outline)`)
+            mapButton.classList.remove('hilite')
+            mapButton.classList.add('outline')
+          } else {
+            // console.log(`__showMaps__ adding hilite (removing outline)`)
+            mapButton.classList.add('hilite')
+            mapButton.classList.remove('outline')
+          }
+        }
+        document.querySelectorAll(`span[data-action]`).forEach((button) => {
+          if (button.dataset.action === b && b !== 'showMaps') {
+            // console.log(`${b} === ${button.dataset.action}`)
+            button.classList.toggle('outline')
+            button.classList.toggle('hilite')
+          } else if (button.dataset.action === b && b === 'showMaps') {
+          } else {
+            // console.log(button, b)
+            button.classList.remove('hilite') 
+            button.classList.add('outline')
+          }
+        })
+      }
+      function toggleTab(t) {
+        const app = document.querySelector('div#app')
+        const tab = document.querySelector(`div[data-tab="${t}"]`)
+        // console.log(tab, displayed(tab)) 
+        // console.log('t: ', t, 'style: ', tab.style.display)
+        switch(t) {
+          case 'login':
+            if (displayed(tab)) {
+              reset()
+              show(app)
+            } else {
+              reset()
+              show(tab)
+            }
+            break
+          case 'list':
+            if (displayed(tab)) {
+              reset()
+              show(app)
+            } else {
+              reset()
+              show(tab)
+            }
+            break
+          case 'new':
+            if (displayed(tab)) {
+              reset()
+              show(app)
+            } else {
+              reset()
+              show(tab)
+            }
+            break
+          case 'maps':
+            if (displayed(app) ||
+                displayed(document.querySelector('div#login')) ||
+                displayed(document.querySelector('div#list')) ||
+                displayed(document.querySelector('div#new'))) {
+              reset()
+              // show(app)
+            } else {
+              reset()
+              show(app)
+            }
+            break
+          default:
+            reset() 
+            show(app)
+        }
+      }
+    </script>
+    <% if (locals) { %>
+      <%- '<!-- html comment -->' %>
+    <% } %>
+  </div>
+</header>

@@ -1,0 +1,22 @@
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
+    <meta name="description" content="<%= pageDescription %>">
+    <% if (openGraph) { %>
+    <%- openGraph %>
+    <% } %>
+    <% if (structuredData) { %>
+    <script type="application/ld+json" nonce="<%= nonce %>">
+        <%- structuredData %>
+    </script>
+    <% } %>
+    <title><%- title -%></title>
+    <link rel="shortcut icon" type="image/png" href="/favicon-hike.png">
+    <link rel="icon" type="image/png" href="/favicon-hike.png"> 
+    <link rel="stylesheet" href="/c/walk.css">
+    <% if (stylesheets) { %>
+    <% stylesheets.forEach((css) => { %>
+        <link rel="stylesheet" href="<%- css -%>">
+    <% }) %>
+    <% } %>
+
