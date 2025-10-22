@@ -53,7 +53,7 @@ router.get('ruckIndex', '/ruck', addIpToSession, hasFlash, async (ctx) => {
     sessionUser: ctx.state.sessionUser,
     flash: ctx.flash?.ruck ?? {},
     title: `${ctx.app.site}: Ruck`,
-    isAuthenticated: ctx.state.isAuthenticated,
+    isAuthenticated: ctx.state.isAuthenticated ?? false,
     preferences: ctx.state.sessionUser?.preferences ?? false,
   }
   await ctx.render('index', locals)
