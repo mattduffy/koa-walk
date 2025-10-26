@@ -131,14 +131,14 @@
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
   const qParams = new URLSearchParams(window.location.search)
-  const DEBUG_LEVEL = qParams.get('debug') ?? 'quiet' // 'quiet'
+  const DEBUG_LEVEL = qParams.get('debug') ?? 'verbose' // normally should be 'quiet'
   const { log, info, warn, error } = await import(`./j/Logger.js?level=${DEBUG_LEVEL}`)
   info('query string level', DEBUG_LEVEL)
   info(`DEBUG LEVEL === ${DEBUG_LEVEL}`)
   let HEADING = 0
   let DISPLAY_UNITS
   let DISPLAY_ORIENTATION
-  const POLYLINE_SEGEMENT_LENGTH = 10
+  const POLYLINE_SEGMENT_LENGTH = 10
   let VERBOSE = false
   let DEBUG = false
   DISPLAY_UNITS = <%- (preferences?.units)
@@ -817,7 +817,7 @@
     function segmentedMarkWalkPointOnMap() {
       log('Segmented Polyline points on map')
       window.currentSegment.push(window.walking.points[window.walking.points.length - 1])
-      if (window.currentSegment.length >= POLYLINE_SEGEMENT_LENGTH) {
+      if (window.currentSegment.length >= POLYLINE_SEGMENT_LENGTH) {
         // make a polyline overlay segment out of currentSegment...
         // move it to the segments array...
         // empty out currentSegment
@@ -853,7 +853,8 @@
       login.addEventListener('click', (e) => {
         e.preventDefault()
         e.stopPropagation()
-        doLogin(document.forms['login'])
+        console.error('what is happening?')
+        // doLogin(document.forms['login'])
       })
       const welcomeDiv = document.querySelector('div#welcomeId')
       log(`logged = ${logged}`)
