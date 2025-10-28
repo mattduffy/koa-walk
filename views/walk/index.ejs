@@ -454,7 +454,10 @@
       } catch (e) {
         info('myGetCurrentPosition(): Failed to acquire geoLocation for some reason.')
         warn(e)
-        info(`Falling back to generic position: lat ${lat}, lon ${lon} to initialize the map.`)
+        info(
+          `Falling back to generic position: lat ${lat}, `
+          + `lon ${lon} to initialize the map.`
+        )
         position = {
           latitude: lat,
           longitude: lon,
@@ -511,7 +514,10 @@
           coords.heading = null
         }
       }
-      const mapkitCoordinate = new mapkit.Coordinate(evtCoords.latitude, evtCoords.longitude)
+      const mapkitCoordinate = new mapkit.Coordinate(
+        evtCoords.latitude,
+        evtCoords.longitude
+      )
       if (window.walking.active) {
         await recordWalk(coords, mapkitCoordinate)
         window._map.setCenterAnimated(mapkitCoordinate, false)
@@ -548,10 +554,13 @@
       if (e.detail.coords) {
         info('localityChanged(e) coords', e.detail.coords)
         let li = document.createElement('li')
-        const heading  = 
-          (window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading)
-          ? window.walking.state.wayPoints[window.walking.state.wayPoints.length - 1]?.heading
-          : '???'
+        const heading  = (window.walking.state.wayPoints[
+          window.walking.state.wayPoints.length - 1
+        ]?.heading) 
+        ? window.walking.state.wayPoints[
+          window.walking.state.wayPoints.length - 1
+        ]?.heading 
+        : '???'
         li.innerHTML = `lat ${evtCoords.latitude.toFixed(4)}, `
           + `lon ${evtCoords.longitude.toFixed(4)} <br>`
           + `accuracy: ${displayUnits(evtCoords.accuracy, DISPLAY_UNITS , 1)}, `
@@ -851,6 +860,9 @@
       })
       const login = loginForm.elements.submit
       login.addEventListener('click', (e) => {
+        window.alert('what?')
+        console.dir(e)
+        return false
         e.preventDefault()
         e.stopPropagation()
         console.error('what is happening?')
@@ -1145,7 +1157,8 @@
           // li.style.marginLeft = '-1.5em'
           // li.style.padding = '5px 0px 6px 0px'
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
-          li.innerHTML = `<span data-show-id="${w.id}" data-scope="remote" class="pointer">`
+          li.innerHTML = `<span data-show-id="${w.id}" `
+            + 'data-scope="remote" class="pointer">'
             + `${w.name}</span> `
             + `(${new Date(w.date).toLocaleString('en-US', fmt)}) <br>`
             + 'export: '
@@ -1155,7 +1168,8 @@
             + 'class="pointer export tiny">GPX</span>'
             + `<span data-export-id=${w.id} data-type="geojson" data-scope="remote" `
             + 'class="pointer export tiny">GEOJson</span>'
-            + `<span data-delete-id=${w.id} data-scope="remote" class="pointer delete tiny">`
+            + `<span data-delete-id=${w.id} `
+            + 'data-scope="remote" class="pointer delete tiny">'
             + `delete</span>`
           replaceLis.push(li)
         })
@@ -1198,7 +1212,9 @@
             // li.style.marginLeft = '-1.5em'
             // li.style.padding = '5px 0px'
             const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
-            li.innerHTML = `<span data-show-id="${w.id}" data-scope="local" class="pointer">`
+            li.innerHTML = '<span data-show-id="'
+              + `${w.id}" `
+              + 'data-scope="local" class="pointer">'
               + `${w.name}</span> `
               + `(${new Date(w.date).toLocaleString('en-US', fmt)}) <br>`
               + 'export: '
@@ -1208,7 +1224,8 @@
               + 'class="pointer export tiny">GPX</span>'
               + `<span data-export-id=${w.id} data-type="geojson" data-scope="local" `
               + 'class="pointer export tiny">GEOJson</span>'
-              + `<span data-delete-id=${w.id} data-scope="local" class="pointer delete tiny">`
+              + `<span data-delete-id=${w.id} `
+              + 'data-scope="local" class="pointer delete tiny">'
               + `delete</span>`
             replaceLis.push(li)
           })
@@ -1217,7 +1234,10 @@
       }
       log(`total number of walks: ${total}`)
       if (total > 0) {
-        window.showCountBadge(total, document.querySelector('span[data-action=showList]'))
+        window.showCountBadge(
+          total,
+          document.querySelector('span[data-action=showList]')
+        )
       }
       document.querySelectorAll('span[data-delete-id]').forEach((s) => {
         s.addEventListener('click', deleteWalk)
