@@ -9,7 +9,7 @@ class Logger {
         this.info = this.log 
         this.warn = this.log 
         this.error = this.log 
-        this.log('level is', level)
+        this.log('logging level is', level)
         this.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHH") 
         break
       case 'verbose':
@@ -17,26 +17,26 @@ class Logger {
         this.info = console.info.bind(console)
         this.warn = console.warn.bind(console)
         this.error = console.error.bind(console)
-        this.log('level is', level)
+        this.log('logging level is', level)
         break
       case 'normal':
         this.log = console.log.bind(console)
         this.info = console.info.bind(console)
         this.warn = () => {}
         this.error = console.error.bind(console)
-        this.log('level is', level)
+        this.log('logging level is', level)
         break
     case 'quiet':
-        this.log = () => {}
+        this.log = console.log.bind(console)
         this.info = () => {}
         this.warn = () => {}
         this.error = console.error.bind(console)
-        this.log('level is', level)
+        this.log('logging level is', level)
         break
     default:
         this.log = console.log.bind(console)
-        this.info = console.info.bind(console)
-        this.warn = console.warn.bind(console)
+        this.info = () => {}
+        this.warn = () => {}
         this.error = console.error.bind(console)
         this.log('no log level specified')
         this.log('using default verbose level')
