@@ -279,7 +279,6 @@
     window.walker.postMessage(credentials)
   }
   async function main() {
-    info('what the absolute fuck?')
     await setupMapKitJs()
     let position
     let lat = 39.833333 
@@ -311,6 +310,7 @@
         maximumAge: 0,
       }
       const x = await myGetCurrentPosition(geoOpts)
+      console.log('first position fix', x)
       info('first position fix', x)
     } else {
       info('geolocation not available, no way of knowing.')
@@ -474,7 +474,13 @@
       }
       log('myGetCurrentPosition() ', position)
       await setPosition(position)
-      updatePosition(position)
+      try {
+        updatePosition(position)
+        log('did updatePosition(position) call work?')
+      } catch (e) {
+        console.warn('updatePosition(position) called failed?')
+        console.error(e)
+      }
       return position
     }
     window.myGetCurrentPosition = myGetCurrentPosition
@@ -1664,7 +1670,8 @@
     }
     if (/(deg(rees)?)|(°)/i.test(_u)) {
       if (isNaN(_x)) {
-        return `${_x}°`
+        // return `${_x}°`
+        return `<em>&lt;${_x}&gt;</em>`
       } else {
         return `${_x.toFixed(1)}°`
       }
@@ -1746,7 +1753,7 @@
       if (coords?.altitude && _alt) {
         a.querySelector('p > span#alt').innerHTML = 
           // `Your altitude is ${coords?.altitude?.toFixed(1) ?? 0}`
-          `Your altitude is ${displayUnits(coords?.altitude, DISPLAY_UNTIS, 1)}`
+          `Your altitude is ${displayUnits(coords?.altitude, DISPLAY_UNITS, 1)}`
       }
       const _heading = a.querySelector('p > span#heading')
       if (coords.heading && _heading) {
