@@ -1723,7 +1723,7 @@
       if (coords?.altitude && _alt) {
         a.querySelector('p > span#alt').innerHTML = 
           // `Your altitude is ${coords?.altitude?.toFixed(1) ?? 0}`
-          `Your altitude is ${displayUnits(coords?.altitude, DISPLAY_UNTIS, 1)}`
+          `Your altitude is ${displayUnits(coords?.altitude, DISPLAY_UNITS, 1)}`
       }
       const _heading = a.querySelector('p > span#heading')
       if (coords.heading && _heading) {
