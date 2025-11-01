@@ -214,6 +214,15 @@ span.userpng {
   cursor: pointer;
 }
 
+span.userpng-logged-in {
+  content: url('/i/user-logged-in.png');
+  max-width: 1.5em;
+  padding: 10px 10px 10px 10px;
+  border-radius: .5em;
+  flex-grow: 1;
+  cursor: pointer;
+}
+
 div#map {
   width: 100vw;
   /* height: 92vh; */
