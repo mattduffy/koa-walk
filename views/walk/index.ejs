@@ -310,7 +310,6 @@
         maximumAge: 0,
       }
       const x = await myGetCurrentPosition(geoOpts)
-      console.log('first position fix', x)
       info('first position fix', x)
     } else {
       info('geolocation not available, no way of knowing.')
@@ -473,7 +472,12 @@
         // updatePosition(position)
       }
       log('myGetCurrentPosition() ', position)
-      await setPosition(position)
+      try {
+        await setPosition(position)
+      } catch (e) {
+        warn('failed to setPosition(position) in myGetCurrentPosition()')
+        error(e)
+      }
       try {
         updatePosition(position)
         log('did updatePosition(position) call work?')
@@ -869,13 +873,15 @@
       })
       const login = loginForm.elements.submit
       login.addEventListener('click', (e) => {
-        window.alert('what?')
-        console.dir(e)
-        return false
         e.preventDefault()
         e.stopPropagation()
-        console.error('what is happening?')
-        // doLogin(document.forms['login'])
+        // console.error('what is happening?')
+        try {
+          doLogin(document.forms['login'])
+        } catch (e) {
+          warn('failed calling doLogin(document.forms[\'login\']')
+          error(e)
+        }
       })
       const welcomeDiv = document.querySelector('div#welcomeId')
       log(`logged = ${logged}`)
@@ -905,6 +911,14 @@
               updateCsrfToken(e.data.newCsrfToken)
             }
             log('csrfToken after SETUP: ', window.csrfToken)
+            if (e.data?.status === 'success') {
+              log('Refreshed authenticated user, changed icon to reflect that')
+              const userIcon = document.querySelector('span[data-action="showLogin"]')
+              userIcon.classList.add('userpng-logged-in')
+              userIcon.classList.remove('userpng')
+            } else {
+              warn('Failed to refresh user and update user icon.')
+            }
             break
           case 'LOGIN':
             log('csrfToken before LOGIN: ', window.csrfToken)
@@ -996,9 +1010,9 @@
     }
     credentials.csrfTokenHidden = csrfTokenHidden.value
     const email = form.elements['email']
-    log(email)
+    log(email.value)
     if (email.value === '' || email.value === undefined) {
-      log(email)
+      log('email field was empty')
       return isRequired(email)
     }
     credentials.email = email.value
@@ -1022,7 +1036,6 @@
     function success(e) {
       log('login success')
       log(e)
-      // window.csrfToken = e.user.newCsrfToken
       updateCsrfToken(e.user.newCsrfToken)
       const initials = document.querySelector('span[data-name-initials]')
       const i = `${e.user.first.slice(0, 1)}${e.user.last.slice(0, 1)}`
@@ -1042,6 +1055,10 @@
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'block'
       toggleButtons('showLogin')
+      const userIcon = document.querySelector('span[data-action="showLogin"]')
+      userIcon.classList.add('userpng-logged-in')
+      userIcon.classList.remove('userpng')
+      // info('userIcon classList', userIcon.classList.value)
     }
     doLogin.success = success
     function failed(e) {
@@ -1067,8 +1084,6 @@
       }
       log('login failed')
       log(e)
-      // window.csrfToken = e.user.newCsrfToken  
-      // window.csrfToken = e.newCsrfToken  
       updateCsrfToken(e.newCsrfToken)
     }
     doLogin.failed = failed
@@ -1081,7 +1096,6 @@
     window.walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
     function finish(e) {
       log('logout response: ', e)
-      // window.csrfToken = e.response.user.newCsrfToken
       updateCsrfToken(e.response.user.newCsrfToken)
       delete window.walking.state.remoteListCache
       const initials = document.querySelector('span[data-name-initials]')
@@ -1096,10 +1110,12 @@
       }
       toggleTab('login')
       toggleButtons('showLogin')
+      const userIcon = document.querySelector('span[data-action="showLogin"]')
+      userIcon.classList.add('userpng')
+      userIcon.classList.remove('userpng-logged-in')
       form.style.display = 'block'
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'none'
-      // window.csrfToken = e.response.user.csrfToken
       updateCsrfToken(e.response.user.csrfToken)
     }
     doLogout.finish = finish
