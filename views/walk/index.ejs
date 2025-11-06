@@ -292,6 +292,15 @@
     updatePreferences.finish = finish
     window.walker.postMessage(credentials)
   }
+  function truncateText(text = '', length = 38) {
+    if (text === '' || length < 1) {
+      return ''
+    }
+    if (text.length <= length) {
+      return text
+    }
+    return text.slice(0, length - 1).concat('\u{2026}') 
+  }
   async function main() {
     await setupMapKitJs()
     let position
@@ -1205,10 +1214,10 @@
           // li.style.marginLeft = '-1.5em'
           // li.style.padding = '5px 0px 6px 0px'
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
-          li.innerHTML = `<span data-show-id="${w.id}" `
+          li.innerHTML = `${new Date(w.date).toLocaleString('en-US', fmt)} `
+            + `<span data-show-id="${w.id}" `
             + 'data-scope="remote" class="pointer">'
-            + `${w.name}</span> `
-            + `(${new Date(w.date).toLocaleString('en-US', fmt)}) <br>`
+            + `${truncateText(w.name)}</span> <br>`
             + 'export: '
             + `<span data-export-id=${w.id} data-type="kml" data-scope="remote" `
             + 'class="pointer export tiny">KML</span>'
@@ -1260,11 +1269,11 @@
             // li.style.marginLeft = '-1.5em'
             // li.style.padding = '5px 0px'
             const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
-            li.innerHTML = '<span data-show-id="'
+            li.innerHTML = `${new Date(w.date).toLocaleString('en-US', fmt)} `
+              + '<span data-show-id="'
               + `${w.id}" `
               + 'data-scope="local" class="pointer">'
-              + `${w.name}</span> `
-              + `(${new Date(w.date).toLocaleString('en-US', fmt)}) <br>`
+              + `${truncateText(w.name)}</span> <br>`
               + 'export: '
               + `<span data-export-id=${w.id} data-type="kml" data-scope="local" `
               + 'class="pointer export tiny">KML</span>'
