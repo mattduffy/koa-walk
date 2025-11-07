@@ -172,7 +172,7 @@ div.countBadge {
   justify-content: center;
   background-color: #555;
   color: white;
-  min-width: 1em;
+  min-width: 1.25em;
   border-radius: 50%;
   vertical-align: middle; 
   display: none;
