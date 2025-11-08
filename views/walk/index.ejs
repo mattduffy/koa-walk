@@ -735,47 +735,53 @@
     }
     document.querySelector('button#stop').addEventListener('click', stopWalk)
     window.saveWalk = async function(e) {
-      e.preventDefault()
-      e.stopPropagation()
-      if (window.walking.c.length === 0) {
-        // No telemetry data, nothing to save.
-        // Show some kind of message.
-        log('nothing to save')
-        return false
-      }
-      if (window.walking.active) {
-        document.querySelector('button#stop').click()
-      }
-      const _name = window.walking.name
-      const _date = window.walking.date
-      const credentials = {
-        TASK: 'SAVE_WALK',
-        url: `${origin}/save`,
-        csrfTokenHidden: csrfToken,
-        jwtAccess: jwtAccess,
-        scope: (window.isAuthenticated) ? 'remote' : 'local',
-      }
-      window.walker.postMessage(credentials)
-      function finish(e) {
-        log('finish saving walk: ', e)
-        const savedWalk = { id: e.res.saved.insertedId, name: _name, date: _date }
-        if (e.scope === 'remote') {
-          if (!window.walking.state?.remoteListCache) {
-            window.walking.state.remoteListCache = [ savedWalk ]
+      try {
+        e.preventDefault()
+        e.stopPropagation()
+        if (window.walking.c.length === 0) {
+          // No telemetry data, nothing to save.
+          // Show some kind of message.
+          log('nothing to save')
+          return false
+        }
+        if (window.walking.active) {
+          document.querySelector('button#stop').click()
+        }
+        const _name = window.walking.name
+        const _date = window.walking.date
+        const credentials = {
+          TASK: 'SAVE_WALK',
+          url: `${origin}/save`,
+          csrfTokenHidden: csrfToken,
+          jwtAccess: jwtAccess,
+          scope: (window.isAuthenticated) ? 'remote' : 'local',
+        }
+        info('About to save walk', credentials)
+        window.walker.postMessage(credentials)
+        function finish(e) {
+          log('finish saving walk: ', e)
+          const savedWalk = { id: e.res.saved.insertedId, name: _name, date: _date }
+          if (e.scope === 'remote') {
+            if (!window.walking.state?.remoteListCache) {
+              window.walking.state.remoteListCache = [ savedWalk ]
+            } else {
+              window.walking.state.remoteListCache.unshift(savedWalk)
+              log(window.walking.state.remoteListCache)
+            }
           } else {
-            window.walking.state.remoteListCache.unshift(savedWalk)
-            log(window.walking.state.remoteListCache)
-          }
-        } else {
-          if (!window.walking.state?.localListCache) {
-            window.walking.state.localListCache = [ savedWalk ]
-          } else {
-            window.walking.state.localListCache.unshift(savedWalk)
-            log(window.walking.state.localListCache)
+            if (!window.walking.state?.localListCache) {
+              window.walking.state.localListCache = [ savedWalk ]
+            } else {
+              window.walking.state.localListCache.unshift(savedWalk)
+              log(window.walking.state.localListCache)
+            }
           }
         }
+        saveWalk.finish = finish
+      } catch (e) {
+        warn('saveWalk() failed')
+        error(e)
       }
-      saveWalk.finish = finish
     }
     document.querySelector('button#saveWalk').addEventListener('click', saveWalk)
     function clearWalk(e) {
