@@ -1,0 +1,27 @@
+<main>
+  <article>
+    <h1>Wellknown URIs</h1>
+    <% if (flash?.info) { %>
+    <div id="info" class="info">
+      <span><%= flash.info %></span>
+    </div>
+    <% } %>
+    <% if (flash?.message) { %>
+    <div id="messages" class="messages">
+      <span><%= flash.message %></span>
+    </div>
+    <% } %>
+    <% if (flash?.error) { %>
+    <div id="errors" class="errors">
+      <span><%= flash.error %></span>
+    </div>
+    <% } %> 
+    <section id="wellknownURIs">
+      <ul>
+      <% wellknown?.forEach((u) => { %>
+        <li><a href="<%= `${origin}${u}` %>"><%= `${origin}${u}` %></a></li>
+      <% }) %>
+      </ul>
+    </section>
+  </article>
+</main>
