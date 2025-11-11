@@ -1,7 +1,7 @@
 /**
  * @module @mattduffy/koa-glp
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @summary The script to calculate calories from a ruck.
+ * @summary The script to calculate estimated energy expenditure from a ruck.
  * @file src/utils/calories.js
  */
 
@@ -22,94 +22,56 @@ const appEnv = {}
 log(`appRoot: ${appRoot}`)
 dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv })
 
-const program = new Command()
-program.name('newUser')
-  .requiredOption('--_id <_id>', 'ObjectId from db of ruck to calculate calories.')
-  .option('--method <method>', 'The method of calorie estimation to use.')
-  .option('-t, --test', 'Dry run the calorie calculations.')
-
-program.parse(process.argv)
-const options = program.opts()
-// log(process.argv)
-log('options: ', options)
-
-const confEnv = {}
-if (options?.conf) {
-  dotenv.config({ path: path.resolve(appRoot, options.conf), processEnv: confEnv })
-}
-let email = confEnv?.email ?? options?.email ?? 'new_user@genevalakepiers.com'
-if (options?.test === true) {
-  const rando = crypto.randomBytes(2).toString('hex')
-  const at = options.email.indexOf('@')
-  email = `${options.email.slice(0, at)}-${rando}${options.email.slice(at)}`
-}
-
-const fName = confEnv?.FIRST_NAME ?? options?.first ?? 'Test'
-const lName = confEnv?.LAST_NAME ?? options?.last ?? 'Test'
-const password = confEnv?.PASSWORD ?? options?.password ?? null
-
-const ctx = {
-  app: {
-    root: appRoot,
-    dirs: {
-      public: {
-        dir: `${appRoot}/public`,
-      },
-      private: {
-        dir: `${appRoot}/private`,
-      },
-    },
-  },
-}
-
-const _id = new mongoClient.ObjectId()
-log(`new mongo _id: ${_id}`)
-
-const userProps = {
-  _id,
-  // first: options.first ?? 'First',
-  first: fName,
-  last: lName,
-  emails: [{ primary: email, verified: false }],
-  description: `A new (${(options?.test) ? 'test' : ''}) ${(options?.admin) ? 'admin' : 'user'} account created from the cli.`,
-  username: `${fName.toLowerCase()}${lName.toLowerCase()}`,
-  password,
-  jwts: { token: '', refresh: '' },
-  userStatus: 'active',
-  schemaVer: 0,
-  ctx,
-  env: appEnv,
-  dbName: mongoClient.dbName,
-  client: mongoClient.client,
-}
-
-log(mongoClient.uri)
-log('[newUser] DB credentials in use: %O', userProps.client.options.credentials)
-log('[newUser] DB name in use: ', userProps.client.options.dbName)
-
-let newUser
-if (options.admin === true) {
-  newUser = Users.newAdminUser(userProps)
-} else {
-  newUser = Users.newUser(userProps)
-}
+let program
+let options
 try {
-  newUser.publicDir = 'a'
-  // TODO Fix issue with assigning privateDir looses hashed account directory in path.
-  // newUser.privateDir = 'a'
-  const newUserKeys = await newUser.generateKeys()
-  log(newUserKeys)
+  program = new Command()
+  program.name('newUser')
+    .requiredOption('--_id <_id>', 'ObjectId from db of ruck to calculate calories.')
+    .requiredOption('--body-weight <weight>', 'Body weight, in lbs.')
+    .option('--ruck-weight <weight>', 'Ruck weight, in lbs.')
+    .option('--simple', 'The simple method of calorie estimation.')
+    .option('-t, --test', 'Dry run the calorie calculations.  Do not save results.')
+
+  program.parse(process.argv)
+  options = program.opts()
+  log('process.argv', process.argv)
+  log('command options: ', options)
+
 } catch (e) {
   error(e)
-  throw new Error(e.message, { cause: e })
 }
-let savedNewUser
+const MET = 6
+const BODY_WEIGHT = options.bodyWeight / 2.2
+const RUCK_WEIGHT = (options?.ruckWeight / 2.2) || 0
+const COMBINED = BODY_WEIGHT + RUCK_WEIGHT
+log('hiking MET', MET)
+log(`body weight in lbs: ${options.bodyWeight} (kgs: ${BODY_WEIGHT})`) 
+log(`ruck weight in lbs: ${options.ruckWeight} (kgs: ${RUCK_WEIGHT})`)
+log(`combined weight in kgs: ${COMBINED}`)
+function simple(minutes) {
+  log('calculating simple EE method')
+  return ((MET * 3.5 * COMBINED) / 200) * minutes
+}
+
+// log(mongoClient)
+const walks = mongoClient.client.db().collection('walks')
+let ruck
+let _id
+let simpleCalories
 try {
-  savedNewUser = await newUser.save()
-  log(savedNewUser.privateDir)
+  _id = new mongoClient.ObjectId(options._id)
+  ruck = await walks.findOne({_id})
+  log(ruck.features[0].properties)
+  // Stored duration is milliseconds.
+  // Convert to minutes duration / 1000 / 60 (plus duration / 1000 % 60 for remaining seconds)
+  const minutes = Math.floor(((ruck.features[0].properties.duration / 1000) / 60))
+  if (options?.simple) {
+    simpleCalories = simple(minutes)
+    log(Math.round(simpleCalories))
+  }
 } catch (e) {
   error(e)
-  throw new Error(e.message, { cause: e })
 }
 // Done creating new user account, exit process.
 process.exit()
