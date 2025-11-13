@@ -1443,7 +1443,8 @@
       )}`
       document.querySelector('span#changeInElevation').textContent = `${
         displayUnits(e.walk.features[0].properties.highestElevation
-          - e.walk.features[0].properties.lowestElevation,
+          // - e.walk.features[0].properties.lowestElevation,
+          - e.walk.features[0].properties.startPosition.altitude,
           DISPLAY_UNITS
       )}`
       divList.style.display = 'none'
