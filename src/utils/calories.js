@@ -91,7 +91,7 @@ function simple(minutes, MET = 7.5) {
  */
 function pandolf(M = 7.5, W, L, V, G, n = 1.2) {
   log('calculating Pandolf equation for calories used.')
-  // 1.5𝑊+2.0(𝑊+𝐿)(𝐿/𝑊)+𝑛(𝑊+𝐿)(1.5𝑉+0.35𝑉𝐺)
+  // 1.5W + 2.0(W + L)(L/W) + n(W + L)(1.5V + 0.35VG)
   return (1.5 * W) + (2.0 * (W + L)) * (L / W) + ((n * (W + L)) * ((1.5 * V) + (0.35 * V) * G))
 }
 
@@ -116,14 +116,38 @@ try {
     let start
     let seconds = 0
     let steps = Array()
+    let calories = Array()
     let ts = ruck.features[0].properties.timestamps
     ts.forEach((t, i) => {
-      if (start === undefined) {
+      if (i === 0) {
         start = t
-      } else if (t - start < 10000 ) {
+      }
+      // not the right way to do this.
+      // collect each timestamp while seconds <= 10000 into steps array.
+      // once seconds reaches 10000, push steps array into parent array, rest steps and seconds
+      // parent[
+      //  steps[
+      //   {0, ts[0], seconds = 1},
+      //   {1, ts[1], seconds = 2},
+      //   ...
+      //   {9, ts[9], seconds = 10},
+      //  ],
+      //  steps[
+      //   {10, ts[10], seconds = 1},
+      //   {11, ts[11], seconds = 2},
+      //   ...
+      //   {19, ts[19], seconds = 10},
+      //  ],
+      //  ...
+      //  steps[],
+      //  steps[]
+      // ]
+      if (t - start <= 10000 ) {
         seconds += ts[i] - ts[i - 1] 
       } else {
         steps.push({index: i, timestamp: t, seconds: seconds}) 
+        seconds = 0
+        start = ts[i]
       }
       // pandolfCalories.push(pandolf())
       
