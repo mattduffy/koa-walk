@@ -142,6 +142,7 @@ try {
       //  steps[],
       //  steps[]
       // ]
+      //
       if (t - start <= 10000 ) {
         seconds += ts[i] - ts[i - 1] 
       } else {
