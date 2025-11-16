@@ -114,15 +114,16 @@ try {
   }
   if (options?.pandolf) {
     let start
-    let seconds = 0
-    let steps = Array()
-    let calories = Array()
+    let milliseconds = 0
+    let ruckSteps = Array()
+    let ruckFull= Array()
+    const TEN_SECONDS = 10000
+    let miniSteps = 0
     let ts = ruck.features[0].properties.timestamps
     ts.forEach((t, i) => {
       if (i === 0) {
         start = t
       }
-      // not the right way to do this.
       // collect each timestamp while seconds <= 10000 into steps array.
       // once seconds reaches 10000, push steps array into parent array, rest steps and seconds
       // parent[
@@ -143,17 +144,45 @@ try {
       //  steps[]
       // ]
       //
-      if (t - start <= 10000 ) {
-        seconds += ts[i] - ts[i - 1] 
+      if (t - start <= TEN_SECONDS) {
+        log(`t ${t} - start ${start} = ${t - start}`)
+        milliseconds += ts[i] - (ts[(i < 1 ? 0 : i - 1)]) 
+        log(
+          `milliseconds ${milliseconds} = `
+          + `ts[${i}] ${ts[i]} - ts[${(i < 1 ? 0 : i - 1)}] ${ts[(i < 1 ? 0 : i - 1)]}`
+        )
+        miniSteps += 1
+        let step = {
+          index: i,
+          timestamp: t,
+          seconds: milliseconds / 1000,
+          miniSteps,
+        }
+        ruckSteps.push(step)
+        log(`adding ${miniSteps} `, step)
       } else {
-        steps.push({index: i, timestamp: t, seconds: seconds}) 
-        seconds = 0
+        log('resetting step', 'index', i)
+        ruckFull.push(ruckSteps)
+        ruckSteps = Array()
+        miniSteps += 1
+        let step = {
+          index: i,
+          timestamp: t,
+          seconds: (milliseconds / 1000),
+          miniSteps,
+        }
+        log(step)
+        ruckSteps.push(step)
+        log(`adding ${miniSteps} `, step)
+        miniSteps = 0
+        milliseconds = 0
         start = ts[i]
       }
       // pandolfCalories.push(pandolf())
       
     })
-    console.table(steps)
+    console.log(ruckFull)
+    // console.table(ruckSteps)
     // log(Math.round(pandolfCalories))
   }
 } catch (e) {
