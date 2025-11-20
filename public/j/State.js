@@ -64,8 +64,8 @@ class State extends Subject {
   }
 
   get totalElevationChange() {
-    if (highestElevation && lowestElevation) {
-      return highestElevation - lowestElevation
+    if (this.state.highestElevation && this.state.lowestElevation) {
+      return this.state.highestElevation - this.state.lowestElevation
     }
     return null
   } 
@@ -199,6 +199,8 @@ class State extends Subject {
       point.distance = 0
       point.heading = 0.0
       point.altitude = null
+      this.state.highestElevation = point.altitude
+      this.state.lowestElevation = point.altitude
     }
     if (point.altitude > this.state.highestElevation) {
       this.state.highestElevation = point.altitude
