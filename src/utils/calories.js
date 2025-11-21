@@ -126,24 +126,7 @@ try {
       }
       // collect each timestamp while seconds <= 10000 into steps array.
       // once seconds reaches 10000, push steps array into parent array, rest steps and seconds
-      // parent[
-      //  steps[
-      //   {0, ts[0], seconds = 1},
-      //   {1, ts[1], seconds = 2},
-      //   ...
-      //   {9, ts[9], seconds = 10},
-      //  ],
-      //  steps[
-      //   {10, ts[10], seconds = 1},
-      //   {11, ts[11], seconds = 2},
-      //   ...
-      //   {19, ts[19], seconds = 10},
-      //  ],
-      //  ...
-      //  steps[],
-      //  steps[]
-      // ]
-      //
+      
       if (t - start <= TEN_SECONDS) {
         log(`t ${t} - start ${start} = ${t - start}`)
         milliseconds += ts[i] - (ts[(i < 1 ? 0 : i - 1)]) 
