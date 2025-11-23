@@ -115,17 +115,21 @@ try {
   if (options?.pandolf) {
     let start
     let milliseconds = 0
-    let ruckSteps = Array()
-    let ruckFull= Array()
     const TEN_SECONDS = 10000
+    // number of individual timestamps in 10 second step
     let miniSteps = 0
+    // array of miniSteps in 10 second step
+    let ruckSteps = Array()
+    // array of all the ruck steps (10 second mini steps)
+    let ruckFull= Array()
     let ts = ruck.features[0].properties.timestamps
     ts.forEach((t, i) => {
       if (i === 0) {
         start = t
       }
-      // collect each timestamp while seconds <= 10000 into steps array.
-      // once seconds reaches 10000, push steps array into parent array, rest steps and seconds
+      // collect each timestamp while milliseconds <= 10000 (10 seconds) into steps array.
+      // once milliseconds reaches 10000, push steps array into parent array,
+      // reset steps and seconads
       
       if (t - start <= TEN_SECONDS) {
         log(`t ${t} - start ${start} = ${t - start}`)
@@ -165,8 +169,11 @@ try {
       
     })
     console.log(ruckFull)
-    // console.table(ruckSteps)
-    // log(Math.round(pandolfCalories))
+    // collate timestamps from each ruckStep[i] to respective waypoint locations
+    // calculate distance traveled in ruckStep[i]
+    // calculate speed as V = distance / ruckStep[i] total seconds
+    // calculate grade of incline as G = (change in elevation) / distance 
+    // reduce ruckStep[i] to speed and terrain grade: { V, G }
   }
 } catch (e) {
   error(e)
