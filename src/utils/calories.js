@@ -123,6 +123,7 @@ try {
     // array of all the ruck steps (10 second mini steps)
     let ruckFull= Array()
     let ts = ruck.features[0].properties.timestamps
+    let coords = ruck.features[0].geometry.coordinates
     ts.forEach((t, i) => {
       if (i === 0) {
         start = t
@@ -130,43 +131,45 @@ try {
       // collect each timestamp while milliseconds <= 10000 (10 seconds) into steps array.
       // once milliseconds reaches 10000, push steps array into parent array,
       // reset steps and seconads
-      
+      let step 
       if (t - start <= TEN_SECONDS) {
-        log(`t ${t} - start ${start} = ${t - start}`)
+        // log(`t ${t} - start ${start} = ${t - start}`)
         milliseconds += ts[i] - (ts[(i < 1 ? 0 : i - 1)]) 
-        log(
-          `milliseconds ${milliseconds} = `
-          + `ts[${i}] ${ts[i]} - ts[${(i < 1 ? 0 : i - 1)}] ${ts[(i < 1 ? 0 : i - 1)]}`
-        )
+        // log(
+        //   `milliseconds ${milliseconds} = `
+        //   + `ts[${i}] ${ts[i]} - ts[${(i < 1 ? 0 : i - 1)}] ${ts[(i < 1 ? 0 : i - 1)]}`
+        // )
         miniSteps += 1
-        let step = {
+        step = {
           index: i,
           timestamp: t,
+          coordinates: coords[i],
           seconds: milliseconds / 1000,
           miniSteps,
         }
         ruckSteps.push(step)
-        log(`adding ${miniSteps} `, step)
+        // log(`adding ${miniSteps} `, step)
       } else {
         log('resetting step', 'index', i)
         ruckFull.push(ruckSteps)
         ruckSteps = Array()
         miniSteps += 1
-        let step = {
+        step = {
           index: i,
           timestamp: t,
+          coordinates: coords[i],
           seconds: (milliseconds / 1000),
           miniSteps,
         }
-        log(step)
+        // log(step)
         ruckSteps.push(step)
-        log(`adding ${miniSteps} `, step)
+        // log(`adding ${miniSteps} `, step)
         miniSteps = 0
         milliseconds = 0
         start = ts[i]
       }
       // pandolfCalories.push(pandolf())
-      
+      log(`adding ${miniSteps} `, step)
     })
     console.log(ruckFull)
     // collate timestamps from each ruckStep[i] to respective waypoint locations
@@ -174,6 +177,15 @@ try {
     // calculate speed as V = distance / ruckStep[i] total seconds
     // calculate grade of incline as G = (change in elevation) / distance 
     // reduce ruckStep[i] to speed and terrain grade: { V, G }
+
+    // coordinate array members:
+    // longitude
+    // latitude
+    // altitude
+    // heading
+    const stepDistances = ruckFull.reduce((a, c, i, arr) => {
+
+    })
   }
 } catch (e) {
   error(e)
