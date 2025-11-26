@@ -962,7 +962,7 @@
             }
             // log('csrfToken after LOGIN: ', window.csrfToken)
             log('getting walk list, post login')
-            window.getList()
+            // window.getList()
             break
           case 'LOGOUT':
             log('csrfToken before LOGOUT: ', window.csrfToken)
@@ -1092,6 +1092,8 @@
       userIcon.classList.add('userpng-logged-in')
       userIcon.classList.remove('userpng')
       // info('userIcon classList', userIcon.classList.value)
+      log('login successful - last step, calling getList()')
+      window.getList()
     }
     doLogin.success = success
     function failed(e) {
@@ -1129,7 +1131,6 @@
     window.walker.postMessage({ TASK: 'LOGOUT', url: `${origin}/logout`, jwtAccess })
     function finish(e) {
       log('logout response: ', e)
-      updateCsrfToken(e.response.user.newCsrfToken)
       delete window.walking.state.remoteListCache
       const initials = document.querySelector('span[data-name-initials]')
       initials.dataset.nameInitials = ''
@@ -1149,7 +1150,7 @@
       form.style.display = 'block'
       const welcome = document.querySelector('div#welcomeId')
       welcome.style.display = 'none'
-      updateCsrfToken(e.response.user.csrfToken)
+      updateCsrfToken(e.response.user.newCsrfToken)
       window.getList()
       window.showCountBadge(
         window.walking.state.localListCache + window.walking.state.remoteListCache,
