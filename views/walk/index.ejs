@@ -1339,10 +1339,11 @@
     function finish(e) {
       log('getList.finish', e)
       updateCsrfToken(e.newCsrfToken)
-      const noAuth = LISTDIV.children.namedItem('noAuth') ?? null
-      if (e.auth === 'no' && !noAuth) {
-        log(`e.auth: ${e.auth}`)
-        log(`noAuth: ${noAuth}`)
+      // const noAuth = LISTDIV.children.namedItem('noAuth') ?? null
+      const noAuth = LISTDIV.children.namedItem('remote')?.children.namedItem('noAuth') ?? null
+      log(`e.auth: ${e.auth}`)
+      log(`noAuth: ${noAuth}`)
+      if (e.auth === 'no' && noAuth === null) {
         const noAuthP = document.createElement('p')
         noAuthP.id = 'noAuth'
         noAuthP.textContent = 'Login to see cloud saved walks.'
