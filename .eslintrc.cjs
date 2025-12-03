@@ -1,4 +1,4 @@
-var restrictedGlobals = require('eslint-restricted-globals')
+const restrictedGlobals = require('eslint-restricted-globals')
 module.exports = {
   globals: {
     window: true,
@@ -16,9 +16,9 @@ module.exports = {
   extends: 'airbnb-base',
   overrides: [
     {
-      files: ["public/j/worker.js"],
+      files: ['public/j/worker.js'],
       rules: {
-        'no-restricted-globals': ['error', 'isFinite', 'isNaN'].concat(restrictedGlobals), 
+        'no-restricted-globals': ['error', 'isFinite', 'isNaN'].concat(restrictedGlobals),
       },
     },
   ],
@@ -32,7 +32,7 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'import/extensions': 'off',
     'import/prefer-default-export': 'off',
-    'max-len': ['error', {"code": 100}],
+    'max-len': ['error', { code: 100 }],
     'new-cap': 'off',
   },
 }

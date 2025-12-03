@@ -31,7 +31,8 @@
   "devDependencies": {
     "eslint": "8.57.1",
     "eslint-config-airbnb-base": "15.0.0",
-    "eslint-plugin-import": "2.26.0"
+    "eslint-plugin-import": "2.26.0",
+    "eslint-restricted-globals": "0.2.0"
   },
   "dependencies": {
     "@koa/ejs": "5.0.0",
