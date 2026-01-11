@@ -2,7 +2,7 @@
  * @summary Koa router for the gallery level pages.
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/routes/main.js The router for the gallery level app URLs.
+ * @file src/routes/main.js
  */
 
 import path from 'node:path'
@@ -55,7 +55,10 @@ router.get('usernamePublicGalleryId', '/:username/gallery/:id', hasFlash, async 
   }
   if (username !== displayUser.username) {
     try {
-      const cachedPage = await readFile(path.join(ctx.app.dirs.cache.pages, ctx.path), { encoding: 'utf8' })
+      const cachedPage = await readFile(
+        path.join(ctx.app.dirs.cache.pages, ctx.path),
+        { encoding: 'utf8' },
+      )
       ctx.status = 200
       ctx.type = 'text/html; charset=utf-8'
       ctx.body = cachedPage

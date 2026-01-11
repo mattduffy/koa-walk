@@ -1,16 +1,15 @@
 /**
  * @module @mattduffy/koa-glp
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/utils/newUser.js The script to create a new user account.
+ * @summary The script to create a new user account.
+ * @file src/utils/newUser.js
  */
 
 import path from 'node:path'
 import * as dotenv from 'dotenv'
 import { fileURLToPath } from 'node:url'
 import crypto from 'node:crypto'
-/* eslint-disable-next-line */
 import { Command } from 'commander'
-/* eslint-disable-next-line */
 import * as Users from '@mattduffy/users/Users.js'
 import * as mongoClient from '../daos/impl/mongodb/mongo-client.js'
 // import * as redis from '../daos/impl/redis/redis-client.js'
@@ -29,7 +28,11 @@ log(`appRoot: ${appRoot}`)
 dotenv.config({ path: path.resolve(appRoot, 'config/app.env'), processEnv: appEnv })
 // log(appEnv)
 // const mongoEnv = {}
-// dotenv.config({ path: path.resolve(appRoot, 'config/mongodb.env'), processEnv: mongoEnv, debug: true })
+// dotenv.config({
+//   path: path.resolve(appRoot, 'config/mongodb.env'),
+//   processEnv: mongoEnv,
+//   debug: true,
+// })
 // log(mongoEnv)
 
 const program = new Command()
@@ -37,7 +40,11 @@ program.name('newUser')
   .requiredOption('--first <name>', 'User\'s first name')
   .requiredOption('--last <name>', 'User\'s last name')
   .requiredOption('--email <addr>', 'User\'s email address')
-  .requiredOption('--desc <description>', 'Short description of the account', 'New account created using cli.')
+  .requiredOption(
+    '--desc <description>',
+    'Short description of the account',
+    'New account created using cli.',
+  )
   .requiredOption('--password <password>', 'The new user\'s initial password.')
   .option('-a, --admin', 'Make this user account admin, otherwise regular.')
   .option('-t, --test', 'A test user account, not a real user.')
@@ -85,7 +92,8 @@ const userProps = {
   first: fName,
   last: lName,
   emails: [{ primary: email, verified: false }],
-  description: `A new (${(options?.test) ? 'test' : ''}) ${(options?.admin) ? 'admin' : 'user'} account created from the cli.`,
+  description: `A new (${(options?.test) ? 'test' : ''}) `
+    + `${(options?.admin) ? 'admin' : 'user'} account created from the cli.`,
   username: `${fName.toLowerCase()}${lName.toLowerCase()}`,
   password,
   jwts: { token: '', refresh: '' },

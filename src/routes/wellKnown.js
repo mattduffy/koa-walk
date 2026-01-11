@@ -2,9 +2,12 @@
  * @summary Koa router for the public .well-known resources.
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/routes/wellKnown.js The router for public well-known URI actions.
+ * @file src/routes/wellKnown.js
  */
 
+// import path from 'node:path'
+// import { Buffer } from 'node:buffer'
+// import { writeFile } from 'node:fs/promises'
 import Router from '@koa/router'
 import NodeInfo from '@mattduffy/webfinger/nodeinfo.js'
 import Hostmeta from '@mattduffy/webfinger/host-meta.js'
@@ -18,15 +21,17 @@ const wellKnownError = _error.extend('wellKnown')
 const router = new Router()
 
 router.get('security', '/.well-known/security.txt', async (ctx) => {
-  const info = wellKnownInfo.extend('GET-serciryt.txt')
-  info('Somebody asked for the security.txt file.')
+  const log = wellKnownLog.extend('GET-security.txt')
+  const info = wellKnownInfo.extend('GET-security.txt')
+  // const error = wellKnownError.extend('GET-security.txt')
+  info('somebody asked for the security.txt file.')
   const securityTxt = []
   securityTxt.push(`Contact: mailto:${ctx.app.securityContact}`)
-  securityTxt.push('Expires: 2026-12-31T23:59:00.000Z')
+  securityTxt.push('Expires: 2025-12-31T23:59:00.000Z')
   securityTxt.push(`Encryption: ${ctx.app.securityGpg}`)
   securityTxt.push('Preferred-Languages: en')
   securityTxt.push(`Canonical: ${ctx.state.origin}/.well-known/security.txt`)
-  info(securityTxt)
+  log(securityTxt)
   ctx.status = 200
   ctx.type = 'text/plain; charset=utf-8'
   ctx.body = securityTxt.join('\n')
@@ -50,8 +55,7 @@ router.get('jwks-json', '/.well-known/jwks.json', async (ctx) => {
     log(keys)
   } catch (e) {
     error(e)
-    const err = new Error('', { cause: e })
-    ctx.throw(500, err)
+    ctx.throw(500, e)
   }
   let jwks
   try {
@@ -59,8 +63,7 @@ router.get('jwks-json', '/.well-known/jwks.json', async (ctx) => {
     log(jwks)
   } catch (e) {
     error(e)
-    const err = new Error('', { cause: e })
-    ctx.throw(500, err)
+    ctx.throw(500, e)
   }
   ctx.status = 200
   ctx.type = 'application/json; charset=utf-8'
@@ -75,12 +78,13 @@ router.get('nodeinfo', '/.well-known/nodeinfo', async (ctx) => {
     error('Missing database connection')
     ctx.status = 500
     ctx.type = 'text/plain; charset=utf-8'
+    // ctx.throw(500, 'Missing db connection')
     const err = new Error('Missing db connection')
     ctx.throw(500, err)
   }
   let info
   try {
-    const host = ctx.request.host
+    const host = ctx.state.origin
     const o = { db: ctx.state.mongodb.client, host, path: ctx.request.path }
     const node = new NodeInfo(o)
     info = await node.info()
@@ -96,6 +100,7 @@ router.get('nodeinfo', '/.well-known/nodeinfo', async (ctx) => {
   } catch (e) {
     error(e)
     ctx.status = 500
+    // ctx.throw(500, 'Nodeinfo failure - 100', e)
     const err = new Error('Nodeinfo failure - 100', { cause: e })
     ctx.throw(500, err)
   }
@@ -113,8 +118,7 @@ router.get('nodeinfo2.1', '/nodeinfo/2.1', async (ctx) => {
     log(info)
   } catch (e) {
     error(e)
-    const err = new Error('', { cause: e })
-    ctx.throw(500, err)
+    ctx.throw(500, e)
   }
   if (!info) {
     error('Nodeinfo not found')
@@ -138,13 +142,15 @@ router.get('host-meta', '/.well-known/host-meta', async (ctx, next) => {
     await next()
   } catch (e) {
     error('Hostmeta failure - 200')
+    // ctx.throw(500, 'Hostmeta failure - 200', e)
     const err = new Error('Hostmeta failure - 200', { cause: e })
     ctx.throw(500, err)
   }
   let info
   try {
     // const host = `${ctx.request.protocol}://${ctx.request.host}`
-    const host = ctx.state.host
+    // const host = ctx.request.origin
+    const { host } = ctx.request
     const o = { path: ctx.request.path, host }
     const meta = new Hostmeta(o)
     info = meta.info()
@@ -161,6 +167,7 @@ router.get('host-meta', '/.well-known/host-meta', async (ctx, next) => {
   } catch (e) {
     error(e)
     ctx.status = 500
+    // ctx.throw(500, 'Hostmeta failure - 100', e)
     const err = new Error('Hostmeta failure - 100', { cause: e })
     ctx.throw(500, err)
   }
@@ -173,20 +180,27 @@ router.get('webfinger', '/.well-known/webfinger', async (ctx, next) => {
     error('Missing db connection')
     ctx.status = 500
     ctx.type = 'text/plain; charset=utf-8'
+    // ctx.throw(500, 'Missing database connection.')
     const err = new Error('Missing database connection.')
+    ctx.throw(500, err)
+  }
+  try {
+    log('awaiting next return')
+    await next()
+  } catch (e) {
+    error('Webfinger failure - 200')
+    error(e)
+    const err = new Error('Webfinger failure - 200', { cause: e })
     ctx.throw(500, err)
   }
   try {
     const re = /^acct:([^\\s][A-Za-z0-9_-]{2,30})(?:@)?([^\\s].*)?$/
     const username = re.exec(ctx.request.query?.resource)
-    log(username)
     if (!ctx.request.query.resource || !username) {
       error('Missing resource query parameter.')
       ctx.status = 400
       ctx.type = 'text/plain; charset=utf-8'
-      ctx.response.message = 'Bad request - missing required webfinger URL parameter: '
-        + 'resource=<query-uri>'
-      ctx.body = 'Bad request - missing required URL parameter: resource'
+      ctx.body = 'Bad request'
     } else {
       const { host, protocol } = ctx.request
       const { origin } = ctx.state
@@ -221,28 +235,10 @@ router.get('webfinger', '/.well-known/webfinger', async (ctx, next) => {
   } catch (e) {
     error(e)
     ctx.status = 500
+    // ctx.throw(500, 'Webfinger failure - 100', e)
     const err = new Error('Webfinger failure - 100', { cause: e })
     ctx.throw(500, err)
   }
-  return next()
-})
-
-router.get('wellknownIndex', '/.well-known', async (ctx) => {
-  const log = wellKnownInfo.extend('GET-wellknown-uris')
-  const wellknown = router.stack.map((i) => i.path)
-  log(wellknown)
-  wellknown.pop()
-  wellknown.sort()
-  console.dir(router.stack)
-  const locals = {
-    body: ctx.body,
-    title: `${ctx.app.site}: .well-known`,
-    flash: ctx.flash?.wellknown ?? {},
-    sessionUser: ctx.state.sessionUser ?? null,
-    isAuthenticated: ctx.state.isAuthenticated,
-    wellknown,
-  }
-  await ctx.render('wellknown/index', locals)
 })
 
 export { router as wellKnown }

@@ -2,7 +2,7 @@
  * @summary Koa router for the apple mapkit api endpoints.
  * @module @mattduffy/koa-glp
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/routes/mapkit.js The router for the apple mapkit api endpoints.
+ * @file src/routes/mapkit.js
  */
 
 import path from 'node:path'
@@ -15,9 +15,9 @@ import {
   _error,
 } from '../utils/logging.js'
 import {
-  addIpToSession,
+  // addIpToSession,
   doTokensMatch,
-  processFormData,
+  // processFormData,
 } from './middlewares.js'
 
 const Log = _log.extend('mapkit')
@@ -45,7 +45,10 @@ function sanitize(param) {
 //     optsAllPiers.RETURN = ['pierNumber', '$.loc']
 //     optsAllPiers.SORTBY = { BY: 'pierNumber', DIRECTION: 'ASC' }
 //     optsAllPiers.LIMIT = { from: 0, size: 1000 }
-//     log(`ft.search ${idxAllPiers} "*" RETURN 4 pierNumber $.loc AS coords SORTBY pierNumber ASC LIMIT 0 1000`)
+//     log(
+//       `ft.search ${idxAllPiers} "*" RETURN 4 pierNumber $.loc `
+//       ` + AS coords SORTBY pierNumber ASC LIMIT 0 1000`,
+//    )
 //     allPiers = await redis.ft.search(idxAllPiers, queryAllPiers, optsAllPiers)
 //     log(allPiers)
 //   } catch (e) {
@@ -93,11 +96,19 @@ function sanitize(param) {
 //     ctx.type = 'application/json; charset=utf-8'
 //     ctx.status = 200
 //     try {
-//       log('FT.SEARCH glp:idx:piers:swim "*" RETURN 13 pier $.loc AS coords $.property.association AS assoc $.property.associationUrl AS url $.owners[*].members[*].f AS name SORTBY pier ASC')
+//       log(
+//         'FT.SEARCH glp:idx:piers:swim "*" RETURN 13 pier $.loc AS coords '
+//         + '$.property.association AS assoc $.property.associationUrl AS url'
+//         + '$.owners[*].members[*].f AS name SORTBY pier ASC',
+//      )
 //       const idxPierSwim = 'glp:idx:piers:swim'
 //       const queryPierSwim = '*'
 //       const optsPierSwim = {}
-//       optsPierSwim.RETURN = ['pier', '$.loc', 'AS', 'coords', '$.property.association', 'AS', 'assoc', '$.owners[*].members[*].f', 'AS', 'name']
+//       optsPierSwim.RETURN = [
+//         'pier',
+//         '$.loc', 'AS', 'coords',
+//         '$.property.association', 'AS', 'assoc',
+//         '$.owners[*].members[*].f', 'AS', 'name']
 //       optsPierSwim.LIMIT = { from, size }
 //       optsPierSwim.SORTBY = { BY: 'pier', DIRECTION: 'ASC' }
 //       const piersInSwim = await redis.ft.search(idxPierSwim, queryPierSwim, optsPierSwim)
@@ -135,11 +146,20 @@ function sanitize(param) {
 //     ctx.type = 'application/json; charset=utf-8'
 //     ctx.status = 200
 //     try {
-//       log('FT.SEARCH glp:idx:piers:food "*" RETURN 10 pier $.loc AS coords $.property.business AS business $.property.associationUrl AS url SORTBY pier ASC')
+//       log(
+//         'FT.SEARCH glp:idx:piers:food "*" RETURN 10 pier $.loc AS coords '
+//         + '$.property.business AS business $.property.associationUrl AS url '
+//         + 'SORTBY pier ASC',
+//       )
 //       const idxPierFood = 'glp:idx:piers:food'
 //       const queryPierFood = '*'
 //       const optsPierFood = {}
-//       optsPierFood.RETURN = ['pier', '$.loc', 'AS', 'coords', '$.property.business', 'AS', 'business', '$.property.associationUrl', 'AS', 'url']
+//       optsPierFood.RETURN = [
+//        'pier',
+//        '$.loc', 'AS', 'coords',
+//        '$.property.business', 'AS', 'business',
+//        '$.property.associationUrl', 'AS', 'url',
+//       ]
 //       optsPierFood.LIMIT = { from, size }
 //       optsPierFood.SORTBY = { BY: 'pier', DIRECTION: 'ASC' }
 //       result = await redis.ft.search(idxPierFood, queryPierFood, optsPierFood)
@@ -176,11 +196,21 @@ function sanitize(param) {
 //     ctx.type = 'application/json; charset=utf-8'
 //     ctx.status = 200
 //     try {
-//       log('FT.SEARCH glp:idx:piers:public "*" RETURN 13 pier $.loc AS coords $.property.association AS association $.property.business AS business $.owners[*].members[*].f AS name  SORTBY pier ASC')
+//       log(
+//         'FT.SEARCH glp:idx:piers:public "*" RETURN 13 pier $.loc AS coords '
+//         + '$.property.association AS association $.property.business AS business '
+//         + '$.owners[*].members[*].f AS name  SORTBY pier ASC',
+//       )
 //       const idxPierPublic = 'glp:idx:piers:public'
 //       const queryPierPublic = '*'
 //       const optsPierPublic = {}
-//       optsPierPublic.RETURN = ['pier', '$.loc', 'AS', 'coords', '$.property.association', 'AS', 'association', '$.property.business', 'AS', 'business', '$.owners[*].members[*].f', 'AS', 'name']
+//       optsPierPublic.RETURN = [
+//         'pier',
+//         '$.loc', 'AS', 'coords',
+//         '$.property.association', 'AS', 'association',
+//         '$.property.business', 'AS', 'business',
+//         '$.owners[*].members[*].f', 'AS', 'name',
+//       ]
 //       optsPierPublic.LIMIT = { from, size }
 //       optsPierPublic.SORTBY = { BY: 'pier', DIRECTION: 'ASC' }
 //       result = await redis.ft.search(idxPierPublic, queryPierPublic, optsPierPublic)
@@ -217,11 +247,20 @@ function sanitize(param) {
 //     ctx.type = 'application/json; charset=utf-8'
 //     ctx.status = 200
 //     try {
-//       log('FT.SEARCH glp:idx:piers:business"*" RETURN 10 pier $.loc AS coords $.property.business AS business $.property.associationUrl AS url SORTBY business ASC')
+//       log(
+//         'FT.SEARCH glp:idx:piers:business"*" RETURN 10 pier $.loc AS coords '
+//         + '$.property.business AS business $.property.associationUrl AS url '
+//         + 'SORTBY business ASC',
+//       )
 //       const idxPierBusiness = 'glp:idx:piers:business'
 //       const queryPierBusiness = '*'
 //       const optsPierBusiness = {}
-//       optsPierBusiness.RETURN = ['pier', '$.loc', 'AS', 'coords', '$.property.business', 'AS', 'business', '$.property.associationUrl', 'AS', 'url']
+//       optsPierBusiness.RETURN = [
+//         'pier',
+//         '$.loc', 'AS', 'coords',
+//         '$.property.business', 'AS', 'business',
+//         '$.property.associationUrl', 'AS', 'url',
+//      ]
 //       optsPierBusiness.LIMIT = { from, size }
 //       // optsPierBusiness.SORTBY = { BY: 'pier', DIRECTION: 'ASC' }
 //       optsPierBusiness.SORTBY = { BY: 'business', DIRECTION: 'ASC' }
@@ -293,11 +332,20 @@ function sanitize(param) {
 //     ctx.type = 'application/json; charset=utf-8'
 //     ctx.status = 200
 //     try {
-//       log('FT.SEARCH glp:idx:piers:marina "*" RETURN 10 pier $.loc AS coords $.property.business AS business $.property.associationUrl AS url SORTBY pier ASC')
+//       log(
+//         'FT.SEARCH glp:idx:piers:marina "*" RETURN 10 pier $.loc AS coords '
+//         + '$.property.business AS business $.property.associationUrl AS url '
+//         + 'SORTBY pier ASC',
+//       )
 //       const idxPierMarina = 'glp:idx:piers:marina'
 //       const queryPierMarina = '*'
 //       const optsPierMarina = {}
-//       optsPierMarina.RETURN = ['pier', '$.loc', 'AS', 'coords', '$.property.business', 'AS', 'business', '$.property.associationUrl', 'AS', 'url']
+//       optsPierMarina.RETURN = [
+//         'pier',
+//         '$.loc', 'AS', 'coords',
+//         '$.property.business', 'AS', 'business',
+//         '$.property.associationUrl', 'AS', 'url',
+//       ]
 //       optsPierMarina.LIMIT = { from, size }
 //       optsPierMarina.SORTBY = { BY: 'pier', DIRECTION: 'ASC' }
 //       result = await redis.ft.search(idxPierMarina, queryPierMarina, optsPierMarina)
@@ -334,7 +382,11 @@ function sanitize(param) {
 //     ctx.type = 'application/json; charset=utf-8'
 //     ctx.status = 200
 //     try {
-//       log('FT.AGGREGATE glp:idx:piers:association "*" LOAD 3 $.loc AS coords GROUPBY 1 @association REDUCE TOLIST 1 @coords SORTBY 2 @association ASC LIMIT 0 15')
+//       log(
+//         'FT.AGGREGATE glp:idx:piers:association "*" LOAD 3 $.loc AS coords '
+//         + 'GROUPBY 1 @association REDUCE TOLIST 1 @coords SORTBY 2 @association ASC '
+//         + 'LIMIT 0 15',
+//       )
 //       const optsAggregateAssociation = {
 //         LOAD: ['$.loc'],
 //         STEPS: [
@@ -359,7 +411,11 @@ function sanitize(param) {
 //           },
 //         ],
 //       }
-//       result = await redis.ft.aggregate('glp:idx:piers:association', '*', optsAggregateAssociation)
+//       result = await redis.ft.aggregate(
+//         'glp:idx:piers:association',
+//         '*',
+//         optsAggregateAssociation,
+//       )
 //       log(result.total)
 //       result.results.forEach((a) => {
 //         if (a.coords && a.coords.length > 1) {
@@ -406,11 +462,25 @@ function sanitize(param) {
 //     ctx.type = 'application/json; charset=utf-8'
 //     ctx.status = 200
 //     try {
-//       log(`FT.SEARCH glp:idx:piers:coords "@coords:[${lon} ${lat} ${radius} ${units}]" RETURN 22 pier $.loc AS coords $.owners[*].estateName AS estateName $.owners[*].members[*].f AS firstname $.owners[*].members[*].l AS lastname $.property.business AS business $.property.association AS association $.property.associationUrl AS url SORTBY pier ASC`)
+//       log(
+//         `FT.SEARCH glp:idx:piers:coords "@coords:[${lon} ${lat} ${radius} ${units}]" `
+//         + `RETURN 22 pier $.loc AS coords $.owners[*].estateName AS estateName `
+//         + `$.owners[*].members[*].f AS firstname $.owners[*].members[*].l AS lastname `
+//         + `$.property.business AS business $.property.association AS association `
+//         + `$.property.associationUrl AS url SORTBY pier ASC`)
 //       const idxPierCoords = 'glp:idx:piers:coords'
 //       const queryPierCoords = `@coords:[${lon} ${lat} ${radius} ${units}]`
 //       const optsPierCoords = {}
-//       optsPierCoords.RETURN = ['pier', '$.loc', 'AS', 'coords', '$.owners[*].estateName', 'AS', 'estateName', '$.owners[*].members[*].f', 'AS', 'firstname', '$.owners[*].members[*].l', 'AS', 'lastname', '$.property.business', 'AS', 'business', '$.property.association', 'AS', 'association', '$.property.associationUrl', 'AS', 'url']
+//       optsPierCoords.RETURN = [
+//         'pier',
+//         '$.loc', 'AS', 'coords',
+//         '$.owners[*].estateName', 'AS', 'estateName',
+//         '$.owners[*].members[*].f', 'AS', 'firstname',
+//         '$.owners[*].members[*].l', 'AS', 'lastname',
+//         '$.property.business', 'AS', 'business',
+//         '$.property.association', 'AS', 'association',
+//         '$.property.associationUrl', 'AS', 'url',
+//       ]
 //       optsPierCoords.LIMIT = { from, size }
 //       optsPierCoords.SORTBY = { BY: 'pier', DIRECTION: 'ASC' }
 //       result = await redis.ft.search(idxPierCoords, queryPierCoords, optsPierCoords)
@@ -423,7 +493,9 @@ function sanitize(param) {
 //     } catch (e) {
 //       error(`Failed to locate piers within ${radius} ${units} of coords: ${lon}, ${lat}.`)
 //       ctx.status = 500
-//       result = { error: `Failed to locate piers within ${radius} ${units} of coords: ${lon}, ${lat}.` }
+//       result = {
+//         error: `Failed to locate piers within ${radius} ${units} of coords: ${lon}, ${lat}.`,
+//       }
 //     }
 //     ctx.body = result
 //   }

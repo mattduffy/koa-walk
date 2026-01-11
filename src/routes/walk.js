@@ -41,7 +41,7 @@ router.get('test', '/test', addIpToSession, async (ctx) => {
 
 router.get('ruckIndex', '/ruck', addIpToSession, hasFlash, async (ctx) => {
   const log = walkLog.extend('ruckIndex')
-  const error = walkError.extend('ruckIndex')
+  // const error = walkError.extend('ruckIndex')
   log('inside ruck index')
   ctx.status = 200
   const csrfToken = ulid()
@@ -121,8 +121,9 @@ router.post('refresh', '/user/refresh', addIpToSession, processFormData, async (
     ctx.body = {
       status: 'fail',
       message: 'csrf token mismatch',
-      csrfToken: newCsrfToken,}
+      csrfToken: newCsrfToken,
     }
+  }
 })
 
 router.post(
@@ -131,63 +132,66 @@ router.post(
   addIpToSession,
   processFormData,
   async (ctx) => {
-  const log = walkLog.extend('setPref')
-  const error = walkError.extend('setPref')
-  const newCsrfToken = ulid()
-  const body = {}
-  body.newCsrfToken = newCsrfToken
-  ctx.status = 200
-  ctx.type = 'application/json; charset=utf-8'
-  log('inside walk router: /user/preferences/update')
-  if (doTokensMatch(ctx)) {
-    if (!ctx.state?.isAuthenticated) {
-      const msg = 'user is not authenticated, no access to saved preferences.'
-      error(msg)
-      body.message = msg
-      body.status = 401
+    const log = walkLog.extend('setPref')
+    const error = walkError.extend('setPref')
+    const newCsrfToken = ulid()
+    const body = {}
+    body.newCsrfToken = newCsrfToken
+    ctx.status = 200
+    ctx.type = 'application/json; charset=utf-8'
+    log('inside walk router: /user/preferences/update')
+    if (doTokensMatch(ctx)) {
+      if (!ctx.state?.isAuthenticated) {
+        const msg = 'user is not authenticated, no access to saved preferences.'
+        error(msg)
+        body.message = msg
+        body.status = 401
+      } else {
+        log('sessionUser: ', ctx.state?.sessionUser?.username)
+        log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
+        log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
+        let units
+        if (ctx.request.body?.units) {
+          // eslint-disable-next-line
+          [units] = ctx.request.body?.units
+        }
+        let orientation
+        if (ctx.request.body?.orientation) {
+          // eslint-disable-next-line
+          [orientation] = ctx.request.body?.orientation
+        }
+        log('preference units:       ', units)
+        log('preference orientation: ', orientation)
+        if (units) {
+          ctx.state.sessionUser.preferences.units = units
+        }
+        if (orientation) {
+          ctx.state.sessionUser.preferences.orientation = orientation
+        }
+        try {
+          const temp = await ctx.state.sessionUser.update()
+          log('did user.update() work to update preferences?')
+          log(temp._preferences)
+          body.status = 'ok'
+          body.message = 'Preferences updated.'
+        } catch (e) {
+          error('failed to save update to user preferences.')
+          error(e)
+        }
+        ctx.session.csrfToken = newCsrfToken
+        ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
+        ctx.body = body
+      }
     } else {
-      log('sessionUser: ', ctx.state?.sessionUser?.username)
-      log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
-      log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
-      let units
-      if (ctx.request.body?.units) {
-        [units] = ctx.request.body?.units
-      } 
-      let orientation
-      if (ctx.request.body?.orientation) {
-        [orientation] = ctx.request.body?.orientation
-      }
-      log('preference units:       ', units)
-      log('preference orientation: ', orientation)
-      if (units) {
-        ctx.state.sessionUser.preferences.units = units
-      }
-      if (orientation) {
-        ctx.state.sessionUser.preferences.orientation = orientation
-      }
-      try {
-        const temp = await ctx.state.sessionUser.update()
-        log('did user.update() work to update preferences?')
-        log(temp._preferences)
-        body.status = 'ok'
-        body.message = 'Preferences updated.'
-      } catch (e) {
-        error('failed to save update to user preferences.')
-        error(e)
-      }
-      ctx.session.csrfToken = newCsrfToken
       ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-      ctx.body = body
+      ctx.body = {
+        status: 'fail',
+        message: 'user is not authenticated',
+        csrfToken: newCsrfToken,
+      }
     }
-  } else {
-    ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
-    ctx.body = {
-      status: 'fail',
-      message: 'user is not authenticated',
-      csrfToken: newCsrfToken,
-    }
-  }
-})
+  },
+)
 
 router.get('saveWalkRedirect', '/save', addIpToSession, async (ctx) => {
   ctx.redirect('/')
