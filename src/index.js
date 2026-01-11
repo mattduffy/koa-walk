@@ -53,7 +53,7 @@ dotenv.config({
   processEnv: appEnv,
   debug: showDebug,
 })
-let aiEnv = {}
+const aiEnv = {}
 dotenv.config({
   path: path.resolve(appRoot, 'config/ai.env'),
   processEnv: aiEnv,
@@ -129,8 +129,6 @@ const o = {
   db_name: mongoClient.dbname ?? appEnv.MONGODB_DBNAME ?? 'test',
 }
 
-// app.use(banner.use(log, error))
-app.use(banner.use())
 let isHTTPS
 log(`isHTTPS: ${isHTTPS}`)
 app.use(async (ctx, next) => {
@@ -184,14 +182,15 @@ async function proxyCheck(ctx, next) {
 
 async function openGraph(ctx, next) {
   const logg = log.extend('OpenGraph-Embed')
-  const o = ctx.request.origin
+  logg('OpenGraph-Embed')
+  const _o = ctx.request.origin
   const h = ctx.request.href
   const ogArray = []
   ogArray.push('<meta property="og:type" content="website">')
   ogArray.push('<meta property="og:site_name" content="Walk">')
   ogArray.push('<meta property="og:title" content="Walk">')
   ogArray.push(`<meta property="og:url" content="${h}">`)
-  ogArray.push(`<meta property="og:image" content="${o}/i/walking-path-450x300.jpg">`)
+  ogArray.push(`<meta property="og:image" content="${_o}/i/walking-path-450x300.jpg">`)
   ogArray.push('<meta property="og:image:type" content="image/jpg">')
   ogArray.push('<meta property="og:image:width" content="450">')
   ogArray.push('<meta property="og:image:height" content="300">')
@@ -226,6 +225,7 @@ async function permissions(ctx, next) {
 async function csp(ctx, next) {
   const logg = log.extend('CSP')
   const err = error.extend('CSP')
+  logg('CSP')
   // nonce assignment moved to the viewGlobals() middleware function.
   // ctx.app.nonce = crypto.randomBytes(16).toString('base64')
   const { nonce } = ctx.state
@@ -251,7 +251,7 @@ async function csp(ctx, next) {
     + `worker-src 'self' blob: ${p}://${d}; `
     + `manifest-src 'self' blob: ${p}://${d}; `
     + `connect-src 'self' blob: ${p}://${d} `
-      + `*.apple-mapkit.com *.geo.apple.com https://mw-ci1-mapkitjs.geo.apple.com; `
+      + '*.apple-mapkit.com *.geo.apple.com https://mw-ci1-mapkitjs.geo.apple.com; '
   ctx.set('Content-Security-Policy', policy)
   // logg(`Content-Security-Policy: ${policy}`)
   try {
@@ -268,7 +268,7 @@ async function cors(ctx, next) {
   // logg('********** CORS middleware checking headers **********')
   // logg('ctx.request.method', ctx.request.method)
   if (ctx.request.method.toLowerCase() === 'options') {
-    logg('********** Trapped an HTTP OPTIONS request **********') 
+    logg('********** Trapped an HTTP OPTIONS request **********')
     logg(ctx.req)
   }
   ctx.set('Vary', 'Origin')
@@ -412,6 +412,7 @@ async function logRequest(ctx, next) {
 
 app.use(isMongo)
 app.use(logRequest)
+app.use(banner.use())
 app.use(viewGlobals)
 app.use(openGraph)
 app.use(errors)
