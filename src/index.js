@@ -1,7 +1,8 @@
 /**
  * @module @mattduffy/koa-walk
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/index.js The entry point to set up a koa walk app.
+ * @summary The entry point to set up a koa walk app.
+ * @file src/index.js
  */
 
 import path from 'node:path'

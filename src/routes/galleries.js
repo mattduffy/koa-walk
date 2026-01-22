@@ -8,9 +8,9 @@
 import path from 'node:path'
 import { readFile } from 'node:fs/promises'
 import Router from '@koa/router'
-import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
+import { Albums } from '@mattduffy/albums/Albums'
 import { Users } from '../models/users.js'
-// import { Blogs } from '@mattduffy/blogs' // eslint-disable-line import/no-unresolved
+// import { Blogs } from '@mattduffy/blogs'
 import { _log, _error } from '../utils/logging.js'
 import { redis } from '../daos/impl/redis/redis-client.js'
 

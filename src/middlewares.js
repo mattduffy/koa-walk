@@ -1,8 +1,8 @@
 /**
- * @summary Useful middleware functions.
+ * @summary A small library of useful middleware funtions.
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/middlewares.js A small library of useful middleware funtions.
+ * @file src/middlewares.js
  */
 
 // import Debug from 'debug'

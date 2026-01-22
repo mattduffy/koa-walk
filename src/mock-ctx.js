@@ -3,7 +3,7 @@ console.log(root)
 
 export const ctx = {
   request: {
-    origin: 'https://mattmadethese.com',
+    origin: 'https://walk.genevalakepiers.com',
   },
   app: {
     dirs: {

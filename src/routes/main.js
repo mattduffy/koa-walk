@@ -1,15 +1,15 @@
 /**
- * @summary Koa router for the main top-level pages.
+ * @summary The router for the top level app URLs.
  * @module @mattduffy/koa-stub
  * @author Matthew Duffy <mattduffy@gmail.com>
- * @file src/routes/main.js The router for the top level app URLs.
+ * @file src/routes/main.js
  */
 
 import Router from '@koa/router'
 import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
-import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
-import { Blogs } from '@mattduffy/blogs' // eslint-disable-line import/no-unresolved
+import { Albums } from '@mattduffy/albums/Albums'
+import { Blogs } from '@mattduffy/blogs'
 // import { Users } from '../models/users.js'
 import { _log, _error } from '../utils/logging.js'
 import { redis } from '../daos/impl/redis/redis-client.js'
