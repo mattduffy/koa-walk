@@ -445,6 +445,19 @@
       accuracyUpdater,
       ACCURACY_INTERVAL,
     )
+    /**
+     * @todo Refactor the order of position properties after lat/lon.
+     * Current shape of position object is:
+     *
+     *   { latitude, longitude, accuracy, heading, altitude, timestamp }.
+     * To make this a bit more useful for processing location data after
+     * it has been collected and stored in a GEOJson structure, I want to
+     * standardize how these properties are stored - so they make a bit
+     * intuitive sense.  Something like this order instead:
+     *
+     *   { latitude, longitude, altitude, heading, accuracy, timestamp }.
+     *   
+     */
     async function myGetCurrentPosition(geoOpts) {
       let position
       try {
