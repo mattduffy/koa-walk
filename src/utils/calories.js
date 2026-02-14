@@ -29,7 +29,8 @@ try {
   program.name('newUser')
     .requiredOption('--_id <_id>', 'ObjectId from db of ruck to calculate calories.')
     .requiredOption('--body-weight <weight>', 'Body weight, in lbs.')
-    .option('--ruck-weight <weight>', 'Ruck weight, in lbs.')
+    .option('--ruck-weight <weight>', 'Ruck weight carried, in lbs.')
+    .option('--water-weight <weight>', 'Water weight carried, in oz.')
     .option('--simple', 'The simple method of calorie estimation.')
     .option('--pandolf', 'The Pandolf equation for calorie estimation.')
     .option('-t, --test', 'Dry run the calorie calculations.  Do not save results.')
@@ -41,14 +42,20 @@ try {
 } catch (e) {
   error(e)
 }
+const H2O_FLUID_OZ = 1.043
 const MET = 7.5
 const BODY_WEIGHT = options.bodyWeight / 2.2
 const RUCK_WEIGHT = (Number.parseInt(options?.ruckWeight, 10) / 2.2) || 0
-const COMBINED = BODY_WEIGHT + RUCK_WEIGHT
+const WATER_WEIGHT = ((Number.parseInt(options?.waterWeight, 10) * H2O_FLUID_OZ) / 2.2) || 0
+const COMBINED = BODY_WEIGHT + RUCK_WEIGHT + WATER_WEIGHT
 log('hiking MET', MET)
-log(`body weight in lbs: ${options.bodyWeight} (kgs: ${BODY_WEIGHT})`)
-log(`ruck weight in lbs: ${options.ruckWeight} (kgs: ${RUCK_WEIGHT})`)
-log(`combined weight in kgs: ${COMBINED}`)
+log(`body weight in lbs: ${options.bodyWeight} (kgs: ${BODY_WEIGHT.toFixed(1)})`)
+log(`ruck weight in lbs: ${options?.ruckWeight ?? 0} (kgs: ${RUCK_WEIGHT.toFixed(1)})`)
+log(
+  `water weight in lbs: ${((options?.waterWeight ?? 0) * H2O_FLUID_OZ).toFixed(1)} `
+  + `(kgs: ${WATER_WEIGHT.toFixed(1)})`,
+)
+log(`combined weight in kgs: ${COMBINED.toFixed(1)} (lbs: ${(COMBINED / 2.2).toFixed(1)})`)
 
 /**
  * @summary The simplest calorie estimating function.  No account is given for
