@@ -27,10 +27,10 @@ let options
 try {
   program = new Command()
   program.name('newUser')
-    .requiredOption('--_id <_id>', 'ObjectId from db of ruck to calculate calories.')
-    .requiredOption('--body-weight <weight>', 'Body weight, in lbs.')
+    .option('--_id <_id>', 'ObjectId from db of ruck to calculate calories.')
+    .option('--body-weight <weight>', 'Body weight, in lbs.')
     .option('--ruck-weight <weight>', 'Ruck weight carried, in lbs.')
-    .option('--water-weight <weight>', 'Water weight carried, in oz.')
+    .option('--h2o-oz <ounces>', 'Water carried, in oz.')
     .option('--simple', 'The simple method of calorie estimation.')
     .option('--pandolf', 'The Pandolf equation for calorie estimation.')
     .option('-t, --test', 'Dry run the calorie calculations.  Do not save results.')
@@ -46,16 +46,16 @@ const H2O_FLUID_OZ = 1.043
 const MET = 7.5
 const BODY_WEIGHT = options.bodyWeight / 2.2
 const RUCK_WEIGHT = (Number.parseInt(options?.ruckWeight, 10) / 2.2) || 0
-const WATER_WEIGHT = ((Number.parseInt(options?.waterWeight, 10) * H2O_FLUID_OZ) / 2.2) || 0
+const WATER_WEIGHT = ((Number.parseInt(options?.h2oOz, 10) * H2O_FLUID_OZ) / 2.2) || 0
 const COMBINED = BODY_WEIGHT + RUCK_WEIGHT + WATER_WEIGHT
 log('hiking MET', MET)
 log(`body weight in lbs: ${options.bodyWeight} (kgs: ${BODY_WEIGHT.toFixed(1)})`)
 log(`ruck weight in lbs: ${options?.ruckWeight ?? 0} (kgs: ${RUCK_WEIGHT.toFixed(1)})`)
 log(
-  `water weight in lbs: ${((options?.waterWeight ?? 0) * H2O_FLUID_OZ).toFixed(1)} `
+  `water weight in lbs: ${((options?.h2oOz ?? 0) * H2O_FLUID_OZ).toFixed(1)} `
   + `(kgs: ${WATER_WEIGHT.toFixed(1)})`,
 )
-log(`combined weight in kgs: ${COMBINED.toFixed(1)} (lbs: ${(COMBINED / 2.2).toFixed(1)})`)
+log(`combined weight in kgs: ${COMBINED.toFixed(1)} (lbs: ${(COMBINED * 2.2).toFixed(1)})`)
 
 /**
  * @summary The simplest calorie estimating function.  No account is given for
@@ -104,103 +104,114 @@ function pandolf(W, L, V, G, n = 1.2) {
   // 1.5W + 2.0(W + L)(L/W) + n(W + L)(1.5V + 0.35VG)
   return (1.5 * W) + (2.0 * (W + L)) * (L / W) + ((n * (W + L)) * ((1.5 * V) + (0.35 * V) * G))
 }
-log(pandolf)
+log(pandolf.toString())
 
 // log(mongoClient)
 const walks = mongoClient.client.db().collection('walks')
-let ruck
+let rucks
 let _id
 let simpleCalories
 const pandolfCalories = []
 log(pandolfCalories)
 try {
-  _id = new mongoClient.ObjectId(options._id)
-  ruck = await walks.findOne({ _id })
-  log(ruck.features[0].properties)
-  // Stored duration is milliseconds.
-  // Convert to minutes: duration / 1000 / 60 (plus duration / 1000 % 60 for remaining seconds)
-  const minutes = Math.floor(((ruck.features[0].properties.duration / 1000) / 60))
-  if (options?.simple) {
-    simpleCalories = simple(minutes)
-    log(Math.round(simpleCalories))
+  if (options?._id) {
+    _id = new mongoClient.ObjectId(options._id)
+    rucks = await walks.find({ _id }).toArray()
+    // log(ruck.features[0].properties)
+  } else {
+    rucks = await walks.find({}).toArray()
   }
-  if (options?.pandolf) {
-    let start
-    let milliseconds = 0
-    const TEN_SECONDS = 10000
-    // number of individual timestamps in 10 second step
-    let miniSteps = 0
-    // array of miniSteps in 10 second step
-    let ruckSteps = []
-    // array of all the ruck steps (10 second mini steps)
-    const ruckFull = []
-    const ts = ruck.features[0].properties.timestamps
-    const coords = ruck.features[0].geometry.coordinates
-    ts.forEach((t, i) => {
-      if (i === 0) {
-        start = t
-      }
-      // collect each timestamp while milliseconds <= 10000 (10 seconds) into steps array.
-      // once milliseconds reaches 10000, push steps array into parent array,
-      // reset steps and seconads
-      let step
-      if (t - start <= TEN_SECONDS) {
-        // log(`t ${t} - start ${start} = ${t - start}`)
-        milliseconds += ts[i] - (ts[(i < 1 ? 0 : i - 1)])
-        // log(
-        //   `milliseconds ${milliseconds} = `
-        //   + `ts[${i}] ${ts[i]} - ts[${(i < 1 ? 0 : i - 1)}] ${ts[(i < 1 ? 0 : i - 1)]}`
-        // )
-        miniSteps += 1
-        step = {
-          index: i,
-          timestamp: t,
-          coordinates: coords[i],
-          seconds: milliseconds / 1000,
-          miniSteps,
+  log(rucks)
+  rucks.forEach((ruck, i) => {
+    // Stored duration is milliseconds.
+    // Convert to minutes: duration / 1000 / 60 (plus duration / 1000 % 60 for remaining seconds)
+    const minutes = Math.floor(((ruck.features[0].properties.duration / 1000) / 60))
+    if (options?.simple) {
+      simpleCalories = simple(minutes)
+      log('duration', ruck.features[0].properties.duration)
+      log(ruck.features[0].properties.duration / 1000)
+      log(ruck.features[0].properties.duration / 1000 / 60)
+      log('minutes', minutes)
+      log(Math.round(simpleCalories))
+    }
+    if (options?.pandolf) {
+      let start
+      let milliseconds = 0
+      const TEN_SECONDS = 10000
+      // number of individual timestamps in 10 second step
+      let miniSteps = 0
+      // array of miniSteps in 10 second step
+      let ruckSteps = []
+      // array of all the ruck steps (10 second mini steps)
+      const ruckFull = []
+      const ts = ruck.features[0].properties.timestamps
+      const coords = ruck.features[0].geometry.coordinates
+      ts.forEach((t, j) => {
+        if (j === 0) {
+          start = t
         }
-        ruckSteps.push(step)
-        // log(`adding ${miniSteps} `, step)
-      } else {
-        log('resetting step', 'index', i)
-        ruckFull.push(ruckSteps)
-        ruckSteps = []
-        miniSteps += 1
-        step = {
-          index: i,
-          timestamp: t,
-          coordinates: coords[i],
-          seconds: (milliseconds / 1000),
-          miniSteps,
+        // collect each timestamp while milliseconds <= 10000 (10 seconds) into steps array.
+        // once milliseconds reaches 10000, push steps array into parent array,
+        // reset steps and seconads
+        let step
+        if (t - start <= TEN_SECONDS) {
+          // log(`t ${t} - start ${start} = ${t - start}`)
+          milliseconds += ts[i] - (ts[(i < 1 ? 0 : i - 1)])
+          // log(
+          //   `milliseconds ${milliseconds} = `
+          //   + `ts[${i}] ${ts[i]} - ts[${(i < 1 ? 0 : i - 1)}] ${ts[(i < 1 ? 0 : i - 1)]}`
+          // )
+          miniSteps += 1
+          step = {
+            index: i,
+            timestamp: t,
+            coordinates: coords[i],
+            seconds: milliseconds / 1000,
+            miniSteps,
+          }
+          ruckSteps.push(step)
+          // log(`adding ${miniSteps} `, step)
+        } else {
+          log('resetting step', 'index', i)
+          ruckFull.push(ruckSteps)
+          ruckSteps = []
+          miniSteps += 1
+          step = {
+            index: i,
+            timestamp: t,
+            coordinates: coords[i],
+            seconds: (milliseconds / 1000),
+            miniSteps,
+          }
+          // log(step)
+          ruckSteps.push(step)
+          // log(`adding ${miniSteps} `, step)
+          miniSteps = 0
+          milliseconds = 0
+          start = ts[i]
         }
-        // log(step)
-        ruckSteps.push(step)
-        // log(`adding ${miniSteps} `, step)
-        miniSteps = 0
-        milliseconds = 0
-        start = ts[i]
-      }
-      // pandolfCalories.push(pandolf())
-      log(`adding ${miniSteps} `, step)
-    })
-    console.log(ruckFull)
-    // collate timestamps from each ruckStep[i] to respective waypoint locations
-    // calculate distance traveled in ruckStep[i]
-    // calculate speed as V = distance / ruckStep[i] total seconds
-    // calculate grade of incline as G = (change in elevation) / distance
-    // reduce ruckStep[i] to speed and terrain grade: { V, G }
+        // pandolfCalories.push(pandolf())
+        log(`adding ${miniSteps} `, step)
+      })
+      console.log(ruckFull)
+      // collate timestamps from each ruckStep[i] to respective waypoint locations
+      // calculate distance traveled in ruckStep[i]
+      // calculate speed as V = distance / ruckStep[i] total seconds
+      // calculate grade of incline as G = (change in elevation) / distance
+      // reduce ruckStep[i] to speed and terrain grade: { V, G }
 
-    // coordinate array members:
-    // longitude
-    // latitude
-    // altitude
-    // heading
-    const stepDistances = ruckFull.reduce((a, c, i, arr) => {
-      log('stepDistances')
-      return [a, c, i, arr]
-    })
-    log(stepDistances)
-  }
+      // coordinate array members:
+      // longitude
+      // latitude
+      // altitude
+      // heading
+      const stepDistances = ruckFull.reduce((a, c, k, arr) => {
+        log('stepDistances')
+        return [a, c, k, arr]
+      })
+      log(stepDistances)
+    }
+  })
 } catch (e) {
   error(e)
 }
