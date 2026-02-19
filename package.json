@@ -22,6 +22,7 @@
     "lint": "eslint --",
     "test": "echo \"Error: no test specified\" && exit 1",
     "bootstrap": "DEBUG_DEPTH=2 DEBUG=* node src/utils/bootstrap.js",
+    "refactor-coords": "DEBUG_DEPTH=2 DEBUG=* node src/utils/refactorCoordsArray.js",
     "calories": "DEBUG_DEPTH=2 DEBUG=* node src/utils/calories.js",
     "newUser": "DEBUG_DEPTH=2 DEBUG=* node src/utils/newUser.js",
     "deleteData": "DEBUG_DEPTH=2 DEBUG=* node src/utils/deleteData.js",
