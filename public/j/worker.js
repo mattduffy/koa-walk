@@ -2,13 +2,12 @@
  * file: public/j/worker.js
  */
 /* eslint-env worker */
-/* global self */
 // import Observer from './Observer.js'
 import State from './State.js'
 import { heading, pointDistance } from './Heading.js'
 import { ObjectId } from './lib/bson.mjs'
 
-const worker = self
+const worker = self // eslint-disable-line no-restricted-globals
 let origin
 let appName
 
@@ -17,9 +16,9 @@ const DBNAME = 'walks'
 const OBJSTORENAME = 'walk'
 let db
 function openDB() {
-  let DBOpenRequest = worker.indexedDB.open(DBNAME, IDB_OBJ_VER)
+  const DBOpenRequest = worker.indexedDB.open(DBNAME, IDB_OBJ_VER)
   DBOpenRequest.onupgradeneeded = (e) => {
-    const db = e.target.result
+    db = e.target.result
     const objectStore = db.createObjectStore(OBJSTORENAME, { keyPath: '_id' })
     objectStore.createIndex('dateIdx', 'date', { unique: false })
     objectStore.createIndex('nameIdx', 'name', { unique: false })
@@ -91,16 +90,17 @@ async function deleteWalk(credentials) {
   const deleted = { status: null, msg: null }
   // if (!isLoggedIn) {
   if (credentials.scope === 'local') {
-    return await new Promise((resolve, reject) => {
+    // return await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       console.log(`deleting local walk id ${credentials.id}`)
       const transaction = db.transaction(OBJSTORENAME, 'readwrite')
       const store = transaction.objectStore(OBJSTORENAME)
       console.log('store', store)
-      let request = store.delete(credentials.id)
+      const request = store.delete(credentials.id)
       request.onerror = (e) => {
         console.log(`rejecting store.delete(${credentials.id})`)
         deleted.status = 'failed'
-        deleted.msg = `rejecting store.delete(${credentials.id})` 
+        deleted.msg = `rejecting store.delete(${credentials.id})`
         deleted.error = e
         reject(deleted)
       }
@@ -125,36 +125,37 @@ async function deleteWalk(credentials) {
         console.log(deleted)
       }
     })
-  } else {
-    const formData = new FormData()
-    formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
-    formData.append('toBeDeleted', credentials.id)
-    const opts = {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer: ${credentials.jwtAccess}`,
-        'X-ASYNCREQUEST': true,
-      },
-      body: formData,
-    }
-    const request = new Request(credentials.url, opts)
-    try {
-      response = await fetch(request)
-      json = await response.json()
-      console.log(json)
-      deleted.status = 'ok'
-      deleted.msg = `walk id ${credentials.id} deleted from the database.`
-      deleted.res = json
-      deleted.id = credentials.id
-      deleted.newCsrfToken = json.newCsrfToken
-      deleted.scope = 'remote'
-    } catch (e) {
-      console.log(e)
-      deleted.status = 'failed'
-      deleted.msg = 'Failed to delete walk from the database for some reason.'
-    }
   }
+  // } else {
+  const formData = new FormData()
+  formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
+  formData.append('toBeDeleted', credentials.id)
+  const opts = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer: ${credentials.jwtAccess}`,
+      'X-ASYNCREQUEST': true,
+    },
+    body: formData,
+  }
+  const request = new Request(credentials.url, opts)
+  try {
+    response = await fetch(request)
+    json = await response.json()
+    console.log(json)
+    deleted.status = 'ok'
+    deleted.msg = `walk id ${credentials.id} deleted from the database.`
+    deleted.res = json
+    deleted.id = credentials.id
+    deleted.newCsrfToken = json.newCsrfToken
+    deleted.scope = 'remote'
+  } catch (e) {
+    console.log(e)
+    deleted.status = 'failed'
+    deleted.msg = 'Failed to delete walk from the database for some reason.'
+  }
+  // }
   console.log(deleted)
   return deleted
 }
@@ -177,19 +178,20 @@ async function saveWalk(credentials) {
       console.log('transaction', transaction)
       const store = transaction.objectStore(OBJSTORENAME)
       console.log('store', store)
-      let request = store.add(walk)
+      const request = store.add(walk)
       request.onerror = (e) => {
         console.log('rejecting store.add request', e)
         reject(e)
       }
       request.onsuccess = (e) => {
         console.log('put result', request)
+        console.log('e', e)
         saved.status = 'ok'
         saved.msg = 'Saved walk to device local storage.'
         saved.res = { saved: { insertedId: _id } }
         saved.scope = 'local'
         saved.newCsrfToken = credentials.csrfTokenHidden
-        console.log('local idb saved', saved)
+        console.log('local isaved', saved)
         resolve(saved)
       }
       transaction.oncomplete = (e) => {
@@ -197,51 +199,52 @@ async function saveWalk(credentials) {
         console.log(saved)
       }
     })
-  } else {
-    const formData = new FormData()
-    formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
-    formData.append('walk', JSON.stringify(walkState.geojson))
-    const opts = {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer: ${credentials.jwtAccess}`,
-        'X-ASYNCREQUEST': true,
-      },
-      body: formData,
-    }
-    const request = new Request(credentials.url, opts)
-    try {
-      response = await fetch(request)
-      json = await response.json()
-      console.log(json)
-      if (json.saved.acknowledged === true && json.saved.insertedId) {
-        console.log('new walk _id:', json.saved.insertedId)
-      }
-      saved.status = 'ok'
-      saved.msg = 'Saved walk.'
-      saved.res = json
-      saved.scope = 'remote'
-      console.log('what happened to saved?', saved)
-      return saved
-    } catch (e) {
-      console.log('worker::save::fetch failed')
-      console.log(e)
-      saved.status = 'failed'
-      saved.msg = 'Failed to save walk to database for some reason.'
-      console.log('what happened to saved?', saved)
-      return saved
-    }
   }
+  // } else {
+  const formData = new FormData()
+  formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
+  formData.append('walk', JSON.stringify(walkState.geojson))
+  const opts = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer: ${credentials.jwtAccess}`,
+      'X-ASYNCREQUEST': true,
+    },
+    body: formData,
+  }
+  const request = new Request(credentials.url, opts)
+  try {
+    response = await fetch(request)
+    json = await response.json()
+    console.log(json)
+    if (json.saved.acknowledged === true && json.saved.insertedId) {
+      console.log('new walk _id:', json.saved.insertedId)
+    }
+    saved.status = 'ok'
+    saved.msg = 'Saved walk.'
+    saved.res = json
+    saved.scope = 'remote'
+    console.log('what happened to saved?', saved)
+    return saved
+  } catch (e) {
+    console.log('worker::save::fetch failed')
+    console.log(e)
+    saved.status = 'failed'
+    saved.msg = 'Failed to save walk to database for some reason.'
+    console.log('what happened to saved?', saved)
+    return saved
+  }
+  // }
 }
 async function exportAs(credentials) {
   console.log('worker::exportAs(credentials)', credentials)
   let response
-  let { format } = credentials
-  let body = {}
+  const { format } = credentials
+  const body = {}
   let kml
   let gpx
-  let geojson
+  // let geojson
   let walk
   let newCsrfToken
   if (credentials.scope === 'local') {
@@ -251,9 +254,10 @@ async function exportAs(credentials) {
       const transaction = db.transaction(OBJSTORENAME, 'readonly')
       const store = transaction.objectStore(OBJSTORENAME)
       console.log('store', store)
-      let request = store.get(credentials.id)
+      const request = store.get(credentials.id)
       request.onerror = (e) => {
         console.log(`rejecting store.get(${credentials.id})`, e)
+        // eslint-disable-next-line
         reject({ status: 'failed', msg: 'failed to get walk from idb' })
       }
       request.onsuccess = (e) => {
@@ -266,7 +270,7 @@ async function exportAs(credentials) {
       transaction.oncomplete = (e) => {
         console.log('transaction complete', e)
         // console.log(walk)
-      } 
+      }
     })
     body.newCsrfToken = credentials.csrfTokenHidden
     body.msg = 'Walk retrieved fom local device.'
@@ -298,6 +302,7 @@ async function exportAs(credentials) {
       walk = { status: 'failed', msg: 'failed to retrieve walk from db', e }
     }
   }
+  /* eslint-disable no-use-before-define */
   if (format === 'kml') {
     if (walk.features[0].properties?.timestamps) {
       kml = kmlTrack(walk)
@@ -318,24 +323,28 @@ async function exportAs(credentials) {
     body.geojson = JSON.stringify(walk)
     console.log('geojson', walk)
   }
-  const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+  /* eslint-enable no-use-before-define */
+  const fmt = { year: 'numeric', month: 'short', day: 'numeric' }
   const niceDate = new Date(walk.features[0].properties.date)
     .toLocaleString('en-US', fmt)
-  let _name = `${walk.features[0].properties.name} ${niceDate}`
+  const _name = `${walk.features[0].properties.name} ${niceDate}`
     .replace(/ /g, '-')
     .replace(/[()]/g, '_')
     .replace(/[,’?!#]/g, '')
   body.filename = `${_name}.${format}`
-  return body 
+  return body
 }
 
 function gpxTrack(walk) {
-  const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+  const fmt = { year: 'numeric', month: 'short', day: 'numeric' }
   const niceDate = new Date(walk.features[0].properties.date)
     .toLocaleString('en-US', fmt)
+  console.log('niceDate', niceDate)
   const shortDate = new Date(walk.features[0].properties.date)
-    .toLocaleString('en-US', {year: 'numeric', month: '2-digit', day: 'numeric'})
+    .toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: 'numeric' })
+  console.log('shortDate', shortDate)
   const last = walk.features[0].geometry.coordinates.length - 1
+  console.log('last', last)
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx xmlns="http://www.topografix.com/GPX/1/1"
 version="1.1"
@@ -343,9 +352,12 @@ creator="${origin}"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="`
   + 'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\n'
-  + 'http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd \n'
-  + 'http://www.topografix.com/GPX/gpx_overlay/0/4 http://www.topografix.com/GPX/gpx_overlay/0/4/gpx_overlay.xsd \n'
-  + 'http://www.topografix.com/GPX/gpx_modified/0/1 http://www.topografix.com/GPX/gpx_modified/0/1/gpx_modified.xsd">\n '
+  + 'http://www.topografix.com/GPX/gpx_style/0/2 '
+  + 'http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd \n'
+  + 'http://www.topografix.com/GPX/gpx_overlay/0/4 '
+  + 'http://www.topografix.com/GPX/gpx_overlay/0/4/gpx_overlay.xsd \n'
+  + 'http://www.topografix.com/GPX/gpx_modified/0/1 '
+  + 'http://www.topografix.com/GPX/gpx_modified/0/1/gpx_modified.xsd">\n '
   + `<metadata>
      <name>${appName}</name>
      <desc>Take a walk.  Record where you went.  Export the data in GPX format.</desc>
@@ -371,20 +383,23 @@ xsi:schemaLocation="`
      <cmt>${walk.features[0].properties.location}</cmt>
      <desc>
          Duration: ${
-           new Date(walk.features[0].properties.duration)
-           .toISOString().slice(11, 19)
-         }\n
+  new Date(walk.features[0].properties.duration)
+    .toISOString().slice(11, 19)
+}\n
          Distance: ${walk.features[0].properties.distance.toFixed(1)} meters.
      </desc>
      <type>Walk</type>
      <trkseg>
        ${walk.features[0].geometry.coordinates.map((w, i) => {
-         return `<trkpt lat="${w[1]}" lon="${w[0]}">`
-           + `<ele>${w[3]}</ele>`
-           + `<time>${new Date(walk.features[0].properties.timestamps[i]).toISOString()}</time>`
-           + '<fix>3d</fix>'
-         + '</trkpt>'
-       }).join('\n')}
+    console.log()
+    return `<trkpt lat="${w[1]}" lon="${w[0]}">`
+      + `<ele>${w[3]}</ele>`
+      + `<time>${new Date(
+        walk.features[0].properties.timestamps[i],
+      ).toISOString()}</time>`
+      + '<fix>3d</fix>'
+    + '</trkpt>'
+  }).join('\n')}
      </trkseg>
   </trk>
  </gpx>
@@ -392,11 +407,11 @@ xsi:schemaLocation="`
 }
 
 function kmlTrack(walk) {
-  const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+  const fmt = { year: 'numeric', month: 'short', day: 'numeric' }
   const niceDate = new Date(walk.features[0].properties.date)
     .toLocaleString('en-US', fmt)
   const shortDate = new Date(walk.features[0].properties.date)
-    .toLocaleString('en-US', {year: 'numeric', month: '2-digit', day: 'numeric'})
+    .toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: 'numeric' })
   const last = walk.features[0].geometry.coordinates.length - 1
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
@@ -416,7 +431,7 @@ function kmlTrack(walk) {
       <p>${walk.features[0].properties.location}</p>
       <p>${niceDate}</p>
       <p>Duration ${new Date(walk.features[0].properties.duration)
-          .toISOString().slice(11, 19)}</p> 
+    .toISOString().slice(11, 19)}</p> 
       <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>
       ]]>
     </description>
@@ -460,7 +475,7 @@ function kmlTrack(walk) {
       <styleUrl>#grn-pushpin</styleUrl>
       <description><![CDATA[
         <p>Start time: ${new Date(walk.features[0].properties.startTime)
-        .toISOString().slice(11, 19)}</p>
+    .toISOString().slice(11, 19)}</p>
         <p>
           Start location:<br>
           longitude ${walk.features[0].geometry.coordinates[0][0]}<br>
@@ -488,7 +503,7 @@ function kmlTrack(walk) {
       <styleUrl>#ylw-pushpin</styleUrl>
       <description>
         <![CDATA[<p>Finish time: ${new Date(walk.features[0].properties.endTime)
-        .toISOString().slice(11, 19)}</p>
+    .toISOString().slice(11, 19)}</p>
         <p>
           Finish location: <br>
           longitude ${walk.features[0].geometry.coordinates[last][0]}<br>
@@ -497,7 +512,9 @@ function kmlTrack(walk) {
       </description>
       <Point>
         <coordinates>
-          ${walk.features[0].geometry.coordinates[last][0]},${walk.features[0].geometry.coordinates[last][1]},0
+          ${walk.features[0].geometry.coordinates[last][0]},
+          ${walk.features[0].geometry.coordinates[last][1]},
+          0
         </coordinates>
       </Point>
     </Placemark>
@@ -509,34 +526,38 @@ function kmlTrack(walk) {
       <p>${walk.features[0].properties.location}</p>
       <p>${niceDate}</p>
       <p>Duration ${new Date(walk.features[0].properties.duration)
-          .toISOString().slice(11, 19)}</p> 
+    .toISOString().slice(11, 19)}</p> 
       <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>]]>
     </description>
     <gx:Track id="theWalk">
         <altitudeMode>clampToGround</altitudeMode>
         ${walk.features[0].properties.timestamps.map((t) => {
-          return '<when>' + new Date(t).toISOString() + '</when>'
-        }).join('\n')}
+    console.log()
+    // eslint-disable-next-line
+    return '<when>' + new Date(t).toISOString() + '</when>'
+  }).join('\n')}
         ${walk.features[0].geometry.coordinates.map((w) => {
-          return '<gx:coord>'
-            + w[0] + ' '
-            + w[1] + ' '
-            + '0'
-            + '</gx:coord>'
-        }).join('\n')}
+    console.log()
+    return '<gx:coord>' // eslint-disable-line
+    + w[0] + ' '
+    + w[1] + ' '
+    + '0'
+    + '</gx:coord>'
+  }).join('\n')}
       </gx:Track> 
     </Placemark>
   </Document>
 </kml>
-`}
+`
+}
 
 function kmlLineString(walk) {
   console.log('kmlLineString(walk)', walk)
-  const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+  const fmt = { year: 'numeric', month: 'short', day: 'numeric' }
   const niceDate = new Date(walk.features[0].properties.date)
     .toLocaleString('en-US', fmt)
   const shortDate = new Date(walk.features[0].properties.date)
-    .toLocaleString('en-US', {year: 'numeric', month: '2-digit', day: 'numeric'})
+    .toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: 'numeric' })
   const last = walk.features[0].geometry.coordinates.length - 1
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
@@ -579,7 +600,7 @@ function kmlLineString(walk) {
         <h4>${walk.features[0].properties.location}</h4>
         <h4>${niceDate}</h4>
         <p>Duration ${new Date(walk.features[0].properties.duration)
-            .toISOString().slice(11, 19)}</p> 
+    .toISOString().slice(11, 19)}</p> 
         <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>]]>
       </description>
       <LookAt>
@@ -594,8 +615,10 @@ function kmlLineString(walk) {
         <tessellate>1</tessellate>
         <coordinates>
           ${walk.features[0].geometry.coordinates.map((c) => {
-            return c[0] + ',' + c[1] + ',0'
-          }).join('\n')}
+    console.log()
+    // eslint-disable-next-line
+    return c[0] + ',' + c[1] + ',0'
+  }).join('\n')}
         </coordinates>
       </LineString>
     </Placemark>
@@ -603,7 +626,7 @@ function kmlLineString(walk) {
       <name>Start</name>
       <description><![CDATA[
         <p>Start time: ${new Date(walk.features[0].properties.startTime)
-        .toISOString().slice(11, 19)}</p>
+    .toISOString().slice(11, 19)}</p>
         <p>
           Start location:<br>
           longitude ${walk.features[0].geometry.coordinates[0][0]}<br>
@@ -621,7 +644,9 @@ function kmlLineString(walk) {
       </Style>
       <Point>
         <coordinates>
-          ${walk.features[0].geometry.coordinates[0][0]},${walk.features[0].geometry.coordinates[0][1]},0
+          ${walk.features[0].geometry.coordinates[0][0]},
+          ${walk.features[0].geometry.coordinates[0][1]},
+          0
         </coordinates>
       </Point>
     </Placemark>
@@ -629,7 +654,7 @@ function kmlLineString(walk) {
       <name>Finish</name>
       <description><![CDATA[
         <p>Finish time: ${new Date(walk.features[0].properties.endTime)
-        .toISOString().slice(11, 19)}</p>
+    .toISOString().slice(11, 19)}</p>
         <p>
           Finish location: <br>
           longitude ${walk.features[0].geometry.coordinates[last][0]}<br>
@@ -646,7 +671,9 @@ function kmlLineString(walk) {
       </Style>
       <Point>
         <coordinates>
-          ${walk.features[0].geometry.coordinates[last][0]},${walk.features[0].geometry.coordinates[last][1]},0
+          ${walk.features[0].geometry.coordinates[last][0]},
+          ${walk.features[0].geometry.coordinates[last][1]},
+          0
         </coordinates>
       </Point>
     </Placemark>
@@ -664,14 +691,16 @@ async function showWalk(credentials) {
     console.log(`getting local walk id ${credentials.id}`)
     walk = {}
     auth = 'no'
-    return await new Promise((resolve, reject) => {
+    // return await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       console.log('db handle opened?', db)
       const transaction = db.transaction(OBJSTORENAME, 'readonly')
       const store = transaction.objectStore(OBJSTORENAME)
       console.log('store', store)
-      let request = store.get(credentials.id)
+      const request = store.get(credentials.id)
       request.onerror = (e) => {
         console.log(`rejecting store.get(${credentials.id})`, e)
+        // eslint-disable-next-line
         reject({ status: 'failed', msg: 'failed to get walk from idb' })
       }
       request.onsuccess = (e) => {
@@ -692,7 +721,7 @@ async function showWalk(credentials) {
         console.log('transaction complete', e)
         console.log(walk)
         // resolve(walk)
-      } 
+      }
     })
   }
   const formData = new FormData()
@@ -723,7 +752,7 @@ async function showWalk(credentials) {
 async function getList(credentials) {
   console.log('woker::getList')
   let response
-  let list = { remoteList: null, localList: null, auth: null }
+  const list = { remoteList: null, localList: null, auth: null }
   let auth
   console.log('is logged in: ', isLoggedIn)
   console.log('user: ', user)
@@ -734,9 +763,9 @@ async function getList(credentials) {
       console.log('db handle opened?', db)
       const transaction = db.transaction(OBJSTORENAME, 'readonly')
       const store = transaction.objectStore(OBJSTORENAME)
-      let dateIdx = store.index('dateIdx')
+      const dateIdx = store.index('dateIdx')
       console.log('dateIdx', dateIdx)
-      let request = dateIdx.getAll()
+      const request = dateIdx.getAll()
       request.onerror = (e) => {
         console.log('rejecting store.getAll() result', e)
         reject(e)
@@ -784,7 +813,7 @@ async function getList(credentials) {
       console.log(response)
       const json = await response.json()
       console.log('getList response: ', json)
-      if (json.error && json.error == 'token mismatch') {
+      if (json.error && json.error === 'token mismatch') {
         list.remoteList = []
       } else {
         list.remoteList = json.list
@@ -908,7 +937,11 @@ function startWalk(s) {
   walkState.date = s.date
   walkState.startTime = s.startTime
   walkState.startPosition = s.startPosition
-  walkState.addPoint({ ...s.startPosition, timestamp: walkState.startTime, distance: 0 }, s.u, s.verbose)
+  walkState.addPoint(
+    { ...s.startPosition, timestamp: walkState.startTime, distance: 0 },
+    s.u,
+    s.verbose,
+  )
   walkState.c = s.c
 }
 
@@ -931,7 +964,7 @@ onmessage = async (e) => {
     switch (e.data.TASK) {
       case 'INIT':
         ({ origin, appName } = e.data)
-        break;
+        break
       case 'SETUP':
         if (e.data.isAuth) {
           postMessage({ TASK: 'SETUP', ...await refresh(e.data) })
@@ -1016,5 +1049,4 @@ onmessage = async (e) => {
     }
   }
 }
-
 postMessage('Take a walk.')
