@@ -19,6 +19,7 @@ module.exports = {
     es2021: true,
     node: true,
     browser: true,
+    worker: true,
   },
   plugins: [
   ],
