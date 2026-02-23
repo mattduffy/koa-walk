@@ -44,9 +44,15 @@ try {
   if (options?.justOne) {
     rucks = [await walks.findOne(query)]
   } else {
-    rucks = await walks.find(query).toArray()
+    rucks = await walks.find(query).sort({ 'features.properties.date': -1 }).toArray()
   }
-  log(rucks[0].features[0].properties.name)
+  rucks.forEach((r, i) => {
+    log(
+      i,
+      r.features[0].properties.name,
+      r.features[0].geometry.coordinates[0],
+    )
+  })
 } catch (e) {
   error(e)
 }
