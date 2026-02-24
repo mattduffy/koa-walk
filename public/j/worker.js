@@ -200,7 +200,6 @@ async function saveWalk(credentials) {
       }
     })
   }
-  // } else {
   const formData = new FormData()
   formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
   formData.append('walk', JSON.stringify(walkState.geojson))
@@ -235,7 +234,6 @@ async function saveWalk(credentials) {
     console.log('what happened to saved?', saved)
     return saved
   }
-  // }
 }
 async function exportAs(credentials) {
   console.log('worker::exportAs(credentials)', credentials)

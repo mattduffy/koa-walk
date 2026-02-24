@@ -2,7 +2,10 @@
  * file: public/j/State.js
  */
 import Subject from './Subject.js'
-import { pointDistance, heading } from './Heading.js'
+import {
+  pointDistance,
+  // heading,
+} from './Heading.js'
 
 function normalizePosition(c) {
   // console.log('normalizePosition(c): ', c)
@@ -68,7 +71,7 @@ class State extends Subject {
       return this.state.highestElevation - this.state.lowestElevation
     }
     return null
-  } 
+  }
 
   get totalDistance() {
     if (!this.state.distance) {
@@ -192,7 +195,7 @@ class State extends Subject {
     let prev
     if (this.state.wayPoints.length > 0) {
       prev = this.state.wayPoints[this.state.wayPoints.length - 1]
-      // point includes heading now, from GPS 
+      // point includes heading now, from GPS
       // point.heading = heading(prev, point, verbose)
       point.distance = pointDistance(prev, point, u)
     } else {
@@ -230,7 +233,7 @@ class State extends Subject {
     const p1 = this.state.wayPoints[l - 1]
     const p2 = this.state.wayPoints[l]
     console.log('State::bearing using p1, p2', p1, p2)
-    let bearing
+    // let bearing
     // if (p1.heading <= p2.heading) {
     //   console.log(`p1.heading (${p1.heading} <= p2.heading ${p2.heading}`)
     //   bearing = (p1.heading + p2.heading) % 360
@@ -244,7 +247,7 @@ class State extends Subject {
     //    `(p1.heading $(p1.heading} - p2.heading ${p2.heading}) % 360 = bearing ${bearing}`
     //   )
     // }
-    bearing = p2.heading
+    const bearing = p2.heading
     this.state.headings.push(bearing)
     return bearing
   }
@@ -265,7 +268,7 @@ class State extends Subject {
     return this.state.wayPoints[this.state.wayPoints.length - 1]
   }
 
-    get geojson() {
+  get geojson() {
     return {
       type: 'FeatureCollection',
       features: [
@@ -293,7 +296,7 @@ class State extends Subject {
               w.longitude,
               w.latitude,
               w.heading ?? 0.0, // property unsanctioned by geojson spec (heading)
-              w.altitude,       // property unscantioned by geojson spec (altitude)
+              w.altitude, // property unscantioned by geojson spec (altitude)
             ]),
           },
         },
@@ -302,13 +305,12 @@ class State extends Subject {
   }
 
   get kmlTrack() {
-    const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+    const fmt = { year: 'numeric', month: 'short', day: 'numeric' }
     const niceDate = new Date(this.state.date)
       .toLocaleString('en-US', fmt)
     const last = this.state.wayPoints.length - 1
-    let kml = 
-`<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2"
+    const kml = '<?xml version="1.0" encoding="UTF-8"?>'
++ `<kml xmlns="http://www.opengis.net/kml/2.2"
   xmlns:gx="http://www.google.com/kml/ext/2.2"
   xmlns:atom="http://www.w3.org/2005/Atom">
   <Document>
@@ -317,7 +319,7 @@ class State extends Subject {
     </atom:author>
     <atom:link href="http://walk.genevalakepiers.com" />
     <open>1</open>
-    <name>${this.state.name} ${shortDate}</name>
+    <name>${this.state.name} ${niceDate}</name>
     <visibility>1</visibility>
     <description>
       <![CDATA[
@@ -325,7 +327,7 @@ class State extends Subject {
       <p>${this.state.location}</p>
       <p>${niceDate}</h4>
       <p>Duration ${new Date(this.state.duration)
-          .toISOString().slice(11, 19)}</p> 
+    .toISOString().slice(11, 19)}</p> 
       <p>Distance ${this.state.distance.toFixed(1)} meters</p>
       ]]>
     </description>
@@ -369,7 +371,7 @@ class State extends Subject {
       <styleUrl>#grn-pushpin</styleUrl>
       <description><![CDATA[
         <p>Start time: ${new Date(this.state.startTime)
-        .toISOString().slice(11, 19)}</p>
+    .toISOString().slice(11, 19)}</p>
         <p>
           Start location:<br>
           longitude ${this.state.wayPoints[0].longitude}<br>
@@ -396,7 +398,7 @@ class State extends Subject {
       <styleUrl>#ylw-pushpin</styleUrl>
       <description>
         <![CDATA[<p>Finish time: ${new Date(this.state.endTime)
-        .toISOString().slice(11, 19)}</p>
+    .toISOString().slice(11, 19)}</p>
         <p>
           Finish location: <br>
           longitude ${this.state.wayPoints[last].longitude}<br>
@@ -413,25 +415,23 @@ class State extends Subject {
       <styleUrl>#myWalkStyle</styleUrl> 
       <name>walk route</name>
       <description>
-        <![CDATA[<p>${walk.features[0].properties.name}</p>
-        <p>${walk.features[0].properties.location}</p>
+        <![CDATA[<p>${this.name}</p>
+        <p>${this.location}</p>
         <p>${niceDate}</p>
-        <p>Duration ${new Date(walk.features[0].properties.duration)
-            .toISOString().slice(11, 19)}</p> 
-        <p>Distance ${walk.features[0].properties.distance.toFixed(1)} meters</p>]]>
+        <p>Duration ${new Date(this.duration)
+    .toISOString().slice(11, 19)}</p> 
+        <p>Distance ${this.distance.toFixed(1)} meters</p>]]>
       </description>
       <gx:Track id="theWalk">
         <altitudeMode>clampToGround</altitudeMode>
         ${this.state.wayPoints.map((w) => {
-          return '<when>' + new Date(w.timestamp).toISOString() + '</when>'
-        }).join('\n')}
+    console.log()
+    return `<when>${new Date(w.timestamp).toISOString()}</when>`
+  }).join('\n')}
         ${this.state.wayPoints.map((w) => {
-          return '<gx:coord>'
-            + w[0] + ' '
-            + w[1] + ' '
-            + '0'
-            + '</gx:coord>'
-        }).join('\n')}
+    console.log()
+    return `<gx:coord>${w[0]} ${w[1]} 0</gx:coord>`
+  }).join('\n')}
       </gx:Track> 
     </Placemark>
   </Document>
@@ -441,13 +441,12 @@ class State extends Subject {
   }
 
   get kmlLineString() {
-    const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
+    const fmt = { year: 'numeric', month: 'short', day: 'numeric' }
     const niceDate = new Date(this.state.date)
       .toLocaleString('en-US', fmt)
     const last = this.state.wayPoints.length - 1
-    let kml = 
-`<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2"
+    const kml = '<?xml version="1.0" encoding="UTF-8"?>'
++ `<kml xmlns="http://www.opengis.net/kml/2.2"
   xmlns:atom="http://www.w3.org/2005/Atom">
   <Document>
     <atom:author>
@@ -486,7 +485,7 @@ class State extends Subject {
         <h4>${this.state.location}</h4>
         <h4>${niceDate}</h4>
         <p>Duration ${new Date(this.state.duration)
-            .toISOString().slice(11, 19)}</p> 
+    .toISOString().slice(11, 19)}</p> 
         <p>Distance ${this.state.distance.toFixed(1)} meters</p>
       ]]></description>
       <LookAt>
@@ -501,8 +500,9 @@ class State extends Subject {
         <tessellate>1</tessellate>
         <coordinates>
           ${this.state.wayPoints.map((w) => {
-            return w.longitude + ',' + w.latitude + ',0'
-          }).join('\n')}
+    console.log()
+    return `${w.longitude}, ${w.latitude},0`
+  }).join('\n')}
         </coordinates>
       </LineString>
     </Placemark>
@@ -510,7 +510,7 @@ class State extends Subject {
       <name>Start</name>
       <description><![CDATA[
         <p>Start time: ${new Date(this.state.startTime)
-        .toISOString().slice(11, 19)}</p>
+    .toISOString().slice(11, 19)}</p>
         <p>
           Start location: <br>
           longitude ${this.state.wayPoints[0].longitude}<br>
@@ -536,7 +536,7 @@ class State extends Subject {
       <name>Finish</name>
       <description><![CDATA[
         <p>Finish time: ${new Date(this.state.endTime)
-        .toISOString().slice(11, 19)}</p>
+    .toISOString().slice(11, 19)}</p>
         <p>
           Finish location:<br>
           longitude ${this.state.wayPoints[last].longitude}<br>

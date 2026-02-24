@@ -193,10 +193,6 @@ router.post(
   },
 )
 
-router.get('saveWalkRedirect', '/save', addIpToSession, async (ctx) => {
-  ctx.redirect('/')
-})
-
 router.post('showWalk', '/showWalk', addIpToSession, processFormData, async (ctx) => {
   const log = walkLog.extend('showWalk')
   const error = walkError.extend('showWalk')
@@ -241,6 +237,10 @@ router.post('showWalk', '/showWalk', addIpToSession, processFormData, async (ctx
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
   }
   ctx.body = body
+})
+
+router.get('saveWalkRedirect', '/save', addIpToSession, async (ctx) => {
+  ctx.redirect('/')
 })
 
 router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) => {
