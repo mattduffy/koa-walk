@@ -189,6 +189,13 @@ class State extends Subject {
     this.state.c.push(p)
   }
 
+  prevPoint() {
+    if (this.state.wayPoints.length > 0) {
+      return this.state.wayPoints[this.state.wayPoints.length - 1]
+    }
+    return { distance: 0, heading: 0, altitude: null }
+  }
+
   addPoint(p, u = 'metric', verbose = false) {
     console.log('State::addPoint(p, u, verbose): ', p, u, verbose)
     const point = p
@@ -296,7 +303,9 @@ class State extends Subject {
               w.longitude,
               w.latitude,
               w.heading ?? 0.0, // property unsanctioned by geojson spec (heading)
-              w.altitude, // property unscantioned by geojson spec (altitude)
+              w.altitude, // property unsanctioned by geojson spec (altitude)
+              w.accuracy, // property unsanctioned by geojson spec (gps accuracy)
+              w.timestamp, // property unsanctioned by geojson spec (waypoint timestamp)
             ]),
           },
         },
