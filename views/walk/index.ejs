@@ -178,14 +178,15 @@
   const identifier = 'my_walk'
   const origin = '<%= origin %>'
   const jwtAccess = '<%= searchJwtAccess %>'
+  const VERSION = <%= VERSION %>
   window.csrfToken = '<%= csrfToken %>'
   info('csrfToken on load: ', window.csrfToken)
-  window.walking = window.walking ?? new State()
+  window.walking = window.walking ?? new State(VERSION)
   window.walker = new Worker(
     '<%= origin %>/j/worker.js',
     { name: 'walker', type: 'module' }
   ) || null
-  window.walker.postMessage({ TASK: 'INIT', origin, appName: 'Walk' })
+  window.walker.postMessage({ TASK: 'INIT', origin, appName: 'Walk', VERSION, })
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   const UPDATE_INTERVAL = 1000

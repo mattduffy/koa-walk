@@ -10,6 +10,7 @@ import { ObjectId } from './lib/bson.mjs'
 const worker = self // eslint-disable-line no-restricted-globals
 let origin
 let appName
+let VERSION
 
 const IDB_OBJ_VER = 1
 const DBNAME = 'walks'
@@ -39,7 +40,7 @@ function openDB() {
 openDB()
 let walkState
 if (walkState === undefined) {
-  walkState = new State()
+  walkState = new State(VERSION)
 }
 console.log('worker state: ', walkState)
 
@@ -961,7 +962,10 @@ onmessage = async (e) => {
   if (e.data?.TASK) {
     switch (e.data.TASK) {
       case 'INIT':
-        ({ origin, appName } = e.data)
+        ({ origin, appName, VERSION } = e.data)
+        if (walkState && !walkState.version) {
+          walkState.version = VERSION
+        }
         break
       case 'SETUP':
         if (e.data.isAuth) {

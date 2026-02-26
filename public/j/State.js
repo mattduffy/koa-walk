@@ -23,9 +23,10 @@ function normalizePosition(c) {
   return c
 }
 class State extends Subject {
-  constructor() {
+  constructor(walkVersion) {
     super()
     this.state = {
+      VERSION: walkVersion ?? null,
       active: false,
       date: null,
       name: null,
@@ -189,6 +190,14 @@ class State extends Subject {
     this.state.c.push(p)
   }
 
+  set version(v) {
+    this.state.VERSION = v
+  }
+
+  get version() {
+    return this.state.VERSION
+  }
+
   prevPoint() {
     if (this.state.wayPoints.length > 0) {
       return this.state.wayPoints[this.state.wayPoints.length - 1]
@@ -283,6 +292,7 @@ class State extends Subject {
           type: 'Feature',
           properties: {
             id: null,
+            version: this.state.VERSION,
             date: this.state.date,
             name: this.state.name,
             location: this.state.location,
