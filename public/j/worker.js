@@ -164,7 +164,8 @@ async function saveWalk(credentials) {
   console.log('worker::saveWalk(credentials)', credentials)
   let response
   let json
-  const saved = { status: null, msg: null }
+  let localSaved
+  let remoteSaved
   if (credentials.scope === 'local') {
     const _id = new ObjectId().toString()
     console.log('new ObjectId()', _id)
@@ -173,7 +174,9 @@ async function saveWalk(credentials) {
     walk.date = walk.features[0].properties.date
     walk.name = walk.features[0].properties.name
     console.log('db handle opened', db)
-    return new Promise((resolve, reject) => {
+    // return new Promise((resolve, reject) => {
+    localSaved = new Promise((resolve, reject) => {
+      const saved = { status: null, msg: null }
       console.log('before transaction', db)
       const transaction = db.transaction(OBJSTORENAME, 'readwrite')
       console.log('transaction', transaction)
@@ -200,6 +203,7 @@ async function saveWalk(credentials) {
         console.log(saved)
       }
     })
+    console.log('localSaved', localSaved)
   }
   const formData = new FormData()
   formData.append('csrfTokenHidden', credentials.csrfTokenHidden)
@@ -214,6 +218,7 @@ async function saveWalk(credentials) {
     body: formData,
   }
   const request = new Request(credentials.url, opts)
+  const saved = { status: null, msg: null }
   try {
     response = await fetch(request)
     json = await response.json()
@@ -226,7 +231,8 @@ async function saveWalk(credentials) {
     saved.res = json
     saved.scope = 'remote'
     console.log('what happened to saved?', saved)
-    return saved
+    // return saved
+    remoteSaved = saved
   } catch (e) {
     console.log('worker::save::fetch failed')
     console.log(e)
@@ -235,6 +241,7 @@ async function saveWalk(credentials) {
     console.log('what happened to saved?', saved)
     return saved
   }
+  return (credentials.scope === 'local') ? localSaved : remoteSaved
 }
 async function exportAs(credentials) {
   console.log('worker::exportAs(credentials)', credentials)
