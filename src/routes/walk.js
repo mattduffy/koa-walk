@@ -253,33 +253,36 @@ router.post('saveWalk', '/save', addIpToSession, processFormData, async (ctx) =>
   ctx.status = 200
   ctx.type = 'application/json; charset=utf-8'
   if (doTokensMatch(ctx)) {
+    const walk = JSON.parse(ctx.request.body.walk[0])
     if (!ctx.state?.isAuthenticated) {
-      const msg = 'User is not authenticated, not able to save walk.'
-      error(msg)
-      body.message = msg
-      ctx.status = 401
+      // const msg = 'User is not authenticated, not able to save walk.'
+      // error(msg)
+      // body.message = msg
+      // ctx.status = 401
+      log("saving an annonymous user's walk.")
+      walk.userId = 'annonymous'
     } else {
       log('sessionUser: ', ctx.state?.sessionUser?.username)
       log('isAuthenticated: ', ctx.state.isAuthenticated)
       log('saving walk')
-      const walk = JSON.parse(ctx.request.body.walk[0])
       walk.userId = ctx.state.sessionUser.id
-      log(walk)
-      try {
-        const db = ctx.state.mongodb.client.db()
-        const collection = db.collection('walks')
-        const saved = await collection.insertOne(walk)
-        log(saved)
-        body.saved = saved
-        body.msg = 'saved a walk.'
-      } catch (e) {
-        error('failed to save walk to db')
-        error(e)
-        ctx.status = 500
-        body.msg = 'failed to save walk to db'
-        body.e = e
-      }
     }
+    log(walk)
+    try {
+      const db = ctx.state.mongodb.client.db()
+      const collection = db.collection('walks')
+      const saved = await collection.insertOne(walk)
+      log(saved)
+      body.saved = saved
+      body.msg = 'saved a walk.'
+    } catch (e) {
+      error('failed to save walk to db')
+      error(e)
+      ctx.status = 500
+      body.msg = 'failed to save walk to db'
+      body.e = e
+    }
+    // }
   } else {
     ctx.session.csrfToken = newCsrfToken
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
