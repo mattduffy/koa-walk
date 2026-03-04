@@ -58,7 +58,8 @@ async function setPref(credentials) {
   }
   if (credentials?.orientation) {
     formData.append('orientation', credentials.orientation)
-  }// formData.append('userId', user.userId)
+    // formData.append('userId', user.userId)
+  }
   const opts = {
     method: 'POST',
     headeers: {

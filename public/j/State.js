@@ -213,7 +213,13 @@ class State extends Subject {
       prev = this.state.wayPoints[this.state.wayPoints.length - 1]
       // point includes heading now, from GPS
       // point.heading = heading(prev, point, verbose)
-      point.distance = pointDistance(prev, point, u)
+      // point.distance = pointDistance(prev, point, u)
+      // ATTENTION!! debugging distance issue:
+      // no longer passing u (the display_units value) to pointDistance() function
+      // because all data should be stored in original GPS metric units and only
+      // converted to user_preference units when displayed.  pointDistance() function
+      // sets default value for u = 'metric'
+      point.distance = pointDistance(prev, point)
     } else {
       point.distance = 0
       point.heading = 0.0
