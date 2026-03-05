@@ -933,6 +933,7 @@
         loginForm.style.display = 'none'
         document.forms['preferences'].elements['units'].forEach((r) => {
           r.addEventListener('change', updatePreferences)
+          r.addEventListener('change', updateDisplayUnits)
         })
         document.forms['preferences'].elements['orientation'].forEach((r) => {
           r.addEventListener('change', updatePreferences)
@@ -1437,7 +1438,9 @@
         e.walk.features[0].properties.name
       document.querySelector('h5#walkLocationH5').textContent = 
         e.walk.features[0].properties.location
-      document.querySelector('span#walkDistance').textContent = `${displayUnits(
+      const spanWalkDistance = document.querySelector('span#walkDistance')
+      spanWalkDistance.dataset.distance = e.walk.features[0].properties.distance
+      spanWalkDistance.textContent = `${displayUnits(
         e.walk.features[0].properties.distance,
         DISPLAY_UNITS
       )}`
@@ -1445,19 +1448,34 @@
         new Date(e.walk.features[0].properties.duration)
         .toISOString().slice(11, 19)
       }`
-      document.querySelector('span#startingElevation').textContent = `${
+      const spanStartingElevation = document.querySelector('span#startingElevation')
+      spanStartingElevation.dataset.startElevation = e.walk.features[0]
+        .properties
+        .startPosition
+        ?.altitude
+      spanStartingElevation.textContent = `${
         displayUnits((e.walk.features[0].properties.startPosition.altitude)
           ? e.walk.features[0].properties.startPosition.altitude
           : 'N/A',
           DISPLAY_UNITS
       )}`
-      document.querySelector('span#endingElevation').textContent = `${
+      const spanEndingElevation = document.querySelector('span#endingElevation')
+      spanEndingElevation.dataset.endElevation = e.walk.features[0]
+        .properties
+        .endPosition
+        ?.altitude
+      spanEndingElevation.textContent = `${
         displayUnits((e.walk.features[0].properties.endPosition?.altitude)
           ? e.walk.features[0].properties.endPosition.altitude
           : 'N/A',
           DISPLAY_UNITS
       )}`
-      document.querySelector('span#changeInElevation').textContent = `${
+      const spanChangeInElevation = document.querySelector('span#changeInElevation')
+      spanChangeInElevation.dataset.changeElevation = e.walk.features[0]
+        .properties.highestElevation
+        - e.walk.features[0]
+          .properties.startPosition.altitude
+      spanChangeInElevation.textContent = `${
         displayUnits(e.walk.features[0].properties.highestElevation
           // - e.walk.features[0].properties.lowestElevation,
           - e.walk.features[0].properties.startPosition.altitude,
@@ -1658,7 +1676,8 @@
       p1: 'Your position is '
         + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4)}</span>, `
         + `<span id="lon" class="coords">lon ${g.coords.longitude.toFixed(4)}</span>.<br>`,
-      p2: '<span id="alt" class="coords">Your altitude is '
+      p2: `Your altitude is <span id="alt" data-altitude="${g.coords?.altitude}" `
+        + 'class="coords">'
         + `${displayUnits(g.coords?.altitude, DISPLAY_UNITS, 1)}</span>`
         + ', <span id="heading" class="coords">heading '
         + `${displayUnits(g.coords?.heading, 'deg', 1)}<span>.<br>`,
@@ -1693,7 +1712,8 @@
       p1: 'Your position is '
         + `<span id="lat" class="coords">lat ${g.coords.latitude.toFixed(4)}</span>, `
         + `<span id="lon" class="coords">lon ${g.coords.longitude.toFixed(4)}</span><br>`,
-      p2: '<span id="alt" class="coords">Your altitude is '
+      p2: `Your altitude is <span id="alt" data-altitude="${g.coords?.altitude}" `
+        + 'class="coords">'
         + `${displayUnits(g.coords?.altitude, DISPLAY_UNITS, 1)}</span>`
         + ', <span id="heading" class="coords">heading '
         + `${displayUnits(g.coords?.heading, 'deg', 1)}</span>.<br>`,
@@ -1725,6 +1745,55 @@
         populateApp(null, null, data.results[0])
       }
     })
+  }
+  function updateDisplayUnits(e) {
+    const newUnits = e.target.value
+    log('DISPLAY_UNITS in', newUnits)
+    const spanWalkDistance = document.querySelector('span#walkDistance')
+    if (spanWalkDistance) {
+      spanWalkDistance.textContent = `${displayUnits(
+        Number.parseFloat(spanWalkDistance.dataset.distance),
+        newUnits 
+      )}`
+    }
+    const spanStartingElevation = document.querySelector('span#startingElevation')
+    if (spanStartingElevation) {
+      log('data-start-elevation', spanStartingElevation.dataset)
+      spanStartingElevation.textContent = `${
+      displayUnits((spanStartingElevation.dataset.startElevation)
+        ? Number.parseFloat(spanStartingElevation.dataset.startElevation)
+        : 'N/A',
+        newUnits
+      )}`
+    }
+    const spanEndingElevation = document.querySelector('span#endingElevation')
+    if (spanEndingElevation) {
+      spanEndingElevation.textContent = `${
+        displayUnits((spanEndingElevation.dataset.endElevation)
+          ? Number.parseFloat(spanEndingElevation.dataset.endElevation)
+          : 'N/A',
+          newUnits
+      )}`
+    }
+    const spanChangeInElevation = document.querySelector('span#changeInElevation')
+    if (spanChangeInElevation) {
+      spanChangeInElevation.textContent = `${
+      displayUnits(Number.parseFloat(spanChangeInElevation.dataset.changeElevation),
+        newUnits
+      )}`
+    }
+    const spanAlt = document.querySelector('span#alt')
+    if (spanAlt) {
+      spanAlt.textContent = `${
+        displayUnits(window.walking.state.currentPosition?.altitude, newUnits, 1)
+      }`
+    }
+    const spanAcc = document.querySelector('span#acc')
+    if (spanAcc) {
+      spanAcc.textContent = `${
+        displayUnits(window.walking.state.currentPosition?.accuracy, newUnits, 1)
+      }`
+    }
   }
   function displayUnits(x, u = 'm', n = 1) {
     const _u = u.toLowerCase()
@@ -1785,7 +1854,9 @@
         administrativeAreaCode,
       } = theLocality ?? null
       log(`updating new locality: ${(subLocality) ? subLocality + ',' : ''} ${name}`)
-      const l = `${(subLocality) ? '<span id="subLocality">' + subLocality + '</span><br>' : ''}`
+      const l = `${(subLocality)
+        ? '<span id="subLocality">' + subLocality + '</span><br>'
+        : ''}`
         + `${(name) ? '<span id="name">' + name + '</span><br>' : ''}` 
         + `${(locality) ? '<span id="locality">' + locality + '</span>, ' : ''}`
         + `${(administrativeAreaCode)
@@ -1821,15 +1892,17 @@
       }
       const _alt = a.querySelector('p > span#alt')
       if (coords?.altitude && _alt) {
-        a.querySelector('p > span#alt').innerHTML = 
-          // `Your altitude is ${coords?.altitude?.toFixed(1) ?? 0}`
-          `Your altitude is ${displayUnits(coords?.altitude, DISPLAY_UNITS, 1)}`
+        _alt.data.altitude = coords?.altitude
+        // a.querySelector('p > span#alt').innerHTML = 
+        _alt.innerHTML = 
+          // `Your altitude is ${displayUnits(coords?.altitude, DISPLAY_UNITS, 1)}`
+          `${displayUnits(coords?.altitude, DISPLAY_UNITS, 1)}`
       }
       const _heading = a.querySelector('p > span#heading')
       if (coords.heading && _heading) {
-        // a.querySelector('p > span#heading').innerHTML = `heading ${coords.heading}`
         a.querySelector('p > span#heading').innerHTML = 
-          `heading ${displayUnits(coords.heading, 'deg', 1)}`
+          // `heading ${displayUnits(coords.heading, 'deg', 1)}`
+          `${displayUnits(coords.heading, 'deg', 1)}`
       }
       // new walk div content
       if (!window.walking.active) {
