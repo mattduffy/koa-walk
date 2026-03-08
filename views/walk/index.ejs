@@ -82,8 +82,8 @@
           <li>
             Total Elevation Gain: <span id="changeInElevation" style="float: right;"></span>
           </li>
-          <li>
-            Estimated Calories Burned: <span id="caloriesBurned" style="float: right;">100</span>
+          <li style="display: none;">
+            Estimated Calories Burned: <span id="caloriesBurned" style="float: right;"></span>
           </li>
         </ul>
       </div>
@@ -1484,6 +1484,11 @@
           - e.walk.features[0].properties.startPosition.altitude,
           DISPLAY_UNITS
       )}`
+      const spanCaloriesBurned = document.querySelector('span#caloriesBurned')
+      if (e.walk.features[0].properties?.calories) {
+        spanCaloriesBurned.textContent = e.walk.features[0].properties.calories
+        spanCaloriesBurned.parentElement.style.display = 'block'
+      }
       divList.style.display = 'none'
       divWalk.style.display = 'block'
       window.walking.active = false 
