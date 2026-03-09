@@ -40,16 +40,23 @@ try {
 let rucks
 try {
   const walks = mongoClient.client.db().collection('walks')
-  const query = { 'features[0].properties.version': null }
+  const query = { 'features.properties.version': { $gt: 0 } }
   if (options?.justOne) {
     rucks = [await walks.findOne(query)]
   } else {
     rucks = await walks.find(query).sort({ 'features.properties.date': -1 }).toArray()
   }
+  /**
+   * coordinates array elements are in this order:
+   * [ longitude, latitude, heading, altitude, accuracy, timestamp ]
+   *
+   */
   rucks.forEach((r, i) => {
     log(
       i,
+      r.features[0].properties.version,
       r.features[0].properties.name,
+      r.features[0].properties.distance,
       r.features[0].geometry.coordinates[0],
     )
   })

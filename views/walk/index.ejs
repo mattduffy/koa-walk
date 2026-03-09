@@ -1547,6 +1547,9 @@
       log('clearing walk')
       divList.style.display = 'block'
       divWalk.style.display = 'none'
+      const calories = document.querySelector('span#caloriesBurned')
+      calories.textContent = ''
+      calories.parentElement.style.display = 'none'
       window.walking.active = false 
       window.walking.state.showing = null
       window._map.showsUserLocation = true

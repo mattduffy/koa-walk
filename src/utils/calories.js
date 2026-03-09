@@ -119,7 +119,7 @@ try {
     rucks = await walks.find({ _id }).toArray()
     // log(ruck.features[0].properties)
   } else {
-    rucks = await walks.find({}).toArray()
+    rucks = await walks.find({ 'features.properties.version': { $gt: 0 } }).toArray()
   }
   log(rucks)
   rucks.forEach((ruck, i) => {
@@ -129,8 +129,8 @@ try {
     if (options?.simple) {
       simpleCalories = simple(minutes)
       log('duration', ruck.features[0].properties.duration)
-      log(ruck.features[0].properties.duration / 1000)
-      log(ruck.features[0].properties.duration / 1000 / 60)
+      // log(ruck.features[0].properties.duration / 1000)
+      // log(ruck.features[0].properties.duration / 1000 / 60)
       log('minutes', minutes)
       log(Math.round(simpleCalories))
     }
