@@ -160,13 +160,40 @@ router.post(
           // eslint-disable-next-line
           [orientation] = ctx.request.body?.orientation
         }
+        let bodyWeight
+        if (ctx.request.body?.bodyWeight) {
+          // eslint-disable-next-line
+          [bodyWeight] = ctx.request.body.bodyWeight
+        }
+        let ruckWeight
+        if (ctx.request.body?.ruckWeight) {
+          // eslint-disable-next-line
+          [ruckWeight] = ctx.request.body.ruckWeight
+        }
+        let waterOunces
+        if (ctx.request.body?.waterOunces) {
+          // eslint-disable-next-line
+          [waterOunces] = ctx.request.body.waterOunces
+        }
         log('preference units:       ', units)
         log('preference orientation: ', orientation)
+        log('preference bodyWeight: ', bodyWeight)
+        log('preference ruckWeight: ', ruckWeight)
+        log('preference waterOunces: ', waterOunces)
         if (units) {
           ctx.state.sessionUser.preferences.units = units
         }
         if (orientation) {
           ctx.state.sessionUser.preferences.orientation = orientation
+        }
+        if (bodyWeight) {
+          ctx.state.sessionUser.preferences.bodyWeight = bodyWeight
+        }
+        if (ruckWeight) {
+          ctx.state.sessionUser.preferences.ruckWeight = ruckWeight
+        }
+        if (waterOunces) {
+          ctx.state.sessionUser.preferences.waterOunces = waterOunces
         }
         try {
           const temp = await ctx.state.sessionUser.update()
