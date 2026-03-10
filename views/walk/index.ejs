@@ -43,6 +43,20 @@
             <label>
               Heading Up<input id="headingUpId" name="orientation" type="radio" value="headingUp" <%= (preferences?.orientation === 'headingUp') ? 'checked' : '' %> tabindex="0">
             </label>
+            <br>
+            <span style="font-weight: 450;">Ruck Weights:</span>
+            <br>
+            <label>
+              Body Weight lbs <input id="bodyWeightId" name="bodyWeight" type="text" size="5" value="<%= preferences?.bodyWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right;">
+            </label>
+            <br>
+            <label>
+              Ruck Weight lbs <input id="ruckWeightId" name="ruckWeight" type="text" size="5" value="<%= preferences?.ruckWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right;">
+            </label>
+            <br>
+            <label>
+              Ounces of Water <input id="waterOuncesId" name="waterOunces" type="text" size="5" value="<%= preferences?.waterOunces ?? 0%>" tabindex="0" style="margin-left: 1em; text-align: right;">
+            </label>
           </fieldset>
         </form>
         <a id="logout" href="/logout">Log out</a>
@@ -103,6 +117,12 @@
         <label for="coords">Starting Coordinates</label>
         <br>
         <input type="text" id="coords" size=45 readonly value="">
+        <br>
+        <label for="bodyWeight">Your Body Weight</label>
+        <input type="text" id="bodyWeight" size="45" value="<%= preferences?.bodyWeight %>">
+        <br>
+        <label for="ruckWeight">Your Ruck Weight</label>
+        <input type="text" id="ruckWeight" size="45" value="<%= preferences?.ruckWeight %>">
       </form>
       <br>
       <h3 id="walkName"></h3>
@@ -522,7 +542,7 @@
         updatePosition(position)
         log('did updatePosition(position) call work?')
       } catch (e) {
-        console.warn('updatePosition(position) called failed?')
+        console.warn('updatePosition(position) call failed?')
         console.error(e)
       }
       return position
@@ -659,6 +679,8 @@
       startWalkForm.style.display = 'none'
       const name = startWalkForm.children.namedItem('name').value
       const location = startWalkForm.children.namedItem('location').value
+      const bodyWeight = Number.parseInt(startWalkForm.children.namedItem('bodyWeight').value)
+      const ruckWeight = Number.parseInt(startWalkForm.children.namedItem('ruckWeight').value)
       const h3 = document.querySelector('h3#walkName')
       h3.textContent = name
       h3.style.display = 'block'
@@ -673,6 +695,8 @@
       window.walking.date = _d
       window.walking.name = name
       window.walking.location = location
+      window.walking.weights.body = bodyWeight
+      window.walking.weights.ruck = ruckWeight
       const c = new mapkit.Coordinate(
         window.walking.currentPosition.latitude,
         window.walking.currentPosition.longitude
@@ -684,6 +708,7 @@
         location,
         date: _d,
         startTime: _d,
+        weights: window.walking.weights,
         u: DISPLAY_UNITS,
         startPosition: window.walking.currentPosition,
         verbose: VERBOSE,
@@ -941,6 +966,18 @@
         document.forms['preferences'].elements['orientation'].forEach((r) => {
           r.addEventListener('change', updatePreferences)
         })
+        document.forms['preferences'].elements['bodyWeight'].addEventListener(
+          'change',
+          updatePreferences,
+        )
+        document.forms['preferences'].elements['ruckWeight'].addEventListener(
+          'change',
+          updatePreferences,
+        )
+        document.forms['preferences'].elements['waterOunces'].addEventListener(
+          'change',
+          updatePreferences,
+        )
       }
       const logout = document.querySelector('a#logout')
       logout.addEventListener('click', (e) => {
@@ -1903,7 +1940,7 @@
       }
       const _alt = a.querySelector('p > span#alt')
       if (coords?.altitude && _alt) {
-        _alt.data.altitude = coords?.altitude
+        _alt.dataset.altitude = coords?.altitude
         // a.querySelector('p > span#alt').innerHTML = 
         _alt.innerHTML = 
           // `Your altitude is ${displayUnits(coords?.altitude, DISPLAY_UNITS, 1)}`
