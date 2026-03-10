@@ -60,6 +60,15 @@ async function setPref(credentials) {
     formData.append('orientation', credentials.orientation)
     // formData.append('userId', user.userId)
   }
+  if (credentials?.bodyWeight) {
+    formData.append('bodyWeight', credentials.bodyWeight)
+  }
+  if (credentials?.ruckWeight) {
+    formData.append('ruckWeight', credentials.ruckWeight)
+  }
+  if (credentials?.waterOunces) {
+    formData.append('waterOunces', credentials.waterOunces)
+  }
   const opts = {
     method: 'POST',
     headeers: {
@@ -941,6 +950,7 @@ function startWalk(s) {
   console.log('worker::startWalk(s)', s)
   walkState.name = s.name
   walkState.location = s.location
+  walkState.weights = s.weights
   walkState.date = s.date
   walkState.startTime = s.startTime
   walkState.startPosition = s.startPosition
