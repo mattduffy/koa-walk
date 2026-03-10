@@ -1485,8 +1485,8 @@
           DISPLAY_UNITS
       )}`
       const spanCaloriesBurned = document.querySelector('span#caloriesBurned')
-      if (e.walk.features[0].properties?.calories) {
-        spanCaloriesBurned.textContent = e.walk.features[0].properties.calories
+      if (e.walk.features[0].properties?.simpleCalories) {
+        spanCaloriesBurned.textContent = Math.round(e.walk.features[0].properties.simpleCalories)
         spanCaloriesBurned.parentElement.style.display = 'block'
       }
       divList.style.display = 'none'
