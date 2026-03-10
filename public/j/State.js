@@ -25,6 +25,8 @@ function normalizePosition(c) {
 class State extends Subject {
   #MET = 7.5
 
+  #WATER_OUNCE = 1.043
+
   constructor(walkVersion) {
     super()
     this.state = {
@@ -45,6 +47,7 @@ class State extends Subject {
       changeInElevation: null,
       simpleCalories: null,
       pandolfCalories: null,
+      weights: { body: null, ruck: 0, water: 0 },
       c: [],
       wayPoints: [],
       headings: [],
@@ -87,13 +90,13 @@ class State extends Subject {
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @param Number minutes - Time spent expending energy, in minutes.
    * @param Object weights - Weight values for body, ruck, and water carried.
-   * @param Number _MET - The metabolic equivalent task number.
+   * @param Number MET - The metabolic equivalent task number.
    * @return Number - Estimated calories used per duration of MET.
    */
-  simpleCalories(minutes, weights = { body: 0, ruck: 0, water: 0 }, _MET = this.#MET) {
+  simpleCalories(minutes, weights = { body: 0, ruck: 0, water: 0 }, MET = this.#MET) {
     const COMBINED = weights.body + (weights.ruck ?? 0) + (weights.water ?? 0)
     console.log('calculating simple EE method')
-    return ((_MET * 3.5 * COMBINED) / 200) * minutes
+    return ((MET * 3.5 * COMBINED) / 200) * minutes
   }
 
   /*
@@ -162,6 +165,46 @@ class State extends Subject {
 
   get location() {
     return this.state.location
+  }
+
+  set weights(w) {
+    this.state.weights = w
+  }
+
+  get weights() {
+    return this.state.weights
+  }
+
+  set bodyWeight(bw) {
+    this.state.weights.bodyWeight = bw
+  }
+
+  get bodyWeight() {
+    return this.state.weights.bodyWeight
+  }
+
+  set ruckWeight(rw) {
+    this.state.weights.ruck = rw
+  }
+
+  get ruckWeight() {
+    return this.state.weights.ruck
+  }
+
+  set waterWeight(ww) {
+    this.state.weights.water = ww
+  }
+
+  get waterWeight() {
+    return this.state.weights.water
+  }
+
+  set waterOunces(o) {
+    this.state.weight.water = o * this.#WATER_OUNCE
+  }
+
+  get waterOunces() {
+    return this.state.weight.water / this.#WATER_OUNCE
   }
 
   set active(s) {
@@ -348,8 +391,12 @@ class State extends Subject {
             highestElevation: this.state.highestElevation,
             lowestElevation: this.state.lowestElevation,
             changeInElevation: this.state.changeInElevation,
-            simpleCalories: this.simpleCalories(),
+            simpleCalories: this.simpleCalories(
+              Math.floor(((this.state.duration / 1000) / 60)),
+              this.state.weights,
+            ),
             pandolfCalories: null,
+            weights: this.state.weights,
           },
           geometry: {
             type: 'LineString',
