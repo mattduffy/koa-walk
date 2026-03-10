@@ -23,6 +23,8 @@ function normalizePosition(c) {
   return c
 }
 class State extends Subject {
+  #MET = 7.5
+
   constructor(walkVersion) {
     super()
     this.state = {
@@ -41,6 +43,8 @@ class State extends Subject {
       highestElevation: null,
       lowestElevation: null,
       changeInElevation: null,
+      simpleCalories: null,
+      pandolfCalories: null,
       c: [],
       wayPoints: [],
       headings: [],
@@ -65,6 +69,38 @@ class State extends Subject {
     this.state.c = []
     this.state.duration = null
     this.state.distance = null
+  }
+
+  /**
+   * @summary The simplest calorie estimating function.  No account is given for
+   * terrain type, gps factors (hill grading), uphill vs downhill efforts, etc.
+   * MET - ratio of energy spent per unit time during a specific physical activity to a
+   * reference value of 3.5 ml O₂/(kg·min).
+   * Metabolic Equivalent Task (Hiking):
+   *  MET = 7.5 (7.0 for backpacking or general weight lifting has a MET of 3.5)
+   *  Calories Burned Per Minute: 𝐶𝑎𝑙𝑜𝑟𝑖𝑒𝑠/𝑚𝑖𝑛 = (MET * 3.5 * Weight in kg) / 200
+   *  Ttl Calories Burned: 𝑇𝑜𝑡𝑎𝑙𝐶𝑎𝑙𝑜𝑟𝑖𝑒𝑠𝐵𝑢𝑟𝑛𝑒𝑑 = (MET * 3.5 * Weight in kg) / 200 * minutes
+   * How to use:
+   * Weight: Your body weight plus the weight of your ruck/pack.
+   * Convert to kg if needed (1 lb≈0.4536 kg).
+   * Duration: The total time spent hiking/rucking, in minutes.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @param Number minutes - Time spent expending energy, in minutes.
+   * @param Object weights - Weight values for body, ruck, and water carried.
+   * @param Number _MET - The metabolic equivalent task number.
+   * @return Number - Estimated calories used per duration of MET.
+   */
+  simpleCalories(minutes, weights = { body: 0, ruck: 0, water: 0 }, _MET = this.#MET) {
+    const COMBINED = weights.body + (weights.ruck ?? 0) + (weights.water ?? 0)
+    console.log('calculating simple EE method')
+    return ((_MET * 3.5 * COMBINED) / 200) * minutes
+  }
+
+  /*
+   * @todo Provide implentation for Pandolf calorie estimate.
+   */
+  pandolfCalories() {
+    return this.state.pandolfCalories
   }
 
   get totalElevationChange() {
@@ -312,6 +348,8 @@ class State extends Subject {
             highestElevation: this.state.highestElevation,
             lowestElevation: this.state.lowestElevation,
             changeInElevation: this.state.changeInElevation,
+            simpleCalories: this.simpleCalories(),
+            pandolfCalories: null,
           },
           geometry: {
             type: 'LineString',
