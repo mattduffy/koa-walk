@@ -42,9 +42,11 @@ try {
 } catch (e) {
   error(e)
 }
+const DRYRUN = options?.test ?? false
+log('is this a dry run?', DRYRUN)
 const H2O_FLUID_OZ = 1.043
 const MET = 7.5
-const BODY_WEIGHT = options.bodyWeight / 2.2
+const BODY_WEIGHT = (options.bodyWeight ?? 0) / 2.2
 const RUCK_WEIGHT = (Number.parseInt(options?.ruckWeight, 10) / 2.2) || 0
 const WATER_WEIGHT = ((Number.parseInt(options?.h2oOz, 10) * H2O_FLUID_OZ) / 2.2) || 0
 const COMBINED = BODY_WEIGHT + RUCK_WEIGHT + WATER_WEIGHT
@@ -111,8 +113,7 @@ const walks = mongoClient.client.db().collection('walks')
 let rucks
 let _id
 let simpleCalories
-const pandolfCalories = []
-log(pandolfCalories)
+// const pandolfCalories = []
 try {
   if (options?._id) {
     _id = new mongoClient.ObjectId(options._id)
@@ -122,7 +123,10 @@ try {
     rucks = await walks.find({ 'features.properties.version': { $gt: 0 } }).toArray()
   }
   log(rucks)
-  rucks.forEach((ruck, i) => {
+  let i = 0
+  // rucks.forEach(async (ruck, i) => {
+  // eslint-disable-next-line
+  for await(const ruck of rucks) {
     // Stored duration is milliseconds.
     // Convert to minutes: duration / 1000 / 60 (plus duration / 1000 % 60 for remaining seconds)
     const minutes = Math.floor(((ruck.features[0].properties.duration / 1000) / 60))
@@ -133,6 +137,19 @@ try {
       // log(ruck.features[0].properties.duration / 1000 / 60)
       log('minutes', minutes)
       log(Math.round(simpleCalories))
+      if (!DRYRUN) {
+        log('not a dry run, saving simple calories calculation.')
+        try {
+          const filter = { _id: ruck._id }
+          const update = { $set: { 'features.$[].properties.simpleCalories': simpleCalories } }
+          // const arrayFilter = [ ]
+          log(filter, update)
+          const result = await walks.updateOne(filter, update)
+          log('did update succeed?', result)
+        } catch (e) {
+          console.error(e)
+        }
+      }
     }
     if (options?.pandolf) {
       let start
@@ -146,6 +163,7 @@ try {
       const ruckFull = []
       const ts = ruck.features[0].properties.timestamps
       const coords = ruck.features[0].geometry.coordinates
+      // eslint-disable-next-line
       ts.forEach((t, j) => {
         if (j === 0) {
           start = t
@@ -211,7 +229,9 @@ try {
       })
       log(stepDistances)
     }
-  })
+    i += 1
+  // })
+  }
 } catch (e) {
   error(e)
 }
