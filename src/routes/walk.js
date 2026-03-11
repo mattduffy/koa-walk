@@ -110,7 +110,8 @@ router.post('refresh', '/user/refresh', addIpToSession, processFormData, async (
       }
       log(`refreshing user: ${body}`)
     } else {
-      body = { status: 'failed', user: {}, newCsrfToken }
+      // body = { status: 'failed', user: {}, newCsrfToken }
+      body = { status: 'annonymous', user: {}, newCsrfToken }
     }
     ctx.status = 200
     ctx.type = 'application/json; charset=utf-8'
@@ -119,7 +120,7 @@ router.post('refresh', '/user/refresh', addIpToSession, processFormData, async (
     ctx.session.csrfToken = newCsrfToken
     ctx.cookies.set('csrfToken', newCsrfToken, { httpOnly: true, sameSite: 'strict' })
     ctx.body = {
-      status: 'fail',
+      status: 'failed',
       message: 'csrf token mismatch',
       csrfToken: newCsrfToken,
     }
