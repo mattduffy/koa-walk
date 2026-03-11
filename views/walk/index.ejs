@@ -118,13 +118,17 @@
         <br>
         <input type="text" id="coords" size=45 readonly value="">
         <br>
-        <label for="bodyWeight">Your Body Weight</label>
-        <input type="text" id="bodyWeight" size="45" value="<%= preferences?.bodyWeight %>">
-        <br>
-        <label for="ruckWeight">Your Ruck Weight</label>
-        <input type="text" id="ruckWeight" size="45" value="<%= preferences?.ruckWeight %>">
+        <span id="ruckWeights" style="display: block; margin-top: 0.5em; margin-bottom: 1.5em;">
+          <label for="bodyWeight" style="float: left;">Body Weight
+            <input type="text" id="bodyWeightId" name="bodyWeight" size="5" value="<%= preferences?.bodyWeight %>" placeholder="# lbs">
+          </label>
+          <label for="ruckWeight" style="float: right;">Ruck Weight
+            <input type="text" id="ruckWeightId" name="ruckWeight" size="5" value="<%= preferences?.ruckWeight %>" placeholder="# lbs">
+          </label>
+          <br>
+          <span id="weightsMsg" style="display: none; color: red;"></span>
+        </span>
       </form>
-      <br>
       <h3 id="walkName"></h3>
       <button id="start">Start</button>
       <button id="stop" disabled>Stop</button><br>
@@ -671,16 +675,35 @@
         warn('You don\'t have a location, can\'t start walk.')
         return false
       }
+      const startWalkForm = document.forms.namedItem('startWalkForm')
+      const bodyWeightField = 
+        startWalkForm.children.namedItem('ruckWeights')
+          .children[0].children.namedItem('bodyWeight')
+      const bodyWeight = Number.parseInt(bodyWeightField.value)
+      if (isNaN(bodyWeight)) {
+        // warn(bodyWeight)
+        const spanMsg = startWalkForm.children.namedItem('ruckWeights')
+          .children.namedItem('weightsMsg')
+        spanMsg.style.display = 'inline'
+        spanMsg.textContent = 'Fill in your body weight.'
+        bodyWeightField.addEventListener('change', () => {
+          spanMsg.textContent = ''
+          spanMsg.style.display = 'none'
+        })
+        bodyWeightField.focus()
+        return
+      }
+      const ruckWeightField = 
+        startWalkForm.children.namedItem('ruckWeights')
+        .children[1].children.namedItem('ruckWeight')
+      const ruckWeight = Number.parseInt(ruckWeightField.value || 0)
+      const name = startWalkForm.children.namedItem('name').value
+      const location = startWalkForm.children.namedItem('location').value
+      startWalkForm.style.display = 'none'
       const startButton = document.querySelector('button#start')
       startButton.disabled = true
       const stopButton = document.querySelector('button#stop')
       stopButton.disabled = false
-      const startWalkForm = document.forms.namedItem('startWalkForm')
-      startWalkForm.style.display = 'none'
-      const name = startWalkForm.children.namedItem('name').value
-      const location = startWalkForm.children.namedItem('location').value
-      const bodyWeight = Number.parseInt(startWalkForm.children.namedItem('bodyWeight').value)
-      const ruckWeight = Number.parseInt(startWalkForm.children.namedItem('ruckWeight').value)
       const h3 = document.querySelector('h3#walkName')
       h3.textContent = name
       h3.style.display = 'block'
@@ -1002,6 +1025,8 @@
               userIcon.classList.remove('userpng')
               log('getting walk list, post user refresh')
               window.getList()
+            } else if (e.data?.status === 'annonymous') {
+              window.isAnnonymous = true 
             } else {
               warn('Failed to refresh user and update user icon.')
             }
