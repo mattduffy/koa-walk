@@ -119,10 +119,10 @@
         <input type="text" id="coords" size=45 readonly value="">
         <br>
         <span id="ruckWeights" style="display: block; margin-top: 0.5em; margin-bottom: 1.5em;">
-          <label for="bodyWeight" style="float: left;">Body Weight
+          <label style="float: left;">Body Weight
             <input type="text" id="bodyWeightId" name="bodyWeight" size="5" value="<%= preferences?.bodyWeight %>" placeholder="# lbs">
           </label>
-          <label for="ruckWeight" style="float: right;">Ruck Weight
+          <label style="float: right;">Ruck Weight
             <input type="text" id="ruckWeightId" name="ruckWeight" size="5" value="<%= preferences?.ruckWeight %>" placeholder="# lbs">
           </label>
           <br>
@@ -1547,7 +1547,13 @@
           DISPLAY_UNITS
       )}`
       const spanCaloriesBurned = document.querySelector('span#caloriesBurned')
-      if (e.walk.features[0].properties?.simpleCalories) {
+      if (e.walk.features[0].properties?.advancedCalories) {
+        spanCaloriesBurned.textContent = Math.round(e.walk.features[0].properties.advancedCalories)
+        spanCaloriesBurned.parentElement.style.display = 'block'
+      } else if (e.walk.features[0].properties?.pandolfCalories) {
+        spanCaloriesBurned.textContent = Math.round(e.walk.features[0].properties.pandolfCalories)
+        spanCaloriesBurned.parentElement.style.display = 'block'
+      } else if (e.walk.features[0].properties?.simpleCalories) {
         spanCaloriesBurned.textContent = Math.round(e.walk.features[0].properties.simpleCalories)
         spanCaloriesBurned.parentElement.style.display = 'block'
       }
