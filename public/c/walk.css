@@ -492,6 +492,8 @@ fieldset {
 
 fieldset label {
   font-size: .90em;
+  padding-left: .5em;
+  padding-right: .5em;
 }
 
 fieldset label:hover {
