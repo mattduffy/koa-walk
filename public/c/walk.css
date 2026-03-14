@@ -569,8 +569,18 @@ textarea {
     width: auto;
     max-width: 95%;
   }
+  
+  input[type=text]#bodyWeightId {
+    max-width: 3em;
+    width: 2.5em;
+  }
 
-  textarea {
+  input[type=text]#ruckWeightId {
+    max-width: 3em;
+    width: 2.5em;
+  }
+
+textarea {
     width: 100%;
     display: block;
   }
