@@ -496,6 +496,19 @@ fieldset label {
   padding-right: .5em;
 }
 
+span.hoverHilite {
+  display: inline-block;
+  width: 100%;
+  padding-right: 5px;
+
+}
+
+span.hoverHilite:hover {
+  border-radius: .5em;
+  background-color: lightblue;
+
+}
+
 fieldset label:hover {
   border-radius: .5em;
   background-color: lightblue;
