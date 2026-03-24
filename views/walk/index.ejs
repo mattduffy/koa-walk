@@ -113,6 +113,9 @@
           <li style="display: none;">
             Estimated Calories Burned: <span id="caloriesBurned" style="float: right;"></span>
           </li>
+          <li style="display: none;">
+            Ruck Weight Carried: <span id="ruckWeightCarried" style="float: right;"></span>
+          </li>
         </ul>
       </div>
     </div>
@@ -1512,117 +1515,136 @@
       window.walker.postMessage(credentials)
     }
     function finish(e) {
-      log(e.walk)
-      document.querySelector('h4#walkNameH4').textContent = 
-        e.walk.features[0].properties.name
-      document.querySelector('h5#walkLocationH5').textContent = 
-        e.walk.features[0].properties.location
-      const spanWalkDistance = document.querySelector('span#walkDistance')
-      spanWalkDistance.dataset.distance = e.walk.features[0].properties.distance
-      spanWalkDistance.textContent = `${displayUnits(
-        e.walk.features[0].properties.distance,
-        DISPLAY_UNITS
-      )}`
-      document.querySelector('span#walkDuration').textContent = `${
-        new Date(e.walk.features[0].properties.duration)
-        .toISOString().slice(11, 19)
-      }`
-      const spanStartingElevation = document.querySelector('span#startingElevation')
-      spanStartingElevation.dataset.startElevation = e.walk.features[0]
-        .properties
-        .startPosition
-        ?.altitude
-      spanStartingElevation.textContent = `${
-        displayUnits((e.walk.features[0].properties.startPosition.altitude)
-          ? e.walk.features[0].properties.startPosition.altitude
-          : 'N/A',
+      if (!e.walk) {
+        error('e.walk is undefined in showWalk.finish(e)')
+        info(e)
+      } else {
+        document.querySelector('h4#walkNameH4').textContent = 
+          e.walk.features[0].properties.name
+        document.querySelector('h5#walkLocationH5').textContent = 
+          e.walk.features[0].properties.location
+        const spanWalkDistance = document.querySelector('span#walkDistance')
+        spanWalkDistance.dataset.distance = e.walk.features[0].properties.distance
+        spanWalkDistance.textContent = `${displayUnits(
+          e.walk.features[0].properties.distance,
           DISPLAY_UNITS
-      )}`
-      const spanEndingElevation = document.querySelector('span#endingElevation')
-      spanEndingElevation.dataset.endElevation = e.walk.features[0]
-        .properties
-        .endPosition
-        ?.altitude
-      spanEndingElevation.textContent = `${
-        displayUnits((e.walk.features[0].properties.endPosition?.altitude)
-          ? e.walk.features[0].properties.endPosition.altitude
-          : 'N/A',
-          DISPLAY_UNITS
-      )}`
-      const spanChangeInElevation = document.querySelector('span#changeInElevation')
-      spanChangeInElevation.dataset.changeElevation = e.walk.features[0]
-        .properties.highestElevation
-        - e.walk.features[0]
-          .properties.startPosition.altitude
-      spanChangeInElevation.textContent = `${
-        displayUnits(e.walk.features[0].properties.highestElevation
-          // - e.walk.features[0].properties.lowestElevation,
-          - e.walk.features[0].properties.startPosition.altitude,
-          DISPLAY_UNITS
-      )}`
-      const spanCaloriesBurned = document.querySelector('span#caloriesBurned')
-      if (e.walk.features[0].properties?.advancedCalories) {
-        spanCaloriesBurned.textContent = Math.round(e.walk.features[0].properties.advancedCalories)
-        spanCaloriesBurned.parentElement.style.display = 'block'
-      } else if (e.walk.features[0].properties?.pandolfCalories) {
-        spanCaloriesBurned.textContent = Math.round(e.walk.features[0].properties.pandolfCalories)
-        spanCaloriesBurned.parentElement.style.display = 'block'
-      } else if (e.walk.features[0].properties?.simpleCalories) {
-        spanCaloriesBurned.textContent = Math.round(e.walk.features[0].properties.simpleCalories)
-        spanCaloriesBurned.parentElement.style.display = 'block'
-      }
-      divList.style.display = 'none'
-      divWalk.style.display = 'block'
-      window.walking.active = false 
-      window.walking.state.showing = true
-      window._map.showsUserLocation = false
-      window.mapkit.importGeoJSON(e.walk, {
-        itemForFeature: (overlay, geo) => {
-          log(geo)
-          overlay.data = {
-            type: 'walk',
-            name: geo.properties.name,
-            id: _id,
+        )}`
+        document.querySelector('span#walkDuration').textContent = `${
+          new Date(e.walk.features[0].properties.duration)
+          .toISOString().slice(11, 19)
+        }`
+        const spanStartingElevation = document.querySelector('span#startingElevation')
+        spanStartingElevation.dataset.startElevation = e.walk.features[0]
+          .properties
+          .startPosition
+          ?.altitude
+        spanStartingElevation.textContent = `${
+          displayUnits((e.walk.features[0].properties.startPosition.altitude)
+            ? e.walk.features[0].properties.startPosition.altitude
+            : 'N/A',
+            DISPLAY_UNITS
+        )}`
+        const spanEndingElevation = document.querySelector('span#endingElevation')
+        spanEndingElevation.dataset.endElevation = e.walk.features[0]
+          .properties
+          .endPosition
+          ?.altitude
+        spanEndingElevation.textContent = `${
+          displayUnits((e.walk.features[0].properties.endPosition?.altitude)
+            ? e.walk.features[0].properties.endPosition.altitude
+            : 'N/A',
+            DISPLAY_UNITS
+        )}`
+        const spanChangeInElevation = document.querySelector('span#changeInElevation')
+        spanChangeInElevation.dataset.changeElevation = e.walk.features[0]
+          .properties.highestElevation
+          - e.walk.features[0]
+            .properties.startPosition.altitude
+        spanChangeInElevation.textContent = `${
+          displayUnits(e.walk.features[0].properties.highestElevation
+            // - e.walk.features[0].properties.lowestElevation,
+            - e.walk.features[0].properties.startPosition.altitude,
+            DISPLAY_UNITS
+        )}`
+        const spanCaloriesBurned = document.querySelector('span#caloriesBurned')
+        if (e.walk.features[0].properties?.advancedCalories) {
+          spanCaloriesBurned.textContent = Math.round(
+            e.walk.features[0].properties.advancedCalories
+          )
+          spanCaloriesBurned.parentElement.style.display = 'block'
+        } else if (e.walk.features[0].properties?.pandolfCalories) {
+          spanCaloriesBurned.textContent = Math.round(
+            e.walk.features[0].properties.pandolfCalories
+          )
+          spanCaloriesBurned.parentElement.style.display = 'block'
+        } else if (e.walk.features[0].properties?.simpleCalories) {
+          spanCaloriesBurned.textContent = Math.round(
+            e.walk.features[0].properties.simpleCalories
+          )
+          spanCaloriesBurned.parentElement.style.display = 'block'
+        }
+        const spanRuckWeightCarried = document.querySelector('span#ruckWeightCarried')
+        // log('ruck weight', DISPLAY_UNITS, e.walk.features[0].properties.weights.ruck)
+          
+        if (e.walk.features[0].properties?.weights
+          && e.walk.features[0].properties?.weights.ruck > 0) {
+          const ruck = e.walk.features[0].properties.weights.ruck
+          spanRuckWeightCarried.textContent = displayUnits(ruck, 'lbs', 0)
+          spanRuckWeightCarried.parentElement.style.display = 'block'
+        }
+        divList.style.display = 'none'
+        divWalk.style.display = 'block'
+        window.walking.active = false 
+        window.walking.state.showing = true
+        window._map.showsUserLocation = false
+        window.mapkit.importGeoJSON(e.walk, {
+          itemForFeature: (overlay, geo) => {
+            log(geo)
+            overlay.data = {
+              type: 'walk',
+              name: geo.properties.name,
+              id: _id,
+            }
+            overlay.style = new window.mapkit.Style({
+              lineWidth: 5,
+              lineJoin: "round",
+              lineDash: [],
+              strokeColor: "royalblue"
+            })
+            return overlay
+          },
+          geoJSONDidComplete: (overlays) => {
+            window._map.showItems(overlays)
+          },
+        })
+        const startAnnotation = new window.mapkit.MarkerAnnotation(
+          new window.mapkit.Coordinate(
+            e.walk.features[0].properties.startPosition.latitude,
+            e.walk.features[0].properties.startPosition.longitude,
+          ), {
+            glyphImage: { 1: `${origin}/i/start-flag-20x20.png` },
+            glyphText: 'Start',
+            glyphColor: 'white',
+            color: 'green',
           }
-          overlay.style = new window.mapkit.Style({
-            lineWidth: 5,
-            lineJoin: "round",
-            lineDash: [],
-            strokeColor: "royalblue"
-          })
-          return overlay
-        },
-        geoJSONDidComplete: (overlays) => {
-          window._map.showItems(overlays)
-        },
-      })
-      const startAnnotation = new window.mapkit.MarkerAnnotation(
-        new window.mapkit.Coordinate(
-          e.walk.features[0].properties.startPosition.latitude,
-          e.walk.features[0].properties.startPosition.longitude,
-        ), {
-          glyphImage: { 1: `${origin}/i/start-flag-20x20.png` },
-          glyphText: 'Start',
-          glyphColor: 'white',
-          color: 'green',
-        }
-      )
-      startAnnotation.animates = false 
-      startAnnotation.data.type = 'walk'
-      const finishAnnotation = new window.mapkit.MarkerAnnotation(
-        new window.mapkit.Coordinate(
-          e.walk.features[0].properties.endPosition.latitude,
-          e.walk.features[0].properties.endPosition.longitude,
-        ), {
-          glyphImage: { 1: `${origin}/i/finish-flag.png` },
-          glyphText: 'Finish',
-          glyphColor: '#FFFFFF',
-          color: '#000000',
-        }
-      )
-      finishAnnotation.animates = false
-      finishAnnotation.data.type = 'walk' 
-      window._map.addAnnotations([ startAnnotation, finishAnnotation ])
+        )
+        startAnnotation.animates = false 
+        startAnnotation.data.type = 'walk'
+        const finishAnnotation = new window.mapkit.MarkerAnnotation(
+          new window.mapkit.Coordinate(
+            e.walk.features[0].properties.endPosition.latitude,
+            e.walk.features[0].properties.endPosition.longitude,
+          ), {
+            glyphImage: { 1: `${origin}/i/finish-flag.png` },
+            glyphText: 'Finish',
+            glyphColor: '#FFFFFF',
+            color: '#000000',
+          }
+        )
+        finishAnnotation.animates = false
+        finishAnnotation.data.type = 'walk' 
+        window._map.addAnnotations([ startAnnotation, finishAnnotation ])
+      }
     }
     window.showWalk.finish = finish
     function reset() {
@@ -1907,6 +1929,12 @@
       } else {
         return `${_x.toFixed(1)}°`
       }
+    }
+    if (/kg|lbs/i.test(_u)) {
+      if (DISPLAY_UNITS.match(/metric/i)) {
+        return `${( parseFloat(_x) / 2.2).toFixed(n)} kgs`
+      }
+      return `${_x} lbs`
     }
     if (/(metric)|(km)|(m$)/i.test(_u)) {
       if (_x < 750) {
