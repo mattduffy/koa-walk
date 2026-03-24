@@ -1582,15 +1582,17 @@
             e.walk.features[0].properties.simpleCalories
           )
           spanCaloriesBurned.parentElement.style.display = 'block'
+        } else {
+          spanCaloriesBurned.parentElement.style.display = 'none'
         }
         const spanRuckWeightCarried = document.querySelector('span#ruckWeightCarried')
-        // log('ruck weight', DISPLAY_UNITS, e.walk.features[0].properties.weights.ruck)
-          
         if (e.walk.features[0].properties?.weights
           && e.walk.features[0].properties?.weights.ruck > 0) {
           const ruck = e.walk.features[0].properties.weights.ruck
           spanRuckWeightCarried.textContent = displayUnits(ruck, 'lbs', 0)
           spanRuckWeightCarried.parentElement.style.display = 'block'
+        } else {
+          spanRuckWeightCarried.parentElement.style.display = 'none'
         }
         divList.style.display = 'none'
         divWalk.style.display = 'block'
