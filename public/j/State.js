@@ -25,10 +25,13 @@ function normalizePosition(c) {
 class State extends Subject {
   #MET = 7.5
 
+  #VERBOSE
+
   #WATER_OUNCE = 1.043
 
-  constructor(walkVersion) {
+  constructor(walkVersion, verbose = false) {
     super()
+    this.#VERBOSE = verbose
     this.state = {
       VERSION: walkVersion ?? null,
       active: false,
@@ -95,8 +98,24 @@ class State extends Subject {
    */
   simpleCalories(minutes, weights = { body: 0, ruck: 0, water: 0 }, MET = this.#MET) {
     const COMBINED = weights.body + (weights.ruck ?? 0) + (weights.water ?? 0)
-    console.log('calculating simple EE method')
-    return ((MET * 3.5 * COMBINED) / 200) * minutes
+    const { duration } = this.state
+    const timeDiff = Math.floor(Math.abs(this.state.endTime - this.state.startTime) / 60000)
+    const cals = ((MET * 3.5 * COMBINED) / 200) * minutes
+    if (this.#VERBOSE) {
+      console.log('calculating simple EE method')
+      console.log('body: ', weights.body, 'ruck: ', weights.ruck, 'h20: ', weights.water)
+      console.log('combinded weights: ', COMBINED)
+      console.log('MET', this.#MET)
+      console.log('minutes', minutes)
+      console.log(
+        `endTime ${this.state.endTime} - startTime ${this.state.startTime} =`,
+        this.state.endTime - this.state.startTime,
+      )
+      console.log('this.state.duration', duration)
+      console.log('this.state.endTime - this.state.startTime', timeDiff)
+      console.log(`((${MET} * 3.5 * ${COMBINED}) / 200) * ${minutes} = ${cals}`)
+    }
+    return cals
   }
 
   /*
@@ -240,9 +259,8 @@ class State extends Subject {
   }
 
   set currentPosition(c) {
-    console.log('setCurrentPosition(c): ', c)
+    // console.log('setCurrentPosition(c): ', c)
     this.state.currentPosition = normalizePosition(c)
-    // console.log('current position is now: ', this.state.currentPosition)
   }
 
   get currentPosition() {
@@ -285,7 +303,10 @@ class State extends Subject {
   }
 
   addPoint(p, u = 'metric', verbose = false) {
-    console.log('State::addPoint(p, u, verbose): ', p, u, verbose)
+    // console.log('State::addPoint(p, u, verbose): ', p, u, verbose)
+    if (/void/i.test(u)) {
+      console.log(u)
+    }
     const point = p
     let prev
     if (this.state.wayPoints.length > 0) {
@@ -312,13 +333,15 @@ class State extends Subject {
     if (point.altitude < this.state.lowestElevation) {
       this.state.lowestElevation = point.altitude
     }
-    console.log('point distance:', point.distance)
     if (!this.state.distance) {
       this.state.distance = point.distance
     } else {
       this.state.distance += point.distance
     }
-    console.log('total distance:', this.state.distance)
+    if (verbose) {
+      console.log('point distance:', point.distance)
+      console.log('total distance:', this.state.distance)
+    }
     this.state.wayPoints.push(point)
   }
 
@@ -392,7 +415,7 @@ class State extends Subject {
             lowestElevation: this.state.lowestElevation,
             changeInElevation: this.state.changeInElevation,
             simpleCalories: this.simpleCalories(
-              Math.floor(((this.state.duration / 1000) / 60)),
+              Math.floor((Math.abs(this.state.endTime - this.state.startTime)) / 60000),
               this.state.weights,
             ),
             pandolfCalories: null,
