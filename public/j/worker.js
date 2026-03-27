@@ -11,6 +11,7 @@ const worker = self // eslint-disable-line no-restricted-globals
 let origin
 let appName
 let VERSION
+let VERBOSE
 
 const IDB_OBJ_VER = 1
 const DBNAME = 'walks'
@@ -40,7 +41,7 @@ function openDB() {
 openDB()
 let walkState
 if (walkState === undefined) {
-  walkState = new State(VERSION)
+  walkState = new State(VERSION, VERBOSE)
 }
 console.log('worker state: ', walkState)
 
@@ -980,7 +981,12 @@ onmessage = async (e) => {
   if (e.data?.TASK) {
     switch (e.data.TASK) {
       case 'INIT':
-        ({ origin, appName, VERSION } = e.data)
+        ({
+          origin,
+          appName,
+          VERSION,
+          VERBOSE,
+        } = e.data)
         if (walkState && !walkState.version) {
           walkState.version = VERSION
         }
