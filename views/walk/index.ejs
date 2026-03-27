@@ -225,12 +225,12 @@
   const VERSION = <%= VERSION %>
   window.csrfToken = '<%= csrfToken %>'
   info('csrfToken on load: ', window.csrfToken)
-  window.walking = window.walking ?? new State(VERSION)
+  window.walking = window.walking ?? new State(VERSION, VERBOSE)
   window.walker = new Worker(
     '<%= origin %>/j/worker.js',
     { name: 'walker', type: 'module' }
   ) || null
-  window.walker.postMessage({ TASK: 'INIT', origin, appName: 'Walk', VERSION, })
+  window.walker.postMessage({ TASK: 'INIT', origin, appName: 'Walk', VERSION, VERBOSE })
   const dMap = document.querySelector('div#map')
   const dHeader = document.querySelector('header')
   const UPDATE_INTERVAL = 1000
@@ -574,7 +574,9 @@
       log('mapSingleTap(e)', e)
     }
     async function userLocationChange(e) {
-      log('userLocationChange(e)', e)
+      if (DEBUG) {
+        log('userLocationChange(e)', e)
+      }
       const isHeadingUp = document.querySelector('input#headingUpId').checked
       const evtCoords = e.coordinate
       const coords = {
@@ -1914,7 +1916,7 @@
   }
   function displayUnits(x, u = 'm', n = 1) {
     const _u = u.toLowerCase()
-    log('displayUnits(): ', x, _u, n)
+    // log('displayUnits(): ', x, _u, n)
     let _x
     if (isNaN(x)) {
       _x = 'N/A'
@@ -1996,11 +1998,13 @@
       }
     }
     if (coords) {
-      log('populateApp coords: ', coords)
-      log(
-        `updating user's coordinates: (${coords.latitude.toFixed(4)}, `
-        + `${coords.longitude.toFixed(4)})`
-      )
+      if (DEBUG) {
+        log('populateApp coords: ', coords)
+        log(
+          `updating user's coordinates: (${coords.latitude.toFixed(4)}, `
+          + `${coords.longitude.toFixed(4)})`
+        )
+      }
       const _lat = a.querySelector('p > span#lat')
       if (coords.latitude && _lat) {
         a.querySelector('p > span#lat').innerHTML = `lat ${coords.latitude.toFixed(4)}`
