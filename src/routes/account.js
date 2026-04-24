@@ -10,16 +10,19 @@ import { ulid } from 'ulid'
 // import { ObjectId } from 'mongodb'
 import path from 'node:path'
 import {
-  mkdir, rename, writeFile, stat,
+  // mkdir, rename, writeFile, stat,
+  // mkdir,
+  rename,
+  // writeFile,
 } from 'node:fs/promises'
-import {
-  // Blog,
-  Blogs,
-  slugify,
-} from '@mattduffy/blogs'
-import { Album } from '@mattduffy/albums'
-import { Albums } from '@mattduffy/albums/Albums'
-import { Unpacker } from '@mattduffy/unpacker'
+// import {
+//   // Blog,
+//   Blogs,
+//   // slugify,
+// } from '@mattduffy/blogs'
+// import { Album } from '@mattduffy/albums'
+// import { Albums } from '@mattduffy/albums/Albums'
+// import { Unpacker } from '@mattduffy/unpacker'
 import {
   // addIpToSession,
   doTokensMatch,
@@ -32,7 +35,7 @@ import {
   // AdminUser,
 } from '../models/users.js'
 
-import { redis } from '../daos/impl/redis/redis-client.js'
+// import { redis } from '../daos/impl/redis/redis-client.js'
 
 const USERS = 'users'
 const accountLog = _log.extend('account')
@@ -304,1088 +307,1091 @@ router.get('accountDecryptData', '/account/decrypt/:ciphertext', hasFlash, async
   console.log(ctx)
 })
 
-router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
-  const log = accountLog.extend('GET-account-blog')
-  const error = accountError.extend('GET-account-blog')
-  if (!ctx.state?.isAuthenticated) {
-    error('User is not authenticated.  Redirect to /')
-    ctx.status = 401
-    ctx.redirect('/')
-  } else {
-    log(`View ${ctx.state.sessionUser.username}'s account details.`)
-    log('flash %O', ctx.flash)
-    const db = ctx.state.mongodb.client.db()
-    // Get list of blogs, if they exist
-    const { username } = ctx.state.sessionUser
-    log(`username for blog owner: ${username}`)
-    const blog = await Blogs.getByUsername(db, username, redis) ?? {}
-    log(`found ${username}'s blog: ${blog.title}`)
-    const posts = await blog.posts(0, 'all')
-    log(`found ${posts.length} posts. `, posts)
-    const csrfToken = ulid()
-    ctx.session.csrfToken = csrfToken
-    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-    const locals = {
-      sessionUser: ctx.state.sessionUser,
-      blog,
-      posts,
-      body: ctx.body,
-      view: ctx.flash.view ?? {},
-      edit: ctx.flash.edit ?? {},
-      // origin: `${ctx.request.origin}`,
-      jwtAccess: (ctx.state.sessionUser.jwts).token,
-      csrfToken,
-      // public: pub,
-      // private: pri,
-      isAuthenticated: ctx.state.isAuthenticated,
-      title: `${ctx.app.site}: View Blog Details`,
-    }
-    ctx.status = 200
-    await ctx.render('account/user-blog-edit', locals)
-  }
-})
+// router.get('accountBlog', '/account/blog', hasFlash, async (ctx) => {
+//   const log = accountLog.extend('GET-account-blog')
+//   const error = accountError.extend('GET-account-blog')
+//   if (!ctx.state?.isAuthenticated) {
+//     error('User is not authenticated.  Redirect to /')
+//     ctx.status = 401
+//     ctx.redirect('/')
+//   } else {
+//     log(`View ${ctx.state.sessionUser.username}'s account details.`)
+//     log('flash %O', ctx.flash)
+//     const db = ctx.state.mongodb.client.db()
+//     // Get list of blogs, if they exist
+//     const { username } = ctx.state.sessionUser
+//     log(`username for blog owner: ${username}`)
+//     const blog = await Blogs.getByUsername(db, username, redis) ?? {}
+//     log(`found ${username}'s blog: ${blog.title}`)
+//     const posts = await blog.posts(0, 'all')
+//     log(`found ${posts.length} posts. `, posts)
+//     const csrfToken = ulid()
+//     ctx.session.csrfToken = csrfToken
+//     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+//     const locals = {
+//       sessionUser: ctx.state.sessionUser,
+//       blog,
+//       posts,
+//       body: ctx.body,
+//       view: ctx.flash.view ?? {},
+//       edit: ctx.flash.edit ?? {},
+//       // origin: `${ctx.request.origin}`,
+//       jwtAccess: (ctx.state.sessionUser.jwts).token,
+//       csrfToken,
+//       // public: pub,
+//       // private: pri,
+//       isAuthenticated: ctx.state.isAuthenticated,
+//       title: `${ctx.app.site}: View Blog Details`,
+//     }
+//     ctx.status = 200
+//     await ctx.render('account/user-blog-edit', locals)
+//   }
+// })
 
-router.post(
-  'accountBlogEdit',
-  '/account/blog/edit',
-  hasFlash,
-  processFormData,
-  async (ctx) => {
-    const log = accountLog.extend('POST-account-blog-edit')
-    const error = accountError.extend('POST-account-blog-edit')
-    if (!isAsyncRequest(ctx)) {
-      ctx.status = 400
-      ctx.redirect('/')
-    }
-    let body
-    let status
-    if (!ctx.state?.isAuthenticated) {
-      error('User is not authenticated.  Redirect to /')
-      ctx.status = 401
-      ctx.redirect('/')
-    } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-      error(
-        `CSR-Token mismatch: header: ${ctx.cookies.get('csrfToken')} - `
-        + `session:${ctx.session.csrfToken}`,
-      )
-      status = 401
-      body = { error: 'csrf token mismatch' }
-    } else {
-      log(ctx.request.body)
-      log(ctx.request.files)
-      let blog
-      const blogId = (!ctx.request.body.id?.[0]?.length) ? null : ctx.request.body.id[0]
-      const blogTitle = ctx.request.body.title?.[0] ?? ''
-      const blogDescription = ctx.request.body.description[0] ?? ''
-      const blogPublic = (ctx.request.body?.public?.[0]) // eslint-disable-line
-        ? ((ctx.request.body.public[0] === 'true') ? true : false) // eslint-disable-line
-        : false // eslint-disable-line
-      log(`blog access: ${blogPublic}`)
-      const blogKeywords = (ctx.request.body?.keywords)
-        ? Array.from(ctx.request.body?.keywords?.[0]?.split(','))
-        : []
-      if (doTokensMatch(ctx)) {
-        const blogDirPath = path.join(
-          ctx.app.dirs.public.dir,
-          ctx.state.sessionUser.publicDir,
-          'blog',
-        )
-        let blogDir
-        let smallImg
-        let smallImgPath
-        let bigImg
-        let bigImgPath
-        try {
-          log(blogDirPath)
-          blogDir = await mkdir(path.resolve(blogDirPath), { recursive: true })
-          if (blogDir !== false) {
-            log(`blogDir exists?: (${blogDir}) ${blogDirPath}`)
-          }
-          if (ctx.request?.files && ctx.request.files?.headerImageSmall) {
-            const originalNameSmall = ctx.request.files.headerImageSmall[0].originalFilename
-            smallImg = path.resolve(blogDirPath, originalNameSmall)
-            await rename(ctx.request.files.headerImageSmall[0].filepath, smallImg)
-            smallImgPath = `${ctx.state.sessionUser.publicDir}blog/${originalNameSmall}`
-          }
-          if (ctx.request?.files && ctx.request.files?.headerImageBig) {
-            const originalNameBig = ctx.request.files.headerImageBig[0].originalFilename
-            bigImg = path.resolve(blogDirPath, originalNameBig)
-            bigImgPath = `${ctx.state.sessionUser.publicDir}blog/${originalNameBig}`
-            await rename(ctx.request.files.headerImageBig[0].filepath, bigImg)
-          }
-        } catch (e) {
-          const msg = `Failed to create (or it doesn't exist) ${blogDirPath}`
-          error(msg)
-          error(e)
-          throw new Error(msg, { cause: e })
-        }
-        try {
-          const db = ctx.state.mongodb.client.db()
-          const o = {
-            newBlog: (!blogId?.length),
-            blogOwnerId: ctx.state.sessionUser.id,
-            blogOwnerName: ctx.state.sessionUser.username,
-            blogId,
-            blogTitle,
-            blogDescription,
-            blogKeywords,
-            public: blogPublic,
-          }
-          if (smallImgPath) {
-            o.headerImageSmall = smallImgPath
-          }
-          if (bigImgPath) {
-            o.headerImageBig = bigImgPath
-          }
-          if (!blogId) {
-            blog = await Blogs.newBlog(db, o, redis)
-            blog.url = blogTitle
-          } else {
-            blog = await Blogs.getById(db, blogId, redis)
-            blog.public = blogPublic
-            blog.title = blogTitle
-            blog.url = blogTitle
-            blog.description = blogDescription
-            blog.keywords = blogKeywords
-            if (smallImgPath) {
-              blog.headerImageSmall = smallImgPath
-            }
-            if (bigImgPath) {
-              blog.headerImageBig = bigImgPath
-            }
-          }
-          const saved = await blog.save()
-          log(`blog slug: ${blog.url}`)
-          status = 200
-          body = { status: 'ok', saved, blog }
-        } catch (e) {
-          error(e)
-          status = 500
-          body = { msg: 'failed to update blog.' }
-        }
-      }
-    }
-    ctx.status = status
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = body
-  },
-)
+// router.post(
+//   'accountBlogEdit',
+//   '/account/blog/edit',
+//   hasFlash,
+//   processFormData,
+//   async (ctx) => {
+//     const log = accountLog.extend('POST-account-blog-edit')
+//     const error = accountError.extend('POST-account-blog-edit')
+//     if (!isAsyncRequest(ctx)) {
+//       ctx.status = 400
+//       ctx.redirect('/')
+//     }
+//     let body
+//     let status
+//     if (!ctx.state?.isAuthenticated) {
+//       error('User is not authenticated.  Redirect to /')
+//       ctx.status = 401
+//       ctx.redirect('/')
+//     } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
+//       error(
+//         `CSR-Token mismatch: header: ${ctx.cookies.get('csrfToken')} - `
+//         + `session:${ctx.session.csrfToken}`,
+//       )
+//       status = 401
+//       body = { error: 'csrf token mismatch' }
+//     } else {
+//       log(ctx.request.body)
+//       log(ctx.request.files)
+//       let blog
+//       const blogId = (!ctx.request.body.id?.[0]?.length) ? null : ctx.request.body.id[0]
+//       const blogTitle = ctx.request.body.title?.[0] ?? ''
+//       const blogDescription = ctx.request.body.description[0] ?? ''
+//       const blogPublic = (ctx.request.body?.public?.[0]) // eslint-disable-line
+//         ? ((ctx.request.body.public[0] === 'true') ? true : false) // eslint-disable-line
+//         : false // eslint-disable-line
+//       log(`blog access: ${blogPublic}`)
+//       const blogKeywords = (ctx.request.body?.keywords)
+//         ? Array.from(ctx.request.body?.keywords?.[0]?.split(','))
+//         : []
+//       if (doTokensMatch(ctx)) {
+//         const blogDirPath = path.join(
+//           ctx.app.dirs.public.dir,
+//           ctx.state.sessionUser.publicDir,
+//           'blog',
+//         )
+//         let blogDir
+//         let smallImg
+//         let smallImgPath
+//         let bigImg
+//         let bigImgPath
+//         try {
+//           log(blogDirPath)
+//           blogDir = await mkdir(path.resolve(blogDirPath), { recursive: true })
+//           if (blogDir !== false) {
+//             log(`blogDir exists?: (${blogDir}) ${blogDirPath}`)
+//           }
+//           if (ctx.request?.files && ctx.request.files?.headerImageSmall) {
+//             const originalNameSmall = ctx.request.files.headerImageSmall[0].originalFilename
+//             smallImg = path.resolve(blogDirPath, originalNameSmall)
+//             await rename(ctx.request.files.headerImageSmall[0].filepath, smallImg)
+//             smallImgPath = `${ctx.state.sessionUser.publicDir}blog/${originalNameSmall}`
+//           }
+//           if (ctx.request?.files && ctx.request.files?.headerImageBig) {
+//             const originalNameBig = ctx.request.files.headerImageBig[0].originalFilename
+//             bigImg = path.resolve(blogDirPath, originalNameBig)
+//             bigImgPath = `${ctx.state.sessionUser.publicDir}blog/${originalNameBig}`
+//             await rename(ctx.request.files.headerImageBig[0].filepath, bigImg)
+//           }
+//         } catch (e) {
+//           const msg = `Failed to create (or it doesn't exist) ${blogDirPath}`
+//           error(msg)
+//           error(e)
+//           throw new Error(msg, { cause: e })
+//         }
+//         try {
+//           const db = ctx.state.mongodb.client.db()
+//           const o = {
+//             newBlog: (!blogId?.length),
+//             blogOwnerId: ctx.state.sessionUser.id,
+//             blogOwnerName: ctx.state.sessionUser.username,
+//             blogId,
+//             blogTitle,
+//             blogDescription,
+//             blogKeywords,
+//             public: blogPublic,
+//           }
+//           if (smallImgPath) {
+//             o.headerImageSmall = smallImgPath
+//           }
+//           if (bigImgPath) {
+//             o.headerImageBig = bigImgPath
+//           }
+//           if (!blogId) {
+//             blog = await Blogs.newBlog(db, o, redis)
+//             blog.url = blogTitle
+//           } else {
+//             blog = await Blogs.getById(db, blogId, redis)
+//             blog.public = blogPublic
+//             blog.title = blogTitle
+//             blog.url = blogTitle
+//             blog.description = blogDescription
+//             blog.keywords = blogKeywords
+//             if (smallImgPath) {
+//               blog.headerImageSmall = smallImgPath
+//             }
+//             if (bigImgPath) {
+//               blog.headerImageBig = bigImgPath
+//             }
+//           }
+//           const saved = await blog.save()
+//           log(`blog slug: ${blog.url}`)
+//           status = 200
+//           body = { status: 'ok', saved, blog }
+//         } catch (e) {
+//           error(e)
+//           status = 500
+//           body = { msg: 'failed to update blog.' }
+//         }
+//       }
+//     }
+//     ctx.status = status
+//     ctx.type = 'application/json; charset=utf-8'
+//     ctx.body = body
+//   },
+// )
 
-router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) => {
-  const log = accountLog.extend('GET-account-blog-list')
-  const error = accountError.extend('GET-account-blog-list')
-  if (!isAsyncRequest(ctx)) {
-    ctx.status = 400
-    ctx.redirect('/')
-  }
-  let body
-  let status
-  if (!ctx.state?.isAuthenticated) {
-    error('User is not authenticated.  Redirect to /')
-    ctx.status = 401
-    ctx.redirect('/')
-  }
-  if (doTokensMatch(ctx)) {
-    const csrfToken = ulid()
-    ctx.session.csrfToken = csrfToken
-    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-    try {
-      const db = ctx.state.mongodb.client.db()
-      const blog = await Blogs.getByCreator(db, ctx.state.sessionUser.username, redis)
-      const posts = await blog.getPosts()
-      log(`blog slug: ${blog.url}`)
-      status = 200
-      body = { status: 'ok', posts }
-    } catch (e) {
-      error(e)
-      status = 500
-      body = { msg: 'failed to get blog posts.' }
-    }
-  }
-  ctx.status = status
-  ctx.type = 'application/json; charset=utf-8'
-  ctx.body = body
-})
+// router.get('accountListBlogPosts', '/account/blog/posts', hasFlash, async (ctx) => {
+//   const log = accountLog.extend('GET-account-blog-list')
+//   const error = accountError.extend('GET-account-blog-list')
+//   if (!isAsyncRequest(ctx)) {
+//     ctx.status = 400
+//     ctx.redirect('/')
+//   }
+//   let body
+//   let status
+//   if (!ctx.state?.isAuthenticated) {
+//     error('User is not authenticated.  Redirect to /')
+//     ctx.status = 401
+//     ctx.redirect('/')
+//   }
+//   if (doTokensMatch(ctx)) {
+//     const csrfToken = ulid()
+//     ctx.session.csrfToken = csrfToken
+//     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+//     try {
+//       const db = ctx.state.mongodb.client.db()
+//       const blog = await Blogs.getByCreator(db, ctx.state.sessionUser.username, redis)
+//       const posts = await blog.getPosts()
+//       log(`blog slug: ${blog.url}`)
+//       status = 200
+//       body = { status: 'ok', posts }
+//     } catch (e) {
+//       error(e)
+//       status = 500
+//       body = { msg: 'failed to get blog posts.' }
+//     }
+//   }
+//   ctx.status = status
+//   ctx.type = 'application/json; charset=utf-8'
+//   ctx.body = body
+// })
 
-router.post(
-  'accountBlogPostNew-POST',
-  '/account/blog/post/save',
-  hasFlash,
-  processFormData,
-  async (ctx) => {
-    const log = accountLog.extend('POST-account-blog-post-save')
-    const error = accountError.extend('POST-account-blog-post-save')
-    if (!ctx.state.isAsyncRequest) {
-      error('Tried to directly access route rather than via async request.')
-      ctx.status = 400
-      ctx.redirect('/')
-    }
-    if (!ctx.state?.isAuthenticated) {
-      error('User is not authenticated.  Redirect to /')
-      ctx.status = 401
-      ctx.redirect('/')
-    }
-    let status
-    let body
-    if (doTokensMatch(ctx)) {
-      log(ctx.request.body)
-      log(ctx.request.files)
-      let blog
-      let post
-      let createPostAlbum
-      let album
-      let smallImg
-      const postId = ctx.request.body?.postId[0] ?? null
-      const blogId = ctx.request.body?.blogId[0] ?? null
-      const postTitle = ctx.request.body?.postTitle?.[0] ?? null
-      const postSlug = (ctx.request.body?.postSlug?.[0] === '')
-        ? slugify(postTitle)
-        : slugify(ctx.request.body.postSlug[0])
-      const postDescription = ctx.request.body?.postDescription?.[0] ?? null
-      const postContent = ctx.request.body?.postContent?.[0] ?? null
-      const postKeywords = (ctx.request.body?.postKeywords)
-        ? Array.from(ctx.request.body.postKeywords[0].split(','))
-        : []
-      const postPublic = (ctx.request.body?.postPublic) // eslint-disable-line
-        ? ((ctx.request.body.postPublic[0] === 'true') ? true : false) // eslint-disable-line
-        : false // eslint-disable-line
-      if (ctx.request.files?.postPreviewImageSmall) {
-        [smallImg] = ctx.request.files.postPreviewImageSmall
-        const originalNameSmall = smallImg.originalFilename
-        log(originalNameSmall)
-        createPostAlbum = true
-      }
-      try {
-        blog = await Blogs.getById(ctx.state.mongodb.client.db(), blogId, redis)
-        log(`${blog}`)
-        if (!postId) {
-          const newPost = {
-            postAuthors: [
-              { author: ctx.state.sessionUser.username, id: ctx.state.sessionUser.id },
-            ],
-            postTitle,
-            postDescription,
-            postContent,
-            postKeywords,
-            postSlug,
-          }
-          if (createPostAlbum) {
-            newPost.postAlbumName = postSlug
-          }
-          post = await blog.createPost(newPost)
-          log('finally, newly created post: ', post.id)
-          const c = {
-            owner: ctx.state.sessionUser.username,
-            rootDir: `${ctx.app.root}/public/${ctx.state.sessionUser.publicDir}galleries/`,
-            collection: ctx.state.mongodb.client.db().collection('albums'),
-          }
-          log('creating post album config: ', c)
-          album = await post.createAlbum(c)
-          const save = await album.save()
-          log(`first album save: ${album}`)
-          log(save)
-          log(`album id? ${album.id}`)
-          post.albumId = album.id
-          log(`${post}`)
-          const originalFilenameCleaned = sanitizeFilename(smallImg.originalFilename)
-          const newImageAlbumDirPath = path.join(album.albumDir, originalFilenameCleaned)
-          log('uploaded filepath:                 ', smallImg.filepath)
-          log('uploaded originalFilename:         ', smallImg.originalFilename)
-          log('uploeded originalFilename cleaned: ', originalFilenameCleaned)
-          log('new img + album dir path:          ', newImageAlbumDirPath)
-          try {
-            await rename(smallImg.filepath, newImageAlbumDirPath)
-            await stat(newImageAlbumDirPath)
-          } catch (e) {
-            const msg = `Failed to move ${smallImg.originalFilename} `
-            + `into album dir: ${album.albumDir}`
-            error(msg)
-            error(e)
-            ctx.type = 'application/json; charset=utf-8'
-            status = 500
-            body = { status: 500, msg, cause: e.message }
-          }
-          const skipSizes = true
-          const result = await album.addImage(newImageAlbumDirPath, skipSizes)
-          log('addImage result: ', result)
-          const url = `${album.imageUrl}/${originalFilenameCleaned}`
-          post.previewImg = url
-          const saved = await post.save()
-          log(saved)
-          log(`${post}`)
-          const update = {
-            id: post.id,
-            title: post.title,
-            slug: post.slug,
-            createOn: post.createdOn,
-            editedOn: post.editedOn,
-            public: post.public,
-            img: post.previewImg,
-          }
-          const x = await blog.updatePostArray(update)
-          log(`${x}`)
-          log(await album.save())
-        } else {
-          log(`updating existing blog post: ${postId}, ${postTitle}`)
-          const updatePost = {
-            _id: postId,
-            blogId,
-            postTitle,
-            postDescription,
-            postContent,
-            postKeywords,
-            postSlug,
-            postPublic,
-          }
-          log(updatePost)
-          post = await blog.updatePost(updatePost)
-          log('updated post: ', post.id, post.title, post.slug)
-        }
-        status = 200
-        body = { msg: 'sucess', post: post.postJson }
-      } catch (e) {
-        error(e)
-        status = 500
-        body = { msg: 'Failed to create new post.' }
-      }
-    }
-    ctx.status = status
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = body
-  },
-)
+// router.post(
+//   'accountBlogPostNew-POST',
+//   '/account/blog/post/save',
+//   hasFlash,
+//   processFormData,
+//   async (ctx) => {
+//     const log = accountLog.extend('POST-account-blog-post-save')
+//     const error = accountError.extend('POST-account-blog-post-save')
+//     if (!ctx.state.isAsyncRequest) {
+//       error('Tried to directly access route rather than via async request.')
+//       ctx.status = 400
+//       ctx.redirect('/')
+//     }
+//     if (!ctx.state?.isAuthenticated) {
+//       error('User is not authenticated.  Redirect to /')
+//       ctx.status = 401
+//       ctx.redirect('/')
+//     }
+//     let status
+//     let body
+//     if (doTokensMatch(ctx)) {
+//       log(ctx.request.body)
+//       log(ctx.request.files)
+//       let blog
+//       let post
+//       let createPostAlbum
+//       let album
+//       let smallImg
+//       const postId = ctx.request.body?.postId[0] ?? null
+//       const blogId = ctx.request.body?.blogId[0] ?? null
+//       const postTitle = ctx.request.body?.postTitle?.[0] ?? null
+//       const postSlug = (ctx.request.body?.postSlug?.[0] === '')
+//         ? slugify(postTitle)
+//         : slugify(ctx.request.body.postSlug[0])
+//       const postDescription = ctx.request.body?.postDescription?.[0] ?? null
+//       const postContent = ctx.request.body?.postContent?.[0] ?? null
+//       const postKeywords = (ctx.request.body?.postKeywords)
+//         ? Array.from(ctx.request.body.postKeywords[0].split(','))
+//         : []
+//       const postPublic = (ctx.request.body?.postPublic) // eslint-disable-line
+//         ? ((ctx.request.body.postPublic[0] === 'true') ? true : false) // eslint-disable-line
+//         : false // eslint-disable-line
+//       if (ctx.request.files?.postPreviewImageSmall) {
+//         [smallImg] = ctx.request.files.postPreviewImageSmall
+//         const originalNameSmall = smallImg.originalFilename
+//         log(originalNameSmall)
+//         createPostAlbum = true
+//       }
+//       try {
+//         blog = await Blogs.getById(ctx.state.mongodb.client.db(), blogId, redis)
+//         log(`${blog}`)
+//         if (!postId) {
+//           const newPost = {
+//             postAuthors: [
+//               { author: ctx.state.sessionUser.username, id: ctx.state.sessionUser.id },
+//             ],
+//             postTitle,
+//             postDescription,
+//             postContent,
+//             postKeywords,
+//             postSlug,
+//           }
+//           if (createPostAlbum) {
+//             newPost.postAlbumName = postSlug
+//           }
+//           post = await blog.createPost(newPost)
+//           log('finally, newly created post: ', post.id)
+//           const c = {
+//             owner: ctx.state.sessionUser.username,
+//             rootDir: `${ctx.app.root}/public/${ctx.state.sessionUser.publicDir}galleries/`,
+//             collection: ctx.state.mongodb.client.db().collection('albums'),
+//           }
+//           log('creating post album config: ', c)
+//           album = await post.createAlbum(c)
+//           const save = await album.save()
+//           log(`first album save: ${album}`)
+//           log(save)
+//           log(`album id? ${album.id}`)
+//           post.albumId = album.id
+//           log(`${post}`)
+//           const originalFilenameCleaned = sanitizeFilename(smallImg.originalFilename)
+//           const newImageAlbumDirPath = path.join(album.albumDir, originalFilenameCleaned)
+//           log('uploaded filepath:                 ', smallImg.filepath)
+//           log('uploaded originalFilename:         ', smallImg.originalFilename)
+//           log('uploeded originalFilename cleaned: ', originalFilenameCleaned)
+//           log('new img + album dir path:          ', newImageAlbumDirPath)
+//           try {
+//             await rename(smallImg.filepath, newImageAlbumDirPath)
+//             await stat(newImageAlbumDirPath)
+//           } catch (e) {
+//             const msg = `Failed to move ${smallImg.originalFilename} `
+//             + `into album dir: ${album.albumDir}`
+//             error(msg)
+//             error(e)
+//             ctx.type = 'application/json; charset=utf-8'
+//             status = 500
+//             body = { status: 500, msg, cause: e.message }
+//           }
+//           const skipSizes = true
+//           const result = await album.addImage(newImageAlbumDirPath, skipSizes)
+//           log('addImage result: ', result)
+//           const url = `${album.imageUrl}/${originalFilenameCleaned}`
+//           post.previewImg = url
+//           const saved = await post.save()
+//           log(saved)
+//           log(`${post}`)
+//           const update = {
+//             id: post.id,
+//             title: post.title,
+//             slug: post.slug,
+//             createOn: post.createdOn,
+//             editedOn: post.editedOn,
+//             public: post.public,
+//             img: post.previewImg,
+//           }
+//           const x = await blog.updatePostArray(update)
+//           log(`${x}`)
+//           log(await album.save())
+//         } else {
+//           log(`updating existing blog post: ${postId}, ${postTitle}`)
+//           const updatePost = {
+//             _id: postId,
+//             blogId,
+//             postTitle,
+//             postDescription,
+//             postContent,
+//             postKeywords,
+//             postSlug,
+//             postPublic,
+//           }
+//           log(updatePost)
+//           post = await blog.updatePost(updatePost)
+//           log('updated post: ', post.id, post.title, post.slug)
+//         }
+//         status = 200
+//         body = { msg: 'sucess', post: post.postJson }
+//       } catch (e) {
+//         error(e)
+//         status = 500
+//         body = { msg: 'Failed to create new post.' }
+//       }
+//     }
+//     ctx.status = status
+//     ctx.type = 'application/json; charset=utf-8'
+//     ctx.body = body
+//   },
+// )
 
-router.get('accountBlogPostNew', '/account/blog/post/new', hasFlash, async (ctx) => {
-  const log = accountLog.extend('GET-account-blog-post-new')
-  const error = accountError.extend('GET-account-blog-post-new')
-  if (!ctx.state?.isAuthenticated) {
-    error('User is not authenticated.  Redirect to /')
-    ctx.status = 401
-    ctx.redirect('/')
-  } else {
-    log(`Creating ${ctx.state.sessionUser.username}'s blog post.`)
-    log('flash %O', ctx.flash)
-    const db = ctx.state.mongodb.client.db()
-    // Get list of blogs, if they exist
-    const { username } = ctx.state.sessionUser
-    log(`username for blog owner: ${username}`)
-    const blog = await Blogs.getByUsername(db, username, redis) ?? {}
-    log(`found ${username}'s blog: ${blog.name}`)
-    const post = {}
-    const csrfToken = ulid()
-    ctx.session.csrfToken = csrfToken
-    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-    const locals = {
-      sessionUser: ctx.state.sessionUser,
-      blog,
-      post,
-      body: ctx.body,
-      view: ctx.flash.view ?? {},
-      edit: ctx.flash.edit ?? {},
-      // origin: `${ctx.request.origin}`,
-      jwtAccess: (ctx.state.sessionUser.jwts).token,
-      csrfToken,
-      isAuthenticated: ctx.state.isAuthenticated,
-      title: `${ctx.app.site}: New Blog Post`,
-    }
-    ctx.status = 200
-    await ctx.render('account/user-blog-post-new', locals)
-  }
-})
+// router.get('accountBlogPostNew', '/account/blog/post/new', hasFlash, async (ctx) => {
+//   const log = accountLog.extend('GET-account-blog-post-new')
+//   const error = accountError.extend('GET-account-blog-post-new')
+//   if (!ctx.state?.isAuthenticated) {
+//     error('User is not authenticated.  Redirect to /')
+//     ctx.status = 401
+//     ctx.redirect('/')
+//   } else {
+//     log(`Creating ${ctx.state.sessionUser.username}'s blog post.`)
+//     log('flash %O', ctx.flash)
+//     const db = ctx.state.mongodb.client.db()
+//     // Get list of blogs, if they exist
+//     const { username } = ctx.state.sessionUser
+//     log(`username for blog owner: ${username}`)
+//     const blog = await Blogs.getByUsername(db, username, redis) ?? {}
+//     log(`found ${username}'s blog: ${blog.name}`)
+//     const post = {}
+//     const csrfToken = ulid()
+//     ctx.session.csrfToken = csrfToken
+//     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+//     const locals = {
+//       sessionUser: ctx.state.sessionUser,
+//       blog,
+//       post,
+//       body: ctx.body,
+//       view: ctx.flash.view ?? {},
+//       edit: ctx.flash.edit ?? {},
+//       // origin: `${ctx.request.origin}`,
+//       jwtAccess: (ctx.state.sessionUser.jwts).token,
+//       csrfToken,
+//       isAuthenticated: ctx.state.isAuthenticated,
+//       title: `${ctx.app.site}: New Blog Post`,
+//     }
+//     ctx.status = 200
+//     await ctx.render('account/user-blog-post-new', locals)
+//   }
+// })
 
-router.get('accountBlogPostNew', '/account/blog/post/:id', hasFlash, async (ctx) => {
-  const log = accountLog.extend(`GET-account-blog-post-${ctx.params.id}`)
-  const error = accountError.extend(`GET-account-blog-post-${ctx.params.id}`)
-  if (!ctx.state?.isAuthenticated) {
-    error('User is not authenticated.  Redirect to /')
-    ctx.status = 401
-    ctx.redirect('/')
-  } else {
-    log(`Editing ${ctx.state.sessionUser.username}'s blog post.`)
-    log('flash %O', ctx.flash)
-    const db = ctx.state.mongodb.client.db()
-    // Get list of blogs, if they exist
-    const { username } = ctx.state.sessionUser
-    const blog = await Blogs.getByUsername(db, username, redis) ?? {}
-    log(`found ${username}'s blog: ${blog.title}`)
-    const post = await blog.getPost(ctx.params.id)
-    if (!post) {
-      throw new Error()
-    }
-    const csrfToken = ulid()
-    ctx.session.csrfToken = csrfToken
-    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-    const locals = {
-      sessionUser: ctx.state.sessionUser,
-      blog,
-      post,
-      body: ctx.body,
-      view: ctx.flash.view ?? {},
-      edit: ctx.flash.edit ?? {},
-      // origin: `${ctx.request.origin}`,
-      jwtAccess: (ctx.state.sessionUser.jwts).token,
-      csrfToken,
-      isAuthenticated: ctx.state.isAuthenticated,
-      title: `${ctx.app.site}: New Blog Post`,
-    }
-    ctx.status = 200
-    await ctx.render('account/user-blog-post-edit', locals)
-  }
-})
+// router.get('accountBlogPostNew', '/account/blog/post/:id', hasFlash, async (ctx) => {
+//   const log = accountLog.extend(`GET-account-blog-post-${ctx.params.id}`)
+//   const error = accountError.extend(`GET-account-blog-post-${ctx.params.id}`)
+//   if (!ctx.state?.isAuthenticated) {
+//     error('User is not authenticated.  Redirect to /')
+//     ctx.status = 401
+//     ctx.redirect('/')
+//   } else {
+//     log(`Editing ${ctx.state.sessionUser.username}'s blog post.`)
+//     log('flash %O', ctx.flash)
+//     const db = ctx.state.mongodb.client.db()
+//     // Get list of blogs, if they exist
+//     const { username } = ctx.state.sessionUser
+//     const blog = await Blogs.getByUsername(db, username, redis) ?? {}
+//     log(`found ${username}'s blog: ${blog.title}`)
+//     const post = await blog.getPost(ctx.params.id)
+//     if (!post) {
+//       throw new Error()
+//     }
+//     const csrfToken = ulid()
+//     ctx.session.csrfToken = csrfToken
+//     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+//     const locals = {
+//       sessionUser: ctx.state.sessionUser,
+//       blog,
+//       post,
+//       body: ctx.body,
+//       view: ctx.flash.view ?? {},
+//       edit: ctx.flash.edit ?? {},
+//       // origin: `${ctx.request.origin}`,
+//       jwtAccess: (ctx.state.sessionUser.jwts).token,
+//       csrfToken,
+//       isAuthenticated: ctx.state.isAuthenticated,
+//       title: `${ctx.app.site}: New Blog Post`,
+//     }
+//     ctx.status = 200
+//     await ctx.render('account/user-blog-post-edit', locals)
+//   }
+// })
 
-router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) => {
-  const log = accountLog.extend('GET-account-galleries-edit')
-  const error = accountError.extend('GET-account-galleries-edit')
-  if (!ctx.state?.isAuthenticated) {
-    error('User is not authenticated.  Redirect to /')
-    ctx.status = 401
-    ctx.redirect('/')
-  } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-    error(
-      `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
-      + `session:${ctx.session.csrfToken}`,
-    )
-    ctx.status = 401
-    ctx.body = { error: 'csrf token mismatch' }
-  } else {
-    const csrfToken = ulid()
-    ctx.session.csrfToken = csrfToken
-    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-    const db = ctx.state.mongodb.client.db()
-    const album = await Albums.getById(db, ctx.params.id, redis)
-    log(album)
-    log(`album keywords: ${album.keywords}`)
-    const locals = {
-      album,
-      sesseionUser: ctx.state.sessionUser,
-      body: ctx.body,
-      view: ctx.flash.view ?? {},
-      edit: ctx.flash.edit ?? {},
-      // origin: `${ctx.request.origin}`,
-      jwtAccess: (ctx.state.sessionUser.jwts).token,
-      csrfToken,
-      title: `${ctx.app.site}: View ALbum Details`,
-    }
-    await ctx.render('account/user-gallery-edit', locals)
-  }
-})
+// router.get('accountEditGallery', '/account/gallery/:id', hasFlash, async (ctx) => {
+//   const log = accountLog.extend('GET-account-galleries-edit')
+//   const error = accountError.extend('GET-account-galleries-edit')
+//   if (!ctx.state?.isAuthenticated) {
+//     error('User is not authenticated.  Redirect to /')
+//     ctx.status = 401
+//     ctx.redirect('/')
+//   } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
+//     error(
+//       `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
+//       + `session:${ctx.session.csrfToken}`,
+//     )
+//     ctx.status = 401
+//     ctx.body = { error: 'csrf token mismatch' }
+//   } else {
+//     const csrfToken = ulid()
+//     ctx.session.csrfToken = csrfToken
+//     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+//     const db = ctx.state.mongodb.client.db()
+//     const album = await Albums.getById(db, ctx.params.id, redis)
+//     log(album)
+//     log(`album keywords: ${album.keywords}`)
+//     const locals = {
+//       album,
+//       sesseionUser: ctx.state.sessionUser,
+//       body: ctx.body,
+//       view: ctx.flash.view ?? {},
+//       edit: ctx.flash.edit ?? {},
+//       // origin: `${ctx.request.origin}`,
+//       jwtAccess: (ctx.state.sessionUser.jwts).token,
+//       csrfToken,
+//       title: `${ctx.app.site}: View ALbum Details`,
+//     }
+//     await ctx.render('account/user-gallery-edit', locals)
+//   }
+// })
 
-router.delete(
-  'deleteGalleryImage',
-  '/account/gallery/:id/image/delete',
-  processFormData,
-  async (ctx) => {
-    const log = accountLog.extend('DELETE-account-gallery-image-delete')
-    const error = accountError.extend('DELETE-account-gallery-image-delete')
-    if (!ctx.state.isAsyncRequest) {
-      ctx.status = 400
-      ctx.redirect('/')
-    }
-    if (!ctx.state?.isAuthenticated) {
-      error('User is not authenticated.  Redirect to /')
-      ctx.status = 401
-      ctx.redirect('/')
-    }
-    log(`album id: ${ctx.params.id}`)
-    log(ctx.request.body)
-    log(ctx.request.files)
-    let status
-    let body
-    let album
-    const albumId = ctx.params.id
-    const image = ctx.request.body.image[0]
-    if (doTokensMatch(ctx)) {
-      try {
-        const db = ctx.state.mongodb.client.db()
-        album = await Albums.getById(db, albumId, redis)
-        log(image)
-        log(album)
-        const deleted = await album.deleteImage(image)
-        status = 200
-        body = { deleted }
-      } catch (e) {
-        error(e)
-        status = 500
-        body = { status: 500, err: 'album failure.' }
-      }
-    }
-    ctx.status = status
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = body
-  },
-)
+// router.delete(
+//   'deleteGalleryImage',
+//   '/account/gallery/:id/image/delete',
+//   processFormData,
+//   async (ctx) => {
+//     const log = accountLog.extend('DELETE-account-gallery-image-delete')
+//     const error = accountError.extend('DELETE-account-gallery-image-delete')
+//     if (!ctx.state.isAsyncRequest) {
+//       ctx.status = 400
+//       ctx.redirect('/')
+//     }
+//     if (!ctx.state?.isAuthenticated) {
+//       error('User is not authenticated.  Redirect to /')
+//       ctx.status = 401
+//       ctx.redirect('/')
+//     }
+//     log(`album id: ${ctx.params.id}`)
+//     log(ctx.request.body)
+//     log(ctx.request.files)
+//     let status
+//     let body
+//     let album
+//     const albumId = ctx.params.id
+//     const image = ctx.request.body.image[0]
+//     if (doTokensMatch(ctx)) {
+//       try {
+//         const db = ctx.state.mongodb.client.db()
+//         album = await Albums.getById(db, albumId, redis)
+//         log(image)
+//         log(album)
+//         const deleted = await album.deleteImage(image)
+//         status = 200
+//         body = { deleted }
+//       } catch (e) {
+//         error(e)
+//         status = 500
+//         body = { status: 500, err: 'album failure.' }
+//       }
+//     }
+//     ctx.status = status
+//     ctx.type = 'application/json; charset=utf-8'
+//     ctx.body = body
+//   },
+// )
 
-router.put(
-  'accountGalleryAddImage',
-  '/account/gallery/:id/image/add',
-  processFormData,
-  async (ctx) => {
-    const log = accountLog.extend('PUT-account-gallery-image-add')
-    const error = accountError.extend('PUT-account-gallery-imageadd')
-    if (!ctx.state.isAsyncRequest) {
-      ctx.status = 400
-      ctx.redirect('/')
-    }
-    let status
-    let body
-    let album
-    if (!ctx.state?.isAuthenticated) {
-      error('User is not authenticated.  Redirect to /')
-      ctx.status = 401
-      ctx.redirect('/')
-    } else {
-      log(`album id: ${ctx.params.id}`)
-      log(`image name: ${ctx.params.name}`)
-      log(ctx.request.body)
-      log(ctx.request.files)
-      const albumId = ctx.params.id
-      const image = ctx.request.files.image[0]
-      // log(image)
-      const originalFilenameCleaned = sanitizeFilename(image.originalFilename)
-      const originalFilenamePath = path.resolve(
-        ctx.app.dirs.private.uploads,
-        originalFilenameCleaned,
-      )
-      log('uploaded filepath:             ', image.filepath)
-      log('uploaded originalFilename:     ', image.originalFilename)
-      log('uploaded originalFilenamePath: ', originalFilenamePath)
-      if (doTokensMatch(ctx)) {
-        let albumDir
-        let newImageAlbumDirPath
-        try {
-          const db = ctx.state.mongodb.client.db().collection('albums')
-          album = await Albums.getById(db, albumId, redis)
-          albumDir = album.albumDir
-          log(`albumDir: ${albumDir}`)
-          newImageAlbumDirPath = path.join(albumDir, originalFilenameCleaned)
-        } catch (e) {
-          const err = `Failed to initialize album id: ${albumId}`
-          error(err)
-          ctx.type = 'application/json; charset=utf-8'
-          status = 500
-          body = { status: 500, err, cause: e.message }
-          return
-        }
-        try {
-          log(`newImageAlbumDirPath: ${newImageAlbumDirPath}`)
-          await rename(image.filepath, newImageAlbumDirPath)
-        } catch (e) {
-          const err = 'Failed to rename uploaded image back to its original '
-            + `name ${originalFilenamePath}, and move to album dir ${newImageAlbumDirPath}.`
-          error(err)
-          ctx.type = 'application/json; charset=utf-8'
-          status = 500
-          body = { status: 500, err, cause: e.message }
-          return
-        }
-        let result
-        try {
-          result = await album.addImage(newImageAlbumDirPath)
-          status = 200
-          body = { result }
-          log(body)
-        } catch (e) {
-          const err = 'Failed to add new iamge to album.'
-          error(err)
-          ctx.type = 'application/json; charset=utf-8'
-          status = 500
-          body = { status: 500, err, cause: e.message }
-          return
-        }
-      }
-    }
-    ctx.status = status
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = body
-  },
-)
+// router.put(
+//   'accountGalleryAddImage',
+//   '/account/gallery/:id/image/add',
+//   processFormData,
+//   async (ctx) => {
+//     const log = accountLog.extend('PUT-account-gallery-image-add')
+//     const error = accountError.extend('PUT-account-gallery-imageadd')
+//     if (!ctx.state.isAsyncRequest) {
+//       ctx.status = 400
+//       ctx.redirect('/')
+//     }
+//     let status
+//     let body
+//     let album
+//     if (!ctx.state?.isAuthenticated) {
+//       error('User is not authenticated.  Redirect to /')
+//       ctx.status = 401
+//       ctx.redirect('/')
+//     } else {
+//       log(`album id: ${ctx.params.id}`)
+//       log(`image name: ${ctx.params.name}`)
+//       log(ctx.request.body)
+//       log(ctx.request.files)
+//       const albumId = ctx.params.id
+//       const image = ctx.request.files.image[0]
+//       // log(image)
+//       const originalFilenameCleaned = sanitizeFilename(image.originalFilename)
+//       const originalFilenamePath = path.resolve(
+//         ctx.app.dirs.private.uploads,
+//         originalFilenameCleaned,
+//       )
+//       log('uploaded filepath:             ', image.filepath)
+//       log('uploaded originalFilename:     ', image.originalFilename)
+//       log('uploaded originalFilenamePath: ', originalFilenamePath)
+//       if (doTokensMatch(ctx)) {
+//         let albumDir
+//         let newImageAlbumDirPath
+//         try {
+//           const db = ctx.state.mongodb.client.db().collection('albums')
+//           album = await Albums.getById(db, albumId, redis)
+//           albumDir = album.albumDir
+//           log(`albumDir: ${albumDir}`)
+//           newImageAlbumDirPath = path.join(albumDir, originalFilenameCleaned)
+//         } catch (e) {
+//           const err = `Failed to initialize album id: ${albumId}`
+//           error(err)
+//           ctx.type = 'application/json; charset=utf-8'
+//           status = 500
+//           body = { status: 500, err, cause: e.message }
+//           return
+//         }
+//         try {
+//           log(`newImageAlbumDirPath: ${newImageAlbumDirPath}`)
+//           await rename(image.filepath, newImageAlbumDirPath)
+//         } catch (e) {
+//           const err = 'Failed to rename uploaded image back to its original '
+//             + `name ${originalFilenamePath}, and move to album dir ${newImageAlbumDirPath}.`
+//           error(err)
+//           ctx.type = 'application/json; charset=utf-8'
+//           status = 500
+//           body = { status: 500, err, cause: e.message }
+//           return
+//         }
+//         let result
+//         try {
+//           result = await album.addImage(newImageAlbumDirPath)
+//           status = 200
+//           body = { result }
+//           log(body)
+//         } catch (e) {
+//           const err = 'Failed to add new iamge to album.'
+//           error(err)
+//           ctx.type = 'application/json; charset=utf-8'
+//           status = 500
+//           body = { status: 500, err, cause: e.message }
+//           return
+//         }
+//       }
+//     }
+//     ctx.status = status
+//     ctx.type = 'application/json; charset=utf-8'
+//     ctx.body = body
+//   },
+// )
 
-router.post(
-  'accountEditGalleryImage',
-  '/account/gallery/:id/image/:name',
-  processFormData,
-  async (ctx) => {
-    const log = accountLog.extend('POST-account-gallery-image-edit')
-    const error = accountError.extend('POST-account-gallery-image-edit')
-    if (!ctx.state.isAsyncRequest) {
-      ctx.status = 400
-      ctx.redirect('/')
-    }
-    let status
-    let body
-    let album
-    if (!ctx.state?.isAuthenticated) {
-      error('User is not authenticated.  Redirect to /')
-      ctx.status = 401
-      ctx.redirect('/')
-    } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-      error(
-        `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
-        + `session:${ctx.session.csrfToken}`,
-      )
-      status = 401
-      body = { error: 'csrf token mismatch' }
-    } else {
-      log(`album id: ${ctx.params.id}`)
-      log(`image name: ${ctx.params.name}`)
-      log(ctx.request.body)
-      const albumId = ctx.params.id
-      const fileName = ctx.params.name
-      const imageName = ctx.request.body?.imageName?.[0] ?? null
-      const imageRotateFullSize = ctx.request.body?.rotate_full_size_image?.[0] ?? null
-      const thumbnailName = ctx.request.body?.thumbnailName?.[0] ?? null
-      const imageRotateThumbnail = ctx.request.body?.rotate_thumbnail_image?.[0] ?? null
-      const imageTitle = ctx.request.body?.imageTitle?.[0] ?? null
-      const imageDescription = ctx.request.body?.imageDescription?.[0] ?? null
-      let imageKeywords = null
-      if (ctx.request.body?.imageKeywords) {
-        imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', '))
-      }
-      let imageHide
-      if (ctx.request.body?.imageHide[0] === 'false') {
-        imageHide = false
-      } else {
-        imageHide = true
-      }
-      if (doTokensMatch(ctx)) {
-        try {
-          const db = ctx.state.mongodb.client.db().collection('albums')
-          album = await Albums.getById(db, albumId, redis)
-          const i = {}
-          i.name = imageName
-          if (imageRotateFullSize) {
-            log(`Rotate full size image ${imageName} counter-clockwise ${imageRotateFullSize}`)
-            i.rotateFullSize = imageRotateFullSize
-          }
-          if (imageRotateThumbnail && thumbnailName) {
-            log(
-              `Rotate thumbnail image ${thumbnailName} `
-              + `counter-clockwise ${imageRotateThumbnail}`,
-            )
-            i.thumbnailName = thumbnailName
-            i.rotateThumbnail = imageRotateThumbnail
-          }
-          if (imageTitle) {
-            i.title = imageTitle
-          }
-          if (imageDescription) {
-            i.description = imageDescription
-          }
-          if (imageKeywords) {
-            i.keywords = imageKeywords
-          }
-          i.hide = imageHide
-          log('new image details: %o', i)
-          const sizes = (!!imageRotateFullSize || !!imageRotateThumbnail)
-          log(`sizes, if TRUE, remake thumbs: ${sizes}`)
-          // const saved = await album.updateImage(i, sizes)
-          const saved = await album.updateImage(i, false)
-          log(saved)
-          if (!saved) {
-            status = 418
-            body = { err: `Failed to update image: ${fileName}` }
-          } else {
-            status = 200
-            body = saved
-          }
-        } catch (e) {
-          error(e)
-          status = 500
-          body = { msg: `failed to find album with id: ${albumId}` }
-        }
-      }
-    }
-    // ctx.set('Cache-Control', 'no-cache, no-store, must-revalidate')
-    ctx.status = status
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = body
-  },
-)
+// router.post(
+//   'accountEditGalleryImage',
+//   '/account/gallery/:id/image/:name',
+//   processFormData,
+//   async (ctx) => {
+//     const log = accountLog.extend('POST-account-gallery-image-edit')
+//     const error = accountError.extend('POST-account-gallery-image-edit')
+//     if (!ctx.state.isAsyncRequest) {
+//       ctx.status = 400
+//       ctx.redirect('/')
+//     }
+//     let status
+//     let body
+//     let album
+//     if (!ctx.state?.isAuthenticated) {
+//       error('User is not authenticated.  Redirect to /')
+//       ctx.status = 401
+//       ctx.redirect('/')
+//     } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
+//       error(
+//         `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
+//         + `session:${ctx.session.csrfToken}`,
+//       )
+//       status = 401
+//       body = { error: 'csrf token mismatch' }
+//     } else {
+//       log(`album id: ${ctx.params.id}`)
+//       log(`image name: ${ctx.params.name}`)
+//       log(ctx.request.body)
+//       const albumId = ctx.params.id
+//       const fileName = ctx.params.name
+//       const imageName = ctx.request.body?.imageName?.[0] ?? null
+//       const imageRotateFullSize = ctx.request.body?.rotate_full_size_image?.[0] ?? null
+//       const thumbnailName = ctx.request.body?.thumbnailName?.[0] ?? null
+//       const imageRotateThumbnail = ctx.request.body?.rotate_thumbnail_image?.[0] ?? null
+//       const imageTitle = ctx.request.body?.imageTitle?.[0] ?? null
+//       const imageDescription = ctx.request.body?.imageDescription?.[0] ?? null
+//       let imageKeywords = null
+//       if (ctx.request.body?.imageKeywords) {
+//         imageKeywords = Array.from(ctx.request.body?.imageKeywords?.[0].split(', '))
+//       }
+//       let imageHide
+//       if (ctx.request.body?.imageHide[0] === 'false') {
+//         imageHide = false
+//       } else {
+//         imageHide = true
+//       }
+//       if (doTokensMatch(ctx)) {
+//         try {
+//           const db = ctx.state.mongodb.client.db().collection('albums')
+//           album = await Albums.getById(db, albumId, redis)
+//           const i = {}
+//           i.name = imageName
+//           if (imageRotateFullSize) {
+//             log(`Rotate full size image ${imageName} counter-clockwise ${imageRotateFullSize}`)
+//             i.rotateFullSize = imageRotateFullSize
+//           }
+//           if (imageRotateThumbnail && thumbnailName) {
+//             log(
+//               `Rotate thumbnail image ${thumbnailName} `
+//               + `counter-clockwise ${imageRotateThumbnail}`,
+//             )
+//             i.thumbnailName = thumbnailName
+//             i.rotateThumbnail = imageRotateThumbnail
+//           }
+//           if (imageTitle) {
+//             i.title = imageTitle
+//           }
+//           if (imageDescription) {
+//             i.description = imageDescription
+//           }
+//           if (imageKeywords) {
+//             i.keywords = imageKeywords
+//           }
+//           i.hide = imageHide
+//           log('new image details: %o', i)
+//           const sizes = (!!imageRotateFullSize || !!imageRotateThumbnail)
+//           log(`sizes, if TRUE, remake thumbs: ${sizes}`)
+//           // const saved = await album.updateImage(i, sizes)
+//           const saved = await album.updateImage(i, false)
+//           log(saved)
+//           if (!saved) {
+//             status = 418
+//             body = { err: `Failed to update image: ${fileName}` }
+//           } else {
+//             status = 200
+//             body = saved
+//           }
+//         } catch (e) {
+//           error(e)
+//           status = 500
+//           body = { msg: `failed to find album with id: ${albumId}` }
+//         }
+//       }
+//     }
+//     // ctx.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+//     ctx.status = status
+//     ctx.type = 'application/json; charset=utf-8'
+//     ctx.body = body
+//   },
+// )
 
-router.post(
-  'accountEditGallery',
-  '/account/gallery/:id',
-  hasFlash,
-  processFormData,
-  async (ctx) => {
-    const log = accountLog.extend('POST-account-gallery-edit')
-    const error = accountError.extend('POST-account-gallery-edit')
-    if (!ctx.state.isAsyncRequest) {
-      ctx.status = 400
-      ctx.redirect('/')
-    }
-    let status
-    let body
-    if (!ctx.state?.isAuthenticated) {
-      error('User is not authenticated.  Redirect to /')
-      ctx.status = 401
-      ctx.redirect('/')
-    } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
-      error(
-        `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
-        + `session:${ctx.session.csrfToken}`,
-      )
-      status = 401
-      body = { error: 'csrf token mismatch' }
-    } else {
-      log(`album id: ${ctx.params.id}`)
-      log(ctx.request.body)
-      let album
-      const albumId = ctx.params.id
-      const albumName = ctx.request.body?.albumName?.[0] ?? null
-      const albumSlug = ctx.request.body?.albumSlug?.[0] ?? slugify(albumName)
-      const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
-      const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
-      const albumKeywords = (ctx.request.body?.albumKeywords)
-        ? Array.from(ctx.request.body?.albumKeywords?.[0]?.split(', '))
-        : []
-      const albumPreviewImage = ctx.request.body?.albumPreviewImage?.[0] ?? null
-      if (doTokensMatch(ctx)) {
-        try {
-          const db = ctx.state.mongodb.client.db().collection('albums')
-          album = await Albums.getById(db, albumId, redis)
-          if (album.name !== albumName) {
-            log(`updating album name from: ${album.name} to: ${albumName}`)
-            album.name = albumName
-          }
-          if (album.slug !== albumSlug) {
-            log(`updating album slug from: ${album.slug} to: ${albumSlug}`)
-            album.slug = albumSlug
-          }
-          if (album.description !== albumDescription) {
-            log(`updating album description from: ${album.description} to: ${albumDescription}`)
-            album.description = albumDescription
-          }
-          if (album.public !== albumPublic) {
-            log(`updating album public from: ${album.public} to: ${albumPublic}`)
-            album.public = albumPublic
-          }
-          if (album.keywords !== albumKeywords) {
-            log(`updating album keywords from: ${album.keywords} to: ${albumKeywords}`)
-            album.keywords = albumKeywords
-          }
-          if (album.previewImage !== albumPreviewImage) {
-            log(`updating album preview image from: ${album.previewImage} to ${albumPreviewImage}`)
-            album.previewImage = albumPreviewImage
-          }
-          const saved = await album.save()
-          log(saved)
-          if (!saved) {
-            status = 500
-            body = { huh: 'whut?', msg: `failed to update album id:${ctx.params.id}` }
-          } else {
-            status = 200
-            body = saved
-            try {
-              const displayUser = ctx.state.sessionUser
-              const locals = {
-                caching: true,
-                view: ctx.flash.view ?? {},
-                // sessionUser: ctx.state.sessionUser,
-                sessionUser: {},
-                isAuthenticated: ctx.state.isAuthenticated,
-                displayUser: displayUser ?? {},
-                body: ctx.body,
-                album,
-                title: `${ctx.app.site}: ${displayUser.username}'s gallery, ${album.name}`,
-              }
-              log(locals)
-              const renderedPage = await ctx.render('account/user-gallery-public', locals)
-              const dir = path.join(ctx.app.dirs.cache.pages, `@${displayUser.username}/gallery`)
-              log(dir)
-              await mkdir(dir, { recursive: true })
-              const written = await writeFile(`${dir}/${album.id}`, renderedPage)
-              log('cached page was written to cache dir? ', written)
-            } catch (e) {
-              error('failed to create a cached version of gallery page after edit.')
-              error(e)
-            }
-          }
-        } catch (e) {
-          error(e)
-          status = 500
-          body = { msg: `failed to find album with id: ${albumId}` }
-        }
-      }
-    }
-    ctx.status = status
-    ctx.type = 'application/json; charset=utf-8'
-    ctx.body = body
-  },
-)
+// router.post(
+//   'accountEditGallery',
+//   '/account/gallery/:id',
+//   hasFlash,
+//   processFormData,
+//   async (ctx) => {
+//     const log = accountLog.extend('POST-account-gallery-edit')
+//     const error = accountError.extend('POST-account-gallery-edit')
+//     if (!ctx.state.isAsyncRequest) {
+//       ctx.status = 400
+//       ctx.redirect('/')
+//     }
+//     let status
+//     let body
+//     if (!ctx.state?.isAuthenticated) {
+//       error('User is not authenticated.  Redirect to /')
+//       ctx.status = 401
+//       ctx.redirect('/')
+//     } else if (ctx.cookies.get('csrfToken') !== ctx.session.csrfToken) {
+//       error(
+//         `CSR-Token mismatch: header:${ctx.cookies.get('csrfToken')} - `
+//         + `session:${ctx.session.csrfToken}`,
+//       )
+//       status = 401
+//       body = { error: 'csrf token mismatch' }
+//     } else {
+//       log(`album id: ${ctx.params.id}`)
+//       log(ctx.request.body)
+//       let album
+//       const albumId = ctx.params.id
+//       const albumName = ctx.request.body?.albumName?.[0] ?? null
+//       const albumSlug = ctx.request.body?.albumSlug?.[0] ?? slugify(albumName)
+//       const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
+//       const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
+//       const albumKeywords = (ctx.request.body?.albumKeywords)
+//         ? Array.from(ctx.request.body?.albumKeywords?.[0]?.split(', '))
+//         : []
+//       const albumPreviewImage = ctx.request.body?.albumPreviewImage?.[0] ?? null
+//       if (doTokensMatch(ctx)) {
+//         try {
+//           const db = ctx.state.mongodb.client.db().collection('albums')
+//           album = await Albums.getById(db, albumId, redis)
+//           if (album.name !== albumName) {
+//             log(`updating album name from: ${album.name} to: ${albumName}`)
+//             album.name = albumName
+//           }
+//           if (album.slug !== albumSlug) {
+//             log(`updating album slug from: ${album.slug} to: ${albumSlug}`)
+//             album.slug = albumSlug
+//           }
+//           if (album.description !== albumDescription) {
+//             log(`updating album description from: ${album.description} to: ${albumDescription}`)
+//             album.description = albumDescription
+//           }
+//           if (album.public !== albumPublic) {
+//             log(`updating album public from: ${album.public} to: ${albumPublic}`)
+//             album.public = albumPublic
+//           }
+//           if (album.keywords !== albumKeywords) {
+//             log(`updating album keywords from: ${album.keywords} to: ${albumKeywords}`)
+//             album.keywords = albumKeywords
+//           }
+//           if (album.previewImage !== albumPreviewImage) {
+//             log(
+//              `updating album preview image from: ${album.previewImage} `
+//              + `to ${albumPreviewImage}`
+//              )
+//             album.previewImage = albumPreviewImage
+//           }
+//           const saved = await album.save()
+//           log(saved)
+//           if (!saved) {
+//             status = 500
+//             body = { huh: 'whut?', msg: `failed to update album id:${ctx.params.id}` }
+//           } else {
+//             status = 200
+//             body = saved
+//             try {
+//               const displayUser = ctx.state.sessionUser
+//               const locals = {
+//                 caching: true,
+//                 view: ctx.flash.view ?? {},
+//                 // sessionUser: ctx.state.sessionUser,
+//                 sessionUser: {},
+//                 isAuthenticated: ctx.state.isAuthenticated,
+//                 displayUser: displayUser ?? {},
+//                 body: ctx.body,
+//                 album,
+//                 title: `${ctx.app.site}: ${displayUser.username}'s gallery, ${album.name}`,
+//               }
+//               log(locals)
+//               const renderedPage = await ctx.render('account/user-gallery-public', locals)
+//               const dir = path.join(ctx.app.dirs.cache.pages, `@${displayUser.username}/gallery`)
+//               log(dir)
+//               await mkdir(dir, { recursive: true })
+//               const written = await writeFile(`${dir}/${album.id}`, renderedPage)
+//               log('cached page was written to cache dir? ', written)
+//             } catch (e) {
+//               error('failed to create a cached version of gallery page after edit.')
+//               error(e)
+//             }
+//           }
+//         } catch (e) {
+//           error(e)
+//           status = 500
+//           body = { msg: `failed to find album with id: ${albumId}` }
+//         }
+//       }
+//     }
+//     ctx.status = status
+//     ctx.type = 'application/json; charset=utf-8'
+//     ctx.body = body
+//   },
+// )
 
-router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
-  const log = accountLog.extend('GET-account-galleries')
-  const error = accountError.extend('GET-account-galleries')
-  if (!ctx.state?.isAuthenticated) {
-    error('User is not authenticated.  Redirect to /')
-    ctx.status = 401
-    ctx.redirect('/')
-  } else {
-    log(`View ${ctx.state.sessionUser.username}'s account details.`)
-    log('flash %O', ctx.flash)
-    const db = ctx.state.mongodb.client.db()
-    // Get list of albums, if they exist
-    const albumList = await Albums.list(db, ctx.state.sessionUser.username)
-    log(albumList)
-    let pub
-    let pri
-    albumList.forEach((list) => {
-      if (list._id === 'public') {
-        pub = list.albums
-        log('public albums: ', pub[0])
-      }
-      if (list._id === false) {
-        pri = list.albums
-        log('private albums: ', pri)
-      }
-    })
-    const csrfToken = ulid()
-    ctx.session.csrfToken = csrfToken
-    ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
-    const locals = {
-      sessionUser: ctx.state.sessionUser,
-      body: ctx.body,
-      view: ctx.flash.view ?? {},
-      edit: ctx.flash.edit ?? {},
-      // origin: `${ctx.request.origin}`,
-      jwtAccess: (ctx.state.sessionUser.jwts).token,
-      csrfToken,
-      public: pub,
-      private: pri,
-      isAuthenticated: ctx.state.isAuthenticated,
-      title: `${ctx.app.site}: View Account Details`,
-    }
-    ctx.status = 200
-    await ctx.render('account/user-galleries', locals)
-  }
-})
+// router.get('accountGalleries', '/account/galleries', hasFlash, async (ctx) => {
+//   const log = accountLog.extend('GET-account-galleries')
+//   const error = accountError.extend('GET-account-galleries')
+//   if (!ctx.state?.isAuthenticated) {
+//     error('User is not authenticated.  Redirect to /')
+//     ctx.status = 401
+//     ctx.redirect('/')
+//   } else {
+//     log(`View ${ctx.state.sessionUser.username}'s account details.`)
+//     log('flash %O', ctx.flash)
+//     const db = ctx.state.mongodb.client.db()
+//     // Get list of albums, if they exist
+//     const albumList = await Albums.list(db, ctx.state.sessionUser.username)
+//     log(albumList)
+//     let pub
+//     let pri
+//     albumList.forEach((list) => {
+//       if (list._id === 'public') {
+//         pub = list.albums
+//         log('public albums: ', pub[0])
+//       }
+//       if (list._id === false) {
+//         pri = list.albums
+//         log('private albums: ', pri)
+//       }
+//     })
+//     const csrfToken = ulid()
+//     ctx.session.csrfToken = csrfToken
+//     ctx.cookies.set('csrfToken', csrfToken, { httpOnly: true, sameSite: 'strict' })
+//     const locals = {
+//       sessionUser: ctx.state.sessionUser,
+//       body: ctx.body,
+//       view: ctx.flash.view ?? {},
+//       edit: ctx.flash.edit ?? {},
+//       // origin: `${ctx.request.origin}`,
+//       jwtAccess: (ctx.state.sessionUser.jwts).token,
+//       csrfToken,
+//       public: pub,
+//       private: pri,
+//       isAuthenticated: ctx.state.isAuthenticated,
+//       title: `${ctx.app.site}: View Account Details`,
+//     }
+//     ctx.status = 200
+//     await ctx.render('account/user-galleries', locals)
+//   }
+// })
 
-router.delete(
-  'deleteGallery',
-  '/account/galleries/delete/:id',
-  processFormData,
-  async (ctx) => {
-    const log = accountLog.extend('DELETE-account-galleries-delete')
-    const error = accountError.extend('DELETE-account-galleries-delete')
-    if (!isAsyncRequest(ctx)) {
-      ctx.status = 400
-      ctx.redirect('/')
-    }
-    let body
-    let status
-    let type
-    if (!ctx.state?.isAuthenticated) {
-      ctx.flash = {
-        index: {
-          message: null,
-          error: 'You need to be logged in to make account changes.',
-        },
-      }
-      error('Tried to delete an album archive without first being authenticated.')
-      ctx.redirect('/')
-    } else {
-      log('ctx.fields: %o', ctx.request.body)
-      log('ctx.files: %o', ctx.request.files)
-      let album
-      const albumId = ctx.request.body?.albumId?.[0] ?? ''
-      if (doTokensMatch(ctx)) {
-        try {
-          const db = ctx.state.mongodb.client.db().collection('albums')
-          album = await Albums.getById(db, albumId, redis)
-          const deleted = await album.deleteAlbum()
-          status = 200
-          if (deleted === undefined) {
-            body = { msg: `Album ${albumId} was permanently deleted.`, deleted: true }
-          } else {
-            body = { msg: `Album ${albumId} was not deleted.`, deleted: false }
-          }
-        } catch (e) {
-          error(`Failed to delete album ${albumId}`)
-          error(e)
-          status = 500
-          type = 'application/json; charset=utf-8'
-          body = { err: e }
-        }
-      }
-    }
-    ctx.status = status
-    ctx.type = type
-    ctx.body = body
-  },
-)
+// router.delete(
+//   'deleteGallery',
+//   '/account/galleries/delete/:id',
+//   processFormData,
+//   async (ctx) => {
+//     const log = accountLog.extend('DELETE-account-galleries-delete')
+//     const error = accountError.extend('DELETE-account-galleries-delete')
+//     if (!isAsyncRequest(ctx)) {
+//       ctx.status = 400
+//       ctx.redirect('/')
+//     }
+//     let body
+//     let status
+//     let type
+//     if (!ctx.state?.isAuthenticated) {
+//       ctx.flash = {
+//         index: {
+//           message: null,
+//           error: 'You need to be logged in to make account changes.',
+//         },
+//       }
+//       error('Tried to delete an album archive without first being authenticated.')
+//       ctx.redirect('/')
+//     } else {
+//       log('ctx.fields: %o', ctx.request.body)
+//       log('ctx.files: %o', ctx.request.files)
+//       let album
+//       const albumId = ctx.request.body?.albumId?.[0] ?? ''
+//       if (doTokensMatch(ctx)) {
+//         try {
+//           const db = ctx.state.mongodb.client.db().collection('albums')
+//           album = await Albums.getById(db, albumId, redis)
+//           const deleted = await album.deleteAlbum()
+//           status = 200
+//           if (deleted === undefined) {
+//             body = { msg: `Album ${albumId} was permanently deleted.`, deleted: true }
+//           } else {
+//             body = { msg: `Album ${albumId} was not deleted.`, deleted: false }
+//           }
+//         } catch (e) {
+//           error(`Failed to delete album ${albumId}`)
+//           error(e)
+//           status = 500
+//           type = 'application/json; charset=utf-8'
+//           body = { err: e }
+//         }
+//       }
+//     }
+//     ctx.status = status
+//     ctx.type = type
+//     ctx.body = body
+//   },
+// )
 
-router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, async (ctx) => {
-  const log = accountLog.extend('PUT-account-galleries-add')
-  const error = accountError.extend('PUT-account-galleries-add')
-  log(ctx.request.body)
-  if (!ctx.state?.isAuthenticated) {
-    ctx.flash = {
-      index: {
-        message: null,
-        error: 'You need to be logged in to make account changes.',
-      },
-    }
-    error('Tried to upload an album archive without first being authenticated.')
-    ctx.redirect('/')
-  }
-  if (doTokensMatch(ctx)) {
-    log('ctx.fields: %o', ctx.request.body)
-    // log('ctx.files: %o', ctx.request.files)
-    log('uploaded filepath: ', ctx.request.files?.PersistentFile?.filepath)
-    log('uploaded originalFilename: ', ctx.request.files?.PersistentFile?.originalFilename)
-    let albumName = ctx.request.body?.albumName?.[0] ?? null
-    const albumNameDir = (albumName) ? slugify(albumName) : null
-    const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
-    const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
-    let unpacker
-    let extracted
-    let newPath
-    let album
-    const galleries = 'galleries'
-    const db = ctx.state.mongodb.client.db()
-    // const userPubDir = ctx.state.sessionUser.publicDir
-    const archive = ctx.request.files.archive[0]
-    const originalFilenameCleaned = sanitizeFilename(archive.originalFilename)
-    const originalFilenamePath = path.resolve(
-      ctx.app.dirs.private.uploads,
-      originalFilenameCleaned,
-    )
-    try {
-      await rename(archive.filepath, originalFilenamePath)
-    } catch (e) {
-      error(e)
-      const err = new Error(
-        'Failed to rename uploaded archive back to its original name.',
-        { cause: e },
-      )
-      ctx.throw(500, err)
-    }
-    log(archive)
-    if (archive.size > 0) {
-      let newName = null
-      newPath = path.resolve(ctx.app.dirs.public.dir, ctx.state.sessionUser.publicDir, galleries)
-      try {
-        log(`uploads: ${ctx.app.dirs.private.uploads}`)
-        log(`username: ${ctx.state.sessionUser.username}`)
-        log(`       |-publicDir: ${ctx.state.sessionUser.publicDir}`)
-        log(`       |-privateDir: ${ctx.state.sessionUser.privateDir}`)
-        log(`       |-newPath: ${newPath}`)
-        log(`archive: ${archive.filepath}`)
-        log(`archive: ${originalFilenamePath}`)
-        log(`       |-originalFilename: ${originalFilenamePath}`)
-        log(`albumName: ${albumName}`)
-        log(`albumNameDir: ${albumNameDir}`)
-        unpacker = new Unpacker()
-        await unpacker.setPath(originalFilenamePath)
-        if (albumNameDir) {
-          newName = { rename: true, newName: albumNameDir }
-          log('renaming the gallery directory name: ', newName)
-        } else {
-          albumName = unpacker.getFileBasename()
-        }
-      } catch (e) {
-        ctx.status = 500
-        ctx.type = 'application/json; charset=utf-8'
-        ctx.body = { status: 500, step: 'unpack setup', _error: e.message }
-      }
-      try {
-        extracted = await unpacker.unpack(newPath, null, newName)
-        log('extraction results: ', extracted)
-      } catch (e) {
-        ctx.status = 500
-        ctx.type = 'application/json; charset=utf-8'
-        ctx.body = { status: 500, step: 'unpack extraction', _error: e.message }
-      }
-      try {
-        const config = {
-          new: true,
-          redis,
-          collection: db.collection('albums'),
-          rootDir: newPath,
-          albumUrl: `${ctx.state.sessionUser.url}/${galleries}/${albumNameDir}`,
-          albumImageUrl: `${ctx.state.sessionUser.publicDir}${galleries}/${albumNameDir}/`,
-          albumName,
-          albumSlug: albumNameDir,
-          albumOwner: ctx.state.sessionUser.username,
-          albumDescription,
-          public: albumPublic,
-        }
-        album = new Album(config)
-        log(`init'ing album with ${extracted.finalPath}`)
-        album = await album.init(extracted.finalPath)
-      } catch (e) {
-        log(e.message)
-        ctx.status = 500
-        ctx.type = 'application/json; charset=utf-8'
-        ctx.body = { status: 500, step: 'album init', _error: e.message }
-      }
-      try {
-        const saved = await album.save()
-        log('was the album saved?: %o', saved)
-        ctx.body = {
-          albumId: album.id,
-          albumName: album.name,
-          albumSlug: album.slug,
-          albumUrl: album.url,
-          albumOwner: album.owner,
-          albumDescription: album.description,
-          public: album.public,
-        }
-      } catch (e) {
-        log(e.message)
-        ctx.status = 500
-        ctx.type = 'application/json; charset=utf-8'
-        ctx.body = { status: 500, step: 'album save', _error: e.message }
-      }
-    }
-    ctx.status = 200
-    ctx.type = 'application/json; charset=utf-8'
-  }
-})
+// router.put('accountGalleriesAdd', '/account/galleries/add', processFormData, async (ctx) => {
+//   const log = accountLog.extend('PUT-account-galleries-add')
+//   const error = accountError.extend('PUT-account-galleries-add')
+//   log(ctx.request.body)
+//   if (!ctx.state?.isAuthenticated) {
+//     ctx.flash = {
+//       index: {
+//         message: null,
+//         error: 'You need to be logged in to make account changes.',
+//       },
+//     }
+//     error('Tried to upload an album archive without first being authenticated.')
+//     ctx.redirect('/')
+//   }
+//   if (doTokensMatch(ctx)) {
+//     log('ctx.fields: %o', ctx.request.body)
+//     // log('ctx.files: %o', ctx.request.files)
+//     log('uploaded filepath: ', ctx.request.files?.PersistentFile?.filepath)
+//     log('uploaded originalFilename: ', ctx.request.files?.PersistentFile?.originalFilename)
+//     let albumName = ctx.request.body?.albumName?.[0] ?? null
+//     const albumNameDir = (albumName) ? slugify(albumName) : null
+//     const albumDescription = ctx.request.body?.albumDescription?.[0] ?? ''
+//     const albumPublic = (ctx.request.body?.albumPublic?.[0] === 'true') ?? false
+//     let unpacker
+//     let extracted
+//     let newPath
+//     let album
+//     const galleries = 'galleries'
+//     const db = ctx.state.mongodb.client.db()
+//     // const userPubDir = ctx.state.sessionUser.publicDir
+//     const archive = ctx.request.files.archive[0]
+//     const originalFilenameCleaned = sanitizeFilename(archive.originalFilename)
+//     const originalFilenamePath = path.resolve(
+//       ctx.app.dirs.private.uploads,
+//       originalFilenameCleaned,
+//     )
+//     try {
+//       await rename(archive.filepath, originalFilenamePath)
+//     } catch (e) {
+//       error(e)
+//       const err = new Error(
+//         'Failed to rename uploaded archive back to its original name.',
+//         { cause: e },
+//       )
+//       ctx.throw(500, err)
+//     }
+//     log(archive)
+//     if (archive.size > 0) {
+//       let newName = null
+//       newPath = path.resolve(ctx.app.dirs.public.dir, ctx.state.sessionUser.publicDir, galleries)
+//       try {
+//         log(`uploads: ${ctx.app.dirs.private.uploads}`)
+//         log(`username: ${ctx.state.sessionUser.username}`)
+//         log(`       |-publicDir: ${ctx.state.sessionUser.publicDir}`)
+//         log(`       |-privateDir: ${ctx.state.sessionUser.privateDir}`)
+//         log(`       |-newPath: ${newPath}`)
+//         log(`archive: ${archive.filepath}`)
+//         log(`archive: ${originalFilenamePath}`)
+//         log(`       |-originalFilename: ${originalFilenamePath}`)
+//         log(`albumName: ${albumName}`)
+//         log(`albumNameDir: ${albumNameDir}`)
+//         unpacker = new Unpacker()
+//         await unpacker.setPath(originalFilenamePath)
+//         if (albumNameDir) {
+//           newName = { rename: true, newName: albumNameDir }
+//           log('renaming the gallery directory name: ', newName)
+//         } else {
+//           albumName = unpacker.getFileBasename()
+//         }
+//       } catch (e) {
+//         ctx.status = 500
+//         ctx.type = 'application/json; charset=utf-8'
+//         ctx.body = { status: 500, step: 'unpack setup', _error: e.message }
+//       }
+//       try {
+//         extracted = await unpacker.unpack(newPath, null, newName)
+//         log('extraction results: ', extracted)
+//       } catch (e) {
+//         ctx.status = 500
+//         ctx.type = 'application/json; charset=utf-8'
+//         ctx.body = { status: 500, step: 'unpack extraction', _error: e.message }
+//       }
+//       try {
+//         const config = {
+//           new: true,
+//           redis,
+//           collection: db.collection('albums'),
+//           rootDir: newPath,
+//           albumUrl: `${ctx.state.sessionUser.url}/${galleries}/${albumNameDir}`,
+//           albumImageUrl: `${ctx.state.sessionUser.publicDir}${galleries}/${albumNameDir}/`,
+//           albumName,
+//           albumSlug: albumNameDir,
+//           albumOwner: ctx.state.sessionUser.username,
+//           albumDescription,
+//           public: albumPublic,
+//         }
+//         album = new Album(config)
+//         log(`init'ing album with ${extracted.finalPath}`)
+//         album = await album.init(extracted.finalPath)
+//       } catch (e) {
+//         log(e.message)
+//         ctx.status = 500
+//         ctx.type = 'application/json; charset=utf-8'
+//         ctx.body = { status: 500, step: 'album init', _error: e.message }
+//       }
+//       try {
+//         const saved = await album.save()
+//         log('was the album saved?: %o', saved)
+//         ctx.body = {
+//           albumId: album.id,
+//           albumName: album.name,
+//           albumSlug: album.slug,
+//           albumUrl: album.url,
+//           albumOwner: album.owner,
+//           albumDescription: album.description,
+//           public: album.public,
+//         }
+//       } catch (e) {
+//         log(e.message)
+//         ctx.status = 500
+//         ctx.type = 'application/json; charset=utf-8'
+//         ctx.body = { status: 500, step: 'album save', _error: e.message }
+//       }
+//     }
+//     ctx.status = 200
+//     ctx.type = 'application/json; charset=utf-8'
+//   }
+// })
 
-router.get('accountUsernamePublicGalleries', '/:username/galleries', hasFlash, async (ctx) => {
-  const log = accountLog.extend('GET-account-Username-Public-Galleries')
-  const error = accountError.extend('GET-account-Username-Public-Galleries')
-  let { username } = ctx.params
-  let displayUser
-  try {
-    log(ctx.state.mongodb.client.options.credentials)
-    const users = new Users(ctx.state.mongodb, ctx)
-    if (username[0] === '@') {
-      username = username.slice(1)
-    }
-    displayUser = await users.getByUsername(username)
-  } catch (e) {
-    error(`Failed to find user by @${username}`)
-    error(e)
-  }
-  let publicList
-  try {
-    const db = ctx.state.mongodb.client.db().collection('albums')
-    const albumLists = await Albums.list(db, username)
-    if (albumLists[0]._id === 'public') {
-      publicList = albumLists[0].albums
-    } else if (albumLists[1]._id === 'public') {
-      publicList = albumLists[1].albums
-    } else {
-      publicList = []
-    }
-    log(publicList)
-  } catch (e) {
-    error(`Failed to find any public galleries for @${username}`)
-    error(e)
-  }
-  const locals = {}
-  locals.sessionUser = ctx.state.sessionUser
-  locals.isAuthenticated = ctx.state.isAuthenticated
-  locals.view = ctx.flash.view ?? {}
-  locals.displayUser = displayUser
-  locals.body = ctx.body
-  locals.public = publicList
-  locals.title = `${ctx.app.site}: ${displayUser.username}'s galleries`
-  await ctx.render('account/user-galleries-public', locals)
-})
+// router.get('accountUsernamePublicGalleries', '/:username/galleries', hasFlash, async (ctx) => {
+//   const log = accountLog.extend('GET-account-Username-Public-Galleries')
+//   const error = accountError.extend('GET-account-Username-Public-Galleries')
+//   let { username } = ctx.params
+//   let displayUser
+//   try {
+//     log(ctx.state.mongodb.client.options.credentials)
+//     const users = new Users(ctx.state.mongodb, ctx)
+//     if (username[0] === '@') {
+//       username = username.slice(1)
+//     }
+//     displayUser = await users.getByUsername(username)
+//   } catch (e) {
+//     error(`Failed to find user by @${username}`)
+//     error(e)
+//   }
+//   let publicList
+//   try {
+//     const db = ctx.state.mongodb.client.db().collection('albums')
+//     const albumLists = await Albums.list(db, username)
+//     if (albumLists[0]._id === 'public') {
+//       publicList = albumLists[0].albums
+//     } else if (albumLists[1]._id === 'public') {
+//       publicList = albumLists[1].albums
+//     } else {
+//       publicList = []
+//     }
+//     log(publicList)
+//   } catch (e) {
+//     error(`Failed to find any public galleries for @${username}`)
+//     error(e)
+//   }
+//   const locals = {}
+//   locals.sessionUser = ctx.state.sessionUser
+//   locals.isAuthenticated = ctx.state.isAuthenticated
+//   locals.view = ctx.flash.view ?? {}
+//   locals.displayUser = displayUser
+//   locals.body = ctx.body
+//   locals.public = publicList
+//   locals.title = `${ctx.app.site}: ${displayUser.username}'s galleries`
+//   await ctx.render('account/user-galleries-public', locals)
+// })
 
 router.get('accountView', '/account/view', hasFlash, async (ctx) => {
   const log = accountLog.extend('GET-account-view')
