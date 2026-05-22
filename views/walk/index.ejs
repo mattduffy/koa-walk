@@ -95,6 +95,9 @@
           <li>
             <h5 id="walkLocationH5" style="font-size: .80rem;"></h5>
           </li>
+          <li style="display: none;">
+            Terrain Type: <span id="terrainType" style="float: right;"></span>
+          </li>
           <li>
             Total Distance: <span id="walkDistance" style="float: right;"></span>
           </li>
@@ -135,7 +138,7 @@
         <br>
         <input type="text" id="coords" size=45 readonly value="">
         <br>
-        <span id="ruckWeights" style="display: block; margin-top: 0.5em; margin-bottom: 1.5em;">
+        <span id="ruckWeights" style="display: block; margin-top: 0.25em; margin-bottom: 0.25em;">
           <label style="float: left;">Body Weight
             <input type="text" id="bodyWeightId" name="bodyWeight" size="3" value="<%= preferences?.bodyWeight %>" style="text-align: right;" placeholder="# lbs">
           </label>
@@ -145,6 +148,16 @@
           <br>
           <span id="weightsMsg" style="display: none; color: red;"></span>
         </span>
+        <label name="terrainLabel" style="text-align: right; float: left; margin-bottom: 0.25em;">Terrain 
+          <select name="terrain" id="terrainId">
+            <option value=1.0>Paved road / Treadmill</option>
+            <option value=1.1 selected>Dirt path / Packed Trail</option>
+            <option value=1.2>Light off-trail / Grass</option>
+            <option value=1.5>Soft sand / Deep grass / Loose gravel</option>
+            <option value=1.8>Snow / Heavy brush / Swamp</option>
+          </select>
+        </label>
+        <br>
       </form>
       <h3 id="walkName"></h3>
       <button id="start">Start</button>
@@ -716,6 +729,11 @@
         startWalkForm.children.namedItem('ruckWeights')
         .children[1].children.namedItem('ruckWeight')
       const ruckWeight = Number.parseInt(ruckWeightField.value || 0)
+      const terrainField = startWalkForm.children.namedItem('terrainLabel').children[0]
+      const terrain = {
+        value: Number.parseFloat(terrainField.selectedOptions[0].value || 1.1),
+        text: terrainField.selecteOptions[0].textContent,
+      }
       const name = startWalkForm.children.namedItem('name').value
       const location = startWalkForm.children.namedItem('location').value
       startWalkForm.style.display = 'none'
@@ -737,6 +755,7 @@
       window.walking.date = _d
       window.walking.name = name
       window.walking.location = location
+      window.walking.terrain = terrain
       window.walking.weights.body = bodyWeight
       window.walking.weights.ruck = ruckWeight
       const c = new mapkit.Coordinate(
@@ -751,6 +770,7 @@
         date: _d,
         startTime: _d,
         weights: window.walking.weights,
+        terrain,
         u: DISPLAY_UNITS,
         startPosition: window.walking.currentPosition,
         verbose: VERBOSE,
@@ -1525,6 +1545,10 @@
           e.walk.features[0].properties.name
         document.querySelector('h5#walkLocationH5').textContent = 
           e.walk.features[0].properties.location
+        if (e.walk.features[0].properties.terrain) {
+          const spanWalkTerrain = document.querySelector('span#terrainType')
+          spanWalkTerrain.textContent = e.walk.features[0].properties.terrain.text
+        }
         const spanWalkDistance = document.querySelector('span#walkDistance')
         spanWalkDistance.dataset.distance = e.walk.features[0].properties.distance
         spanWalkDistance.textContent = `${displayUnits(
