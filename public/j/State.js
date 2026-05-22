@@ -51,30 +51,40 @@ class State extends Subject {
       simpleCalories: null,
       pandolfCalories: null,
       weights: { body: null, ruck: 0, water: 0 },
+      terrain: { text: null, value: null },
       c: [],
       wayPoints: [],
       headings: [],
     }
   }
 
-  update(data = {}) {
-    this.state = Object.assign(this.state, data)
-    this.notify(this.state)
-  }
-
   clear() {
     this.state.active = false
     this.state.date = null
     this.state.name = null
+    this.state.location = null
     this.state.startTime = null
     this.state.startPosition = null
     // this.state.currentPosition = null
     this.state.endPosition = null
     this.state.endTime = null
-    this.state.wayPoints = []
-    this.state.c = []
     this.state.duration = null
     this.state.distance = null
+    this.state.highestElevation = null
+    this.state.lowestElevation = null
+    this.state.changeInElevation = null
+    this.state.simpleCalories = null
+    this.state.pandolfCalories = null
+    this.state.weights = { body: null, ruck: null, water: null }
+    this.state.terrain = { text: null, value: null }
+    this.state.c = []
+    this.state.wayPoints = []
+    this.state.headings = []
+  }
+
+  update(data = {}) {
+    this.state = Object.assign(this.state, data)
+    this.notify(this.state)
   }
 
   /**
@@ -184,6 +194,14 @@ class State extends Subject {
 
   get location() {
     return this.state.location
+  }
+
+  set terrain(t) {
+    this.state.terrain = t
+  }
+
+  get terrain() {
+    return this.state.terrain
   }
 
   set weights(w) {
@@ -420,6 +438,7 @@ class State extends Subject {
             ),
             pandolfCalories: null,
             weights: this.state.weights,
+            terrain: this.state.terrain,
           },
           geometry: {
             type: 'LineString',
