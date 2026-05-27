@@ -2057,8 +2057,9 @@
       }
       // new walk div content
       if (!window.walking.active) {
-        document.querySelector('input[id="coords"]').value = `${coords.latitude}, `
-          + `${coords.longitude}`
+        // reorder coords and add prefixes for context
+        document.querySelector('input[id="coords"]').value = `lon ${coords.longitude}, `
+          + `lat ${coords.latitude}`
       }
     }
   }
