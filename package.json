@@ -42,6 +42,7 @@
     "@mattduffy/albums": "file:../albums",
     "@mattduffy/banner": "file:../banner",
     "@mattduffy/blogs": "file:../blogs",
+    "@mattduffy/calories": "file:../calories",
     "@mattduffy/koa-migrations": "file:../koa-migrations",
     "@mattduffy/koa-redis": "file:../koa-redis",
     "@mattduffy/unpacker": "file:../unpacker",
