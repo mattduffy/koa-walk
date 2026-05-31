@@ -1600,7 +1600,7 @@
           spanCaloriesBurned.parentElement.style.display = 'block'
         } else if (e.walk.features[0].properties?.pandolfCalories) {
           spanCaloriesBurned.textContent = Math.round(
-            e.walk.features[0].properties.pandolfCalories
+            e.walk.features[0].properties.pandolfCalories.totalKcal
           )
           spanCaloriesBurned.parentElement.style.display = 'block'
         } else if (e.walk.features[0].properties?.simpleCalories) {
