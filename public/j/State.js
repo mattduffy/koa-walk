@@ -6,6 +6,10 @@ import {
   pointDistance,
   // heading,
 } from './Heading.js'
+import {
+  pandolfCalories as panCalories,
+  simpleCalories as simpCalories,
+} from './calories.js'
 
 function normalizePosition(c) {
   // console.log('normalizePosition(c): ', c)
@@ -106,33 +110,41 @@ class State extends Subject {
    * @param Number MET - The metabolic equivalent task number.
    * @return Number - Estimated calories used per duration of MET.
    */
+  // simpleCalories(minutes, weights = { body: 0, ruck: 0, water: 0 }, MET = this.#MET) {
+  //   const COMBINED = weights.body + (weights.ruck ?? 0) + (weights.water ?? 0)
+  //   const { duration } = this.state
+  //   const timeDiff = Math.floor(Math.abs(this.state.endTime - this.state.startTime) / 60000)
+  //   const cals = ((MET * 3.5 * COMBINED) / 200) * minutes
+  //   if (this.#VERBOSE) {
+  //     console.log('calculating simple EE method')
+  //     console.log('body: ', weights.body, 'ruck: ', weights.ruck, 'h20: ', weights.water)
+  //     console.log('combinded weights: ', COMBINED)
+  //     console.log('MET', this.#MET)
+  //     console.log('minutes', minutes)
+  //     console.log(
+  //       `endTime ${this.state.endTime} - startTime ${this.state.startTime} =`,
+  //       this.state.endTime - this.state.startTime,
+  //     )
+  //     console.log('this.state.duration', duration)
+  //     console.log('this.state.endTime - this.state.startTime', timeDiff)
+  //     console.log(`((${MET} * 3.5 * ${COMBINED}) / 200) * ${minutes} = ${cals}`)
+  //   }
+  //   return cals
+  // }
   simpleCalories(minutes, weights = { body: 0, ruck: 0, water: 0 }, MET = this.#MET) {
-    const COMBINED = weights.body + (weights.ruck ?? 0) + (weights.water ?? 0)
-    const { duration } = this.state
-    const timeDiff = Math.floor(Math.abs(this.state.endTime - this.state.startTime) / 60000)
-    const cals = ((MET * 3.5 * COMBINED) / 200) * minutes
-    if (this.#VERBOSE) {
-      console.log('calculating simple EE method')
-      console.log('body: ', weights.body, 'ruck: ', weights.ruck, 'h20: ', weights.water)
-      console.log('combinded weights: ', COMBINED)
-      console.log('MET', this.#MET)
-      console.log('minutes', minutes)
-      console.log(
-        `endTime ${this.state.endTime} - startTime ${this.state.startTime} =`,
-        this.state.endTime - this.state.startTime,
-      )
-      console.log('this.state.duration', duration)
-      console.log('this.state.endTime - this.state.startTime', timeDiff)
-      console.log(`((${MET} * 3.5 * ${COMBINED}) / 200) * ${minutes} = ${cals}`)
-    }
-    return cals
+    return simpCalories(minutes, weights, MET)
   }
 
   /*
    * @todo Provide implentation for Pandolf calorie estimate.
    */
-  pandolfCalories() {
-    return this.state.pandolfCalories
+  pandolfCalories(coords, options) {
+    const cals = panCalories(coords, options)
+    console.log('pandolf-santee calories')
+    console.log('weights:', this.state.weights)
+    console.log('terrain:', this.state.terrain)
+    console.log('pandolf-santee calories:', cals)
+    return cals
   }
 
   get totalElevationChange() {
@@ -411,6 +423,21 @@ class State extends Subject {
   }
 
   get geojson() {
+    const coords = this.state.wayPoints.map((w) => [
+      w.longitude,
+      w.latitude,
+      w.heading ?? 0.0, // property unsanctioned by geojson spec (heading)
+      w.altitude, // property unsanctioned by geojson spec (altitude)
+      w.accuracy, // property unsanctioned by geojson spec (gps accuracy)
+      w.timestamp, // property unsanctioned by geojson spec (waypoint timestamp)
+    ])
+    const pandolfOptions = {
+      bodyWeightKg: this.state.weights.body,
+      loadKg: this.state.weights.ruck,
+      waterKg: this.state.weights.water,
+      terrain: this.state.terrain.value,
+      smooth: true,
+    }
     return {
       type: 'FeatureCollection',
       features: [
@@ -436,20 +463,21 @@ class State extends Subject {
               Math.floor((Math.abs(this.state.endTime - this.state.startTime)) / 60000),
               this.state.weights,
             ),
-            pandolfCalories: null,
+            pandolfCalories: this.pandolfCalories(coords, pandolfOptions),
             weights: this.state.weights,
             terrain: this.state.terrain,
           },
           geometry: {
             type: 'LineString',
-            coordinates: this.state.wayPoints.map((w) => [
-              w.longitude,
-              w.latitude,
-              w.heading ?? 0.0, // property unsanctioned by geojson spec (heading)
-              w.altitude, // property unsanctioned by geojson spec (altitude)
-              w.accuracy, // property unsanctioned by geojson spec (gps accuracy)
-              w.timestamp, // property unsanctioned by geojson spec (waypoint timestamp)
-            ]),
+            coordinates: coords,
+            // coordinates: this.state.wayPoints.map((w) => [
+            //   w.longitude,
+            //   w.latitude,
+            //   w.heading ?? 0.0, // property unsanctioned by geojson spec (heading)
+            //   w.altitude, // property unsanctioned by geojson spec (altitude)
+            //   w.accuracy, // property unsanctioned by geojson spec (gps accuracy)
+            //   w.timestamp, // property unsanctioned by geojson spec (waypoint timestamp)
+            // ]),
           },
         },
       ],
