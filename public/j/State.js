@@ -225,11 +225,11 @@ class State extends Subject {
   }
 
   set bodyWeight(bw) {
-    this.state.weights.bodyWeight = bw
+    this.state.weights.body = bw
   }
 
   get bodyWeight() {
-    return this.state.weights.bodyWeight
+    return this.state.weights.body
   }
 
   set ruckWeight(rw) {
@@ -461,7 +461,12 @@ class State extends Subject {
             changeInElevation: this.state.changeInElevation,
             simpleCalories: this.simpleCalories(
               Math.floor((Math.abs(this.state.endTime - this.state.startTime)) / 60000),
-              this.state.weights,
+              // this.state.weights,
+              {
+                body: this.state.weights.body / 2.2,
+                ruck: this.state.weights.ruck / 2.2,
+                water: (this.state.weights.water === 0) ? 0 : this.state.weights.water / 2.2,
+              },
             ),
             pandolfCalories: this.pandolfCalories(coords, pandolfOptions),
             weights: this.state.weights,
