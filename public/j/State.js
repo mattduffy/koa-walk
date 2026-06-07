@@ -432,9 +432,9 @@ class State extends Subject {
       w.timestamp, // property unsanctioned by geojson spec (waypoint timestamp)
     ])
     const pandolfOptions = {
-      bodyWeightKg: this.state.weights.body,
-      loadKg: this.state.weights.ruck,
-      waterKg: this.state.weights.water,
+      bodyWeightKg: this.state.weights.body / 2.2,
+      loadKg: this.state.weights.ruck / 2.2,
+      waterKg: (this.state.weights.water === 0) ? 0 : this.state.weights.water / 2.2,
       terrain: this.state.terrain.value,
       smooth: true,
     }
