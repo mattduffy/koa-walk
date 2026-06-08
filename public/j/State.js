@@ -55,6 +55,7 @@ class State extends Subject {
       simpleCalories: null,
       pandolfCalories: null,
       weights: { body: null, ruck: 0, water: 0 },
+      apple: { activity: null },
       terrain: { text: null, value: null },
       c: [],
       wayPoints: [],
