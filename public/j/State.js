@@ -472,6 +472,7 @@ class State extends Subject {
             pandolfCalories: this.pandolfCalories(coords, pandolfOptions),
             weights: this.state.weights,
             terrain: this.state.terrain,
+            apple: this.state.apple,
           },
           geometry: {
             type: 'LineString',
