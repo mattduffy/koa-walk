@@ -82,7 +82,7 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
     title: `${ctx.app.site}: Walk`,
     isAuthenticated: ctx.state.isAuthenticated ?? false,
     preferences: ctx.state.sessionUser?.preferences ?? false,
-    VERSION: 0.1,
+    VERSION: 0.2,
   }
   await ctx.render('index', locals)
 })
