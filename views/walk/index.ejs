@@ -52,8 +52,29 @@
               </label>
             </span>
             <br>
+            <span style="font-weight: 450;">BMR Values:</span>
+            <br>
+            <span class="hoverHilite">
+              <label>
+                Height cm <input id="heightId" name="height" type="text" size="5" value="<%= preferences?.height ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
+              </label>
+            </span>
+            <br>
+            <span class="hoverHilite">
+              <label>
+                Age <input id="ageId" name="age" type="text" size="5" value="<%= preferences?.age ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
+              </label>
+            </span>
+            <br>
+            <span class="hoverHilite">
+              <label>
+                Gender (m or f) <input id="sexId" name="sex" type="text" size="5" value="<%= preferences?.sex ?? '?' %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
+              </label>
+            </span>
+            <br>
             <span style="font-weight: 450;">Ruck Weights:</span>
             <br>
+            
             <span class="hoverHilite">
               <label>
                 Body Weight lbs <input id="bodyWeightId" name="bodyWeight" type="text" size="5" value="<%= preferences?.bodyWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
@@ -323,6 +344,9 @@
     info('updatePreference(e)', e)
     e.preventDefault()
     e.stopPropagation()
+    if (e.target.name === 'sex' && !/m|f/i.test(e.target.value)) {
+      return false 
+    }
     const credentials = {}
     credentials.url = `${origin}/user/preferences/update`
     credentials.csrfTokenHidden = window.csrfToken
@@ -350,7 +374,7 @@
     updatePreferences.finish = finish
     window.walker.postMessage(credentials)
   }
-  function truncateText(text = '', length = 35) {
+  function truncateText(text = '', length = 34) {
     if (text === '' || length < 1) {
       return ''
     }
@@ -1028,6 +1052,18 @@
         document.forms['preferences'].elements['orientation'].forEach((r) => {
           r.addEventListener('change', updatePreferences)
         })
+        document.forms['preferences'].elements['height'].addEventListener(
+          'change',
+          updatePreferences,
+        )
+        document.forms['preferences'].elements['age'].addEventListener(
+          'change',
+          updatePreferences,
+        )
+        document.forms['preferences'].elements['sex'].addEventListener(
+          'change',
+          updatePreferences,
+        )
         document.forms['preferences'].elements['bodyWeight'].addEventListener(
           'change',
           updatePreferences,
