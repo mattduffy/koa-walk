@@ -583,12 +583,32 @@ textarea {
     max-width: 95%;
   }
   
+  input[type=text]#heightId {
+    max-width: 3em;
+    width: 2.5em;
+  }
+
+  input[type=text]#ageId {
+    max-width: 3em;
+    width: 2.5em;
+  }
+
+  input[type=text]#sexId {
+    max-width: 3em;
+    width: 2.5em;
+  }
+
   input[type=text]#bodyWeightId {
     max-width: 3em;
     width: 2.5em;
   }
 
   input[type=text]#ruckWeightId {
+    max-width: 3em;
+    width: 2.5em;
+  }
+
+  input[type=text]#waterOuncesId {
     max-width: 3em;
     width: 2.5em;
   }
