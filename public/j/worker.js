@@ -61,6 +61,15 @@ async function setPref(credentials) {
     formData.append('orientation', credentials.orientation)
     // formData.append('userId', user.userId)
   }
+  if (credentials?.height) {
+    formData.append('height', credentials.height)
+  }
+  if (credentials?.age) {
+    formData.append('age', credentials.age)
+  }
+  if (credentials?.sex) {
+    formData.append('sex', credentials.sex)
+  }
   if (credentials?.bodyWeight) {
     formData.append('bodyWeight', credentials.bodyWeight)
   }
