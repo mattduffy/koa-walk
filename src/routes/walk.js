@@ -151,6 +151,7 @@ router.post(
         log('sessionUser: ', ctx.state?.sessionUser?.username)
         log('sessionUser email: ', ctx.state?.sessionUser?.email?.primary)
         log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
+        log('request body: ', ctx.request.body)
         let units
         if (ctx.request.body?.units) {
           // eslint-disable-next-line
@@ -160,6 +161,21 @@ router.post(
         if (ctx.request.body?.orientation) {
           // eslint-disable-next-line
           [orientation] = ctx.request.body?.orientation
+        }
+        let height
+        if (ctx.request.body?.height) {
+          // eslint-disable-next-line
+          [height] = ctx.request.body?.height
+        }
+        let age
+        if (ctx.request.body?.age) {
+          // eslint-disable-next-line
+          [age] = ctx.request.body?.age
+        }
+        let sex
+        if (ctx.request.body?.sex) {
+          // eslint-disable-next-line
+          [sex] = ctx.request.body?.sex
         }
         let bodyWeight
         if (ctx.request.body?.bodyWeight) {
@@ -178,6 +194,9 @@ router.post(
         }
         log('preference units:       ', units)
         log('preference orientation: ', orientation)
+        log('preference height: ', height)
+        log('preference age: ', age)
+        log('preference sex: ', sex)
         log('preference bodyWeight: ', bodyWeight)
         log('preference ruckWeight: ', ruckWeight)
         log('preference waterOunces: ', waterOunces)
@@ -186,6 +205,15 @@ router.post(
         }
         if (orientation) {
           ctx.state.sessionUser.preferences.orientation = orientation
+        }
+        if (height) {
+          ctx.state.sessionUser.preferences.height = Number.parseInt(height, 10)
+        }
+        if (age) {
+          ctx.state.sessionUser.preferences.age = Number.parseInt(age, 10)
+        }
+        if (sex) {
+          ctx.state.sessionUser.preferences.sex = sex.toLowerCase()
         }
         if (bodyWeight) {
           ctx.state.sessionUser.preferences.bodyWeight = bodyWeight
