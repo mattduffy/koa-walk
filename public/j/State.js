@@ -7,8 +7,9 @@ import {
   // heading,
 } from './Heading.js'
 import {
-  pandolfCalories as panCalories,
-  simpleCalories as simpCalories,
+  pandolfCalories as pandolf,
+  simpleCalories as simple,
+  lcdaCalories as lcda,
 } from './calories.js'
 
 function normalizePosition(c) {
@@ -54,9 +55,16 @@ class State extends Subject {
       changeInElevation: null,
       simpleCalories: null,
       pandolfCalories: null,
+      lcdaCalories: null,
       weights: { body: null, ruck: 0, water: 0 },
       apple: { activity: null },
       terrain: { text: null, value: null },
+      bmr: {
+        height: null,
+        weight: null,
+        age: null,
+        sex: null,
+      },
       c: [],
       wayPoints: [],
       headings: [],
@@ -82,6 +90,12 @@ class State extends Subject {
     this.state.pandolfCalories = null
     this.state.weights = { body: null, ruck: null, water: null }
     this.state.terrain = { text: null, value: null }
+    this.state.bmr = {
+      height: null,
+      weight: null,
+      age: null,
+      sex: null,
+    }
     this.state.c = []
     this.state.wayPoints = []
     this.state.headings = []
@@ -111,36 +125,33 @@ class State extends Subject {
    * @param Number MET - The metabolic equivalent task number.
    * @return Number - Estimated calories used per duration of MET.
    */
-  // simpleCalories(minutes, weights = { body: 0, ruck: 0, water: 0 }, MET = this.#MET) {
-  //   const COMBINED = weights.body + (weights.ruck ?? 0) + (weights.water ?? 0)
-  //   const { duration } = this.state
-  //   const timeDiff = Math.floor(Math.abs(this.state.endTime - this.state.startTime) / 60000)
-  //   const cals = ((MET * 3.5 * COMBINED) / 200) * minutes
-  //   if (this.#VERBOSE) {
-  //     console.log('calculating simple EE method')
-  //     console.log('body: ', weights.body, 'ruck: ', weights.ruck, 'h20: ', weights.water)
-  //     console.log('combinded weights: ', COMBINED)
-  //     console.log('MET', this.#MET)
-  //     console.log('minutes', minutes)
-  //     console.log(
-  //       `endTime ${this.state.endTime} - startTime ${this.state.startTime} =`,
-  //       this.state.endTime - this.state.startTime,
-  //     )
-  //     console.log('this.state.duration', duration)
-  //     console.log('this.state.endTime - this.state.startTime', timeDiff)
-  //     console.log(`((${MET} * 3.5 * ${COMBINED}) / 200) * ${minutes} = ${cals}`)
-  //   }
-  //   return cals
-  // }
   simpleCalories(minutes, weights = { body: 0, ruck: 0, water: 0 }, MET = this.#MET) {
-    return simpCalories(minutes, weights, MET)
+    return simple(minutes, weights, MET)
   }
 
-  /*
-   * @todo Provide implentation for Pandolf calorie estimate.
+  /**
+   * @todo Provide documentation for LCDA calorie estimate.
+   */
+  lcdaCalories(coords, bmr, options) {
+    if (!this.state.bmr.height
+      || !this.state.bmr.age
+      || !this.state.bmr.sex
+      || !this.state.bmr.weight) {
+      return null
+    }
+    const cals = lcda(coords, bmr, options)
+    console.log('lcda calories')
+    console.log('bmr:', bmr)
+    console.log('options:', options)
+    console.log(cals)
+    return cals
+  }
+
+  /**
+   * @todo Provide documentation for Pandolf calorie estimate.
    */
   pandolfCalories(coords, options) {
-    const cals = panCalories(coords, options)
+    const cals = pandolf(coords, options)
     console.log('pandolf-santee calories')
     console.log('weights:', this.state.weights)
     console.log('terrain:', this.state.terrain)
@@ -227,6 +238,7 @@ class State extends Subject {
 
   set bodyWeight(bw) {
     this.state.weights.body = bw
+    this.state.bmr.weight = bw
   }
 
   get bodyWeight() {
@@ -255,6 +267,30 @@ class State extends Subject {
 
   get waterOunces() {
     return this.state.weight.water / this.#WATER_OUNCE
+  }
+
+  set bmr(bmr) {
+    this.state.bmr = bmr
+  }
+
+  get bmr() {
+    return this.state.bmr
+  }
+
+  set height(h) {
+    this.state.bmr.height = h
+  }
+
+  get height() {
+    return this.state.bmr.height
+  }
+
+  set age(y) {
+    this.state.bmr.age = y
+  }
+
+  get age() {
+    return this.state.bmr.age
   }
 
   set active(s) {
@@ -439,6 +475,13 @@ class State extends Subject {
       terrain: this.state.terrain.value,
       smooth: true,
     }
+    const lcdaOptions = {
+      bodyWeightKg: this.state.weights.body / 2.2,
+      loadKg: this.state.weights.ruck / 2.2,
+      waterKg: (this.state.weights.water === 0) ? 0 : this.state.weights.water / 2.2,
+      terrain: this.state.terrain.value,
+      smooth: true,
+    }
     return {
       type: 'FeatureCollection',
       features: [
@@ -470,6 +513,7 @@ class State extends Subject {
               },
             ),
             pandolfCalories: this.pandolfCalories(coords, pandolfOptions),
+            lcdaCalories: this.lcdaCalories(coords, this.state.bmr, lcdaOptions),
             weights: this.state.weights,
             terrain: this.state.terrain,
             apple: this.state.apple,
