@@ -961,6 +961,7 @@ function startWalk(s) {
   walkState.name = s.name
   walkState.location = s.location
   walkState.weights = s.weights
+  walkState.bmr = s.bmr
   walkState.terrain = s.terrain
   walkState.date = s.date
   walkState.startTime = s.startTime
