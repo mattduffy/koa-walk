@@ -704,7 +704,7 @@
     if (DEBUG) {
       log(`DEBUG is ${DEBUG}, so should emit localityChanged events`)
       // log('DEBUG=',DEBUG)
-      window.addEventListener('locality-changed', localityChanged)
+      // window.addEventListener('locality-changed', localityChanged)
     }
     function clickStartNew(e) {
       info('clickStartNew(e)', e)
@@ -758,6 +758,14 @@
         value: Number.parseFloat(terrainField.selectedOptions[0].value || 1.1),
         text: terrainField.selectedOptions[0].textContent,
       }
+      const bmr = {
+        weight: Number.parseInt(
+          document.querySelector('input[type=text]#bodyWeightId').value / 2.2
+        ),
+        height: Number.parseInt(document.querySelector('input[type=text]#heightId').value, 10),
+        age: Number.parseInt(document.querySelector('input[type=text]#ageId').value, 10),
+        sex: document.querySelector('input[type=text]#sexId').value,
+      }
       const name = startWalkForm.children.namedItem('name').value
       const location = startWalkForm.children.namedItem('location').value
       startWalkForm.style.display = 'none'
@@ -782,6 +790,7 @@
       window.walking.terrain = terrain
       window.walking.weights.body = bodyWeight
       window.walking.weights.ruck = ruckWeight
+      window.walking.bmr = bmr
       const c = new mapkit.Coordinate(
         window.walking.currentPosition.latitude,
         window.walking.currentPosition.longitude
@@ -794,6 +803,7 @@
         date: _d,
         startTime: _d,
         weights: window.walking.weights,
+        bmr,
         terrain,
         u: DISPLAY_UNITS,
         startPosition: window.walking.currentPosition,
