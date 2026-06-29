@@ -499,7 +499,7 @@ class State extends Subject {
             startPosition: this.state.startPosition,
             endPosition: this.state.endPosition,
             distance: this.state.distance,
-            timestamps: this.state.wayPoints.map((w) => w.timestamp),
+            // timestamps: this.state.wayPoints.map((w) => w.timestamp),
             highestElevation: this.state.highestElevation,
             lowestElevation: this.state.lowestElevation,
             changeInElevation: this.state.changeInElevation,
