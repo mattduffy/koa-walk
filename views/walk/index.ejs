@@ -28,13 +28,13 @@
             <br>
             <span class="hoverHilite">
               <label>
-                Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (preferences.units === 'Metric') ? 'checked' : '' %> tabindex="0" style="float: right;">
+                Metric - meters &amp; kilometers<input id="metricId" name="units" type="radio" value="Metric" <%= (preferences.units === 'Metric') ? 'checked' : '' %> tabindex="0" style="float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
             <span class="hoverHilite">
               <label>
-                Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (preferences.units === 'Imperial') ? 'checked' : '' %> tabindex="0" style="float: right;">
+                Imperial - feet &amp; miles<input id="imperialId" name="units" type="radio" value="Imperial" <%= (preferences.units === 'Imperial') ? 'checked' : '' %> tabindex="0" style="float: right; position; relative: top: 2px;">
               </label>
             </span>
             <br>
@@ -42,13 +42,13 @@
             <br>
             <span class="hoverHilite">
               <label>
-                North Up<input id="northUpId" name="orientation" type="radio" value="northUp" <%= (preferences?.orientation === 'northUp') ? 'checked' : '' %> tabindex="0" style="float: right;">
+                North Up<input id="northUpId" name="orientation" type="radio" value="northUp" <%= (preferences?.orientation === 'northUp') ? 'checked' : '' %> tabindex="0" style="float: right; position: relative; top: 3px;">
               </label>
             </span>
             <br>
             <span class="hoverHilite">
               <label>
-                Heading Up<input id="headingUpId" name="orientation" type="radio" value="headingUp" <%= (preferences?.orientation === 'headingUp') ? 'checked' : '' %> tabindex="0" style="float: right;">
+                Heading Up<input id="headingUpId" name="orientation" type="radio" value="headingUp" <%= (preferences?.orientation === 'headingUp') ? 'checked' : '' %> tabindex="0" style="float: right; position: relative; top: 3px;">
               </label>
             </span>
             <br>
@@ -56,19 +56,19 @@
             <br>
             <span class="hoverHilite">
               <label>
-                Height cm <input id="heightId" name="height" type="text" size="5" value="<%= preferences?.height ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
+                Height cm <input id="heightId" name="height" type="text" size="5" value="<%= preferences?.height ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
             <span class="hoverHilite">
               <label>
-                Age <input id="ageId" name="age" type="text" size="5" value="<%= preferences?.age ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
+                Age <input id="ageId" name="age" type="text" size="5" value="<%= preferences?.age ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
             <span class="hoverHilite">
               <label>
-                Gender (m or f) <input id="sexId" name="sex" type="text" size="5" value="<%= preferences?.sex ?? '?' %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
+                Gender (m or f) <input id="sexId" name="sex" type="text" size="5" value="<%= preferences?.sex ?? '?' %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
@@ -77,19 +77,19 @@
             
             <span class="hoverHilite">
               <label>
-                Body Weight lbs <input id="bodyWeightId" name="bodyWeight" type="text" size="5" value="<%= preferences?.bodyWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
+                Body Weight lbs <input id="bodyWeightId" name="bodyWeight" type="text" size="5" value="<%= preferences?.bodyWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
             <span class="hoverHilite">
               <label>
-                Ruck Weight lbs <input id="ruckWeightId" name="ruckWeight" type="text" size="5" value="<%= preferences?.ruckWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right">
+                Ruck Weight lbs <input id="ruckWeightId" name="ruckWeight" type="text" size="5" value="<%= preferences?.ruckWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
             <span class="hoverHilite">
             <label>
-              Ounces of Water <input id="waterOuncesId" name="waterOunces" type="text" size="5" value="<%= preferences?.waterOunces ?? 0%>" tabindex="0" style="margin-left: 1em; text-align: right; float: right;">
+              Ounces of Water <input id="waterOuncesId" name="waterOunces" type="text" size="5" value="<%= preferences?.waterOunces ?? 0%>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
             </label>
             </span>
           </fieldset>
