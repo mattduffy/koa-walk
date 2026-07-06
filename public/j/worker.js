@@ -79,6 +79,15 @@ async function setPref(credentials) {
   if (credentials?.waterOunces) {
     formData.append('waterOunces', credentials.waterOunces)
   }
+  if (credentials?.shoes) {
+    formData.append('shoes', credentials.shoes)
+  }
+  if (credentials?.firstName) {
+    formData.append('firstName', credentials.firstName)
+  }
+  if (credentials?.lastName) {
+    formData.append('lastName', credentials.lastName)
+  }
   const opts = {
     method: 'POST',
     headeers: {
@@ -963,6 +972,7 @@ function startWalk(s) {
   walkState.weights = s.weights
   walkState.bmr = s.bmr
   walkState.terrain = s.terrain
+  walkState.shoe = s.shoe
   walkState.date = s.date
   walkState.startTime = s.startTime
   walkState.startPosition = s.startPosition
