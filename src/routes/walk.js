@@ -192,6 +192,21 @@ router.post(
           // eslint-disable-next-line
           [waterOunces] = ctx.request.body.waterOunces
         }
+        let shoes
+        if (ctx.request.body?.shoes) {
+          // eslint-disable-next-line
+          [shoes] = ctx.request.body.shoes
+        }
+        let firstName
+        if (ctx.request.body?.firstName) {
+          // eslint-disable-next-line
+          [firstName] = ctx.request.body.firstName
+        }
+        let lastName
+        if (ctx.request.body?.lastName) {
+          // eslint-disable-next-line
+          [lastName] = ctx.request.body.lastName
+        }
         log('preference units:       ', units)
         log('preference orientation: ', orientation)
         log('preference height: ', height)
@@ -200,6 +215,9 @@ router.post(
         log('preference bodyWeight: ', bodyWeight)
         log('preference ruckWeight: ', ruckWeight)
         log('preference waterOunces: ', waterOunces)
+        log('preference shoes: ', shoes)
+        log('preference firstName: ', firstName)
+        log('preference lastName: ', lastName)
         if (units) {
           ctx.state.sessionUser.preferences.units = units
         }
@@ -223,6 +241,21 @@ router.post(
         }
         if (waterOunces) {
           ctx.state.sessionUser.preferences.waterOunces = waterOunces
+        }
+        if (shoes) {
+          if (Array.isArray(ctx.state.sessionUser.preferences?.shoes)) {
+            ctx.state.sessionUser.preferences.shoes.unshift(shoes)
+          } else {
+            ctx.state.sessionUser.preferences.shoes = [shoes]
+          }
+        }
+        if (firstName) {
+          ctx.state.sessionUser.preferences.firstName = firstName
+          ctx.state.sessionUser.firstName = firstName
+        }
+        if (lastName) {
+          ctx.state.sessionUser.preferences.lastName = lastName
+          ctx.state.sessionUser.lastName = lastName
         }
         try {
           const temp = await ctx.state.sessionUser.update()
