@@ -158,7 +158,9 @@ span.countBadge {
   display: none;
   position: absolute;
   top: 0px;
-  left: 0px;}
+  left: 0px;
+  padding: 0.15em;
+}
 
 span.countBadge:before {
   content:'';
@@ -176,10 +178,11 @@ div.countBadge {
   border-radius: 50%;
   vertical-align: middle; 
   display: none;
-  font-size: .65em;
+  font-size: .75em;
   position: absolute;
   top: 0px;
   left: 0px;
+  padding: 0.15em;
 }
 
 div.countBadge:before {
