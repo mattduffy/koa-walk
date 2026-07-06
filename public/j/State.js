@@ -59,6 +59,7 @@ class State extends Subject {
       weights: { body: null, ruck: 0, water: 0 },
       apple: { activity: null },
       terrain: { text: null, value: null },
+      shoe: null,
       bmr: {
         height: null,
         weight: null,
@@ -90,6 +91,7 @@ class State extends Subject {
     this.state.pandolfCalories = null
     this.state.weights = { body: null, ruck: null, water: null }
     this.state.terrain = { text: null, value: null }
+    this.state.shoe = null
     this.state.bmr = {
       height: null,
       weight: null,
@@ -226,6 +228,14 @@ class State extends Subject {
 
   get terrain() {
     return this.state.terrain
+  }
+
+  set shoe(s) {
+    this.state.shoe = s
+  }
+
+  get shoe() {
+    return this.state.shoe
   }
 
   set weights(w) {
@@ -516,6 +526,7 @@ class State extends Subject {
             lcdaCalories: this.lcdaCalories(coords, this.state.bmr, lcdaOptions),
             weights: this.state.weights,
             terrain: this.state.terrain,
+            shoe: this.state.shoe,
             apple: this.state.apple,
           },
           geometry: {
