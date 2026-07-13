@@ -485,6 +485,8 @@ class State extends Subject {
       terrain: this.state.terrain.value,
       smooth: true,
     }
+    const pCalories = this.pandolfCalories(coords, pandolfOptions)
+    delete pCalories?.segments
     const lcdaOptions = {
       bodyWeightKg: this.state.weights.body / 2.2,
       loadKg: this.state.weights.ruck / 2.2,
@@ -492,6 +494,8 @@ class State extends Subject {
       terrain: this.state.terrain.value,
       smooth: true,
     }
+    const lCalories = this.lcdaCalories(coords, this.state.bmr, lcdaOptions)
+    delete lCalories?.segments
     return {
       type: 'FeatureCollection',
       features: [
@@ -522,8 +526,8 @@ class State extends Subject {
                 water: (this.state.weights.water === 0) ? 0 : this.state.weights.water / 2.2,
               },
             ),
-            pandolfCalories: this.pandolfCalories(coords, pandolfOptions),
-            lcdaCalories: this.lcdaCalories(coords, this.state.bmr, lcdaOptions),
+            pandolfCalories: pCalories,
+            lcdaCalories: lCalories,
             weights: this.state.weights,
             terrain: this.state.terrain,
             shoe: this.state.shoe,
