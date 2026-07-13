@@ -1294,8 +1294,10 @@
       initials.dataset.nameInitials = i
       initials.textContent = i
       const first = document.querySelector('span[data-name-first]')
-      first.dataset.first = e.user.first
-      first.textContent = e.user.first
+      if (first) {
+        first.dataset.first = e.user.first
+        first.textContent = e.user.first
+      }
       document.querySelector(`input[type=radio][value=${
         e.user.preferences.units
       }]`).checked = 'checked'
@@ -1355,8 +1357,10 @@
       initials.dataset.nameInitials = ''
       initials.textContent = ''
       const first = document.querySelector('span[data-name-first]')
-      first.dataset.nameFirst = ''
-      first.textContent = ''
+      if (first) {
+        first.dataset.nameFirst = ''
+        first.textContent = ''
+      }
       const walkList = document.querySelector('ul#walks')
       if (walkList) {
         walkList.remove()
