@@ -9,12 +9,14 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import * as Koa from 'koa'
+import Router from '@koa/router'
 import serve from 'koa-static'
 import Keygrip from 'keygrip'
 import render from '@koa/ejs'
 import * as dotenv from 'dotenv'
 import { migrations } from '@mattduffy/koa-migrations'
 import { Banner } from '@mattduffy/banner'
+import { getCaloriesJs } from '@mattduffy/calories'
 import { _log, _error } from './utils/logging.js'
 import { geoIPCity } from './utils/geoip.js'
 import * as mongoClient from './daos/impl/mongodb/mongo-client.js'
@@ -40,6 +42,9 @@ import { mapkit as Mapkit } from './routes/mapkit.js'
 import { app as theApp } from './routes/app.js'
 import { users as Users } from './routes/users.js'
 import { seo as Seo } from './routes/seo.js'
+
+const caloriesRouter = new Router()
+caloriesRouter.get('caloriesjs', '/j/calories.js', getCaloriesJs)
 
 const log = _log.extend('index')
 const error = _error.extend('index')
@@ -339,6 +344,8 @@ async function viewGlobals(ctx, next) {
 async function logRequest(ctx, next) {
   const logg = log.extend('logRequest')
   const err = error.extend('logRequest')
+  const logEntry = {}
+  const geos = []
   try {
     /* eslint-disable-next-line */
     const ignore = ['favicon', 'c/.+\.css']
@@ -350,16 +357,15 @@ async function logRequest(ctx, next) {
     if (ignore.find(find) === undefined) {
       const db = ctx.state.mongodb.client.db(ctx.state.mongodb.dbName)
       const mainLog = db.collection('mainLog')
-      const logEntry = {}
       logEntry.remoteIps = ctx.request.ips
-      const geos = []
       if (geoIPCity && ctx.request.ips) {
         try {
-          if (Array.isArray(ctx.request.ips)) {
+          if (Array.isArray(ctx.request.ips) && ctx.request.ips.length > 0) {
             ctx.request.ips.forEach((ip, i) => {
-              const city = geoIPCity.city(ip)
+              const _ip = /^::ffff:(?<ip4>.*)$/.exec(ip)?.groups.ip4 ?? ip
+              const city = geoIPCity.city(_ip)
               const geo = {}
-              geo.ip = ip
+              geo.ip = _ip
               geo.country = city?.country?.names?.en
               geo.city = city?.city?.names?.en
               geo.subdivision = city?.subdivisions?.[0]?.names?.en
@@ -368,12 +374,12 @@ async function logRequest(ctx, next) {
               logEntry[`geo_${i}`] = geo
               geos.push(geo)
               // logg('Request ip geo:     %o', geo)
-              // ctx.session.ip = ctx.request.ips
             })
           } else {
             const city = geoIPCity.city(ctx.request.ip)
             const geo = {}
-            geo.ip = ctx.request.ip
+            // Find IPv6 addresses with ::ffff prefix that is just masking an IPv4 address.
+            geo.ip = /^::ffff:(?<ip4>.*)$/.exec(ctx.request.ip)?.groups.ip4 ?? ctx.request.ip
             geo.country = city?.country?.names?.en
             geo.city = city?.city?.names?.en
             geo.subdivision = city?.subdivisions?.[0]?.names?.en
@@ -382,10 +388,9 @@ async function logRequest(ctx, next) {
             logEntry.geo = geo
             geos.push(geo)
             // logg('Request ip geo:     %O', geo)
-            // ctx.session.ip = ctx.request.ip
           }
         } catch (e) {
-          err(e.message)
+          err('logEntry error: ', e.message)
         }
       } else {
         logg(`failed to log ip geo for ${ctx.request.ips}`)
@@ -396,11 +401,18 @@ async function logRequest(ctx, next) {
       logEntry.httpVersion = `${ctx.req.httpVersionMajor}.${ctx.req.httpVersionMinor}`
       logEntry.referer = ctx.request.headers?.referer
       logEntry.userAgent = ctx.request.headers['user-agent']
-      ctx.state.logEntry = { ip: logEntry.remoteIps, geos }
+      ctx.state.logEntry = {
+        ip: (geos.length > 0 && geos[0]?.ip) ? geos[0].ip : ctx.request.ip,
+        geos,
+      }
       await mainLog.insertOne(logEntry)
     }
+    const remoteIps = (logEntry?.geos && logEntry.geos.length > 0)
+      ? logEntry.geos[0].ip
+      : ctx.request.ips
+    logg('geos:                %O', geos)
     logg(`Request href:        ${ctx.request.href}`)
-    logg(`Request remote ips:  ${ctx.request.ips}`)
+    logg(`Request remote ips:  ${remoteIps}`)
     logg(`Request remote ip:   ${ctx.request.ip}`)
     logg('Request user-agent:  %O', ctx.request.headers['user-agent'])
     logg('Request querystring: %O', ctx.request.query)
@@ -410,6 +422,9 @@ async function logRequest(ctx, next) {
     ctx.throw(500, 'Rethrown in logRequest middleware.')
   }
 }
+
+// special use case for the calories router
+app.use(caloriesRouter.routes())
 
 app.use(isMongo)
 app.use(logRequest)
