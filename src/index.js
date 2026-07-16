@@ -348,7 +348,7 @@ async function logRequest(ctx, next) {
   const geos = []
   try {
     /* eslint-disable-next-line */
-    const ignore = ['favicon', 'c/.+\.css']
+    const ignore = ['favicon', 'c/.+\.css', 'j/*.js']
     /* eslint-disable-next-line */
     function find(x) {
       const re = new RegExp(x)
@@ -374,7 +374,7 @@ async function logRequest(ctx, next) {
               geo.coords = [city?.location?.latitude, city?.location?.longitude]
               logEntry[`geo_${i}`] = geo
               geos.push(geo)
-              // logg('Request ip geo:     %o', geo)
+              // logg('Request ip geo:     %O', geo)
             })
           } else {
             const city = geoIPCity.city(ctx.request.ip)
