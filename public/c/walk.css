@@ -266,6 +266,7 @@ div#container {
   top: 14vh;
   left: 4.5vw;
   width: 90vw;
+  max-width: 375px;
   height: auto;
   margin: 0 auto;
 }
@@ -304,7 +305,8 @@ div#list {
   background-color: white;
   border-radius: .5em;
   padding: .25em;
-  max-height: 250px;
+  height: auto;
+  max-height: 400px;
   overflow: scroll;
 }
 
@@ -492,6 +494,12 @@ form {
 fieldset {
   border-radius: .5em;
   overflow: scroll;
+}
+
+fieldset#set1Id {
+  height: auto;
+  max-height: 65vh;
+  overflow-y: scroll;
 }
 
 fieldset label {
