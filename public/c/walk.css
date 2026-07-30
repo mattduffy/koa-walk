@@ -587,6 +587,13 @@ textarea {
   }
 
   input[type=text] {
+    font-size: 0.75em;
+    width: auto;
+    max-width: 95%;
+  }
+
+  input[type=text][id=name] {
+    font-size: 0.90em;
     width: auto;
     max-width: 95%;
   }
