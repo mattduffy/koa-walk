@@ -291,6 +291,43 @@
   info('DEBUG is set to:', DEBUG)
   info('DISPLAY_UNITS', DISPLAY_UNITS)
   info('DISPLAY_ORIENTATION', DISPLAY_ORIENTATION)
+
+  let wakeLock = null
+  if ('wakeLock' in navigator) {
+    info('WakeLock supported.')
+    async function releaseWakeLock() {
+      if (wakeLock) {
+        try {
+          info('release wake lock sentinel')
+          await wakeLock.release()
+          info('wake lock sentinel released')
+        } catch (err) {
+          error('Failed to release wakeLock', err)
+        }
+        wakeLock = null
+        info('wakeLock should now be null', wakeLock)
+      }
+      info('wakeLock is null?', wakeLock)
+    }
+    window.releaseWakeLock = releaseWakeLock
+    async function requestWakeLock(ctx) {
+      try {
+        wakeLock = await navigator.wakeLock.request(ctx)
+        log('wake lock sentinel acquired', wakeLock)
+        wakeLock.addEventListener('release', releaseWakeLock)
+      } catch (err) {
+        error('wakeLock release failed', err)
+      }
+    }
+    window.requestWakeLock = requestWakeLock
+    document.addEventListener('visibilityChange', async (e) => {
+      info('VisibilityChange event fired', e)
+      if (!wakeLock && document.visibilityState === 'visible') {
+        // wakeLock = await navigator.wakeLock.request('screen')
+        wakeLock = await requestWakeLock('screen')
+      }
+    })
+  }
   const identifier = 'my_walk'
   const origin = '<%= origin %>'
   const jwtAccess = '<%= searchJwtAccess %>'
@@ -765,9 +802,16 @@
         warn('No web worker, can\'t save walk.')
         return false
       }
-      if (!"geolocation" in navigator) {
+      if (!'geolocation' in navigator) {
         warn('You don\'t have a location, can\'t start walk.')
         return false
+      }
+      if ('wakeLock' in navigator) {
+        if (!wakeLock) {
+          await window.requestWakeLock('screen')
+        } else {
+          info('wakeLock sentinel already active.') 
+        }
       }
       const startWalkForm = document.forms.namedItem('startWalkForm')
       const bodyWeightField = 
@@ -897,7 +941,9 @@
       info('stopWalk(e)', e)
       e.preventDefault()
       e.stopPropagation()
-      const start = document.querySelector('button#start')
+      if ('wakeLock' in navigator && wakeLock) {
+        await releaseWakeLock()
+      } const start = document.querySelector('button#start')
       const stop = document.querySelector('button#stop')
       start.disabled = false
       stop.disabled = true
