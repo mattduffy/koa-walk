@@ -217,9 +217,13 @@ async function permissions(ctx, next) {
     perms = 'geolocation=(*)'
     logg(`Permissions-Policy: ${perms}`)
   } else {
-    perms = `geolocation=("${ctx.request.origin}")`
+    // perms = `geolocation=("${ctx.request.origin}"), `
+    // perms += `screen-wake-lock=${ctx.request.origin}")`
+    perms = 'geolocation=(self), '
+    perms += 'screen-wake-lock=(self)'
   }
-  ctx.set('Permissions-Policy', perms)
+  ctx.set('permissions-policy', perms)
+  logg('permissions-policy:', perms)
   try {
     await next()
   } catch (e) {
