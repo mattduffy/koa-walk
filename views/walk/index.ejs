@@ -292,39 +292,43 @@
   info('DISPLAY_UNITS', DISPLAY_UNITS)
   info('DISPLAY_ORIENTATION', DISPLAY_ORIENTATION)
 
-  let wakeLock = null
+  window.myWakeLock = null
   if ('wakeLock' in navigator) {
     info('WakeLock supported.')
     async function releaseWakeLock() {
-      if (wakeLock) {
+      if (window.myWakeLock) {
         try {
           info('release wake lock sentinel')
-          await wakeLock.release()
+          await window.myWakeLock.release()
           info('wake lock sentinel released')
         } catch (err) {
           error('Failed to release wakeLock', err)
         }
-        wakeLock = null
-        info('wakeLock should now be null', wakeLock)
+        window.myWakeLock = null
+        log('wakeLock should now be null', window.myWakeLock)
       }
-      info('wakeLock is null?', wakeLock)
+      log('wakeLock is null?', window.myWakeLock)
     }
     window.releaseWakeLock = releaseWakeLock
     async function requestWakeLock(ctx) {
+      log('VISIBILITY_STATE', document.visibilityState)
       try {
-        wakeLock = await navigator.wakeLock.request(ctx)
-        log('wake lock sentinel acquired', wakeLock)
-        wakeLock.addEventListener('release', releaseWakeLock)
+        window.myWakeLock = await navigator.wakeLock.request(ctx)
+        log('WAKE LOCK sentinel acquired', window.myWakeLock)
+        window.myWakeLock.addEventListener('release', window.releaseWakeLock)
       } catch (err) {
         error('wakeLock release failed', err)
       }
     }
     window.requestWakeLock = requestWakeLock
+    log('VISIBILITY_STATE', document.visibilityState)
     document.addEventListener('visibilityChange', async (e) => {
-      info('VisibilityChange event fired', e)
-      if (!wakeLock && document.visibilityState === 'visible') {
-        // wakeLock = await navigator.wakeLock.request('screen')
-        wakeLock = await requestWakeLock('screen')
+      log('VisibilityChange event fired', e)
+      log('wakeLock is set to', window.myWakeLock)
+      log('VISIBILITY_STATE', document.visibilityState)
+      if (!window.myWakeLock && document.visibilityState === 'visible') {
+        window.myWakeLock = await window.requestWakeLock('screen')
+        log('resetting wakeLock to', window.myWakeLock)
       }
     })
   }
@@ -807,8 +811,12 @@
         return false
       }
       if ('wakeLock' in navigator) {
-        if (!wakeLock) {
+        if (!window.myWakeLock) {
+          log('WAKE LOCK BEING REQUESTED')
+          log('wakeLock', window.myWakeLock)
           await window.requestWakeLock('screen')
+          log('WAKE LOCK REQUESTED')
+          log('wakeLock', window.myWakeLock)
         } else {
           info('wakeLock sentinel already active.') 
         }
@@ -919,6 +927,10 @@
     }
     document.querySelector('button#start').addEventListener('click', startWalk)
     async function recordWalk(wp, c) {
+      log('WAKE LOCK during recordWalk addPoint', window.myWakeLock)
+      if (!window.myWakeLock || window.myWakeLock.released) {
+        await window.requestWakeLock('screen')
+      }
       const step = { TASK: 'SET_WAYPOINT', wp, c, u: DISPLAY_UNITS, verbose: VERBOSE }
       window.walking.c = c
       window.walking.addPoint(wp, DISPLAY_UNITS, true)
@@ -941,8 +953,11 @@
       info('stopWalk(e)', e)
       e.preventDefault()
       e.stopPropagation()
-      if ('wakeLock' in navigator && wakeLock) {
-        await releaseWakeLock()
+      if ('wakeLock' in navigator) {
+        log('WAKE LOCK being released at the end of a walk.')
+        log('wakeLock', window.myWakeLock)
+        await window.releaseWakeLock()
+        log('wakeLock', window.myWakeLock)
       } const start = document.querySelector('button#start')
       const stop = document.querySelector('button#stop')
       start.disabled = false
