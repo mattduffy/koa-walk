@@ -17,13 +17,18 @@ body {
 
 body > header {
   width: 100vw;
-  min-height: 100%;
+  min-height: auto;
+  top: calc(100vh - 53px);
 }
 
 h1,h2,h3,h4,h5 {
   margin: 0px;
 }
 
+
+.mk-map-view {
+  max-height: calc(100vh - 53px);
+}
 
 a#skipnav {
   position: absolute;
@@ -272,7 +277,8 @@ div#logging > div#bearings > ol {
 div#container {
   z-index: 100;
   position: absolute;
-  top: 14vh;
+  /* top: 14vh; */
+  top: 8vh;
   left: 4.5vw;
   width: 90vw;
   max-width: 375px;
@@ -555,6 +561,12 @@ textarea {
 }
 
 @media screen and (max-width: 400px) {
+  body > header {
+    width: 100vw;
+    min-height: 100%;
+    top: calc(100vh - 53px);
+  }
+
   div#header {
   }
   
