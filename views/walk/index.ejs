@@ -264,7 +264,7 @@
 <script nonce="<%= nonce %>" type="module">
   import State from '/j/State.js'
   const qParams = new URLSearchParams(window.location.search)
-  const DEBUG_LEVEL = qParams.get('debug') ?? 'verbose' // normally should be 'quiet'
+  const DEBUG_LEVEL = qParams.get('debug') ?? 'quiet' // normally should be 'quiet'
   const { log, info, warn, error } = await import(`./j/Logger.js?level=${DEBUG_LEVEL}`)
   info('query string level', DEBUG_LEVEL)
   info(`DEBUG LEVEL === ${DEBUG_LEVEL}`)
@@ -272,6 +272,7 @@
   let DISPLAY_UNITS
   let DISPLAY_ORIENTATION
   const POLYLINE_SEGMENT_LENGTH = 10
+  const CALORIE_MODELS = <%- JSON.stringify(calorieModels) %>
   let VERBOSE = false
   let DEBUG = false
   DISPLAY_UNITS = <%- (preferences?.units)
