@@ -10,6 +10,7 @@ import Router from '@koa/router'
 import { ulid } from 'ulid'
 import { ObjectId } from 'mongodb'
 // import { Users } from '../models/users.js'
+import { models as calorieModels } from '@mattduffy/calories'
 import { _log, _error } from '../utils/logging.js'
 // import { redis } from '../daos/impl/redis/redis-client.js'
 import {
@@ -73,6 +74,8 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
   log('preferences: ', ctx.state?.sessionUser?.preferences)
   log('preferences.orientation: ', ctx.state?.sessionUser?.preferences?.orientation)
+  const models = calorieModels()
+  log('calorie models available', models)
 
   const locals = {
     csrfToken,
@@ -83,6 +86,7 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
     isAuthenticated: ctx.state.isAuthenticated ?? false,
     preferences: ctx.state.sessionUser?.preferences ?? false,
     VERSION: 0.2,
+    calorieModels: models,
   }
   await ctx.render('index', locals)
 })
