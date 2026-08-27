@@ -3,14 +3,14 @@
  */
 class Logger {
   constructor(level) {
-    switch(level) {
+    switch (level) {
       case 'scream':
         this.log = console.log.bind(console)
-        this.info = this.log 
-        this.warn = this.log 
-        this.error = this.log 
+        this.info = this.log
+        this.warn = this.log
+        this.error = this.log
         this.log('logging level is', level)
-        this.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHH") 
+        this.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHH')
         break
       case 'verbose':
         this.log = console.log.bind(console)
@@ -26,14 +26,14 @@ class Logger {
         this.error = console.error.bind(console)
         this.log('logging level is', level)
         break
-    case 'quiet':
+      case 'quiet':
         this.log = console.log.bind(console)
         this.info = () => {}
         this.warn = () => {}
         this.error = console.error.bind(console)
         this.log('logging level is', level)
         break
-    default:
+      default:
         this.log = console.log.bind(console)
         this.info = () => {}
         this.warn = () => {}
@@ -47,10 +47,10 @@ class Logger {
 const level = new URL(import.meta.url).searchParams.get('level')
 console.log('module level', level)
 const logger = new Logger(level)
-const log = logger.log
-const info = logger.info
-const warn = logger.warn
-const error = logger.error
+const { log } = logger
+const { info } = logger
+const { warn } = logger
+const { error } = logger
 export {
   log,
   info,
