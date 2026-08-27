@@ -1,9 +1,22 @@
+## Pre-calculate calories for found hiking trails
+- [ ] correlate trail waypoints track from OSM overpass search with DEM for lat/long/elevation data
+- [ ] pre-calculate calories (with default person params if necessary) for correlated trail dataset
+
+## DEM private webservice using .hgt tiles
+- [ ] get local copy of .hgt tiles for coterminus US
+- [ ] create python program that gets elevation data from .hgt tiles by lat/lon
+- [ ] set up python (bottle? or flask?) http server that accepts GET requests with lat/lon, returns elevation in meters
+
 ## OpenStreet Map search for nearby trails
-- [ ] use OSM overpass api to query for nearby hiking trails
 - [ ] look into setting up local deployment of OSM, for reasons...
 - [ ] add new button/tab to nav bar to display trail search card
+- [ ] use OSM overpass api to query for nearby hiking trails
 - [ ] search parameters: distance from user, trail difficulty, etc
-- [ ] 
+
+## Enriched after-hike report
+- [ ] add distance half-way time split
+- [ ] add per-mile time splits
+- [ ] add mile marker map annotations on linestring
 
 ## Progress reporting during active hike
 - [ ] keep a running distance total during the active hike
@@ -14,7 +27,7 @@
 - [x] make icon file sizes much smaller
 - [ ] ~maybe convert png icons to svg format~
 - [x] maybe base64 encode icons, embed directly in walk.css reducing total # of http requests
-- [ ] nginx compression ???
+- [x] nginx compression ???
 - [ ] nginx proxy cache ???
 
 ## Add more fields to user preferences
@@ -25,7 +38,7 @@
 - [x] default ruck weights (to be automatically populated in Start Walk card)
 - [x] map orientation (north up vs heading up)
 - [x] preference for units displayed
-  
+
 ## Calorie estimates for completed hikes
 - [x] implement pandolf-santee predictive model for hike waypoint dataset
 - [x] add calorie hook to save hike routine
