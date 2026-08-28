@@ -10,6 +10,8 @@ import {
   pandolfCalories as pandolf,
   simpleCalories as simple,
   lcdaCalories as lcda,
+  minimumMechanicsCalories as minMech,
+  calorieEnsemble as ensemble,
 } from './calories.js'
 
 function normalizePosition(c) {
@@ -56,6 +58,7 @@ class State extends Subject {
       simpleCalories: null,
       pandolfCalories: null,
       lcdaCalories: null,
+      minimumMechanicsCalories: null,
       weights: { body: null, ruck: 0, water: 0 },
       apple: { activity: null },
       terrain: { text: null, value: null },
@@ -89,6 +92,8 @@ class State extends Subject {
     this.state.changeInElevation = null
     this.state.simpleCalories = null
     this.state.pandolfCalories = null
+    this.state.lcdaCalories = null
+    this.state.minimumMechanicsCalories = null
     this.state.weights = { body: null, ruck: null, water: null }
     this.state.terrain = { text: null, value: null }
     this.state.shoe = null
@@ -150,14 +155,51 @@ class State extends Subject {
   }
 
   /**
-   * @todo Provide documentation for Pandolf calorie estimate.
+   * @todo Provide documentation for Minimum Mechanics calorie estimate.
+   */
+  minimumMechanicsCalories(coords, bmr, options) {
+    if (!this.state.bmr.height
+      || !this.state.bmr.age
+      || !this.state.bmr.sex
+      || !this.state.bmr.weight) {
+      return null
+    }
+    const cals = minMech(coords, bmr, options)
+    console.log('minimum mechanics calories')
+    console.log('weights:', this.state.weights)
+    console.log('terrain:', this.state.terrain)
+    console.log('calories:', cals)
+    return cals
+  }
+
+  /**
+   * @todo Provide documentation for calorie ensemble.
+   */
+  calorieEnsemble(coords, options) {
+    if (!options.BMR.height
+      || !this.state.bmr.height
+      || !options.BMR.age
+      || !options.BMR.sex
+      || !options.BMR.weight) {
+      return null
+    }
+    const cals = ensemble(coords, options)
+    console.log('calorie ensemble')
+    console.log('pandolf:', cals.pandolf.totalKcal)
+    console.log('lcda:', cals.lcda.totalKcal)
+    console.log('minMech:', cals.minMech.totalKcal)
+    return cals
+  }
+
+  /**
+   * @todo Provide documentation for Pandolf-Santee calorie estimate.
    */
   pandolfCalories(coords, options) {
     const cals = pandolf(coords, options)
     console.log('pandolf-santee calories')
     console.log('weights:', this.state.weights)
     console.log('terrain:', this.state.terrain)
-    console.log('pandolf-santee calories:', cals)
+    console.log('calories:', cals)
     return cals
   }
 
@@ -478,24 +520,30 @@ class State extends Subject {
       w.accuracy, // property unsanctioned by geojson spec (gps accuracy)
       w.timestamp, // property unsanctioned by geojson spec (waypoint timestamp)
     ])
-    const pandolfOptions = {
+    const calorieOptions = {
       bodyWeightKg: this.state.weights.body / 2.2,
       loadKg: this.state.weights.ruck / 2.2,
       waterKg: (this.state.weights.water === 0) ? 0 : this.state.weights.water / 2.2,
       terrain: this.state.terrain.value,
       smooth: true,
+      // smooth: false,
+      returnSegments: false,
     }
-    const pCalories = this.pandolfCalories(coords, pandolfOptions)
-    delete pCalories?.segments
-    const lcdaOptions = {
-      bodyWeightKg: this.state.weights.body / 2.2,
-      loadKg: this.state.weights.ruck / 2.2,
-      waterKg: (this.state.weights.water === 0) ? 0 : this.state.weights.water / 2.2,
-      terrain: this.state.terrain.value,
-      smooth: true,
-    }
-    const lCalories = this.lcdaCalories(coords, this.state.bmr, lcdaOptions)
-    delete lCalories?.segments
+    calorieOptions.BMR = this.state.bmr
+    // const pCalories = this.pandolfCalories(coords, pandolfOptions)
+    // delete pCalories?.segments
+    // const lcdaOptions = {
+    //   bodyWeightKg: this.state.weights.body / 2.2,
+    //   loadKg: this.state.weights.ruck / 2.2,
+    //   waterKg: (this.state.weights.water === 0) ? 0 : this.state.weights.water / 2.2,
+    //   terrain: this.state.terrain.value,
+    //   smooth: true,
+    //   returnSegments: false,
+    // }
+    // const lCalories = this.lcdaCalories(coords, this.state.bmr, lcdaOptions)
+    // delete lCalories?.segments
+    // const minCalories = this.minimumMechanicsCalories(coords, this.state.bmr, lcdaOptions)
+    const ensembleCalories = this.calorieEnsemble(coords, calorieOptions)
     return {
       type: 'FeatureCollection',
       features: [
@@ -526,8 +574,11 @@ class State extends Subject {
                 water: (this.state.weights.water === 0) ? 0 : this.state.weights.water / 2.2,
               },
             ),
-            pandolfCalories: pCalories,
-            lcdaCalories: lCalories,
+            // pandolfCalories: pCalories,
+            pandolfCalories: ensembleCalories.pandolf,
+            // lcdaCalories: lCalories,
+            lcdaCalories: ensembleCalories.lcda,
+            minimumMechanicsCalories: ensembleCalories.minMech,
             weights: this.state.weights,
             terrain: this.state.terrain,
             shoe: this.state.shoe,
