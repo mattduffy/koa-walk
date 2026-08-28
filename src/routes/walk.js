@@ -10,7 +10,7 @@ import Router from '@koa/router'
 import { ulid } from 'ulid'
 import { ObjectId } from 'mongodb'
 // import { Users } from '../models/users.js'
-import { models as calorieModels } from '@mattduffy/calories'
+// import { models as calorieModels } from '@mattduffy/calories'
 import { _log, _error } from '../utils/logging.js'
 // import { redis } from '../daos/impl/redis/redis-client.js'
 import {
@@ -74,8 +74,7 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
   log('isAuthenticated: ', ctx.state.isAuthenticated ?? false)
   log('preferences: ', ctx.state?.sessionUser?.preferences)
   log('preferences.orientation: ', ctx.state?.sessionUser?.preferences?.orientation)
-  const models = calorieModels()
-  log('calorie models available', models)
+  // const models = calorieModels()
 
   const locals = {
     csrfToken,
@@ -86,7 +85,7 @@ router.get('index', '/', addIpToSession, hasFlash, async (ctx) => {
     isAuthenticated: ctx.state.isAuthenticated ?? false,
     preferences: ctx.state.sessionUser?.preferences ?? false,
     VERSION: 0.2,
-    calorieModels: models,
+    // calorieModels: models,
   }
   await ctx.render('index', locals)
 })
@@ -211,6 +210,11 @@ router.post(
           // eslint-disable-next-line
           [lastName] = ctx.request.body.lastName
         }
+        let calorieModel
+        if (ctx.request.body?.calorieModel) {
+          // eslint-disable-next-line
+          [calorieModel] = ctx.request.body.calorieModel
+        }
         log('preference units:       ', units)
         log('preference orientation: ', orientation)
         log('preference height: ', height)
@@ -222,6 +226,7 @@ router.post(
         log('preference shoes: ', shoes)
         log('preference firstName: ', firstName)
         log('preference lastName: ', lastName)
+        log('preference calorieModel: ', calorieModel)
         if (units) {
           ctx.state.sessionUser.preferences.units = units
         }
@@ -260,6 +265,10 @@ router.post(
         if (lastName) {
           ctx.state.sessionUser.preferences.lastName = lastName
           ctx.state.sessionUser.lastName = lastName
+        }
+        if (calorieModel) {
+          ctx.state.sessionUser.preferences.calorieModel = calorieModel
+          ctx.state.sessionUser.calorieModel = calorieModel
         }
         try {
           const temp = await ctx.state.sessionUser.update()
