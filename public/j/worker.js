@@ -88,6 +88,9 @@ async function setPref(credentials) {
   if (credentials?.lastName) {
     formData.append('lastName', credentials.lastName)
   }
+  if (credentials?.calorie) {
+    formData.append('calorieModel', credentials.calorie)
+  }
   const opts = {
     method: 'POST',
     headeers: {
@@ -104,6 +107,8 @@ async function setPref(credentials) {
     json = await response.json()
     if (credentials?.units) {
       json.newUnits = credentials.units
+    } else if (credentials.calorie) {
+      json.newCalorieModel = credentials.calorie
     } else if (credentials?.orientation) {
       json.newOrientation = credentials.orientation
     }
