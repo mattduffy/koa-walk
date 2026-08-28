@@ -46,30 +46,37 @@
               </label>
             </span>
             <br>
-            <span style="font-weight: 450;">BMR Values:</span>
+            <span style="font-weight: 450;">Health Values:</span>
             <br>
             <span class="hoverHilite">
               <label>
-                Age <input id="ageId" name="age" type="text" size="5" value="<%= preferences?.age ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
+                Pick Calorie Model <select id="calorieId" name="calorie" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
+                  
+                </select>
               </label>
             </span>
             <br>
             <span class="hoverHilite">
               <label>
-                Height (cm) <input id="heightId" name="height" type="text" size="5" value="<%= preferences?.height ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
+                BMR Age <input id="ageId" name="age" type="text" size="5" value="<%= preferences?.age ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
             <span class="hoverHilite">
               <label>
-                Body Weight (lbs) <input id="bodyWeightId" name="bodyWeight" type="text" size="5" value="<%= preferences?.bodyWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
+                BMR Height (cm) <input id="heightId" name="height" type="text" size="5" value="<%= preferences?.height ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
-            
             <span class="hoverHilite">
               <label>
-                Gender (m or f) <input id="sexId" name="sex" type="text" size="5" value="<%= preferences?.sex ?? '?' %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
+                BMR Body Weight (lbs) <input id="bodyWeightId" name="bodyWeight" type="text" size="5" value="<%= preferences?.bodyWeight ?? 0 %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
+              </label>
+            </span>
+            <br>
+            <span class="hoverHilite">
+              <label>
+                BMR Gender (m or f) <input id="sexId" name="sex" type="text" size="5" value="<%= preferences?.sex ?? '?' %>" tabindex="0" style="margin-left: 1em; text-align: right; float: right; position: relative; top: 2px;">
               </label>
             </span>
             <br>
@@ -165,7 +172,7 @@
             Shoes Worn: <span id="shoesWorn" style="float: right;"></span>
           </li>
           <li style="display: none;">
-            Estimated Calories Burned: <span id="caloriesBurned" style="float: right;"></span>
+            Calorie Model <select id="modelsId" name="models"></select>: <span id="caloriesBurned" style="float: right;"></span>
           </li>
         </ul>
       </div>
@@ -262,6 +269,7 @@
   data-initial-token="">
 </script>
 <script nonce="<%= nonce %>" type="module">
+  import { models } from './j/calories.js'
   import State from '/j/State.js'
   const qParams = new URLSearchParams(window.location.search)
   const DEBUG_LEVEL = qParams.get('debug') ?? 'quiet' // normally should be 'quiet'
@@ -272,7 +280,12 @@
   let DISPLAY_UNITS
   let DISPLAY_ORIENTATION
   const POLYLINE_SEGMENT_LENGTH = 10
-  const CALORIE_MODELS = <%- JSON.stringify(calorieModels) %>
+  const CALORIE_MODELS = models()
+  let PREFERRED_CALORIE_MODEL = <%- (preferences?.calorieModel)
+    ? JSON.stringify(preferences.calorieModel)
+    : false %> || 'pandolfCalories'
+  info('preferred calorie model', PREFERRED_CALORIE_MODEL)
+  info('calorie models()', CALORIE_MODELS)
   let VERBOSE = false
   let DEBUG = false
   DISPLAY_UNITS = <%- (preferences?.units)
@@ -295,7 +308,7 @@
   info('DEBUG is set to:', DEBUG)
   info('DISPLAY_UNITS', DISPLAY_UNITS)
   info('DISPLAY_ORIENTATION', DISPLAY_ORIENTATION)
-
+  
   window.myWakeLock = null
   if ('wakeLock' in navigator) {
     info('WakeLock supported.')
@@ -373,9 +386,52 @@
     fitMap()
   })
   fitMap()
-  document.addEventListener("readystatechange", (event) => {
-    console.log(`readystate: ${document.readyState}\n`)
-  })
+  function buildSavedWalkCalorieSelect() {
+    log('Saved walk: fill in the calories model select options')
+    const modelSelect = document.querySelector('select#modelsId')
+    log(modelSelect)
+    CALORIE_MODELS.models.map((c) => {
+      const option = document.createElement('option')
+      option.value = c.function
+      option.text = c.shortName
+      if (PREFERRED_CALORIE_MODEL === c.function) {
+        option.selected = true
+      }
+      log(option)
+      modelSelect.appendChild(option)
+    })
+  }
+  function buildPreferencesCalorieSelect() {
+    log('user preferences: fill in the preferred calories model select options')
+    const calorieSelect = document.querySelector('select#calorieId')
+    log(calorieSelect)
+    const blank = document.createElement('option')
+    blank.text = 'Pick a model'
+    blank.value = 0
+    calorieSelect.appendChild(blank)
+    CALORIE_MODELS.models.map((c) => {
+      const option = document.createElement('option')
+      option.value = c.function
+      option.text = c.shortName
+      if (PREFERRED_CALORIE_MODEL === c.function) {
+        option.selected = true
+      }
+      log(option)
+      calorieSelect.appendChild(option)
+    })
+  }
+  if (document.readyState == 'loading') {
+    document.addEventListener('readystatechange', (evt) => {
+      log(`readystate: ${document.readyState}\n`, evt)
+      if (document.readyState === 'complete') {
+        buildPreferencesCalorieSelect()
+        buildSavedWalkCalorieSelect()
+      }
+    })
+  } else {
+    buildPreferencesCalorieSelect()
+    buildSavedWalkCalorieSelect()
+  }
   window.setupMapKitJs = async function() {
   // async function setupMapKitJs() {
     const tokenOpts = {
@@ -444,6 +500,8 @@
         if (e?.newUnits) {
           DISPLAY_UNITS = e.newUnits
           window._map.distances = mapkit.Map.Distances[DISPLAY_UNITS]
+        } else if (e?.newCalorieModel) {
+          PREFERRED_CALORIE_MODEL = e.newCalorieModel
         } else if (e?.newOrientation) {
           DISPLAY_ORIENTATION = e.newOrientation 
           console.log('display orientation: ', DISPLAY_ORIENTATION)
@@ -1170,6 +1228,15 @@
         document.forms['preferences'].elements['orientation'].forEach((r) => {
           r.addEventListener('change', updatePreferences)
         })
+        document.forms['preferences'].elements['calorie'].addEventListener(
+          'change',
+          (e) => {
+            console.log(e)
+            if (e.target.value === '0' || e.target.value === 0) {
+              return false
+            }
+            updatePreferences(e)
+        })
         document.forms['preferences'].elements['height'].addEventListener(
           'change',
           updatePreferences,
@@ -1762,30 +1829,6 @@
             - e.walk.features[0].properties.startPosition.altitude,
             DISPLAY_UNITS
         )}`
-        const shoesWorn = document.querySelector('span#shoesWorn')
-        shoesWorn.innerHTML = `${e.walk.features[0].properties?.shoe
-          || '<em>Barefoot?  That\'s weird</em>'}`
-        shoesWorn.parentElement.style.display = 'block'
-        console.log(shoesWorn)
-        const spanCaloriesBurned = document.querySelector('span#caloriesBurned')
-        if (e.walk.features[0].properties?.advancedCalories) {
-          spanCaloriesBurned.textContent = Math.round(
-            e.walk.features[0].properties.advancedCalories
-          )
-          spanCaloriesBurned.parentElement.style.display = 'block'
-        } else if (e.walk.features[0].properties?.pandolfCalories) {
-          spanCaloriesBurned.textContent = Math.round(
-            e.walk.features[0].properties.pandolfCalories.totalKcal
-          )
-          spanCaloriesBurned.parentElement.style.display = 'block'
-        } else if (e.walk.features[0].properties?.simpleCalories) {
-          spanCaloriesBurned.textContent = Math.round(
-            e.walk.features[0].properties.simpleCalories
-          )
-          spanCaloriesBurned.parentElement.style.display = 'block'
-        } else {
-          spanCaloriesBurned.parentElement.style.display = 'none'
-        }
         const spanRuckWeightCarried = document.querySelector('span#ruckWeightCarried')
         if (e.walk.features[0].properties?.weights
           && e.walk.features[0].properties?.weights.ruck > 0) {
@@ -1795,6 +1838,38 @@
         } else {
           spanRuckWeightCarried.parentElement.style.display = 'none'
         }
+        const shoesWorn = document.querySelector('span#shoesWorn')
+        shoesWorn.innerHTML = `${e.walk.features[0].properties?.shoe
+          || '<em>Barefoot?  That\'s weird</em>'}`
+        shoesWorn.parentElement.style.display = 'block'
+        log(shoesWorn)
+        const spanCaloriesBurned = document.querySelector('span#caloriesBurned')
+        spanCaloriesBurned.parentElement.style.display = 'none'
+        const modelSelect = document.querySelector('select#modelsId')
+        let selected
+        const _walk = e.walk
+        Array.from(modelSelect.options).map((o) => {
+          o.selected = (PREFERRED_CALORIE_MODEL === o.value) ? true : false
+          if (o.selected) {
+            selected = o.value
+            spanCaloriesBurned.parentElement.style.display = 'block'
+          }
+          o.disabled = (!_walk.features[0].properties[o.value]) ? true : false 
+        })
+        modelSelect.removeEventListener('change', changeModel)
+        modelSelect.addEventListener('change', changeModel)
+        function changeModel(e) {
+          info('picking new calorie model results to show, if available')
+          info(e.target.name, e.target.value) 
+          spanCaloriesBurned.textContent = Math.round(
+            _walk.features[0].properties[e.target.value].totalKcal
+          )
+        }
+        window.showWalk.finish.changeModel = changeModel
+        spanCaloriesBurned.textContent = Math.round(
+          _walk.features[0].properties[selected].totalKcal
+        )
+               
         divList.style.display = 'none'
         divWalk.style.display = 'block'
         window.walking.active = false 
@@ -1850,6 +1925,7 @@
       }
     }
     window.showWalk.finish = finish
+    // window.showWalk.finish.changeModel = changeModel
     function reset() {
       log('clearing walk')
       divList.style.display = 'block'
@@ -1862,11 +1938,19 @@
       window._map.showsUserLocation = true
       window._map.removeOverlays(window._map.overlays.filter((o) => o.data.type === 'walk'))
       window._map.removeAnnotations(window._map.annotations.filter((o) => o.data.type === 'walk'))
+
+     document.querySelector('span#closeWalk').removeEventListener('click', xClose)
+     document.querySelector('select#modelsId').removeEventListener('change', window.showWalk.finish.changeModel)
+     log('removing listener changeModel', finish.changeModel)
     }
     window.showWalk.reset = reset
-    document.querySelector('span#closeWalk').addEventListener('click', (e) => {
+    function xClose(e) {
       reset()
-    })
+    }
+    document.querySelector('span#closeWalk').addEventListener('click', xClose)
+    // document.querySelector('span#closeWalk').addEventListener('click', (e) => {
+    //   reset()
+    // })
   }
   window.deleteWalk = async function(e) {
     e.preventDefault()
@@ -2054,7 +2138,7 @@
     const geocoder = new mapkit.Geocoder(opts)
     log(geocoder)
     const reverseLookup = geocoder.reverseLookup(coords, function(error, data) {
-      log('reverseLookup callbback')
+      log('reverseLookup callback')
       if (error) {
         warn(error)
       }
