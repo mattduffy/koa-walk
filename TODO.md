@@ -17,6 +17,7 @@
 - [ ] add distance half-way time split
 - [ ] add per-mile time splits
 - [ ] add mile marker map annotations on linestring
+- [x] add dropdown list of available calorie model values
 
 ## Progress reporting during active hike
 - [ ] keep a running distance total during the active hike
@@ -31,7 +32,7 @@
 - [ ] nginx proxy cache ???
 
 ## Add more fields to user preferences
-- [ ] preferred calorie model to use (pandolf, minimum mechanics, or lcda)
+- [x] preferred calorie model to use (pandolf, minimum mechanics, or lcda)
 - [x] first and last name fields
 - [x] some kind of list of shoes worn during hikes
 - [x] BMR values (age, height, weight, gender) for minimum mechanics model
