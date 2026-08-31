@@ -1579,7 +1579,7 @@
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
           li.innerHTML = `${new Date(w.date).toLocaleString('en-US', fmt)} `
             + `<span data-show-id="${w.id}" `
-            + 'data-scope="remote" class="pointer">'
+            + 'data-scope="remote" onclick="" class="pointer">'
             + `${truncateText(w.name)}</span> <br>`
             + 'export: '
             + `<span data-export-id=${w.id} data-type="kml" data-scope="remote" `
