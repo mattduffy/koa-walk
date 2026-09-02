@@ -387,9 +387,9 @@
   })
   fitMap()
   function buildSavedWalkCalorieSelect() {
-    log('Saved walk: fill in the calories model select options')
+    // log('Saved walk: fill in the calories model select options')
     const modelSelect = document.querySelector('select#modelsId')
-    log(modelSelect)
+    // log(modelSelect)
     CALORIE_MODELS.models.map((c) => {
       const option = document.createElement('option')
       option.value = c.function
@@ -397,14 +397,14 @@
       if (PREFERRED_CALORIE_MODEL === c.function) {
         option.selected = true
       }
-      log(option)
+      // log(option)
       modelSelect.appendChild(option)
     })
   }
   function buildPreferencesCalorieSelect() {
-    log('user preferences: fill in the preferred calories model select options')
+    // log('user preferences: fill in the preferred calories model select options')
     const calorieSelect = document.querySelector('select#calorieId')
-    log(calorieSelect)
+    // log(calorieSelect)
     const blank = document.createElement('option')
     blank.text = 'Pick a model'
     blank.value = 0
@@ -416,7 +416,7 @@
       if (PREFERRED_CALORIE_MODEL === c.function) {
         option.selected = true
       }
-      log(option)
+      // log(option)
       calorieSelect.appendChild(option)
     })
   }
@@ -1579,7 +1579,7 @@
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
           li.innerHTML = `${new Date(w.date).toLocaleString('en-US', fmt)} `
             + `<span data-show-id="${w.id}" `
-            + 'data-scope="remote" onclick="" class="pointer">'
+            + 'data-scope="remote" class="pointer">'
             + `${truncateText(w.name)}</span> <br>`
             + 'export: '
             + `<span data-export-id=${w.id} data-type="kml" data-scope="remote" `
@@ -1608,7 +1608,7 @@
           const p = document.createElement('p')
           p.textContent = 'No walks saved to this device.'
           p.id = 'noLocalWalks'  
-          log('p', p)
+          // log('p', p)
           LOCALDIV.appendChild(p) 
           return LOCALDIV 
         })()
@@ -1684,7 +1684,7 @@
         div.classList.add('countBadge')
         div.style.display = 'inline-flex'
         el.after(div)
-        log('created', div)
+        // log('created', div)
         return div
       })()
       badge.style.top = `${listTabIconRect.y + 1}px`
@@ -1941,7 +1941,7 @@
 
      document.querySelector('span#closeWalk').removeEventListener('click', xClose)
      document.querySelector('select#modelsId').removeEventListener('change', window.showWalk.finish.changeModel)
-     log('removing listener changeModel', finish.changeModel)
+     // log('removing listener changeModel', finish.changeModel)
     }
     window.showWalk.reset = reset
     function xClose(e) {
