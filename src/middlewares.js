@@ -12,7 +12,7 @@ import { METHODS } from 'node:http'
 import { _log, _error } from './utils/logging.js'
 import { Users } from './models/users.js'
 import { App } from './models/app.js'
-import { redis } from './daos/impl/redis/redis-om.js'
+import { redis } from './daos/impl/redis/redis-client.js'
 
 // const DBNAME = 'walk'
 const USERS = 'users'
