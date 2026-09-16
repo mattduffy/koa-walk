@@ -12,7 +12,7 @@ import { ObjectId } from 'mongodb'
 // import { Users } from '../models/users.js'
 // import { models as calorieModels } from '@mattduffy/calories'
 import { _log, _error } from '../utils/logging.js'
-// import { redis } from '../daos/impl/redis/redis-client.js'
+import { redis } from '../daos/impl/redis/redis-client.js'
 import {
   addIpToSession,
   doTokensMatch,
@@ -28,6 +28,9 @@ function sanitize(param) {
   if (!param) walkError('missing param')
   return param
 }
+
+walkLog(await redis.ping())
+
 const router = new Router()
 
 router.get('test', '/test', addIpToSession, async (ctx) => {
