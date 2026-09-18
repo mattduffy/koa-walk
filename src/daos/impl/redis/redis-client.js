@@ -47,7 +47,7 @@ const redisConnOpts = {
       tls: true,
       rejectUnauthorized: false,
       ca: await fs.readFile(redisEnv.REDIS_CACERT),
-      reconnectionStraty: reconnectStrategy(),
+      reconnectStrategy,
     },
   },
   nodeClientOptions: {
@@ -57,7 +57,7 @@ const redisConnOpts = {
       tls: true,
       rejectUnauthorized: false,
       ca: await fs.readFile(redisEnv.REDIS_CACERT),
-      reconnectionStraty: reconnectStrategy(),
+      reconnectStrategy,
     },
   },
   sentinelRetryDelayOnFailover: 100,
