@@ -1,26 +1,21 @@
 # Map My Walk/Hike + Hiking Route Discovery - Engineering Roadmap
-**Target Architecture:** Node.js Monolith + Local OpenStreetMap (OSM) Node + Python Elevation Microservice (.HGT)
+**Target Architecture:** Node.js Monolith + Local OpenStreetMap (OSM) Node + Python Elevation Micro-service (.HGT)
 
 ## Projected System Architecture
 <pre>
                                   +-----------------------+
-
                                   |     Nginx Proxy       |
                                   +-----------------------+
                                               |
                      +------------------------+------------------------+
-
                      | (Public Traffic)                                | (Internal/Private Traffic)
                      v                                                 v
         +-------------------------+                       +-------------------------+
-
-        |   Main Node.js App      |                       |  Python FastAPI (.HGT)  |
+        |   Main Node.js App      |                       |  Python API (.HGT)      |
         | (Auth, Tracking, Logic) |                       |   (Elevation Service)   |
         +-------------------------+                       +-------------------------+
-
                      |                                                 |
          +-----------+-----------+                                     | Reads binary files
-
          |                       |                                     v
          v                       v                          +---------------------+
   [ MongoDB ]             [ PostGIS DB ]                    |  Local .HGT Tiles   |
@@ -28,7 +23,7 @@
 </pre>
 
 ## Phase 1: Local Infrastructure Setup & Data Seeding (Now: Months 1-2)
-*Objective: Establish standalone local instances of OpenStreetMap and the Elevation Microservice without impacting live users.*
+*Objective: Establish standalone local instances of OpenStreetMap and the Elevation Micro-service.*
 
 ### Track A: OpenStreetMap (OSM) Local Instance
 *   **Data Sourcing & Ingestion:**
@@ -43,9 +38,9 @@
     *   Source `.HGT` (SRTM/NASADEM) tiles for target geographical regions from USGS EarthExplorer or NASA Earthdata.
     *   Organize tiles into a highly structured local folder hierarchy (`/data/srtm/NXXWYYY.hgt`).
 *   **Service Core Development:**
-    *   Build a lightweight Python API using **FastAPI** or **Flask**.
-    *   Implement binary file parsing (e.g., using `numpy` or `rasterio`) to read 16-bit signed integers directly from `.HGT` files using latitude/longitude offsets.
-    *   Create an endpoint `POST /v1/elevation-profile` that accepts an array of coordinates `[[lat, lon], ...]` and returns an array of matching elevations `[alt, ...]`.
+    *   Build a lightweight Python API using **Flask**.
+    *   Implement binary file parsing `rasterio` to read 16-bit signed integers directly from `.HGT` files using latitude/longitude offsets.
+    *   Create an endpoint `POST /v1/elevation-profile` that accepts an array of coordinates `[[lat, lon], ...]` and returns an array of matching elevations `[[lat, lon, alt], ...]`.
 
 ### Track C: Main Node.js App & Nginx Bridging
 *   **Nginx Reverse-Proxy Configurations:**
@@ -56,14 +51,14 @@
 ---
 
 ## Phase 2: System Integration & Calorie Modeling (Next: Months 3-4)
-*Objective: Connect the microservices together to extract OSM trails, enrich them with elevation metrics, and execute your custom calorie formula.*
+*Objective: Connect the micro-services together to extract OSM trails, enrich them with elevation metrics, and calculate custom calorie model.*
 
 ### Track A: The Sync & Enrichment Pipeline (Node.js Controller)
 1.  **User Request:** User requests "Find nearby trails" from the UI.
 2.  **OSM Query:** Node.js executes a geo-query against the local PostGIS/OSM database within a 10km radius.
 3.  **Coordinate Extraction:** Extract arrays of `[lat, lon]` points (OSM "ways") representing discovered trails.
 4.  **Elevation Fetching:** Node.js fires an internal HTTP request to the Python Service passing the raw coordinate arrays.
-5.  **Calorie Calculation:** Node.js passes the combined `[lat, lon, alt]` array into your custom calories expended equation (calculating slope grade changes over distance).
+5.  **Calorie Calculation:** Node.js passes the combined `[lat, lon, alt]` array into calories expended equation.
 
 ### Track B: Data Modeling & Optimization
 *   **Coordinate Downsampling:** Implement a polyline simplification algorithm (like the Ramer-Douglas-Peucker algorithm) in Node.js. Passing dense raw OSM nodes directly into the calorie engine will degrade performance.
@@ -72,7 +67,7 @@
 ---
 
 ## Phase 3: UI Implementation & Local Deployment Validation (Later: Months 5+)
-*Objective: Build the user interfaces for "Discovery Mode" and seamlessly migrate from local development to a stable private production box.*
+*Objective: Build the user interfaces for "Discovery Mode" and migrate from local development to a stable private production box.*
 
 ### Track A: Frontend Overhaul
 *   **Dual Map Interfaces:** Create a toggle switch or dedicated tab for "Record Hike" vs "Explore Trails".
@@ -82,8 +77,8 @@
 ### Track B: Deployment Architecture & Dockerization
 *   **Containerization Strategy:** Create a multi-container `docker-compose.yml` local ecosystem containing:
     1.  Node.js (Main App)
-    2.  Python FastAPI App (Elevation Engine)
+    2.  Python Flask App (Elevation Engine)
     3.  PostgreSQL/PostGIS (OSM data)
     4.  MongoDB (User Logs & Cached Routes)
     5.  Nginx (Gateway Proxy)
-*   **Resource Management:** Benchmark RAM usage on your development machine. The PostGIS OSM node and Python memory-mapped `.HGT` arrays will be memory-intensive; configure swap spaces or limit bounding boxes accordingly.
+*   **Resource Management:** Benchmark RAM usage on development machine. The PostGIS OSM node and Python memory-mapped `.HGT` arrays will be memory-intensive; configure swap spaces or limit bounding boxes accordingly.
