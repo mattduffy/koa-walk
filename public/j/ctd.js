@@ -31,11 +31,11 @@ export function crossTrackDistance(point, track, scale = 'm') {
   let acosArgument = Math.sin(startLat) * Math.sin(pointLat)
       + Math.cos(startLat) * Math.cos(pointLat) * Math.cos(pointLon - startLon)
   acosArgument = Math.max(-1, Math.min(1, acosArgument)) // clamp the argument between -1 and 1
-  const deltaSigma = Math.cos(acosArgument)
+  const deltaSigma = Math.acos(acosArgument)
 
   const thetaPoint = Math.atan2(
     Math.sin(pointLon - startLon) * Math.cos(pointLat),
-    Math.cos(startLat) * Math.sin(pointLat) - Math.sin(pointLat)
+    Math.cos(startLat) * Math.sin(pointLat) - Math.sin(startLat)
       * Math.cos(pointLat) * Math.cos(pointLon - startLon),
   )
   const thetaEnd = Math.atan2(
