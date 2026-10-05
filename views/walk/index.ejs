@@ -2204,8 +2204,9 @@
     if (isNaN(x)) {
       _x = 'N/A'
     } else if (x === null || x === undefined) {
-      log('displayUnits() missing x: ', x)
-      _x = 'indeterminate' 
+      log(`displayUnits(${x}, ${u}, ${n}) missing x: ${x} `)
+      // _x = 'indeterminate' 
+      _x = 'Undeterminable' 
     } else {
       _x = x
     }
@@ -2237,7 +2238,8 @@
         return `${( _x / 5280 ).toFixed(n)} mi`
       }
     }
-    return 'indeteriminate'
+    // return 'indeteriminate'
+    return _x
   }
   function populateApp(strings, coords = null, theLocality = null) {
     const a = window.app ?? document.querySelector('div#app')    
