@@ -512,13 +512,12 @@ class State extends Subject {
   }
 
   get geojson() {
+    // [2] property unsanctioned by geojson spec (heading)
+    // [3] property unsanctioned by geojson spec (altitude)
+    // [4] property unsanctioned by geojson spec (gps accuracy)
+    // [5] property unsanctioned by geojson spec (waypoint timestamp)
     const coords = this.state.wayPoints.map((w) => [
-      w.longitude,
-      w.latitude,
-      w.heading ?? 0.0, // property unsanctioned by geojson spec (heading)
-      w.altitude, // property unsanctioned by geojson spec (altitude)
-      w.accuracy, // property unsanctioned by geojson spec (gps accuracy)
-      w.timestamp, // property unsanctioned by geojson spec (waypoint timestamp)
+      w.longitude, w.latitude, w.heading ?? 0.0, w.altitude, w.accuracy, w.timestamp,
     ])
     const calorieOptions = {
       bodyWeightKg: this.state.weights.body / 2.2,
@@ -545,6 +544,12 @@ class State extends Subject {
     // const minCalories = this.minimumMechanicsCalories(coords, this.state.bmr, lcdaOptions)
     const ensembleCalories = this.calorieEnsemble(coords, calorieOptions)
     return {
+      crs: {
+        type: 'name',
+        properties: {
+          name: 'urn:ogc:def:crs:OGC:1.3:CRS84',
+        },
+      },
       type: 'FeatureCollection',
       features: [
         {
@@ -587,15 +592,8 @@ class State extends Subject {
           geometry: {
             type: 'LineString',
             coordinates: coords,
-            // coordinates: this.state.wayPoints.map((w) => [
-            //   w.longitude,
-            //   w.latitude,
-            //   w.heading ?? 0.0, // property unsanctioned by geojson spec (heading)
-            //   w.altitude, // property unsanctioned by geojson spec (altitude)
-            //   w.accuracy, // property unsanctioned by geojson spec (gps accuracy)
-            //   w.timestamp, // property unsanctioned by geojson spec (waypoint timestamp)
-            // ]),
           },
+          
         },
       ],
     }
