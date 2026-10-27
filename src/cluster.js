@@ -29,8 +29,10 @@ if (cluster.isPrimary) {
     console.warn(
       `cluster:primary:${cluster.pid} worker process ${worker.pid} died with signal: ${signal}.`,
     )
-    if (cluster.workers.length < numCores) {
-      console.warn(`cluster:primary:${cluster.pid} Forking a new work to replace it.`)
+    // if (cluster.workers.length < numCores) {
+    if (Object.keys(cluster.workers).length < numCores) {
+      // console.warn(`cluster:primary:${cluster.pid} Forking a new work to replace it.`)
+      console.warn(`cluster:primary:${process.pid} Forking a new work to replace it.`)
       cluster.fork()
     }
   })
