@@ -42,6 +42,7 @@ import { mapkit as Mapkit } from './routes/mapkit.js'
 import { app as theApp } from './routes/app.js'
 import { users as Users } from './routes/users.js'
 import { seo as Seo } from './routes/seo.js'
+import { osm as Osm } from './routes/osm.js'
 
 const caloriesRouter = new Router()
 caloriesRouter.get('caloriesjs', '/j/calories.js', getCaloriesJs)
@@ -462,6 +463,7 @@ app.use(wellKnown.routes())
 app.use(Seo.routes())
 // app.use(activityV1.routes())
 app.use(apiV1.routes())
+app.use(Osm.routes())
 
 app.on('error', async (err, ctx) => {
   error('***********************************')
