@@ -1,11 +1,11 @@
 /*
  * file: public/j/worker.js
  */
-/* eslint-env worker */
+/* worker globals are provided by eslint.config.js */
 // import Observer from './Observer.js'
 import State from './State.js'
 import { heading, pointDistance } from './Heading.js'
-import { ObjectId } from './lib/bson.mjs'
+import { ObjectId } from './lib/bson.mjs' // eslint-disable-line import-x/no-relative-packages
 
 const worker = self // eslint-disable-line no-restricted-globals
 let origin

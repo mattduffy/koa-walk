@@ -29,7 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - No semicolons (rule: semi: ['error', 'never'])
 - Debug logging with debug package (e.g., `const debug = Debug('namespace:subname')`)
 - Error handling via try/catch blocks with appropriate error logging
-- Line length: No strict limit (max-len is turned off)
+- Line length: max-len is turned on, 100 chars
 - Prefer named exports over default exports
 - Underscores in variable names are allowed
 

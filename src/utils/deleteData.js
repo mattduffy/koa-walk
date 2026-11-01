@@ -4,14 +4,14 @@
  * @summary The script to bulk delete keys from redis.
  * @file src/utils/deleteData.js
  */
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import-x/no-extraneous-dependencies */
 import path from 'node:path'
 import * as dotenv from 'dotenv'
 import { fileURLToPath } from 'node:url'
 import { Command } from 'commander'
 import { redis_single as redis } from '../daos/impl/redis/redis-single.js'
 import { _log, _error } from './logging.js'
-/* eslint-enable import/no-extraneous-dependencies */
+/* eslint-enable import-x/no-extraneous-dependencies */
 
 const log = _log.extend('utils:load-data')
 const error = _error.extend('utils:load-data')
