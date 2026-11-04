@@ -52,10 +52,11 @@ router.get(
   async (ctx) => {
     osmLog(ctx.params)
     let type
-    if (!/^hiking$/i.test(ctx.params.type)) {
-      ctx.throw(400, 'Invalide type value.')
+    const match = /^(?<type>hiking|walking|running|fitness_trail|foot)$/i.exec(ctx.params.type)
+    if (!match) {
+      ctx.throw(400, 'Invalid type value.')
     } else {
-      type = 'hiking'
+      type = match.groups.type
     }
     let longitude
     if (!/^[+-]?[\d]{1,3}.[\d]{1,}$/.test(ctx.params.lon)) {
@@ -110,6 +111,7 @@ router.get(
     }
 
     try {
+      /* eslint-disable prefer-template */
       const trails = await sql`
         WITH matched_relations AS (
           SELECT 
@@ -130,7 +132,8 @@ router.get(
               SELECT osm_id, way FROM planet_osm_roads
           ) l ON l.osm_id = way_id
           WHERE 
-              r.tags->>'route' = ${type} 
+              -- Matches if 'hiking' OR 'walking' appears anywhere in the route tag string
+              (r.tags->>'route' LIKE ${'%' + type + '%'} OR r.tags->>'route' LIKE '%foot%')
           GROUP BY 
               r.id, r.tags
           HAVING 
@@ -152,13 +155,22 @@ router.get(
         LIMIT ${limit} 
         OFFSET ( (${page} - 1) * 10 );
       `
+      /* eslint-enable prefer-template */
       osmLog(`found ${trails.length} hiking trails.`)
       body.data = trails
-      body.meta.pagination.totalTrails = trails[0].total_count
-      body.meta.pagination.limit = limit
-      body.meta.pagination.offset = ((page - 1) * 10)
-      body.meta.pagination.currentPage = page
-      body.meta.pagination.totalPages = Math.ceil(trails[0].total_count / limit)
+      if (trails.length < 1) {
+        body.meta.pagination.totalTrails = 0
+        body.meta.pagination.limit = limit
+        body.meta.pagination.offset = 0
+        body.meta.pagination.currentPage = 1
+        body.meta.pagination.totalPages = 0
+      } else {
+        body.meta.pagination.totalTrails = trails[0].total_count
+        body.meta.pagination.limit = limit
+        body.meta.pagination.offset = ((page - 1) * 10)
+        body.meta.pagination.currentPage = page
+        body.meta.pagination.totalPages = Math.ceil(trails[0].total_count / limit)
+      }
     } catch (e) {
       body = { status: 'query failed', msg: e.toString() }
     }
