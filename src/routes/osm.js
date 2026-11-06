@@ -29,6 +29,11 @@ function sanitize(param) {
 
 const router = new Router()
 
+router.use(async (ctx, next) => {
+  ctx.startTime = Date.now()
+  await next()
+})
+
 router.post(
   'discoverPost',
   '/api/v1/osm/trails/:type/:lon/:lat/:radius{/:page}',
@@ -122,32 +127,43 @@ router.get(
     try {
       /* eslint-disable prefer-template */
       const trails = await sql`
-        WITH matched_relations AS (
+        WITH nearby_ways AS (
+          -- Step 1: Use ST_DWithin first. This forces PostgreSQL to use the GiST 
+          -- spatial index via bounding boxes, instantly filtering out distant ways.
+          SELECT osm_id, way 
+          FROM planet_osm_line
+          WHERE ST_DWithin(
+            way, 
+            ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857), 
+            ${radiusMeters}
+          )
+          UNION ALL
+          SELECT osm_id, way 
+          FROM planet_osm_roads
+          WHERE ST_DWithin(
+            way, 
+            ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857), 
+            ${radiusMeters}
+          )
+        ),
+        matched_relations AS (
+          -- Step 2: Map those nearby ways back to their parent relations
           SELECT 
             r.id AS relation_id,
             r.tags->>'name' AS route_name,
             r.tags AS relation_tags,
             MIN(ST_Distance(
-              l.way,
+              nw.way,
               ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857)
             )) AS distance_meters
           FROM 
             planet_osm_rels r
           JOIN LATERAL unnest(planet_osm_member_ids(r.members, 'W')) AS way_id ON true
-          JOIN (
-            SELECT osm_id, way FROM planet_osm_line
-            UNION ALL
-            SELECT osm_id, way FROM planet_osm_roads
-          ) l ON l.osm_id = way_id
+          JOIN nearby_ways nw ON nw.osm_id = way_id
           WHERE 
             (r.tags->>'route' LIKE ${'%' + type + '%'} OR r.tags->>'route' LIKE '%foot%')
           GROUP BY 
             r.id, r.tags
-          HAVING 
-            MIN(ST_Distance(
-              l.way,
-              ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857)
-            )) <= ${radiusMeters}
         ),
         paginated AS (
           SELECT 
@@ -169,13 +185,10 @@ router.get(
           p.relation_tags,
           ROUND(p.distance_meters::numeric, 2) AS distance_meters,
           p.total_count,
-          -- Extracts and sequences all node IDs across the relation's member ways 
-          -- in correct order
           (
             SELECT array_agg(node_id ORDER BY m.ord, node_idx)
             FROM planet_osm_rels r2
-            CROSS JOIN LATERAL jsonb_array_elements(r2.members)
-              WITH ORDINALITY AS m(elem, ord)
+            CROSS JOIN LATERAL jsonb_array_elements(r2.members) WITH ORDINALITY AS m(elem, ord)
             JOIN planet_osm_ways w ON w.id = (elem->>'ref')::bigint
             CROSS JOIN LATERAL unnest(w.nodes) WITH ORDINALITY AS n(node_id, node_idx)
             WHERE r2.id = p.relation_id AND elem->>'type' = 'W'
@@ -185,6 +198,70 @@ router.get(
         ORDER BY 
           p.distance_meters ASC;
       `
+      // const trails = await sql`
+      //   WITH matched_relations AS (
+      //     SELECT
+      //       r.id AS relation_id,
+      //       r.tags->>'name' AS route_name,
+      //       r.tags AS relation_tags,
+      //       MIN(ST_Distance(
+      //         l.way,
+      //         ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857)
+      //       )) AS distance_meters
+      //     FROM
+      //       planet_osm_rels r
+      //     JOIN LATERAL unnest(planet_osm_member_ids(r.members, 'W')) AS way_id ON true
+      //     JOIN (
+      //       SELECT osm_id, way FROM planet_osm_line
+      //       UNION ALL
+      //       SELECT osm_id, way FROM planet_osm_roads
+      //     ) l ON l.osm_id = way_id
+      //     WHERE
+      //       (r.tags->>'route' LIKE ${'%' + type + '%'} OR r.tags->>'route' LIKE '%foot%')
+      //     GROUP BY
+      //       r.id, r.tags
+      //     HAVING
+      //       MIN(ST_Distance(
+      //         l.way,
+      //         ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857)
+      //       )) <= ${radiusMeters}
+      //   ),
+      //   paginated AS (
+      //     SELECT
+      //       relation_id,
+      //       route_name,
+      //       relation_tags,
+      //       distance_meters,
+      //       COUNT(*) OVER() AS total_count
+      //     FROM
+      //       matched_relations
+      //     ORDER BY
+      //       distance_meters ASC
+      //     LIMIT 10
+      //     OFFSET ( (${page} - 1) * 10 )
+      //   )
+      //   SELECT
+      //     p.relation_id,
+      //     p.route_name,
+      //     p.relation_tags,
+      //     ROUND(p.distance_meters::numeric, 2) AS distance_meters,
+      //     p.total_count,
+      //     -- Extracts and sequences all node IDs across the relation's member ways
+      //     -- in correct order
+      //     (
+      //       SELECT array_agg(node_id ORDER BY m.ord, node_idx)
+      //       FROM planet_osm_rels r2
+      //       CROSS JOIN LATERAL jsonb_array_elements(r2.members)
+      //         WITH ORDINALITY AS m(elem, ord)
+      //       JOIN planet_osm_ways w ON w.id = (elem->>'ref')::bigint
+      //       CROSS JOIN LATERAL unnest(w.nodes) WITH ORDINALITY AS n(node_id, node_idx)
+      //       WHERE r2.id = p.relation_id AND elem->>'type' = 'W'
+      //     ) AS sequenced_node_ids
+      //   FROM
+      //     paginated p
+      //   ORDER BY
+      //     p.distance_meters ASC;
+      // `
       // const trails = await sql`
       //   WITH matched_relations AS (
       //     SELECT
@@ -243,6 +320,7 @@ router.get(
         body.meta.pagination.offset = ((page - 1) * 10)
         body.meta.pagination.currentPage = page
         body.meta.pagination.totalPages = Math.ceil(trails[0].total_count / limit)
+        body.meta.request_duration_milliseconds = Date.now() - ctx.startTime
       }
     } catch (e) {
       body = { status: 'query failed', msg: e.toString() }
