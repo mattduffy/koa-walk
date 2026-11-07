@@ -427,6 +427,22 @@ div#new > p, ul {
   font-size: .75em;
 }
 
+div#search {
+  display: none;
+  width: auto;
+  background-color: white;
+  border-radius: .5em;
+  padding: .25em;
+}
+
+div#search > h3 {
+  margin: 0px;
+}
+
+div#search > p, ul {
+  font-size: .75em;
+}
+
 div#maps {
   display: none;
   width: auto;
