@@ -240,6 +240,14 @@
     </div>
     <div id="search" data-tab="search">
       <h3>Discover New Trails</h3>
+      <form id="searchId" name="search">
+        <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>" required>
+        Find trails within <select id="searchRadiusId" name="searchRadius" tabindex="0" style="margin-left: 0em; text-align: right; position: relative; top: 0px;">
+
+        </select> <span data-units="" id="searchRadiusUnits"></span> of your location.
+        <br>
+        <input type="submit" id="searchSubmitId" name="searchSubmit" value="Discover" tabindex="0">
+      </form>
 
     </div>
     <div id="app" data-tab="app">
@@ -420,17 +428,37 @@
       calorieSelect.appendChild(option)
     })
   }
+  function buildSearchRadiusSelect() {
+    const radiusSelect = document.querySelector('select#searchRadiusId')
+    const ten = document.createElement('option')
+    ten.text = '10'
+    ten.value = 10
+    radiusSelect.appendChild(ten)
+    const twenty = document.createElement('option')
+    twenty.text = '20'
+    twenty.value = 20
+    radiusSelect.appendChild(twenty)
+    const thirty = document.createElement('option')
+    thirty.text = '30'
+    thirty.value = 30
+    radiusSelect.appendChild(thirty)
+    const spanUnits = document.querySelector('span#searchRadiusUnits')
+    spanUnits.dataset.units = DISPLAY_UNITS
+    spanUnits.textContent = `${displayUnits('', DISPLAY_UNITS, 0)}`
+  }
   if (document.readyState == 'loading') {
     document.addEventListener('readystatechange', (evt) => {
       log(`readystate: ${document.readyState}\n`, evt)
       if (document.readyState === 'complete') {
         buildPreferencesCalorieSelect()
         buildSavedWalkCalorieSelect()
+        buildSearchRadiusSelect()
       }
     })
   } else {
     buildPreferencesCalorieSelect()
     buildSavedWalkCalorieSelect()
+    buildSearchRadiusSelect()
   }
   window.setupMapKitJs = async function() {
   // async function setupMapKitJs() {
@@ -2196,12 +2224,18 @@
         displayUnits(window.walking.state.currentPosition?.accuracy, newUnits, 1)
       }`
     }
+    const spanRadiusUnits = document.querySelector('span#searchRadiusUnits')
+    if (spanRadiusUnits) {
+      spanRadiusUnits.textContent = `${displayUnits('', newUnits, 0)}`
+    }
   }
   function displayUnits(x, u = 'm', n = 1) {
     const _u = u.toLowerCase()
     // log('displayUnits(): ', x, _u, n)
     let _x
-    if (isNaN(x)) {
+    if (_x === '') {
+      _x = ''
+    } else if (isNaN(x)) {
       _x = 'N/A'
     } else if (x === null || x === undefined) {
       log(`displayUnits(${x}, ${u}, ${n}) missing x: ${x} `)
@@ -2225,17 +2259,25 @@
       return `${_x} lbs`
     }
     if (/(metric)|(km)|(m$)/i.test(_u)) {
-      if (_x < 750) {
-        return `${_x.toFixed(n)} m`
+      if (_x === '') {
+        return 'km'
       } else {
-        return `${( parseFloat(_x) / 1000 ).toFixed(n)} km`
+        if (_x < 750) {
+          return `${_x.toFixed(n)} m`
+        } else {
+          return `${( parseFloat(_x) / 1000 ).toFixed(n)} km`
+        }
       }
     } else if (/(imperial)|(mile)|(mi)|(feet)|(ft)|(f)/i.test(_u)) {
-      let _x = parseFloat(x) * 3.3
-      if (_x < (5280 / 2)) {
-        return `${_x.toFixed(n)} ft`
+      if (_x === '') {
+        return 'miles'
       } else {
-        return `${( _x / 5280 ).toFixed(n)} mi`
+        let _x = parseFloat(x) * 3.3
+        if (_x < (5280 / 2)) {
+          return `${_x.toFixed(n)} ft`
+        } else {
+          return `${( _x / 5280 ).toFixed(n)} mi`
+        }
       }
     }
     // return 'indeteriminate'

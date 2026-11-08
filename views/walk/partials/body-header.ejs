@@ -27,7 +27,7 @@
               e.preventDefault()
               e.stopPropagation()
               function actionName(fnName, a) {
-                console.info('fnName', fnName)
+                // console.info('fnName', fnName)
                 return this[fnName](a)
               }
               actionName(button.dataset.action, button.dataset.action) 
@@ -76,18 +76,20 @@
         toggleTab(newTab.dataset.tab)
       }
       function showSearch(o) {
-        console.log('showSearch', o)
-        const app = document.querySelector('div#app')
-        const search = document.querySelector('div#search')
+        // console.log('showSearch', o)
+        const container = document.querySelector('div#container')
+        const app = container.querySelector('div#app')
+        const search = container.querySelector('div#search')
         toggleButtons(o)
         toggleTab(search.dataset.tab)
       }
       function showMaps(o) {
-        console.log('showMaps', o)
-        const app = document.querySelector('div#app')
-        const maps  = document.querySelector('div#maps')
+        // console.log('showMaps', o)
+        const container = document.querySelector('div#container')
+        const app = container.querySelector('div#app')
+        const maps  = container.querySelector('div#maps')
         toggleButtons(o)
-        toggleTab(maps.dataset.tab)
+        toggleTab('maps')
       }
       function hide(t) {
         t.style.display = 'none'
@@ -108,7 +110,7 @@
         })
       }
       function toggleButtons(b) {
-        console.log(`b = ${b}`)
+        // console.log(`b = ${b}`)
         const mapButton = document.querySelector(`span[data-action=showMaps]`)
         if (b === 'showMaps') {
           if (mapButton.classList.contains('hilite')) {
@@ -137,8 +139,8 @@
       function toggleTab(t) {
         const app = document.querySelector('div#app')
         const tab = document.querySelector(`div[data-tab="${t}"]`)
-        console.log(tab, displayed(tab)) 
-        console.log('t: ', t, 'style: ', tab.style.display)
+        // console.log(tab, displayed(tab)) 
+        // console.log('t: ', t, 'style: ', tab.style.display)
         switch(t) {
           case 'login':
             if (displayed(tab)) {
@@ -180,7 +182,8 @@
             if (displayed(app) ||
                 displayed(document.querySelector('div#login')) ||
                 displayed(document.querySelector('div#list')) ||
-                displayed(document.querySelector('div#new'))) {
+                displayed(document.querySelector('div#new')) ||
+                displayed(document.querySelector('div#search'))) {
               reset()
               // show(app)
             } else {
