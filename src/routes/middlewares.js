@@ -5,6 +5,7 @@
  * @file src/routes/middlewares.js
  */
 
+import querystring from 'node:querystring'
 import formidable from 'formidable'
 import { _log, _error } from '../utils/logging.js'
 
@@ -76,6 +77,19 @@ export async function processFormData(ctx, next) {
       log('Multipart form data was successfully parsed.')
       ctx.request.body = fields
       ctx.request.files = files
+      // get querystring params if they are present
+      // log('ctx href is', ctx.request.href)
+      // log('ctx querystring is', ctx.request.querystring)
+      if (ctx.request.querystring !== '') {
+        const parsed = querystring.parse(ctx.request.querystring) ?? {}
+        // log('parsed querystring is')
+        // log(parsed)
+        Object.getOwnPropertyNames(parsed).map((p) => {
+          ctx.request.body[p] = [parsed[p]]
+          return [parsed[p]]
+        })
+        // log('combined formidable and querystring params', ctx.request.body)
+      }
       resolve()
     })
   })
