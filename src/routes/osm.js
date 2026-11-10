@@ -98,8 +98,8 @@ router.get(
       if (Number.isNaN(n)) {
         ctx.throw(400, 'Invalid search radius distance value.')
       } else {
-        // radiusMeters = Number.parseInt(n, 10) // value already in meters
-        radiusMeters = Number.parseInt(n * 1.609 * 1000, 10) // convert miles to meters
+        radiusMeters = n // value already in meters
+        // radiusMeters = Number.parseInt(n * 1.609 * 1000, 10) // convert miles to meters
       }
       let page
       const p = Number.parseInt(ctx.params.page, 10)
@@ -225,6 +225,7 @@ router.get(
           body.meta.pagination.totalPages = Math.ceil(trails[0].total_count / limit)
           body.meta.request_duration_milliseconds = Date.now() - ctx.startTime
         }
+        body.csrfToken = newCsrfToken
       } catch (e) {
         body = { status: 'query failed', msg: e.toString() }
       }
