@@ -25,8 +25,9 @@ async function findNewTrailsInRadiusN(credentials) {
     },
   }
   const c = credentials
-  const searchUrl = `${c.url}/${c.type}/${c.longitude}/${c.latitude}/${c.radius}/${c.page}`
-    + `?tk=${c.csrfTokenHidden}`
+  const searchUrl = `${c.url}/api/v1/osm/trails/`
+    + `${c.type}/${c.longitude}/${c.latitude}/${c.radius}/${c.page}`
+    + `?csrfTokenHidden=${c.csrfTokenHidden}`
   console.log('submitting trails query to', searchUrl)
   const request = new Request(searchUrl, opts)
   let trails
@@ -39,6 +40,7 @@ async function findNewTrailsInRadiusN(credentials) {
     console.error('error finding new trails', e)
     trails = { status: 'failed', msg: 'failed to retrieve search results for trails', e }
   }
+  console.log(trails)
   return trails
 }
 
@@ -62,14 +64,13 @@ onmessage = async (e) => {
       //     postMessage({ TASK: 'SETUP', ...await refresh(e.data) })
       //   }
       //   break
-      case 'SEARCH':
+      case 'FIND_TRAILS':
         try {
           const trailsFound = await findNewTrailsInRadiusN(e.data)
-          console.log('found new trails')
-          postMessage(trailsFound)
+          postMessage({ TASK: 'FIND_TRAILS', status: 'ok', ...trailsFound })
         } catch (err) {
           console.log('search request failed:', err)
-          postMessage({ err: 'search request failed', cause: err })
+          postMessage({ TASK: 'FIND_TRAILS', err: 'search request failed', cause: err })
         }
         break
       default:
