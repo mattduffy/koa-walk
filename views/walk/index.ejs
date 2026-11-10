@@ -242,11 +242,13 @@
       <h3>Discover New Trails</h3>
       <form id="searchId" name="search">
         <input type="hidden" id="csrfTokenId" name="csrfToken" value="<%= csrfToken %>" required>
-        Find trails within <select id="searchRadiusId" name="searchRadius" tabindex="0" style="margin-left: 0em; text-align: right; position: relative; top: 0px;">
+        Find trails within <select id="searchRadiusId" name="searchRadius" tabindex="0" style="margin-left: 0em; text-align: right; position: relative; top: 0px;" required>
 
         </select> <span data-units="" id="searchRadiusUnits"></span> of your location.
         <br>
-        <input type="submit" id="searchSubmitId" name="searchSubmit" value="Discover" tabindex="0">
+        <button id="searchSubmitId" name="searchSubmit" tabindex="0">
+          Discover 
+        </button>
       </form>
 
     </div>
@@ -287,6 +289,7 @@
   let HEADING = 0
   let DISPLAY_UNITS
   let DISPLAY_ORIENTATION
+  let SEARCH_PAGE = 1
   const POLYLINE_SEGMENT_LENGTH = 10
   const CALORIE_MODELS = models()
   let PREFERRED_CALORIE_MODEL = <%- (preferences?.calorieModel)
@@ -367,6 +370,10 @@
   window.walker = new Worker(
     '<%= origin %>/j/worker.js',
     { name: 'walker', type: 'module' }
+  ) || null
+  window.discover = new Worker(
+    '<%= origin %>/j/discover.js',
+    { name: 'discover', type: 'module' }
   ) || null
   window.walker.postMessage({ TASK: 'INIT', origin, appName: 'Walk', VERSION, VERBOSE })
   const dMap = document.querySelector('div#map')
@@ -1128,6 +1135,64 @@
       window._map.removeOverlay(window._map.overlays.find((o) => o.data.name === identifier))
     }
     document.querySelector('button#clearWalk').addEventListener('click', clearWalk)
+    window.findTrails = async function(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      log('findTrails - discover new trails')
+      const form = document.forms.namedItem('search')
+      function convertRadiusToMeters(r) {
+        let meters
+        if (/imperial/i.test(DISPLAY_UNITS)) {
+          meters = Math.ceil(r * 1.609344 * 1000)
+        } else {
+          meters *= 1000
+        }
+        log(`converting radius: ${r} to metric meters gives: ${meters}`)
+        return meters
+      }
+      const rmeters = convertRadiusToMeters(
+        Number.parseInt(
+          document.querySelector('select#searchRadiusId').selectedOptions[0].value,
+          10
+        )
+      )
+      const credentials = {
+        TASK: 'FIND_TRAILS',
+        url: `${origin}`,
+        type: 'hiking',
+        longitude: window.walking.currentPosition.longitude,
+        latitude: window.walking.currentPosition.latitude,
+        radius: rmeters,
+        page: SEARCH_PAGE || 1,
+        // csrfTokenHidden: form.children.namedItem('csrfTokenId').value,
+        csrfTokenHidden: window.csrfToken,
+        jwtAccess: jwtAccess,
+      }
+      log('credentials', credentials)
+      try {
+        //
+        // Fill in function body to get radius value - convert to meters.
+        // Get csrfTokenHidden value.
+        // Get current lon/lat position.
+        // Assign TASK value for searching.
+        // Package values up and call postMessage().
+        window.discover.postMessage(credentials)
+      } catch (err) {
+        warn('getTrails() failed')
+        error(err)
+      }
+      function finish(e) {
+        log('findTrails.finish()', e.data)
+        if (e?.newCsrfToken) {
+          updateCsrfToken(e.newCsrfToken)
+        }
+        if (e.data?.TASK === 'FIND_TRAILS' && e.data?.status === 'ok') {
+          
+        }
+      }
+      findTrails.finish = finish
+    }
+    document.querySelector('button#searchSubmitId').addEventListener('click', findTrails)
     function updateHeading() {
       if (DISPLAY_ORIENTATION && DISPLAY_ORIENTATION === 'northUp') {
         log('map orientation: North Up')
@@ -1308,6 +1373,7 @@
         e.stopPropagation()
         doLogout()
       })
+      
       window.walker.onmessage = function(e) {
         log('walker.onmessage: ', e.data)
         switch (e.data.TASK) {
@@ -1385,10 +1451,28 @@
             log('csrfToken after DELETE_WALK: ', window.csrfToken)
             break
           default:
-            log(e.data)
+            log('window.walker default case:', e.data)
         }
       }
       window.walker.onerror = function(e) {
+        e.preventDefault()
+        console.warn('err msg: ', e.message)
+        console.warn('in: ', e.filename)
+        console.warn('at: ', e.lineno)
+      }
+      window.discover.onmessage = function(e) {
+        log('discover.onmessage: ', e.data)
+        switch (e.data.TASK) {
+          case 'FIND_TRAILS':
+            log('csrfToken before FIND_TRAILS: ', window.csrfToken)
+            window.findTrails.finish(e.data) 
+            log('csrfToken after FIND_TRAILS: ', window.csrfToken)
+            break
+          default:
+            log('window.discover default case:', e.data) 
+        }
+      }
+      window.discover.onerror = function(e) {
         e.preventDefault()
         console.warn('err msg: ', e.message)
         console.warn('in: ', e.filename)
