@@ -48,22 +48,6 @@ onmessage = async (e) => {
   console.log('discovery worker e.data', e.data)
   if (e.data?.TASK) {
     switch (e.data.TASK) {
-      // case 'INIT':
-      //   ({
-      //     origin,
-      //     appName,
-      //     VERSION,
-      //     VERBOSE,
-      //   } = e.data)
-      //   if (walkState && !walkState.version) {
-      //     walkState.version = VERSION
-      //   }
-      //   break
-      // case 'SETUP':
-      //   if (e.data.isAuth) {
-      //     postMessage({ TASK: 'SETUP', ...await refresh(e.data) })
-      //   }
-      //   break
       case 'FIND_TRAILS':
         try {
           const trailsFound = await findNewTrailsInRadiusN(e.data)
