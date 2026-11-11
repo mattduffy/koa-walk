@@ -250,7 +250,11 @@
           Discover 
         </button>
       </form>
-
+      <span style="display: none;">
+        Total Number of Trail<span id="makeTrailsPlural">s</span> Found: <span id="numberFound">0</span> 
+      </span>
+      <ul id="found-trails" style="">
+      </ul>
     </div>
     <div id="app" data-tab="app">
       <h3 id="h3"></h3>
@@ -1182,12 +1186,31 @@
         error(err)
       }
       function finish(e) {
-        log('findTrails.finish()', e.data)
+        log('findTrails.finish()', e)
         if (e?.newCsrfToken) {
           updateCsrfToken(e.newCsrfToken)
         }
-        if (e.data?.TASK === 'FIND_TRAILS' && e.data?.status === 'ok') {
-          
+        if (e?.TASK === 'FIND_TRAILS' && e?.status === 'ok') {
+          // render list of foiund trails
+          const ul = document.querySelector('ul#found-trails')
+          const osmTrails = e?.osm?.trails ?? []
+          const knownTrails = e?.known?.trails ?? []
+          const total = e?.osm.meta.pagination.totalTrails
+          document.querySelector('span#numberFound').textContent = total
+          document.querySelector('span#makeTrailsPlural').textContent = (total === 1) ? '' : 's'
+          document.querySelector('span#numberFound').parentElement.style.display = 'inline'
+          osmTrails.forEach((t, i) => {
+            const li = document.createElement('li')
+            li.dataset.source = "osm" 
+            li.innerHTML = `<span data-osm-rel="${t.relation_id}" `
+            + `data-osm-type="${t.relation_tags.type}" `
+            + `data-osm-route="${t.relation_tags.route}" `
+            + `data-osm-source="${t.relation_tags?.source}">`
+            + `${truncateText(t.route_name, 54)}</span>`
+            + '<br>'
+            + `distance from here: ${displayUnits(t.distance_meters, DISPLAY_UNITS)}`
+            ul.appendChild(li)
+          })
         }
       }
       findTrails.finish = finish

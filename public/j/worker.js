@@ -1045,7 +1045,6 @@ onmessage = async (e) => {
       case 'GET_LIST':
         console.log(e.data.TASK)
         try {
-          // const list = await getList(e.data)
           postMessage({ TASK: 'GET_LIST', ...await getList(e.data) })
         } catch (err) {
           console.error(`${e.data.TASK} failed.`, err)
