@@ -313,6 +313,49 @@ div#login > div#welcomeId {
   display: none;
 }
 
+div#search {
+  display: none;
+  width: auto;
+  background-color: white;
+  border-radius: .5em;
+  padding: .25em;
+  height: auto;
+  max-height: 400px;
+  overflow: scroll;
+}
+
+div#search > h3, h4, h5 {
+  margin: 0px;
+}
+
+div#search > p, ul {
+  margin: 0px, 0px, 1em 0px;
+}
+
+ul[id=found-trails] {
+  margin-left: -.25em!important;
+  min-width: fit-content;
+  max-with: auto;
+}
+
+ul[id=found-trails] li[data-source="osm"] {
+  border-bottom: solid 1px lightgray;
+  margin: 0px 0px 1.25em -1.75em;
+  list-style: none;
+}
+
+ul[id=found-trails] li[data-source="osm"]:nth-child(odd) {
+  background-color: ghostwhite;
+}
+
+span[data-osm]:active, span[data-osm]:hover {
+  color: blue;
+}
+
+div#search p {
+  font-size: .75em;
+}
+
 div#list {
   display: none;
   width: auto;
