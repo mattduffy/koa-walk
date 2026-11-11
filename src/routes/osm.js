@@ -120,20 +120,21 @@ router.get(
       // // 1 kilometer equals 0.621371 miles
       // const radiusMeters = (25 * 1.609) * 1000 // convert 25 miles to meters
       let body = {
-        meta: {
-          generatedAt: new Date(),
-          source: 'osm',
-          cached: false,
-          pagination: {
-            totalTrails: 0,
-            offset: 0,
-            limit: 0,
-            totalPages: 0,
+        newCsrfToken,
+        osm: {
+          meta: {
+            generatedAt: new Date(),
+            cached: false,
+            pagination: {
+              totalTrails: 0,
+              offset: 0,
+              limit: 0,
+              totalPages: 0,
+            },
           },
+          trails: [],
         },
-        data: [],
       }
-
       try {
         /* eslint-disable prefer-template */
         const trails = await sql`
@@ -210,24 +211,23 @@ router.get(
         `
         /* eslint-enable prefer-template */
         osmLog(`found ${trails.length} hiking trails.`)
-        body.data = trails
+        body.osm.trails = trails
         if (trails.length < 1) {
-          body.meta.pagination.totalTrails = 0
-          body.meta.pagination.limit = limit
-          body.meta.pagination.offset = 0
-          body.meta.pagination.currentPage = 1
-          body.meta.pagination.totalPages = 0
+          body.osm.meta.pagination.totalTrails = 0
+          body.osm.meta.pagination.limit = limit
+          body.osm.meta.pagination.offset = 0
+          body.osm.meta.pagination.currentPage = 1
+          body.osm.meta.pagination.totalPages = 0
         } else {
-          body.meta.pagination.totalTrails = trails[0].total_count
-          body.meta.pagination.limit = limit
-          body.meta.pagination.offset = ((page - 1) * 10)
-          body.meta.pagination.currentPage = page
-          body.meta.pagination.totalPages = Math.ceil(trails[0].total_count / limit)
-          body.meta.request_duration_milliseconds = Date.now() - ctx.startTime
+          body.osm.meta.pagination.totalTrails = trails[0].total_count
+          body.osm.meta.pagination.limit = limit
+          body.osm.meta.pagination.offset = ((page - 1) * 10)
+          body.osm.meta.pagination.currentPage = page
+          body.osm.meta.pagination.totalPages = Math.ceil(trails[0].total_count / limit)
+          body.osm.meta.request_duration_milliseconds = Date.now() - ctx.startTime
         }
-        body.csrfToken = newCsrfToken
       } catch (e) {
-        body = { status: 'query failed', msg: e.toString() }
+        body = { status: 'query failed', csrfToken: newCsrfToken, msg: e.toString() }
       }
       ctx.type = 'application/json; charset=utf-8'
       ctx.body = body
