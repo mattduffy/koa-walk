@@ -27,6 +27,70 @@ function sanitize(param) {
   return param
 }
 
+const geojsonTemplate = {
+  _id: null,
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: {
+        id: null,
+        version: 0.2,
+        osm: {
+          route_name: null,
+          relation_id: null,
+          relation_tags_type: null,
+          relation_tags_route: null,
+          relation_tags_source: null,
+        },
+        dateCopiedFromOsm: null,
+        name: null,
+        location: null,
+        startPosition: {
+          longitude: null,
+          latitude: null,
+          accuracy: null,
+          altitude: null,
+          heading: null,
+        },
+        endPosition: {
+          longitude: null,
+          latitude: null,
+          accuracy: null,
+          altitude: null,
+          heading: null,
+          timestamp: null,
+          distance: null,
+        },
+        highestElevation: null,
+        lowestElevation: null,
+        changeInElevation: null,
+        terrain: {
+          value: null,
+          text: null,
+        },
+      },
+      geometry: {
+        type: 'LineString',
+        coordinates: [],
+      },
+    },
+  ],
+}
+
+function convertOsmToGeojson(t) {
+  const tmp = structuredClone(geojsonTemplate) 
+  tmp.features[0].properties.osm.route_name = t.route_name
+  tmp.features[0].properties.osm.relation_id = t.relation_id
+  tmp.features[0].properties.osm.relation_tags_type = t.relation_tags.type
+  tmp.features[0].properties.osm.relation_tags_route = t.relation_tags.route
+  tmp.features[0].properties.osm.relation_tags_source = t.relation_tags.source ?? null
+  tmp.features[0].properties.dateCopiedFromOsm = Date.now()
+  tmp.features[0].properties.name = t.route_name
+
+  return tmp
+}
+
 const router = new Router()
 
 router.use(async (ctx, next) => {
@@ -211,6 +275,7 @@ router.get(
         `
         /* eslint-enable prefer-template */
         osmLog(`found ${trails.length} hiking trails.`)
+        body.geojson = trails.map(convertOsmToGeojson)
         body.osm.trails = trails
         if (trails.length < 1) {
           body.osm.meta.pagination.totalTrails = 0
