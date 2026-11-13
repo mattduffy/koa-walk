@@ -338,14 +338,16 @@ ul[id=found-trails] {
   max-with: auto;
 }
 
-ul[id=found-trails] li[data-source="osm"] {
+ul[id=found-trails] li[data-source="osm"]:not(:first-child) {
   border-bottom: solid 1px lightgray;
-  margin: 0px 0px 1.25em -1.75em;
+  margin: 0px 0px 0em 0em;
+  padding-top: 1em;
   list-style: none;
 }
 
-ul[id=found-trails] li[data-source="osm"]:nth-child(odd) {
+ul[id=found-trails] li[data-source="osm"]:nth-child(even) {
   background-color: ghostwhite;
+  margin: 0em 0px 0em 0px;
 }
 
 span[data-osm]:active, span[data-osm]:hover {

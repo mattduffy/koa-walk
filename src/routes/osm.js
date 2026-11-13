@@ -79,7 +79,7 @@ const geojsonTemplate = {
 }
 
 function convertOsmToGeojson(t) {
-  const tmp = structuredClone(geojsonTemplate) 
+  const tmp = structuredClone(geojsonTemplate)
   tmp.features[0].properties.osm.route_name = t.route_name
   tmp.features[0].properties.osm.relation_id = t.relation_id
   tmp.features[0].properties.osm.relation_tags_type = t.relation_tags.type
@@ -87,7 +87,8 @@ function convertOsmToGeojson(t) {
   tmp.features[0].properties.osm.relation_tags_source = t.relation_tags.source ?? null
   tmp.features[0].properties.dateCopiedFromOsm = Date.now()
   tmp.features[0].properties.name = t.route_name
-
+  tmp.features[0].geometry.coordinates = t.sequenced_coordinates
+    .map((c) => [c.lon, c.lat, null, null, null, null])
   return tmp
 }
 
@@ -203,75 +204,81 @@ router.get(
         /* eslint-disable prefer-template */
         const trails = await sql`
           WITH nearby_ways AS (
-            -- Step 1: Use ST_DWithin first. This forces PostgreSQL to use the GiST 
-            -- spatial index via bounding boxes, instantly filtering out distant ways.
-            SELECT osm_id, way 
-            FROM planet_osm_line
-            WHERE ST_DWithin(
-              way, 
-              ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857), 
-              ${radiusMeters}
-            )
-            UNION ALL
-            SELECT osm_id, way 
-            FROM planet_osm_roads
-            WHERE ST_DWithin(
-              way, 
-              ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857), 
-              ${radiusMeters}
-            )
+              SELECT osm_id, way 
+              FROM planet_osm_line
+              WHERE ST_DWithin(
+                  way, 
+                  ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857), 
+                  ${radiusMeters}
+              )
+              UNION ALL
+              SELECT osm_id, way 
+              FROM planet_osm_roads
+              WHERE ST_DWithin(
+                  way, 
+                  ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857), 
+                  ${radiusMeters} 
+              )
           ),
           matched_relations AS (
-            -- Step 2: Map those nearby ways back to their parent relations
-            SELECT 
-              r.id AS relation_id,
-              r.tags->>'name' AS route_name,
-              r.tags AS relation_tags,
-              MIN(ST_Distance(
-                nw.way,
-                ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857)
-              )) AS distance_meters
-            FROM 
-              planet_osm_rels r
-            JOIN LATERAL unnest(planet_osm_member_ids(r.members, 'W')) AS way_id ON true
-            JOIN nearby_ways nw ON nw.osm_id = way_id
-            WHERE 
-              (r.tags->>'route' LIKE ${'%' + type + '%'} OR r.tags->>'route' LIKE '%foot%')
-            GROUP BY 
-              r.id, r.tags
+              SELECT 
+                  r.id AS relation_id,
+                  r.tags->>'name' AS route_name,
+                  r.tags AS relation_tags,
+                  MIN(ST_Distance(
+                      nw.way,
+                      ST_Transform(ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326), 3857)
+                  )) AS distance_meters
+              FROM 
+                  planet_osm_rels r --
+              JOIN LATERAL unnest(planet_osm_member_ids(r.members, 'W')) AS way_id ON true
+              JOIN nearby_ways nw ON nw.osm_id = way_id
+              WHERE 
+                  (r.tags->>'route' LIKE ${'%' + type + '%'} OR r.tags->>'route' LIKE '%foot%')
+              GROUP BY 
+                  r.id, r.tags
           ),
           paginated AS (
-            SELECT 
-              relation_id,
-              route_name,
-              relation_tags,
-              distance_meters,
-              COUNT(*) OVER() AS total_count
-            FROM 
-              matched_relations
-            ORDER BY 
-              distance_meters ASC
-            LIMIT 10
-            OFFSET ( (${page} - 1) * 10 )
+              SELECT 
+                  relation_id,
+                  route_name,
+                  relation_tags,
+                  distance_meters,
+                  COUNT(*) OVER() AS total_count
+              FROM 
+                  matched_relations
+              ORDER BY 
+                  distance_meters ASC
+              LIMIT 10
+              OFFSET ( (${page} - 1) * 10 )
           )
           SELECT 
-            p.relation_id,
-            p.route_name,
-            p.relation_tags,
-            ROUND(p.distance_meters::numeric, 2) AS distance_meters,
-            p.total_count,
-            (
-              SELECT array_agg(node_id ORDER BY m.ord, node_idx)
-              FROM planet_osm_rels r2
-              CROSS JOIN LATERAL jsonb_array_elements(r2.members) WITH ORDINALITY AS m(elem, ord)
-              JOIN planet_osm_ways w ON w.id = (elem->>'ref')::bigint
-              CROSS JOIN LATERAL unnest(w.nodes) WITH ORDINALITY AS n(node_id, node_idx)
-              WHERE r2.id = p.relation_id AND elem->>'type' = 'W'
-            ) AS sequenced_node_ids
+              p.relation_id,
+              p.route_name,
+              p.relation_tags,
+              ROUND(p.distance_meters::numeric, 2) AS distance_meters,
+              p.total_count,
+              -- Replaces node IDs with a sequential JSONB array of {lon, lat} coordinate objects
+              (
+                  SELECT jsonb_agg(
+                      jsonb_build_object(
+                          'lon', n.lon::double precision / 10000000.0,
+                          'lat', n.lat::double precision / 10000000.0
+                      )
+                      ORDER BY m.ord, node_idx
+                  )
+                  FROM planet_osm_rels r2
+                  CROSS JOIN LATERAL jsonb_array_elements(r2.members)
+                    WITH ORDINALITY AS m(elem, ord)
+                  JOIN planet_osm_ways w ON w.id = (elem->>'ref')::bigint
+                  CROSS JOIN LATERAL unnest(w.nodes) WITH ORDINALITY AS n_idx(node_id, node_idx)
+                  JOIN planet_osm_nodes n ON n.id = node_id
+                  WHERE r2.id = p.relation_id AND elem->>'type' = 'W'
+              ) AS sequenced_coordinates
           FROM 
-            paginated p
+              paginated p
           ORDER BY 
-            p.distance_meters ASC;
+              p.distance_meters ASC;
         `
         /* eslint-enable prefer-template */
         osmLog(`found ${trails.length} hiking trails.`)
