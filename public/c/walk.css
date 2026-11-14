@@ -333,21 +333,28 @@ div#search > p, ul {
 }
 
 ul[id=found-trails] {
-  margin-left: -.25em!important;
+  margin-left: -1.5em!important;
   min-width: fit-content;
   max-with: auto;
 }
 
 ul[id=found-trails] li[data-source="osm"]:not(:first-child) {
   border-bottom: solid 1px lightgray;
-  margin: 0px 0px 0em 0em;
+  margin: 0px 0px 0em -1em;
+  padding-top: 1em;
+  list-style: none;
+}
+
+ul[id=found-trails] li[data-source="osm"] {
+  border-bottom: solid 1px lightgray;
+  margin: 0px 0px 0em -1em;
   padding-top: 1em;
   list-style: none;
 }
 
 ul[id=found-trails] li[data-source="osm"]:nth-child(even) {
   background-color: ghostwhite;
-  margin: 0em 0px 0em 0px;
+  margin: 0em 0px 0em -1em;
 }
 
 span[data-osm]:active, span[data-osm]:hover {
