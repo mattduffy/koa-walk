@@ -348,7 +348,7 @@ ul[id=found-trails] li[data-source="osm"]:not(:first-child) {
 ul[id=found-trails] li[data-source="osm"] {
   border-bottom: solid 1px lightgray;
   margin: 0px 0px 0em -1em;
-  padding-top: 1em;
+  padding-top: 0em;
   list-style: none;
 }
 
@@ -357,7 +357,7 @@ ul[id=found-trails] li[data-source="osm"]:nth-child(even) {
   margin: 0em 0px 0em -1em;
 }
 
-span[data-osm]:active, span[data-osm]:hover {
+span[data-osm-rel-id]:active, span[data-osm-rel-id]:hover {
   color: blue;
 }
 
@@ -390,7 +390,8 @@ div#list div ul {
 
 ul[id$=walks] {
   margin-left: -.25em!important;
-  max-width: fit-content;
+  martin-right: 1em!important;
+  width: auto;
 }
 
 ul[id$=walks] li {
