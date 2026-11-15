@@ -554,14 +554,26 @@
     updatePreferences.finish = finish
     window.walker.postMessage(credentials)
   }
-  function truncateText(text = '', length = 34) {
+  function truncateText(text = '', length = 34, elem = null) {
+    // console.log(text, length, elem)
     if (text === '' || length < 1) {
       return ''
     }
     if (text.length <= length) {
       return text
     }
-    return text.slice(0, length - 1).concat('\u{2026}') 
+    let elementPixelWidth = 0
+    let fontEmToPixelSize
+    let textWidthInPixels
+    let maxStringLength = length
+    if (elem) {
+      elementPixelWidth = elem.getBoundingClientRect().width
+      fontEmToPixelSize = Number.parseFloat(window.getComputedStyle(elem).fontSize, 10)
+      textWidthInPixels = text.length * fontEmToPixelSize
+      if (textWidthInPixels) console.log('textWidthInPixels', textWidthInPixels)
+      maxStringLength = Math.floor(Math.max(length, elementPixelWidth) - 1)
+    }
+    return text.slice(0, maxStringLength).concat('\u{2026}') 
   }
   async function main() {
     await setupMapKitJs()
@@ -1197,24 +1209,38 @@
           const knownTrails = e?.known?.trails ?? []
           const total = e?.osm.meta.pagination.totalTrails
           document.querySelector('span#numberFound').textContent = total
-          document.querySelector('span#makeTrailsPlural').textContent = (total === 1) ? '' : 's'
+          document.querySelector('span#makeTrailsPlural')
+            .textContent = (total === 1) ? '' : 's'
           document.querySelector('span#numberFound').parentElement.style.display = 'inline'
           osmTrails.forEach((t, i) => {
             const li = document.createElement('li')
             li.dataset.source = "osm" 
-            li.innerHTML = `<span data-osm-rel="${t.relation_id}" `
+            li.innerHTML = `<span data-osm-rel-id="${t.relation_id}" `
             + `data-osm-type="${t.relation_tags.type}" `
             + `data-osm-route="${t.relation_tags.route}" `
-            + `data-osm-source="${t.relation_tags?.source}">`
+            + `data-osm-source="${t.relation_tags?.source}" `
+            + `class="pointer" title="${t.route_name}">`
             + `${truncateText(t.route_name, 54)}</span>`
             + '<br>'
-            + `distance from here: ${displayUnits(t.distance_meters, DISPLAY_UNITS)}`
+            + 'Distance from your current location: '
+            + `${displayUnits(t.distance_meters, DISPLAY_UNITS)}`
             ul.appendChild(li)
           })
         }
+        document.querySelectorAll('span[data-osm-rel-id]').forEach((t) => {
+          t.addEventListener('click', showTrail)
+        })
       }
       findTrails.finish = finish
     }
+    window.showTrail = async function(e) {
+      // Draw map linstring annotation with trial's coordinates.  
+      // 
+      e.preventDefault()
+      e.stopPropagation()
+      log('showTrail(e)', e.target.dataset)
+    }
+    
     document.querySelector('button#searchSubmitId').addEventListener('click', findTrails)
     function updateHeading() {
       if (DISPLAY_ORIENTATION && DISPLAY_ORIENTATION === 'northUp') {
@@ -1709,13 +1735,12 @@
         remoteList.forEach((w) => {
           // log(w)
           const li = document.createElement('li')
-          // li.style.marginLeft = '-1.5em'
-          // li.style.padding = '5px 0px 6px 0px'
           const fmt = {year: 'numeric', month: 'short', day: 'numeric'}
           li.innerHTML = `${new Date(w.date).toLocaleString('en-US', fmt)} `
             + `<span data-show-id="${w.id}" `
-            + 'data-scope="remote" class="pointer">'
+            + `data-scope="remote" class="pointer" title="${w.name}">`
             + `${truncateText(w.name)}</span> <br>`
+            // + `${w.name}</span> <br>`
             + 'export: '
             + `<span data-export-id=${w.id} data-type="kml" data-scope="remote" `
             + 'class="pointer export tiny">KML</span>'
@@ -1729,6 +1754,23 @@
           replaceList.push(li)
         })
         remoteWalks.replaceChildren(...replaceList)
+        // Array.from(remoteWalks.children).forEach((li, i) => {
+        //   console.log(li.getBoundingClientRect())
+        //   const liPixelWidth = li.getBoundingClientRect().width
+        //   const fontEmToPixelSize = Number.parseFloat(
+        //     window.getComputedStyle(li).fontSize, 10,
+        //   )
+        //   const text = li.children[0].textContent
+        //   console.log('liPixelWidth', liPixelWidth)
+        //   console.log('fontEmToPixelSize', fontEmToPixelSize)
+        //   console.log('liPixelWidth / fontEmToPixelSize:', liPixelWidth / fontEmToPixelSize)
+        //   console.log('text.length * fontEmToPixelSize:', text.length * fontEmToPixelSize)
+        //   const truncateAtLength = Math.floor(
+        //     Math.min((liPixelWidth/fontEmToPixelSize), (text.lenth * fontEmToPixelSize))
+        //   )
+        //   console.log('truncateAtLength', truncateAtLength)
+        //   console.log(i, truncateText(text, truncateAtLength, li))
+        // })
       }
       const localList = window.walking.state?.localListCache ?? []
       total += localList.length
@@ -1770,7 +1812,7 @@
             li.innerHTML = `${new Date(w.date).toLocaleString('en-US', fmt)} `
               + '<span data-show-id="'
               + `${w.id}" `
-              + 'data-scope="local" class="pointer">'
+              + `data-scope="local" class="pointer" title="${w.name}">`
               + `${truncateText(w.name)}</span> <br>`
               + 'export: '
               + `<span data-export-id=${w.id} data-type="kml" data-scope="local" `
@@ -2161,6 +2203,7 @@
     }
     window.exportWalkAs.finish = finish
   }
+
   async function noPositionCantWalk(o, g) {
     log('using fallback position: ', g)
     window.me = new mapkit.Coordinate(g.coords.latitude, g.coords.longitude)
