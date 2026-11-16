@@ -12,6 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+.claude/settings.local.json
 tmp
 .npmrc
 *.config.bk
