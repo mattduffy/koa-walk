@@ -234,7 +234,13 @@ router.get(
               JOIN LATERAL unnest(planet_osm_member_ids(r.members, 'W')) AS way_id ON true
               JOIN nearby_ways nw ON nw.osm_id = way_id
               WHERE 
-                  (r.tags->>'route' LIKE ${'%' + type + '%'} OR r.tags->>'route' LIKE '%foot%')
+                  (
+                    r.tags->>'route' LIKE ${'%' + type + '%'}
+                    OR r.tags->>'route' LIKE '%foot%'
+                    OR r.tags->>'highway' = 'pedestrian' -- add tag check for highway=pedestrian
+                    OR r.tags->>'highway' = 'path'       -- add tag check for highway=path
+                    OR r.tags->>'highway' = 'footway'    -- add tag check for highway=footway
+                  )
               GROUP BY 
                   r.id, r.tags
           ),
