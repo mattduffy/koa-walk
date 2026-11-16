@@ -365,6 +365,29 @@ div#search p {
   font-size: .75em;
 }
 
+div#trail-div {
+  display: none;
+  width: auto;
+  max-height: fit-content;
+  overflow: scroll;
+  background-color: white;
+  border-radius: .5em;
+  padding: .25em;
+  font-size: .85em;
+}
+
+div#trail-div > h3, h4, h5 {
+  margin: 0px;
+}
+
+div#trail-div > ul#trailData {
+  list-style: none;
+  padding-left: .5em;
+  font-size: 1em;
+  margin: auto;
+  margin-top: 1em;
+}
+
 div#list {
   display: none;
   width: auto;
