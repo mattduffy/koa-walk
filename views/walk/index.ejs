@@ -1253,18 +1253,18 @@
           document.querySelector('span#makeTrailsPlural')
             .textContent = (total === 1) ? '' : 's'
           document.querySelector('span#numberFound').parentElement.style.display = 'inline'
-          osmTrails.forEach((trail, i) => {
-            const t = trail.features[0]
+          osmTrails.forEach((t, i) => {
+            const trail = t.geojson.features[0]
             const li = document.createElement('li')
             li.dataset.source = "osm" 
-            li.innerHTML = `<span data-osm-rel-id="${t.properties.osm.relation_id}" `
-            + `data-osm-name="${t.properties.name ?? 'Unnamed trail'}" `
-            + `data-osm-type="${t.properties.osm.relation_tags.type}" `
-            + `data-osm-route="${t.properties.osm.relation_tags.route}" `
-            + `data-osm-source="${t.properties.osm.relation_tags?.source}" `
+            li.innerHTML = `<span data-osm-rel-id="${trail.properties.osm.relation_id}" `
+            + `data-osm-name="${trail.properties.name ?? 'Unnamed trail'}" `
+            + `data-osm-type="${trail.properties.osm.relation_tags.type}" `
+            + `data-osm-route="${trail.properties.osm.relation_tags.route}" `
+            + `data-osm-source="${trail.properties.osm.relation_tags?.source}" `
             + `data-page="${e.osm.meta.pagination.currentPage}"`
-            + `class="pointer" title="${t.properties.name}">`
-            + `${truncateText(t.properties.name, 54)}</span>`
+            + `class="pointer" title="${trail.properties.name}">`
+            + `${truncateText(trail.properties.name, 54)}</span>`
             + '<br>'
             + 'Distance from your current location: '
             + `${displayUnits(t.distance_meters, DISPLAY_UNITS)}`
@@ -1286,7 +1286,7 @@
       log('page:', page)
       log(window.walking.state.trailSearchResults.pages[page])
       const trail = window.walking.state.trailSearchResults.pages[page].find((t) => {
-        return t.features[0].properties.osm.relation_id === e.target.dataset.osmRelId
+        return t.geojson.features[0].properties.osm.relation_id === e.target.dataset.osmRelId
       })
       log(trail)
       const divList = document.querySelector('div#search-div')
