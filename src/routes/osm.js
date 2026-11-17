@@ -8,7 +8,7 @@
 
 import Router from '@koa/router'
 import { ulid } from 'ulid'
-// import { ObjectId } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import { _log, _error } from '../utils/logging.js'
 import { sql } from '../daos/impl/postgres/postgres-client.js'
 import {
@@ -26,6 +26,8 @@ function sanitize(param) {
   if (!param) osmError('missing param')
   return param
 }
+
+const GEOJSON_VERSION = 0.2
 
 const geojsonTemplate = {
   _id: null,
@@ -79,16 +81,26 @@ const geojsonTemplate = {
 }
 
 function convertOsmToGeojson(t) {
-  const tmp = structuredClone(geojsonTemplate)
-  tmp.features[0].properties.osm.route_name = t.route_name
-  tmp.features[0].properties.osm.relation_id = t.relation_id
-  tmp.features[0].properties.osm.relation_tags_type = t.relation_tags.type
-  tmp.features[0].properties.osm.relation_tags_route = t.relation_tags.route
-  tmp.features[0].properties.osm.relation_tags_source = t.relation_tags.source ?? null
-  tmp.features[0].properties.dateCopiedFromOsm = Date.now()
-  tmp.features[0].properties.name = t.route_name
-  tmp.features[0].geometry.coordinates = t.sequenced_coordinates
+  const tmp = {
+    geojson: structuredClone(geojsonTemplate),
+    distance_meters: t.distance_meters,
+  }
+  tmp.geojson._id = new ObjectId()
+  tmp.geojson.type = 'FeatureCollection'
+  tmp.geojson.features[0].properties.version = GEOJSON_VERSION
+  tmp.geojson.features[0].properties.osm.route_name = t.route_name
+  tmp.geojson.features[0].properties.osm.relation_id = t.relation_id
+  tmp.geojson.features[0].properties.osm.relation_tags = t.relation_tags
+  tmp.geojson.features[0].properties.dateCopiedFromOsm = Date.now()
+  tmp.geojson.features[0].properties.name = t.route_name ?? 'Unnamed trail'
+  tmp.geojson.features[0].properties.location = undefined
+  tmp.geojson.features[0].properties.highestElevation = undefined
+  tmp.geojson.features[0].properties.lowestElevation = undefined
+  tmp.geojson.features[0].properties.changeInElevation = undefined
+  tmp.geojson.features[0].geometry.type = 'LineString'
+  tmp.geojson.features[0].geometry.coordinates = t.sequenced_coordinates
     .map((c) => [c.lon, c.lat, null, null, null, null])
+    // Good place to run the ramer-douglas-peucker function to reduce number of gps points.
   return tmp
 }
 
@@ -288,8 +300,9 @@ router.get(
         `
         /* eslint-enable prefer-template */
         osmLog(`found ${trails.length} hiking trails.`)
-        body.geojson = trails.map(convertOsmToGeojson)
-        body.osm.trails = trails
+        // body.geojson = trails.map(convertOsmToGeojson)
+        // body.osm.trails = trails
+        body.osm.trails = trails.map(convertOsmToGeojson)
         if (trails.length < 1) {
           body.osm.meta.pagination.totalTrails = 0
           body.osm.meta.pagination.limit = limit
