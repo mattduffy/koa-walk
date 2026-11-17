@@ -593,7 +593,6 @@ class State extends Subject {
             type: 'LineString',
             coordinates: coords,
           },
-          
         },
       ],
     }

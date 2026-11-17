@@ -1237,22 +1237,34 @@
           // render list of foiund trails
           const ul = document.querySelector('ul#found-trails')
           const osmTrails = e?.osm?.trails ?? []
-          const knownTrails = e?.known?.trails ?? []
+          //
+          // Add each page of osm trails to local cache so they don't get re-requested.
+          //
+          window.walking.state.trailSearchResults = window.walking.state.trailSearchResults
+            ?? {
+              page: e.osm.meta.pagination.currentPage ?? 1,
+              pages: [],
+            }
+          window.walking.state.trailSearchResults.pages[e.osm.meta.pagination.currentPage]
+            = osmTrails
+          // const knownTrails = e?.known?.trails ?? []
           const total = e?.osm.meta.pagination.totalTrails
           document.querySelector('span#numberFound').textContent = total
           document.querySelector('span#makeTrailsPlural')
             .textContent = (total === 1) ? '' : 's'
           document.querySelector('span#numberFound').parentElement.style.display = 'inline'
-          osmTrails.forEach((t, i) => {
+          osmTrails.forEach((trail, i) => {
+            const t = trail.features[0]
             const li = document.createElement('li')
             li.dataset.source = "osm" 
-            li.innerHTML = `<span data-osm-rel-id="${t.relation_id}" `
-            + `data-osm-name="${t?.route_name ?? 'Unnamed trail'}" `
-            + `data-osm-type="${t.relation_tags.type}" `
-            + `data-osm-route="${t.relation_tags.route}" `
-            + `data-osm-source="${t.relation_tags?.source}" `
-            + `class="pointer" title="${t?.route_name ?? 'Unnamed trail'}">`
-            + `${truncateText(t?.route_name ?? 'Unnamed trail', 54)}</span>`
+            li.innerHTML = `<span data-osm-rel-id="${t.properties.osm.relation_id}" `
+            + `data-osm-name="${t.properties.name ?? 'Unnamed trail'}" `
+            + `data-osm-type="${t.properties.osm.relation_tags.type}" `
+            + `data-osm-route="${t.properties.osm.relation_tags.route}" `
+            + `data-osm-source="${t.properties.osm.relation_tags?.source}" `
+            + `data-page="${e.osm.meta.pagination.currentPage}"`
+            + `class="pointer" title="${t.properties.name}">`
+            + `${truncateText(t.properties.name, 54)}</span>`
             + '<br>'
             + 'Distance from your current location: '
             + `${displayUnits(t.distance_meters, DISPLAY_UNITS)}`
@@ -1270,6 +1282,13 @@
       e.preventDefault()
       e.stopPropagation()
       log('showTrail(e)', e.target.dataset)
+      const page = Number.parseInt(e.target.dataset.page, 10)
+      log('page:', page)
+      log(window.walking.state.trailSearchResults.pages[page])
+      const trail = window.walking.state.trailSearchResults.pages[page].find((t) => {
+        return t.features[0].properties.osm.relation_id === e.target.dataset.osmRelId
+      })
+      log(trail)
       const divList = document.querySelector('div#search-div')
       const divTrail = document.querySelector('div#trail-div')
       if (window.walking.state.showingTrail) {
@@ -1288,7 +1307,8 @@
       }
       showTrail.finish = finish
       document.querySelector('h4#trailNameH4').textContent = e.osmName  
-      document.querySelector('h5#trailLocationH5').textContent = e?.osmLocation ?? "Right here"
+      document.querySelector('h5#trailLocationH5')
+        .textContent = e?.osmLocation ?? "Right here"
       const spanTrailDistance = document.querySelector('span#trailDistance')
       spanTrailDistance.dataset.distance = (e?.distance ?? 1000000)
       spanTrailDistance.textContent = `${displayUnits(
