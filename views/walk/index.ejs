@@ -247,10 +247,14 @@
 
           </select> <span data-units="" id="searchRadiusUnits"></span> of your location.
           <br>
-          <button id="searchSubmitId" name="searchSubmit" tabindex="0">
+          <button id="searchSubmitId" name="searchSubmit" tabindex="0" enabled>
             Discover 
           </button>
+          <button id="searchClearId" name="searchClear" tabindex="0" style="" disabled>
+            Clear
+          </button>
         </form>
+        <br>
         <span style="display: none;">
           Total Number of Trail<span id="makeTrailsPlural">s</span> Found: <span id="numberFound">0</span> 
         </span>
@@ -1182,11 +1186,25 @@
       window._map.removeOverlay(window._map.overlays.find((o) => o.data.name === identifier))
     }
     document.querySelector('button#clearWalk').addEventListener('click', clearWalk)
+    window.clearTrails = function(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      const form = document.forms.namedItem('search')
+      form.children.namedItem('searchSubmitId').disabled = false 
+      form.children.namedItem('searchClearId').disabled = true
+      document.querySelector('span#numberFound').textContent = '0'
+      document.querySelector('ul#found-trails').replaceChildren('')
+      window.walking.state.trailSearchResults = {}
+
+    }
+    document.querySelector('button#searchClearId').addEventListener('click', clearTrails)
     window.findTrails = async function(e) {
       e.preventDefault()
       e.stopPropagation()
       log('findTrails - discover new trails')
       const form = document.forms.namedItem('search')
+      form.children.namedItem('searchSubmitId').disabled = true
+      form.children.namedItem('searchClearId').disabled = false
       function convertRadiusToMeters(r) {
         let meters
         if (/imperial/i.test(DISPLAY_UNITS)) {
@@ -1284,20 +1302,20 @@
       log('showTrail(e)', e.target.dataset)
       const page = Number.parseInt(e.target.dataset.page, 10)
       log('page:', page)
-      log(window.walking.state.trailSearchResults.pages[page])
+      // log(window.walking.state.trailSearchResults.pages[page])
       const trail = window.walking.state.trailSearchResults.pages[page].find((t) => {
         return t.geojson.features[0].properties.osm.relation_id === e.target.dataset.osmRelId
       })
-      log(trail)
+      // log(trail)
       const divList = document.querySelector('div#search-div')
       const divTrail = document.querySelector('div#trail-div')
       if (window.walking.state.showingTrail) {
-        log('divList.style.display', divList.style.display)
+        // log('divList.style.display', divList.style.display)
         divList.style.display = 'none'
-        log('divList.style.display', divList.style.display)
-        log('divWalk.style.display', divWalk.style.display)
+        // log('divList.style.display', divList.style.display)
+        // log('divWalk.style.display', divWalk.style.display)
         divWalk.style.display = 'block'
-        log('divWalk.style.display', divWalk.style.display)
+        // log('divWalk.style.display', divWalk.style.display)
       } else {
         // no need to call postMessage() because trail geojson is already here
         // window.walk.postMessage()
@@ -1319,8 +1337,56 @@
       divTrail.style.display = 'block'
       window.walking.active = false
       window.walking.state.showTrail = true
-      window._map.showUserLocation = false
-      // window.mapkit.importGeoJSON(t, {}) // see showWalk.finish for mapkit.importGeoJSON()
+      window._map.showsUserLocation = false
+      window.mapkit.importGeoJSON(trail.geojson, {
+        itemForFeature: (overlay, geo) => {
+          // log('importGeoJSON.itemForFeature(overlay, geo)', overlay, geo)
+          // log('importGeoJSON.itemForFeature(overlay, geo)', geo)
+          overlay.data = {
+            type: 'trail',
+            name: geo.properties.name,
+            id: geo._id,
+            source: 'osm',
+          }
+          overlay.style = new window.mapkit.Style({
+            lineWidth: 5,
+            lineJoin: 'round',
+            lineDash: [],
+            strokeColor: 'royalblue',
+          })
+          return overlay
+        },
+        geoJSONDidComplete: (overlays) => {
+          window._map.showItems(overlays)
+        },
+      })
+      const startAnnotation = new window.mapkit.MarkerAnnotation(
+        new window.mapkit.Coordinate(
+          trail.geojson.features[0].properties.startPosition.latitude,
+          trail.geojson.features[0].properties.startPosition.longitude,
+        ), {
+          glyphImage: { 1: `${origin}/i/start-flag-20x20.png` },
+          glyphText: 'Start',
+          glyphColor: 'white',
+          color: 'green',
+        },
+      )
+      startAnnotation.animates = false
+      startAnnotation.data.type = 'trail'
+      const finishAnnotation = new window.mapkit.MarkerAnnotation(
+        new window.mapkit.Coordinate(
+          trail.geojson.features[0].properties.endPosition.latitude,
+          trail.geojson.features[0].properties.endPosition.longitude,
+        ), {
+          glyphImage: { 1: `${origin}/i/finish-flag.png` },
+          glyphText: 'Finish',
+          glyphColor: '#FFFFFF',
+          color: '#000000',
+        }
+      )
+      finishAnnotation.animates = false
+      finishAnnotation.data.type = 'trail'
+      window._map.addAnnotations([ startAnnotation, finishAnnotation ])
 
       function reset() {
         log('clearing trail')
