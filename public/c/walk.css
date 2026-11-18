@@ -328,6 +328,14 @@ div#search > h3, h4, h5 {
   margin: 0px;
 }
 
+button#searchSubmitId {
+  float: left;
+}
+
+button#searchClearId {
+  float: right;
+}
+
 div#search > p, ul {
   margin: 0px, 0px, 1em 0px;
 }
