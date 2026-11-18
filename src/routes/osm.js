@@ -97,6 +97,17 @@ function convertOsmToGeojson(t) {
   tmp.geojson.features[0].properties.highestElevation = undefined
   tmp.geojson.features[0].properties.lowestElevation = undefined
   tmp.geojson.features[0].properties.changeInElevation = undefined
+  tmp.geojson.features[0].properties.startPosition = {
+    latitude: t.sequenced_coordinates[0].lat,
+    longitude: t.sequenced_coordinates[0].lon,
+    accuracy: null,
+  }
+  const len = t.sequenced_coordinates.length
+  tmp.geojson.features[0].properties.endPosition = {
+    latitude: t.sequenced_coordinates[len - 2].lat,
+    longitude: t.sequenced_coordinates[len - 2].lon,
+    accuracy: null,
+  }
   tmp.geojson.features[0].geometry.type = 'LineString'
   tmp.geojson.features[0].geometry.coordinates = t.sequenced_coordinates
     .map((c) => [c.lon, c.lat, null, null, null, null])
