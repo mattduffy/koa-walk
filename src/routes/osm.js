@@ -9,6 +9,7 @@
 import Router from '@koa/router'
 import { ulid } from 'ulid'
 import { ObjectId } from 'mongodb'
+import { ramerDouglasPeucker } from '@mattduffy/calories/rdp.js'
 import { _log, _error } from '../utils/logging.js'
 import { sql } from '../daos/impl/postgres/postgres-client.js'
 import {
@@ -80,6 +81,7 @@ const geojsonTemplate = {
   ],
 }
 
+const EPSILON = 2.9
 function convertOsmToGeojson(t) {
   const tmp = {
     geojson: structuredClone(geojsonTemplate),
@@ -109,9 +111,14 @@ function convertOsmToGeojson(t) {
     accuracy: null,
   }
   tmp.geojson.features[0].geometry.type = 'LineString'
-  tmp.geojson.features[0].geometry.coordinates = t.sequenced_coordinates
-    .map((c) => [c.lon, c.lat, null, null, null, null])
-    // Good place to run the ramer-douglas-peucker function to reduce number of gps points.
+  console.log('osm trail length:                         ', t.sequenced_coordinates.length)
+  tmp.geojson.features[0].geometry.coordinates = ramerDouglasPeucker(t.sequenced_coordinates
+    .map((c) => [c.lon, c.lat, null, null, null, null]), EPSILON)
+  console.log(
+    'after ramer-douglas-peucker (epsilon: %d)',
+    EPSILON,
+    tmp.geojson.features[0].geometry.coordinates.length,
+  )
   return tmp
 }
 
