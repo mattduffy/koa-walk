@@ -9,7 +9,9 @@
 import Router from '@koa/router'
 import { ulid } from 'ulid'
 import { ObjectId } from 'mongodb'
+import { pointDistance } from '@mattduffy/calories'
 import { ramerDouglasPeucker } from '@mattduffy/calories/rdp.js'
+import { createAccessToken } from '../utils/accessTokens.js'
 import { _log, _error } from '../utils/logging.js'
 import { sql } from '../daos/impl/postgres/postgres-client.js'
 import {
@@ -265,8 +267,8 @@ router.get(
               JOIN nearby_ways nw ON nw.osm_id = way_id
               WHERE 
                   (
-                    r.tags->>'route' LIKE ${'%' + type + '%'}
-                    OR r.tags->>'route' LIKE '%foot%'
+                    r.tags->>'route' = ${type}
+                    OR r.tags->>'route' = 'foot'
                     OR r.tags->>'highway' = 'pedestrian' -- add tag check for highway=pedestrian
                     OR r.tags->>'highway' = 'path'       -- add tag check for highway=path
                     OR r.tags->>'highway' = 'footway'    -- add tag check for highway=footway
