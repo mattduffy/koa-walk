@@ -21,8 +21,8 @@ import {
   // hasFlash,
 } from './middlewares.js'
 
-const osmLog = _log.extend('walk')
-const osmError = _error.extend('walk')
+const osmLog = _log.extend('walk:osm')
+const osmError = _error.extend('walk:osm')
 /* eslint-disable-next-line no-unused-vars */
 function sanitize(param) {
   // fill in with some effective input scubbing logic
@@ -83,6 +83,38 @@ const geojsonTemplate = {
   ],
 }
 
+function calculateDistance(track) {
+  osmLog('calculateDistance(track)')
+  osmLog('track.length', track.length)
+  if (track.length < 1) {
+    osmLog('returning null')
+    return null
+  }
+  if (track.length < 2) {
+    osmLog('returning 0')
+    return 0
+  }
+  let distance = 0
+  track.map((c, i) => {
+    // call pointDistance(p1, p2, u = 'metric')
+    // p1 is track[i], p2 is track[i + 1]
+    let next
+    if (i <= track.length - 2) {
+      next = pointDistance(
+        { longitude: track[i][0], latitude: track[i][1] },
+        { longitude: track[i + 1][0], latitude: track[i + 1][1] },
+      )
+    } else {
+      next = 0
+    }
+    // osmLog(`i: ${i}, next: ${next}`)
+    distance += next
+    return 0
+  })
+  osmLog('computed distance:', distance)
+  return distance
+}
+
 const EPSILON = 2.9
 function convertOsmToGeojson(t) {
   const tmp = {
@@ -113,14 +145,19 @@ function convertOsmToGeojson(t) {
     accuracy: null,
   }
   tmp.geojson.features[0].geometry.type = 'LineString'
-  console.log('osm trail length:                         ', t.sequenced_coordinates.length)
+  // osmLog('osm trail length:                         ', t.sequenced_coordinates.length)
   tmp.geojson.features[0].geometry.coordinates = ramerDouglasPeucker(t.sequenced_coordinates
     .map((c) => [c.lon, c.lat, null, null, null, null]), EPSILON)
-  console.log(
-    'after ramer-douglas-peucker (epsilon: %d)',
-    EPSILON,
-    tmp.geojson.features[0].geometry.coordinates.length,
+  // osmLog(
+  //   'after ramer-douglas-peucker (epsilon: %d)',
+  //   EPSILON,
+  //   tmp.geojson.features[0].geometry.coordinates.length,
+  // )
+  const calculatedDistance = calculateDistance(
+    tmp.geojson.features[0].geometry.coordinates,
   )
+  // osmLog('calculated distance', calculatedDistance)
+  tmp.geojson.features[0].properties.distance = calculatedDistance
   return tmp
 }
 
