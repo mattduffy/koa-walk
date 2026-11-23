@@ -258,6 +258,7 @@
         <span style="display: none;">
           Total Number of Trail<span id="makeTrailsPlural">s</span> Found: <span id="numberFound">0</span> 
         </span>
+        <ul id="pageLinks" style="display: none;"></ul>
         <ul id="found-trails" style="">
         </ul>
       </div>
@@ -1194,8 +1195,7 @@
       form.children.namedItem('searchClearId').disabled = true
       document.querySelector('span#numberFound').textContent = '0'
       document.querySelector('ul#found-trails').replaceChildren('')
-      window.walking.state.trailSearchResults = {}
-
+      window.walking.state.trailSearchResults = { page: null, pages: [] }
     }
     document.querySelector('button#searchClearId').addEventListener('click', clearTrails)
     window.findTrails = async function(e) {
@@ -1235,12 +1235,6 @@
       }
       log('credentials', credentials)
       try {
-        //
-        // Fill in function body to get radius value - convert to meters.
-        // Get csrfTokenHidden value.
-        // Get current lon/lat position.
-        // Assign TASK value for searching.
-        // Package values up and call postMessage().
         window.discover.postMessage(credentials)
       } catch (err) {
         warn('getTrails() failed')
@@ -1254,7 +1248,9 @@
         if (e?.TASK === 'FIND_TRAILS' && e?.status === 'ok') {
           // render list of foiund trails
           const ul = document.querySelector('ul#found-trails')
+          if (ul.children.length > 0) ul.replaceChildren('')
           const osmTrails = e?.osm?.trails ?? []
+          // log('osmTrails', osmTrails)
           //
           // Add each page of osm trails to local cache so they don't get re-requested.
           //
@@ -1288,12 +1284,69 @@
             + `${displayUnits(t.distance_meters, DISPLAY_UNITS)}`
             ul.appendChild(li)
           })
+          makePageLinks(e.osm.meta.pagination)
         }
         document.querySelectorAll('span[data-osm-rel-id]').forEach((t) => {
           t.addEventListener('click', showTrail)
         })
       }
       findTrails.finish = finish
+      function makePageLinks(p) {
+        const ul = document.querySelector('ul#pageLinks')
+        if (ul.children.length > 0) ul.replaceChildren('')
+        if (p.totalPages === 1) return
+        for (let i = 1; i <= p.totalPages; i++) {
+          const li = document.createElement('li')
+          li.innerHTML = `<span data-page=${i}>${i}</span>`
+          li.style.display = 'inline-block'
+          li.style.padding = '0em 1.5em'
+          li.style.borderRadius = '.5em'
+          li.style.backgroundColor = (i === p.currentPage) ? 'aliceblue' : 'ghostwhite'
+          li.style.border = (i === p.currentPage) ? '1px solid black' : '1px solid ghostwhite'
+          li.style.cursor = 'pointer'
+          li.addEventListener('click', changePage)
+          ul.appendChild(li)
+        }
+        ul.style.display = 'flex'
+        ul.style.justifyContent = 'space-evenly'
+        ul.style.padding = '.5em 0em 0em 0em'
+      }
+      findTrails.makePageLinks = makePageLinks
+      async function changePage(e) {
+        e.preventDefault()
+        e.stopPropagation()
+        console.log(e.target)
+        let page
+        const elem = e.target
+        if (elem.nodeName === 'SPAN') {
+          page = elem.dataset.page
+        }
+        if (elem.nodeName === 'LI') {
+          page = elem.children[0].dataset.page
+        }
+        if (window.walking.state.trailSearchResults.pages[page]) {
+
+        } else {
+          const credentials = {
+            TASK: 'FIND_TRAILS',
+            url: `${origin}`,
+            type: 'hiking',
+            longitude: window.walking.currentPosition.longitude,
+            latitude: window.walking.currentPosition.latitude,
+            radius: rmeters,
+            page: page || 1,
+            csrfTokenHidden: window.csrfToken,
+            jwtAccess: jwtAccess,
+          }
+          log('credentials', credentials)
+          try {
+            window.discover.postMessage(credentials)
+          } catch (err) {
+            warn(`getTrails() page ${page} request failed`)
+            error(err)
+          }
+        }
+      }
     }
     window.showTrail = async function(e) {
       // Draw map lineString annotation with trial's coordinates.  
