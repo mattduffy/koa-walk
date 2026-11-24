@@ -1251,48 +1251,64 @@
           if (ul.children.length > 0) ul.replaceChildren('')
           const osmTrails = e?.osm?.trails ?? []
           // log('osmTrails', osmTrails)
+          // const knownTrails = e?.known?.trails ?? []
           //
           // Add each page of osm trails to local cache so they don't get re-requested.
           //
-          window.walking.state.trailSearchResults = window.walking.state.trailSearchResults
-            ?? {
-              page: e.osm.meta.pagination.currentPage ?? 1,
-              pages: [],
-            }
-          window.walking.state.trailSearchResults.pages[e.osm.meta.pagination.currentPage]
-            = osmTrails
-          // const knownTrails = e?.known?.trails ?? []
           const total = e?.osm.meta.pagination.totalTrails
           document.querySelector('span#numberFound').textContent = total
           document.querySelector('span#makeTrailsPlural')
             .textContent = (total === 1) ? '' : 's'
           document.querySelector('span#numberFound').parentElement.style.display = 'inline'
-          osmTrails.forEach((t, i) => {
-            const trail = t.geojson.features[0]
-            const li = document.createElement('li')
-            li.dataset.source = "osm" 
-            li.innerHTML = `<span data-osm-rel-id="${trail.properties.osm.relation_id}" `
-            + `data-osm-name="${trail.properties.name ?? 'Unnamed trail'}" `
-            + `data-osm-type="${trail.properties.osm.relation_tags.type}" `
-            + `data-osm-route="${trail.properties.osm.relation_tags.route}" `
-            + `data-osm-source="${trail.properties.osm.relation_tags?.source}" `
-            + `data-page="${e.osm.meta.pagination.currentPage}"`
-            + `class="pointer" title="${trail.properties.name}">`
-            + `${truncateText(trail.properties.name, 54)}</span>`
-            + '<br>'
-            + 'Distance from your current location: '
-            + `${displayUnits(t.distance_meters, DISPLAY_UNITS)}`
-            ul.appendChild(li)
-          })
+          updateTrailsStateCache(e.osm.meta.pagination, osmTrails)
+          makeTrailList(e.osm, ul, e.osm.meta.pagination.currentPage)
           makePageLinks(e.osm.meta.pagination)
         }
+      }
+      findTrails.finish = finish
+      function makeTrailList(searchResults, listElem, page) {
+        log('makeTrailLilst(searchResults)', searchResults)
+        const ul = listElem
+        ul.replaceChildren('')
+        searchResults.trails.forEach((t, i) => {
+          const trail = t.geojson.features[0]
+          const li = document.createElement('li')
+          li.dataset.source = "osm" 
+          li.innerHTML = `<span data-osm-rel-id="${trail.properties.osm.relation_id}" `
+          + `data-osm-name="${trail.properties.name ?? 'Unnamed trail'}" `
+          + `data-osm-type="${trail.properties.osm.relation_tags.type}" `
+          + `data-osm-route="${trail.properties.osm.relation_tags.route}" `
+          + `data-osm-source="${trail.properties.osm.relation_tags?.source}" `
+          // + `data-page="${searchResults.meta.pagination.currentPage}"`
+          + `data-page="${page}"`
+          + `class="pointer" title="${trail.properties.name}">`
+          + `${truncateText(trail.properties.name, 54)}</span>`
+          + '<br>'
+          + 'Distance from your current location: '
+          + `${displayUnits(t.distance_meters, DISPLAY_UNITS)}`
+          ul.appendChild(li)
+        })
         document.querySelectorAll('span[data-osm-rel-id]').forEach((t) => {
           t.addEventListener('click', showTrail)
         })
       }
-      findTrails.finish = finish
+      
+      function updateTrailsStateCache(pagination, trails) {
+        window.walking.state.trailSearchResults = window.walking.state.trailSearchResults
+          ?? {
+            page: pagination.currentPage ?? 1,
+            pages: [],
+            pagination,
+          }
+        window.walking.state.trailSearchResults.pages[pagination.currentPage]
+          = trails
+        window.walking.state.trailSearchResults.pagination = pagination
+        window.walking.state.trailSearchResults.page = pagination.currentPage
+      }
       function makePageLinks(p) {
+        // log('pagination', p)
         const ul = document.querySelector('ul#pageLinks')
+        const currentPage = Number.parseInt(p.currentPage, 10)
         if (ul.children.length > 0) ul.replaceChildren('')
         if (p.totalPages === 1) return
         for (let i = 1; i <= p.totalPages; i++) {
@@ -1301,8 +1317,8 @@
           li.style.display = 'inline-block'
           li.style.padding = '0em 1.5em'
           li.style.borderRadius = '.5em'
-          li.style.backgroundColor = (i === p.currentPage) ? 'aliceblue' : 'ghostwhite'
-          li.style.border = (i === p.currentPage) ? '1px solid black' : '1px solid ghostwhite'
+          li.style.backgroundColor = (i === currentPage, 10) ? 'aliceblue' : 'ghostwhite'
+          li.style.border = (i === currentPage) ? '1px solid black' : '1px solid ghostwhite'
           li.style.cursor = 'pointer'
           li.addEventListener('click', changePage)
           ul.appendChild(li)
@@ -1325,7 +1341,16 @@
           page = elem.children[0].dataset.page
         }
         if (window.walking.state.trailSearchResults.pages[page]) {
-
+          log(`changing page to an existing list of trails: ${page}`)
+          const ul = document.querySelector('ul#found-trails')
+          const trails = window.walking.state.trailSearchResults.pages[page]
+          makeTrailList({ trails }, ul, page)
+          // makePageLinks(e.osm.meta.pagination)
+          window.walking.state.trailSearchResults.page = page
+          const pagination = window.walking.state.trailSearchResults.pagination
+          pagination.currentPage = page
+          updateTrailsStateCache(pagination, trails)
+          makePageLinks(window.walking.state.trailSearchResults.pagination)
         } else {
           const credentials = {
             TASK: 'FIND_TRAILS',
@@ -1348,6 +1373,7 @@
         }
       }
     }
+    document.querySelector('button#searchSubmitId').addEventListener('click', findTrails)
     window.showTrail = async function(e) {
       // Draw map lineString annotation with trial's coordinates.  
       e.preventDefault()
@@ -1394,7 +1420,6 @@
       window.mapkit.importGeoJSON(trail.geojson, {
         itemForFeature: (overlay, geo) => {
           // log('importGeoJSON.itemForFeature(overlay, geo)', overlay, geo)
-          // log('importGeoJSON.itemForFeature(overlay, geo)', geo)
           overlay.data = {
             type: 'trail',
             name: geo.properties.name,
@@ -1462,7 +1487,6 @@
       }
       document.querySelector('span#closeTrail').addEventListener('click', xClose)
     }
-    document.querySelector('button#searchSubmitId').addEventListener('click', findTrails)
     function updateHeading() {
       if (DISPLAY_ORIENTATION && DISPLAY_ORIENTATION === 'northUp') {
         log('map orientation: North Up')
