@@ -271,6 +271,9 @@
           <li>
             <h5 id="trailLocationH5" style="font-size: .80rem;"></h5>
           </li>
+          <li style="">
+            Lookup Source: <span id="trailLookupSource" style="float: right;"></span>
+          </li>
           <li style="display: none;">
             Terrain Type: <span id="trailTerrainType" style="float: right;"></span>
           </li>
@@ -1199,6 +1202,7 @@
       document.querySelector('span#numberFound').textContent = '0'
       document.querySelector('ul#found-trails').replaceChildren('')
       window.walking.state.trailSearchResults = { page: null, pages: [] }
+      findTrails.makePageLinks(null)
     }
     document.querySelector('button#searchClearId').addEventListener('click', clearTrails)
     window.findTrails = async function(e) {
@@ -1209,11 +1213,17 @@
       form.children.namedItem('searchSubmitId').disabled = true
       form.children.namedItem('searchClearId').disabled = false
       function convertRadiusToMeters(r) {
-        let meters
+        let meters = 0
+        log('DISPLAY_UNITS', DISPLAY_UNITS)
         if (/imperial/i.test(DISPLAY_UNITS)) {
           meters = Math.ceil(r * 1.609344 * 1000)
+          log('1 meters', meters)
+        } else if (/metric/i.test(DISPLAY_UNITS)) {
+          meters = r * 1000 
+          log('2 meters', meters)
         } else {
-          meters *= 1000
+          meters = r * 1000
+          log('3 meters', meters)
         }
         log(`converting radius: ${r} to metric meters gives: ${meters}`)
         return meters
@@ -1283,7 +1293,8 @@
           + `data-osm-route="${trail.properties.osm.relation_tags.route}" `
           + `data-osm-source="${trail.properties.osm.relation_tags?.source}" `
           // + `data-page="${searchResults.meta.pagination.currentPage}"`
-          + `data-page="${page}"`
+          + `data-page="${page}" `
+          + `data-source="OpenStreetMaps" `
           + `class="pointer" title="${trail.properties.name}">`
           + `${truncateText(trail.properties.name, 54)}</span>`
           + '<br>'
@@ -1311,6 +1322,10 @@
       function makePageLinks(p) {
         // log('pagination', p)
         const ul = document.querySelector('ul#pageLinks')
+        if (p === null) {
+          ul.replaceChildren('')
+          return
+        }
         const currentPage = Number.parseInt(p.currentPage, 10)
         if (ul.children.length > 0) ul.replaceChildren('')
         if (p.totalPages === 1) return
@@ -1387,16 +1402,12 @@
       const trail = window.walking.state.trailSearchResults.pages[page].find((t) => {
         return t.geojson.features[0].properties.osm.relation_id === e.target.dataset.osmRelId
       })
-      // log(trail)
+      log(trail)
       const divList = document.querySelector('div#search-div')
       const divTrail = document.querySelector('div#trail-div')
       if (window.walking.state.showingTrail) {
-        // log('divList.style.display', divList.style.display)
         divList.style.display = 'none'
-        // log('divList.style.display', divList.style.display)
-        // log('divTrail.style.display', divTrail.style.display)
         divTrail.style.display = 'block'
-        // log('divWalk.style.display', divWalk.style.display)
       } else {
         // no need to call postMessage() because trail geojson is already here
         // window.walk.postMessage()
@@ -1405,13 +1416,15 @@
         
       }
       showTrail.finish = finish
-      document.querySelector('h4#trailNameH4').textContent = e.osmName  
+      document.querySelector('h4#trailNameH4')
+        .textContent = trail.geojson.features[0].properties.name
       document.querySelector('h5#trailLocationH5')
-        .textContent = e?.osmLocation ?? "Right here"
+        .textContent = e?.osmLocation ?? "Over there..."
+      document.querySelector('span#trailLookupSource').textContent = e.target.dataset.source
       const spanTrailDistance = document.querySelector('span#trailDistance')
-      spanTrailDistance.dataset.distance = (e?.distance ?? 1000000)
+      spanTrailDistance.dataset.distance = (trail.geojson.features[0].properties.distance ?? 1000000)
       spanTrailDistance.textContent = `${displayUnits(
-        (e?.distance ?? 1000000),
+        (trail.geojson.features[0].properties.distance ?? 1000000),
         DISPLAY_UNITS
       )}` 
       divList.style.display = 'none'
