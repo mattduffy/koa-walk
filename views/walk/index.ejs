@@ -479,15 +479,15 @@
     const radiusSelect = document.querySelector('select#searchRadiusId')
     const ten = document.createElement('option')
     ten.text = '10'
-    ten.value = 10
+    ten.value = 10 
     radiusSelect.appendChild(ten)
     const twenty = document.createElement('option')
-    twenty.text = '20'
-    twenty.value = 20
+    twenty.text = '15'
+    twenty.value = 15
     radiusSelect.appendChild(twenty)
     const thirty = document.createElement('option')
-    thirty.text = '30'
-    thirty.value = 30
+    thirty.text = '20'
+    thirty.value = 20
     radiusSelect.appendChild(thirty)
     const spanUnits = document.querySelector('span#searchRadiusUnits')
     spanUnits.dataset.units = DISPLAY_UNITS
@@ -883,6 +883,9 @@
         window._map.setCenterAnimated(mapkitCoordinate, false)
       } else if (window.walking.state.showingHike) {
         info('showing old (saved) walk')
+        return
+      } else if (window.walking.state.showingTrail) {
+        info('showing trail search result')
         return
       } else {
         window._map.setCenterAnimated(mapkitCoordinate, true)
@@ -1375,7 +1378,6 @@
     }
     document.querySelector('button#searchSubmitId').addEventListener('click', findTrails)
     window.showTrail = async function(e) {
-      // Draw map lineString annotation with trial's coordinates.  
       e.preventDefault()
       e.stopPropagation()
       log('showTrail(e)', e.target.dataset)
@@ -1392,8 +1394,8 @@
         // log('divList.style.display', divList.style.display)
         divList.style.display = 'none'
         // log('divList.style.display', divList.style.display)
-        // log('divWalk.style.display', divWalk.style.display)
-        divWalk.style.display = 'block'
+        // log('divTrail.style.display', divTrail.style.display)
+        divTrail.style.display = 'block'
         // log('divWalk.style.display', divWalk.style.display)
       } else {
         // no need to call postMessage() because trail geojson is already here
@@ -1415,8 +1417,9 @@
       divList.style.display = 'none'
       divTrail.style.display = 'block'
       window.walking.active = false
-      window.walking.state.showTrail = true
+      window.walking.state.showingTrail = true
       window._map.showsUserLocation = false
+      window._map.tracksUserLocation = false
       window.mapkit.importGeoJSON(trail.geojson, {
         itemForFeature: (overlay, geo) => {
           // log('importGeoJSON.itemForFeature(overlay, geo)', overlay, geo)
@@ -1473,6 +1476,7 @@
         window.walking.active = false 
         window.walking.state.showingTrail = null
         window._map.showsUserLocation = true
+        window._map.tracksUserLocation = true
         window._map.removeOverlays(
           window._map.overlays.filter((o) => o.data.type === 'trail')
         )
