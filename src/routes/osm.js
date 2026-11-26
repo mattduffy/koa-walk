@@ -48,6 +48,7 @@ const geojsonTemplate = {
           relation_tags_route: null,
           relation_tags_source: null,
         },
+        meta: {},
         dateCopiedFromOsm: null,
         name: null,
         location: null,
@@ -127,6 +128,7 @@ function convertOsmToGeojson(t) {
   tmp.geojson.features[0].properties.osm.route_name = t.route_name
   tmp.geojson.features[0].properties.osm.relation_id = t.relation_id
   tmp.geojson.features[0].properties.osm.relation_tags = t.relation_tags
+  tmp.geojson.features[0].properties.meta.source = 'OpenStreetMaps'
   tmp.geojson.features[0].properties.dateCopiedFromOsm = Date.now()
   tmp.geojson.features[0].properties.name = t.route_name ?? 'Unnamed trail'
   tmp.geojson.features[0].properties.location = undefined
