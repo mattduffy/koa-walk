@@ -1294,7 +1294,7 @@
           + `data-osm-source="${trail.properties.osm.relation_tags?.source}" `
           // + `data-page="${searchResults.meta.pagination.currentPage}"`
           + `data-page="${page}" `
-          + `data-source="OpenStreetMaps" `
+          + `data-source="${trail.properties.meta.source}" `
           + `class="pointer" title="${trail.properties.name}">`
           + `${truncateText(trail.properties.name, 54)}</span>`
           + '<br>'
