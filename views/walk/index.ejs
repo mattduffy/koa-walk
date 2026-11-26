@@ -1280,7 +1280,7 @@
       }
       findTrails.finish = finish
       function makeTrailList(searchResults, listElem, page) {
-        log('makeTrailLilst(searchResults)', searchResults)
+        log('makeTrailList(searchResults)', searchResults)
         const ul = listElem
         ul.replaceChildren('')
         searchResults.trails.forEach((t, i) => {
@@ -1419,10 +1419,10 @@
       document.querySelector('h4#trailNameH4')
         .textContent = trail.geojson.features[0].properties.name
       document.querySelector('h5#trailLocationH5')
-        .textContent = e?.osmLocation ?? "Over there..."
+        .textContent = trail.geojson.features[0].properties.location ?? "Over there..."
       document.querySelector('span#trailLookupSource').textContent = e.target.dataset.source
       const spanTrailDistance = document.querySelector('span#trailDistance')
-      spanTrailDistance.dataset.distance = (trail.geojson.features[0].properties.distance ?? 1000000)
+      spanTrailDistance.dataset.distance = trail.geojson.features[0].properties.distance ?? 1000000
       spanTrailDistance.textContent = `${displayUnits(
         (trail.geojson.features[0].properties.distance ?? 1000000),
         DISPLAY_UNITS
