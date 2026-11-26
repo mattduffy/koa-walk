@@ -85,14 +85,16 @@ const geojsonTemplate = {
 }
 
 function calculateDistance(track) {
-  osmLog('calculateDistance(track)')
-  osmLog('track.length', track.length)
+  const log = osmLog.extend('calculateDistance')
+  // const err = osmError.extend('calculateDistance')
+  log('calculateDistance(track)')
+  log('track.length', track.length)
   if (track.length < 1) {
-    osmLog('returning null')
+    log('returning null')
     return null
   }
   if (track.length < 2) {
-    osmLog('returning 0')
+    log('returning 0')
     return 0
   }
   let distance = 0
@@ -108,16 +110,41 @@ function calculateDistance(track) {
     } else {
       next = 0
     }
-    // osmLog(`i: ${i}, next: ${next}`)
+    // log(`i: ${i}, next: ${next}`)
     distance += next
     return 0
   })
-  osmLog('computed distance:', distance)
+  log('computed distance:', distance)
   return distance
 }
 
+async function mapkitReverseGeocode(coord) {
+  const log = osmLog.extend('mapkitReverseGeocode')
+  const err = osmError.extend('mapkitReverseGeocode')
+  let formattedAddress = null
+  try {
+    const token = await createAccessToken('server_api')
+    const { latitude, longitude } = coord
+    const url = 'https://maps-api.apple.com/v1/reverseGeocode'
+      + `?loc=${latitude}%2C${longitude}&lang=en-US`
+    log('mapkit reverse geocode url', url)
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    // log('fetch res', res)
+    const json = await res.json()
+    log('mapkit reverse geocode response', json)
+    formattedAddress = json.results?.[0]?.formattedAddressLines ?? null
+    return formattedAddress
+  } catch (e) {
+    err('mapkit server_api reverse geocode lookup failed for location', coord)
+    err(e)
+  }
+  return formattedAddress
+}
+
 const EPSILON = 2.9
-function convertOsmToGeojson(t) {
+async function convertOsmToGeojson(t) {
+  const log = osmLog.extend('convertOsmToGeojson')
+  const err = osmError.extend('convertOsmToGeojson')
   const tmp = {
     geojson: structuredClone(geojsonTemplate),
     distance_meters: t.distance_meters,
@@ -147,19 +174,28 @@ function convertOsmToGeojson(t) {
     accuracy: null,
   }
   tmp.geojson.features[0].geometry.type = 'LineString'
-  // osmLog('osm trail length:                         ', t.sequenced_coordinates.length)
+  // log('osm trail length:                         ', t.sequenced_coordinates.length)
   tmp.geojson.features[0].geometry.coordinates = ramerDouglasPeucker(t.sequenced_coordinates
     .map((c) => [c.lon, c.lat, null, null, null, null]), EPSILON)
-  // osmLog(
-  //   'after ramer-douglas-peucker (epsilon: %d)',
-  //   EPSILON,
-  //   tmp.geojson.features[0].geometry.coordinates.length,
-  // )
   const calculatedDistance = calculateDistance(
     tmp.geojson.features[0].geometry.coordinates,
   )
-  // osmLog('calculated distance', calculatedDistance)
+  // log('calculated distance', calculatedDistance)
   tmp.geojson.features[0].properties.distance = calculatedDistance
+  try {
+    const location = {
+      latitude: t.sequenced_coordinates[0].lat,
+      longitude: t.sequenced_coordinates[0].lon,
+    }
+    log('calling mapkitReverseGeocode(coordinate)', location)
+    const reverseLocation = await mapkitReverseGeocode(location)
+    log('reverseLocation', reverseLocation)
+    tmp.geojson.features[0].properties.location = reverseLocation
+  } catch (e) {
+    const msg = 'failed to reverse geoocode location from mapkit server_api'
+    err(msg)
+    err(e)
+  }
   return tmp
 }
 
@@ -361,7 +397,7 @@ router.get(
         osmLog(`found ${trails.length} hiking trails.`)
         // body.geojson = trails.map(convertOsmToGeojson)
         // body.osm.trails = trails
-        body.osm.trails = trails.map(convertOsmToGeojson)
+        body.osm.trails = await Promise.all(trails.map(convertOsmToGeojson))
         if (trails.length < 1) {
           body.osm.meta.pagination.totalTrails = 0
           body.osm.meta.pagination.limit = limit
